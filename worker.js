@@ -2,20 +2,30 @@ export default {
   async fetch(request) {
     const url = new URL(request.url);
 
-    // 只代理 /imageGeneration 请求
     if (url.pathname !== '/imageGeneration') {
       return new Response('Not Found', { status: 404 });
     }
 
-    const apiKey = url.searchParams.get('key');
-    if (!apiKey) {
+    const apiKey = request.headers.get('x-api-key') || request.headers.get('Authorization')?.replace('Bearer ', '');
+    const MINIMAX_KEY = apiKey || '';
+
+    if (!MINIMAX_KEY) {
       return new Response(JSON.stringify({ error: 'Missing API key' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' }
       });
     }
 
-    const body = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
     const prompt = body.prompt || body.prompt_text || '';
 
     if (!prompt) {
@@ -29,7 +39,7 @@ export default {
       const upstream = await fetch('https://api.minimaxi.com/v1/image_generation', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
+          'Authorization': `Bearer ${MINIMAX_KEY}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -40,7 +50,6 @@ export default {
 
       const data = await upstream.json();
 
-      // 标准化返回格式
       let imageUrl = null;
       const candidates = [
         data.image_urls?.[0],
