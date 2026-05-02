@@ -1,0 +1,76 @@
+export default {
+  async fetch(request) {
+    const url = new URL(request.url);
+
+    // 只代理 /imageGeneration 请求
+    if (url.pathname !== '/imageGeneration') {
+      return new Response('Not Found', { status: 404 });
+    }
+
+    const apiKey = url.searchParams.get('key');
+    if (!apiKey) {
+      return new Response(JSON.stringify({ error: 'Missing API key' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const body = await request.json();
+    const prompt = body.prompt || body.prompt_text || '';
+
+    if (!prompt) {
+      return new Response(JSON.stringify({ error: 'Missing prompt' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    try {
+      const upstream = await fetch('https://api.minimaxi.com/v1/image_generation', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'image-01',
+          prompt: prompt
+        })
+      });
+
+      const data = await upstream.json();
+
+      // 标准化返回格式
+      let imageUrl = null;
+      const candidates = [
+        data.image_urls?.[0],
+        data.data?.[0]?.url || data.data?.[0]?.base64,
+        data.images?.[0]?.url || data.images?.[0],
+        data.output?.url,
+        data.result?.url,
+        data.url
+      ];
+      for (const c of candidates) {
+        if (c && typeof c === 'string' && (c.startsWith('http') || c.startsWith('data:'))) {
+          imageUrl = c;
+          break;
+        }
+      }
+
+      return new Response(JSON.stringify({
+        success: !!imageUrl,
+        imageUrl: imageUrl,
+        raw: data
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+    } catch (e) {
+      return new Response(JSON.stringify({ error: e.message }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+  }
+};

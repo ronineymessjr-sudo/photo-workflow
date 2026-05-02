@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>摄影方案生成器 | Photo Workflow</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #0a0a0a; --bg2: #141414; --bg3: #1a1a1a; --bg4: #1e1e1e;
+            --bd: #2a2a2a; --t1: #f0f0f0; --t2: #a0a0a0; --t3: #666;
+            --ac: #e85d04; --ach: #f48c06; --ok: #38b000; --er: #d00000;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--t1); min-height: 100vh; font-size: 14px; line-height: 1.5; }
+        .container { max-width: 1500px; margin: 0 auto; padding: 1.5rem; }
+        h1 { font-size: 1.8rem; font-weight: 700; letter-spacing: -.02em; margin-bottom: .2rem; }
+        h1 span { color: var(--ac); }
+        header { text-align: center; padding: 1.5rem 0 1rem; border-bottom: 1px solid var(--bd); margin-bottom: 1.5rem; }
+        header p { color: var(--t2); font-size: .9rem; }
+        .tabs { display: flex; gap: .35rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--bd); padding-bottom: .4rem; flex-wrap: wrap; }
+        .tab-btn { padding: .5rem 1rem; background: transparent; border: 1px solid transparent; border-radius: 6px; color: var(--t2); font-size: .85rem; font-weight: 500; cursor: pointer; transition: .15s; display: flex; align-items: center; gap: .4rem; }
+        .tab-btn:hover { background: var(--bg3); color: var(--t1); }
+        .tab-btn.active { background: var(--ac); color: #fff; border-color: var(--ac); }
+        .badge { font-size: .65rem; padding: .1rem .4rem; background: rgba(255,255,255,.2); border-radius: 10px; }
+        .tab-cnt { display: none; }
+        .tab-cnt.active { display: block; }
+        .grid { display: grid; grid-template-columns: 300px 1fr 260px; gap: 1.25rem; align-items: start; }
+        @media(max-width: 1100px) { .grid { grid-template-columns: 1fr; } .col-side { display: none; } }
+        .panel { background: var(--bg2); border: 1px solid var(--bd); border-radius: 10px; overflow: hidden; }
+        .p-head { padding: .85rem 1.1rem; border-bottom: 1px solid var(--bd); background: var(--bg3); display: flex; align-items: center; justify-content: space-between; }
+        .p-head h2 { font-size: .8rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--t2); }
+        .p-body { padding: 1rem; }
+        .fg { margin-bottom: .85rem; }
+        .fg:last-child { margin-bottom: 0; }
+        label { display: block; font-size: .75rem; font-weight: 500; color: var(--t2); margin-bottom: .3rem; }
+        input, textarea, select { width: 100%; padding: .5rem .75rem; background: var(--bg); border: 1px solid var(--bd); border-radius: 6px; color: var(--t1); font-size: .85rem; font-family: inherit; transition: border-color .2s; }
+        textarea { min-height: 65px; resize: vertical; }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: var(--ac); box-shadow: 0 0 0 2px rgba(232,93,4,.12); }
+        input::placeholder, textarea::placeholder { color: var(--t3); }
+        select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right .75rem center; padding-right: 2.2rem; }
+        .btn { display: inline-flex; align-items: center; justify-content: center; gap: .35rem; padding: .55rem .9rem; font-size: .8rem; font-weight: 600; font-family: inherit; border: none; border-radius: 6px; cursor: pointer; transition: .15s; white-space: nowrap; }
+        .btn-p { width: 100%; background: var(--ac); color: #fff; }
+        .btn-p:hover:not(:disabled) { background: var(--ach); }
+        .btn-p:disabled { opacity: .5; cursor: not-allowed; }
+        .btn-s { background: var(--bg3); color: var(--t2); border: 1px solid var(--bd); }
+        .btn-s:hover { background: var(--bg4); color: var(--t1); }
+        .btn-d { background: rgba(208,0,0,.15); color: var(--er); border: 1px solid rgba(208,0,0,.25); }
+        .btn-d:hover { background: rgba(208,0,0,.25); }
+        .btn-i { background: rgba(232,93,4,.15); color: var(--ac); border: 1px solid rgba(232,93,4,.3); }
+        .btn-i:hover { background: rgba(232,93,4,.25); }
+        .btn-sm { padding: .3rem .6rem; font-size: .7rem; }
+        .btn-xs { padding: .2rem .45rem; font-size: .68rem; }
+        .btn-i2 { padding: .3rem; background: transparent; border: none; color: var(--t3); cursor: pointer; border-radius: 4px; }
+        .btn-i2:hover { background: var(--bg3); color: var(--t1); }
+        .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
+        .output-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px; color: var(--t3); text-align: center; }
+        .output-empty svg { width: 48px; height: 48px; margin-bottom: .6rem; opacity: .35; }
+        .output-empty p { font-size: .85rem; }
+        .output-cnt { display: none; }
+        .output-cnt.active { display: block; }
+        .output-load { display: none; flex-direction: column; align-items: center; justify-content: center; min-height: 300px; }
+        .output-load.active { display: flex; }
+        .spinner { width: 26px; height: 26px; border: 3px solid var(--bd); border-top-color: var(--ac); border-radius: 50%; animation: s 1s linear infinite; margin-bottom: .6rem; }
+        @keyframes s { to { transform: rotate(360deg); } }
+        .output-load p { color: var(--t2); font-size: .85rem; }
+        .plan-meta { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1rem; padding-bottom: .85rem; border-bottom: 1px solid var(--bd); }
+        .mtag { display: inline-flex; align-items: center; gap: .3rem; padding: .25rem .6rem; background: var(--bg3); border-radius: 5px; font-size: .72rem; color: var(--t2); }
+        .mtag strong { color: var(--t1); }
+        .ps { margin-bottom: 1rem; }
+        .ps:last-child { margin-bottom: 0; }
+        .ps-hdr { display: flex; align-items: center; gap: .4rem; margin-bottom: .5rem; padding-bottom: .4rem; border-bottom: 1px solid var(--bd); }
+        .ps-icon { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; background: var(--bg3); border-radius: 5px; font-size: .85rem; }
+        .ps-title { font-size: .9rem; font-weight: 600; }
+        .ps-cnt { color: var(--t2); line-height: 1.65; font-size: .83rem; }
+        .ps-cnt ul { list-style: none; padding: 0; }
+        .ps-cnt li { position: relative; padding-left: 1rem; margin-bottom: .3rem; }
+        .ps-cnt li::before { content: "•"; position: absolute; left: 0; color: var(--ac); }
+        .actions { display: flex; gap: .4rem; margin-top: 1rem; padding-top: .85rem; border-top: 1px solid var(--bd); flex-wrap: wrap; }
+        /* Generated image */
+        .img-gallery { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--bd); }
+        .img-gallery h4 { font-size: .85rem; font-weight: 600; margin-bottom: .75rem; color: var(--t2); }
+        .img-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: .75rem; }
+        .img-card { border-radius: 8px; overflow: hidden; border: 1px solid var(--bd); background: var(--bg); }
+        .img-card img { width: 100%; height: 160px; object-fit: cover; display: block; cursor: pointer; transition: opacity .15s; }
+        .img-card img:hover { opacity: .85; }
+        .img-card-info { padding: .4rem .6rem; font-size: .72rem; color: var(--t3); }
+        .img-gen-form { margin-top: .75rem; display: flex; gap: .5rem; }
+        .img-gen-form input { flex: 1; }
+        .img-loading { display: flex; align-items: center; justify-content: center; height: 160px; color: var(--t3); font-size: .82rem; }
+        /* History */
+        .hist-list { max-height: 400px; overflow-y: auto; }
+        .hist-item { padding: .65rem .85rem; border-bottom: 1px solid var(--bd); cursor: pointer; transition: background .12s; }
+        .hist-item:hover { background: var(--bg3); }
+        .hist-item:last-child { border-bottom: none; }
+        .hist-title { font-weight: 600; font-size: .82rem; color: var(--t1); margin-bottom: .15rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .hist-meta { font-size: .68rem; color: var(--t3); display: flex; gap: .5rem; }
+        .hist-actions { display: flex; gap: .35rem; margin-top: .4rem; opacity: 0; transition: opacity .12s; }
+        .hist-item:hover .hist-actions { opacity: 1; }
+        .hist-empty { padding: 1.25rem; text-align: center; color: var(--t3); font-size: .82rem; }
+        .hist-count { font-size: .7rem; color: var(--t3); padding: .5rem .85rem; border-bottom: 1px solid var(--bd); }
+        /* Equipment */
+        .eq-cat { margin-bottom: 1rem; }
+        .eq-cat-hdr { display: flex; align-items: center; gap: .4rem; margin-bottom: .5rem; cursor: pointer; }
+        .eq-cat-icon { font-size: .9rem; }
+        .eq-cat-name { font-weight: 600; font-size: .85rem; }
+        .eq-cat-n { font-size: .68rem; color: var(--t3); margin-left: auto; }
+        .eq-item { display: flex; align-items: center; gap: .4rem; padding: .4rem .55rem; background: var(--bg); border: 1px solid var(--bd); border-radius: 6px; margin-bottom: .35rem; font-size: .82rem; }
+        .eq-item-name { flex: 1; }
+        .eq-item-note { font-size: .7rem; color: var(--t3); }
+        .eq-item-actions { display: flex; gap: .2rem; opacity: 0; transition: opacity .12s; }
+        .eq-item:hover .eq-item-actions { opacity: 1; }
+        .eq-empty { color: var(--t3); font-size: .82rem; padding: .4rem 0; }
+        /* Venue */
+        .venue-card { padding: .75rem; background: var(--bg); border: 1px solid var(--bd); border-radius: 8px; margin-bottom: .6rem; }
+        .venue-card:last-child { margin-bottom: 0; }
+        .venue-name { font-weight: 600; font-size: .88rem; margin-bottom: .25rem; display: flex; align-items: center; gap: .4rem; }
+        .venue-tags { display: flex; gap: .3rem; flex-wrap: wrap; margin-bottom: .35rem; }
+        .venue-tag { font-size: .65rem; padding: .1rem .45rem; background: var(--bg3); border-radius: 3px; color: var(--t2); }
+        .venue-tag.style-tag { background: rgba(232,93,4,.15); color: var(--ac); }
+        .venue-addr { font-size: .75rem; color: var(--t3); margin-bottom: .25rem; }
+        .venue-note { font-size: .75rem; color: var(--t2); margin-bottom: .35rem; }
+        .venue-actions { display: flex; gap: .35rem; }
+        /* Model */
+        .model-card { padding: .75rem; background: var(--bg); border: 1px solid var(--bd); border-radius: 8px; margin-bottom: .6rem; }
+        .model-card:last-child { margin-bottom: 0; }
+        .model-name { font-weight: 600; font-size: .88rem; margin-bottom: .25rem; display: flex; align-items: center; gap: .4rem; }
+        .model-tags { display: flex; gap: .3rem; flex-wrap: wrap; margin-bottom: .35rem; }
+        .model-tag { font-size: .65rem; padding: .1rem .45rem; background: var(--bg3); border-radius: 3px; color: var(--t2); }
+        .model-tag.auth { background: rgba(56,176,0,.15); color: var(--ok); }
+        .model-tag.no-auth { background: rgba(208,0,0,.15); color: var(--er); }
+        .model-meta { font-size: .75rem; color: var(--t3); margin-bottom: .2rem; }
+        .model-note { font-size: .75rem; color: var(--t2); margin-bottom: .35rem; }
+        .model-actions { display: flex; gap: .35rem; }
+        /* Templates */
+        .tpl-card { padding: .75rem; background: var(--bg); border: 1px solid var(--bd); border-radius: 8px; margin-bottom: .6rem; cursor: pointer; transition: border-color .15s; }
+        .tpl-card:hover { border-color: var(--ac); }
+        .tpl-card:last-child { margin-bottom: 0; }
+        .tpl-name { font-weight: 600; font-size: .88rem; margin-bottom: .25rem; display: flex; align-items: center; justify-content: space-between; }
+        .tpl-desc { font-size: .75rem; color: var(--t3); margin-bottom: .35rem; }
+        .tpl-actions { display: flex; gap: .35rem; }
+        .tpl-use-form { display: none; padding: .75rem; background: var(--bg); border: 1px dashed var(--ac); border-radius: 8px; margin-top: .6rem; }
+        .tpl-use-form.active { display: block; }
+        /* Data backup */
+        .backup-section { margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--bd); }
+        .backup-section h3 { font-size: .85rem; font-weight: 600; margin-bottom: .75rem; color: var(--t2); }
+        .backup-btns { display: flex; gap: .5rem; flex-wrap: wrap; }
+        /* Toast */
+        .toast { position: fixed; bottom: 1.5rem; right: 1.5rem; padding: .7rem 1rem; background: var(--bg4); border: 1px solid var(--bd); border-radius: 8px; color: var(--t1); font-size: .82rem; transform: translateY(100px); opacity: 0; transition: all .25s; z-index: 9999; }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.ok { border-color: var(--ok); }
+        .toast.er { border-color: var(--er); }
+        .side-panel { margin-top: 1rem; }
+        .side-section { margin-bottom: 1rem; }
+        .side-section:last-child { margin-bottom: 0; }
+        /* Modal for image preview */
+        .img-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 99999; align-items: center; justify-content: center; }
+        .img-modal.active { display: flex; }
+        .img-modal img { max-width: 90vw; max-height: 90vh; border-radius: 8px; }
+        .img-modal-close { position: absolute; top: 1rem; right: 1rem; font-size: 1.5rem; color: #fff; cursor: pointer; background: rgba(255,255,255,.2); border: none; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; }
+        /* API Key input */
+        .api-key-notice { background: rgba(232,93,4,.1); border: 1px solid rgba(232,93,4,.3); border-radius: 6px; padding: .6rem .75rem; font-size: .78rem; color: var(--ac); margin-bottom: .75rem; display: flex; align-items: center; gap: .4rem; }
+        .api-key-notice input { flex: 1; padding: .3rem .5rem; font-size: .78rem; }
+        .api-key-notice button { padding: .3rem .6rem; font-size: .72rem; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>摄影<span>方案</span>生成器</h1>
+        <p>创意 → 方案 → 例图生成 · localStorage 持久化</p>
+    </header>
+
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="gen">📋 方案生成</button>
+        <button class="tab-btn" data-tab="eq">📷 设备库 <span class="badge" id="t-eq">0</span></button>
+        <button class="tab-btn" data-tab="venue">📍 场地库 <span class="badge" id="t-venue">0</span></button>
+        <button class="tab-btn" data-tab="model">👤 模特库 <span class="badge" id="t-model">0</span></button>
+        <button class="tab-btn" data-tab="tpl">📑 方案模板 <span class="badge" id="t-tpl">0</span></button>
+        <button class="tab-btn" data-tab="hist">🕐 历史 <span class="badge" id="t-hist">0</span></button>
+        <button class="tab-btn" data-tab="backup">💾 备份</button>
+    </div>
+
+    <!-- ============ 方案生成 ============ -->
+    <div class="tab-cnt active" id="tab-gen">
+        <div class="grid">
+            <aside>
+                <div class="panel">
+                    <div class="p-head"><h2>创意需求</h2></div>
+                    <div class="p-body">
+                        <form id="briefForm">
+                            <div class="fg"><label>拍摄主题</label><input id="f-theme" placeholder="如：都市时尚夜景" value="复古电影感私房"></div>
+                            <div class="fg"><label>风格定位</label>
+                                <select id="f-style">
+                                    <option value="">选择风格</option><option value="时尚">时尚杂志风</option><option value="复古" selected>复古胶片风</option>
+                                    <option value="文艺">文艺清新</option><option value="性感">私房性感</option><option value="街拍">街头街拍</option>
+                                    <option value="运动">运动活力</option><option value="古风">古风汉服</option><option value="婚纱">婚纱婚礼</option>
+                                    <option value="商业">商业广告</option><option value="情绪">情绪人像</option>
+                                </select>
+                            </div>
+                            <div class="fg"><label>模特特征</label><textarea id="f-model" placeholder="外貌、身材、气质">身高168，黑色长发，偏瘦，气质慵懒神秘，肤质白皙</textarea></div>
+                            <div class="fg"><label>场景偏好</label><textarea id="f-scene" placeholder="拍摄场景">老式酒店房间，复古家具，落地窗，老式浴缸</textarea></div>
+                            <div class="fg"><label>预期情绪</label><input id="f-mood" value="慵懒、神秘、暧昧"></div>
+                            <div class="g2">
+                                <div class="fg"><label>拍摄时长</label>
+                                    <select id="f-dur"><option>1小时</option><option selected>2小时</option><option>3小时</option><option>半天</option><option>全天</option></select>
+                                </div>
+                                <div class="fg"><label>人数</label><input id="f-people" type="number" value="1" min="1"></div>
+                            </div>
+                            <div class="fg"><label>其他要求</label><textarea id="f-extra" placeholder="服装、道具等">暖色调，复古质感，烟雾效果</textarea></div>
+                            <button type="submit" class="btn btn-p" id="genBtn">⚡ 生成并保存</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="side-panel">
+                    <div class="panel">
+                        <div class="p-head"><h2>快速场地</h2></div>
+                        <div class="p-body" id="quickVenue"></div>
+                    </div>
+                </div>
+            </aside>
+
+            <section>
+                <div class="panel">
+                    <div class="p-head"><h2>拍摄方案</h2><span style="font-size:.7rem;color:var(--t3)" id="planSavedAt"></span></div>
+                    <div class="p-body">
+                        <div class="output-empty" id="outEmpty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg><p>填写需求，点击生成方案</p></div>
+                        <div class="output-load" id="outLoad"><div class="spinner"></div><p>正在生成...</p></div>
+                        <div class="output-cnt" id="outCnt"></div>
+                    </div>
+                </div>
+            </section>
+
+            <aside class="col-side">
+                <div class="panel">
+                    <div class="p-head"><h2>最近方案</h2></div>
+                    <div class="hist-count" id="histMiniCount">0 条</div>
+                    <div class="hist-list" id="histMini"></div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <!-- ============ 设备库 ============ -->
+    <div class="tab-cnt" id="tab-eq">
+        <div class="grid">
+            <aside>
+                <div class="panel">
+                    <div class="p-head"><h2>添加设备</h2></div>
+                    <div class="p-body">
+                        <form id="eqForm">
+                            <div class="fg"><label>设备名称</label><input id="eq-name" placeholder="如：Sony A7M4"></div>
+                            <div class="fg"><label>分类</label>
+                                <select id="eq-cat"><option value="camera">📷 相机机身</option><option value="lens">🔭 镜头</option><option value="light">💡 灯光设备</option><option value="audio">🎙️ 音频</option><option value="tripod">🗼 三脚架/稳定器</option><option value="filter">🔘 滤镜/附件</option><option value="other">📦 其他</option></select>
+                            </div>
+                            <div class="fg"><label>备注</label><input id="eq-note" placeholder="如：2024年购入，9成新"></div>
+                            <button type="submit" class="btn btn-p">+ 添加设备</button>
+                        </form>
+                        <div class="backup-section">
+                            <h3>快速添加</h3>
+                            <div class="backup-btns"><button class="btn btn-s btn-sm" onclick="addSampleEq()">+ 常见设备模板</button></div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+            <section>
+                <div class="panel">
+                    <div class="p-head"><h2>我的设备</h2><span id="eq-total" style="font-size:.72rem;color:var(--t3)"></span></div>
+                    <div class="p-body" id="eq-list"></div>
+                </div>
+            </section>
+            <aside></aside>
+        </div>
+    </div>
+
+    <!-- ============ 场地库 ============ -->
+    <div class="tab-cnt" id="tab-venue">
+        <div class="grid">
+            <aside>
+                <div class="panel">
+                    <div class="p-head"><h2>添加场地</h2></div>
+                    <div class="p-body">
+                        <form id="venueForm">
+                            <div class="fg"><label>场地名称</label><input id="v-name" placeholder="如：老洋行酒店公寓"></div>
+                            <div class="fg"><label>地址</label><input id="v-addr" placeholder="详细地址"></div>
+                            <div class="fg"><label>适合风格（逗号分隔）</label><input id="v-styles" placeholder="如：复古、文艺、时尚"></div>
+                            <div class="fg"><label>联系方式</label><input id="v-contact" placeholder="电话或微信"></div>
+                            <div class="fg"><label>备注</label><textarea id="v-note" placeholder="开放时间、收费、注意事项等"></textarea></div>
+                            <button type="submit" class="btn btn-p">+ 添加场地</button>
+                        </form>
+                    </div>
+                </div>
+            </aside>
+            <section>
+                <div class="panel">
+                    <div class="p-head"><h2>场地列表</h2><span id="venue-total" style="font-size:.72rem;color:var(--t3)"></span></div>
+                    <div class="p-body" id="venue-list"></div>
+                </div>
+            </section>
+            <aside></aside>
+        </div>
+    </div>
+
+    <!-- ============ 模特库 ============ -->
+    <div class="tab-cnt" id="tab-model">
+        <div class="grid">
+            <aside>
+                <div class="panel">
+                    <div class="p-head"><h2>添加模特</h2></div>
+                    <div class="p-body">
+                        <form id="modelForm">
+                            <div class="fg"><label>模特名称/代号</label><input id="m-name" placeholder="如：小美"></div>
+                            <div class="fg"><label>风格标签（逗号分隔）</label><input id="m-styles" placeholder="如：文艺、清冷、性感、复古"></div>
+                            <div class="fg"><label>联系方式</label><input id="m-contact" placeholder="微信或电话"></div>
+                            <div class="fg"><label>档期状态</label>
+                                <select id="m-avail"><option value="available">✅ 可用</option><option value="booked">📅 已预约</option><option value="unavailable">❌ 暂不可用</option></select>
+                            </div>
+                            <div class="fg"><label>肖像授权</label>
+                                <select id="m-auth"><option value="authorized">✅ 已授权</option><option value="pending">⏳ 待确认</option><option value="none">❌ 未授权</option></select>
+                            </div>
+                            <div class="fg"><label>备注</label><textarea id="m-note" placeholder="身高体重、外貌特征、偏好等"></textarea></div>
+                            <button type="submit" class="btn btn-p">+ 添加模特</button>
+                        </form>
+                    </div>
+                </div>
+            </aside>
+            <section>
+                <div class="panel">
+                    <div class="p-head"><h2>模特列表</h2><span id="model-total" style="font-size:.72rem;color:var(--t3)"></span></div>
+                    <div class="p-body" id="model-list"></div>
+                </div>
+            </section>
+            <aside></aside>
+        </div>
+    </div>
+
+    <!-- ============ 方案模板 ============ -->
+    <div class="tab-cnt" id="tab-tpl">
+        <div class="grid">
+            <aside>
+                <div class="panel">
+                    <div class="p-head"><h2>保存当前方案为模板</h2></div>
+                    <div class="p-body" id="tplSavePanel" style="display:none;">
+                        <div class="fg"><label>模板名称</label><input id="tpl-name" placeholder="如：复古私房通用方案"></div>
+                        <div class="fg"><label>模板描述</label><input id="tpl-desc" placeholder="简短描述适用场景"></div>
+                        <button class="btn btn-p" onclick="saveAsTemplate()">💾 保存为模板</button>
+                    </div>
+                    <div style="padding:1rem;text-align:center;color:var(--t3);font-size:.82rem;" id="tplSaveHint">先生成一个方案，即可保存为模板</div>
+                </div>
+            </aside>
+            <section>
+                <div class="panel">
+                    <div class="p-head"><h2>方案模板</h2><span id="tpl-total" style="font-size:.72rem;color:var(--t3)"></span></div>
+                    <div class="p-body" id="tpl-list"></div>
+                </div>
+            </section>
+            <aside></aside>
+        </div>
+    </div>
+
+    <!-- ============ 历史记录 ============ -->
+    <div class="tab-cnt" id="tab-hist">
+        <div style="max-width:700px;margin:0 auto;">
+            <div class="panel">
+                <div class="p-head"><h2>全部历史方案</h2><span class="badge" id="histFullCount">0 条</span></div>
+                <div class="hist-count" id="histHeaderCount">0 条方案</div>
+                <div class="hist-list" id="histFull"></div>
+                <div style="padding:.75rem 1rem;"><button class="btn btn-d btn-sm" id="clearAllBtn" style="display:none;" onclick="clearAllHistory()">🗑️ 清空全部</button></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ 数据备份 ============ -->
+    <div class="tab-cnt" id="tab-backup">
+        <div style="max-width:600px;margin:0 auto;">
+            <div class="panel" style="margin-bottom:1rem;">
+                <div class="p-head"><h2>📤 导出数据</h2></div>
+                <div class="p-body">
+                    <p style="color:var(--t2);font-size:.85rem;margin-bottom:1rem;">将所有数据导出为 JSON 文件，可用于备份或迁移。</p>
+                    <div style="color:var(--t3);font-size:.78rem;margin-bottom:1rem;">包含：<span id="backupStats"></span></div>
+                    <button class="btn btn-p" onclick="exportData()">📥 导出 JSON 备份</button>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="p-head"><h2>📥 导入数据</h2></div>
+                <div class="p-body">
+                    <p style="color:var(--t2);font-size:.85rem;margin-bottom:1rem;">从 JSON 备份文件恢复数据。导入将合并现有数据，不会覆盖。</p>
+                    <input type="file" id="importFile" accept=".json" style="margin-bottom:.75rem;">
+                    <button class="btn btn-s" onclick="importData()">📤 导入数据</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Image preview modal -->
+<div class="img-modal" id="imgModal" onclick="closeImgModal()">
+    <button class="img-modal-close">✕</button>
+    <img id="imgModalSrc" src="" alt="preview">
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== Storage Keys =====
+const SK = { P:'pw_plans', EQ:'pw_eq', V:'pw_venues', M:'pw_models', T:'pw_tpl' };
+
+// ===== API Config =====
+const HARDCODE_API_KEY = 'sk-cp-13x46aYVSblxG_QO9pR1WjcTKo7KJCVdKUO831LQis76zrRMZOwBjoglVbMmV8_pQ5CGMaQyVODkuF61aZOcIi-bjtIJK2m_E6Z3fn988OnIWcVl_4ikkFM';
+let API_KEY = localStorage.getItem('pw_api_key') || HARDCODE_API_KEY;
+
+function setApiKey(k) { API_KEY = k; localStorage.setItem('pw_api_key', k); }
+
+// ===== Utils =====
+const $ = id => document.getElementById(id);
+const toast = (m,t='i') => { const el=$('toast'); el.textContent=m; el.className=`toast show ${t==='i'?'ok':t}`; setTimeout(()=>el.className='toast',3000); };
+const sg = k => { try { return JSON.parse(localStorage.getItem(k))||null } catch { return null } };
+const ss = (k,v) => { try { localStorage.setItem(k,JSON.stringify(v)); return true } catch { return false } };
+
+// ===== Tabs =====
+document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.tab-cnt').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    $('tab-'+b.dataset.tab).classList.add('active');
+    const tab = b.dataset.tab;
+    if(tab==='eq') renderEq();
+    if(tab==='venue') renderVenue();
+    if(tab==='model') renderModel();
+    if(tab==='tpl') renderTpl();
+    if(tab==='hist') renderHistFull();
+    if(tab==='backup') updateBackupStats();
+}));
+
+// ===== Category Config =====
+const CATS = { camera:{n:'📷 相机机身',ic:'📷'}, lens:{n:'🔭 镜头',ic:'🔭'}, light:{n:'💡 灯光设备',ic:'💡'}, audio:{n:'🎙️ 音频',ic:'🎙️'}, tripod:{n:'🗼 三脚架/稳定器',ic:'🗼'}, filter:{n:'🔘 滤镜/附件',ic:'🔘'}, other:{n:'📦 其他',ic:'📦'} };
+
+// ===== Sample Data =====
+const sampleEq = [
+    {n:'Sony A7M4',c:'camera',note:'主力机，2023年购入'},{n:'Sony A7R5',c:'camera',note:'高像素备机'},{n:'Sony 35mm f/1.8',c:'lens',note:'挂机头'},{n:'Sony 85mm f/1.4 GM',c:'lens',note:'人像王'},{n:'Sony 135mm f/1.8 GM',c:'lens',note:'空气切割机'},{n:'Sigma 24-70mm f/2.8',c:'lens',note:'变焦万金油'},{n:'Godox AD600 Pro',c:'light',note:'外拍主力灯'},{n:'Godox AD200',c:'light',note:'便携补光'},{n:'Aputure 60x',c:'light',note:'视频常亮灯'},{n:'Manfrotto 190XPRO',c:'tripod',note:'碳纤维三脚架'},{n:'DJI RS3 Pro',c:'tripod',note:'稳定器'},{n:'B+W 77mm ND8',c:'filter',note:'减光镜'},{n:'B+W 77mm CPL',c:'filter',note:'偏振镜'}
+];
+
+function addSampleEq() {
+    const list = sg(SK.EQ)||[];
+    sampleEq.forEach(s => { if(!list.some(e=>e.n===s.n)) list.push({...s,id:Date.now().toString()+Math.random(),at:new Date().toISOString()}) });
+    ss(SK.EQ,list); renderEq(); toast(`已添加 ${sampleEq.length} 件示例设备`,'ok');
+}
+
+// ===== Equipment =====
+function renderEq() {
+    const list = sg(SK.EQ)||[];
+    $('t-eq').textContent = list.length;
+    $('eq-total').textContent = `共 ${list.length} 件`;
+    const byCat = {};
+    Object.keys(CATS).forEach(k=>byCat[k]=[]);
+    list.forEach(e=>{ if(byCat[e.c]) byCat[e.c].push(e); else byCat.other.push(e); });
+    let html='';
+    Object.keys(CATS).forEach(k=>{
+        const items=byCat[k]; if(!items.length) return;
+        const cat=CATS[k];
+        html+=`<div class="eq-cat"><div class="eq-cat-hdr"><span class="eq-cat-icon">${cat.ic}</span><span class="eq-cat-name">${cat.n}</span><span class="eq-cat-n">${items.length} 件</span></div>`;
+        html+=items.map(e=>`<div class="eq-item"><span class="eq-item-name">${e.n}</span>${e.note?`<span class="eq-item-note">${e.note}</span>`:''}<div class="eq-item-actions"><button class="btn-i2" onclick="delEq('${e.id}')" title="删除">✕</button></div></div>`).join('');
+        html+='</div>';
+    });
+    $('eq-list').innerHTML=html||'<div class="eq-empty">设备库为空，添加你的第一件设备</div>';
+}
+function delEq(id){ let l=sg(SK.EQ)||[]; l=l.filter(e=>e.id!==id); ss(SK.EQ,l); renderEq(); toast('已删除'); }
+$('eqForm').addEventListener('submit',e=>{
+    e.preventDefault();
+    const n=$('eq-name').value.trim(),c=$('eq-cat').value,note=$('eq-note').value.trim();
+    if(!n){toast('请输入设备名称','er');return;}
+    const list=sg(SK.EQ)||[]; list.push({id:Date.now().toString(),n,c,note,at:new Date().toISOString()}); ss(SK.EQ,list);
+    $('eq-name').value=''; $('eq-note').value=''; renderEq(); toast('设备已添加','ok');
+});
+
+// ===== Venue =====
+function renderVenue() {
+    const list=sg(SK.V)||[];
+    $('t-venue').textContent=list.length;
+    $('venue-total').textContent=`共 ${list.length} 个场地`;
+    if(!list.length){ $('venue-list').innerHTML='<div class="eq-empty">场地库为空</div>'; return; }
+    $('venue-list').innerHTML=list.map(v=>`
+        <div class="venue-card">
+            <div class="venue-name">📍 ${v.name} <button class="btn-i2" onclick="delVenue('${v.id}')" title="删除" style="margin-left:auto;">✕</button></div>
+            ${v.styles?`<div class="venue-tags">${v.styles.split(',').map(s=>`<span class="venue-tag style-tag">${s.trim()}</span>`).join('')}</div>`:''}
+            ${v.addr?`<div class="venue-addr">📌 ${v.addr}</div>`:''}
+            ${v.contact?`<div class="venue-addr">📞 ${v.contact}</div>`:''}
+            ${v.note?`<div class="venue-note">${v.note}</div>`:''}
+            <div class="venue-actions"><button class="btn btn-s btn-sm" onclick="useVenue('${v.id}')">📋 引用到方案</button></div>
+        </div>`).join('');
+}
+function delVenue(id){ let l=sg(SK.V)||[]; l=l.filter(v=>v.id!==id); ss(SK.V,l); renderVenue(); toast('已删除'); }
+function useVenue(id){ const v=(sg(SK.V)||[]).find(x=>x.id===id); if(v){ $('f-scene').value=$('f-scene').value?$('f-scene').value+', '+v.name:v.name; toast('已引用到场景'); } }
+$('venueForm').addEventListener('submit',e=>{
+    e.preventDefault();
+    const v={id:Date.now().toString(),name:$('v-name').value.trim(),addr:$('v-addr').value.trim(),styles:$('v-styles').value.trim(),contact:$('v-contact').value.trim(),note:$('v-note').value.trim()};
+    if(!v.name){toast('请输入场地名称','er');return;}
+    const list=sg(SK.V)||[]; list.push(v); ss(SK.V,list);
+    ['v-name','v-addr','v-styles','v-contact','v-note'].forEach(k=>$(k).value='');
+    renderVenue(); toast('场地已添加','ok');
+});
+
+// ===== Model =====
+function renderModel() {
+    const list=sg(SK.M)||[];
+    $('t-model').textContent=list.length;
+    $('model-total').textContent=`共 ${list.length} 位模特`;
+    if(!list.length){ $('model-list').innerHTML='<div class="eq-empty">模特库为空</div>'; return; }
+    $('model-list').innerHTML=list.map(m=>`
+        <div class="model-card">
+            <div class="model-name">👤 ${m.name} <button class="btn-i2" onclick="delModel('${m.id}')" title="删除" style="margin-left:auto;">✕</button></div>
+            ${m.styles?`<div class="model-tags">${m.styles.split(',').map(s=>`<span class="model-tag">${s.trim()}</span>`).join('')}</div>`:''}
+            <div class="model-meta">📅 ${m.avail==='available'?'可用':m.avail==='booked'?'已预约':'暂不可用'} &nbsp;|&nbsp; 肖像权：${m.auth==='authorized'?'✅已授权':m.auth==='pending'?'⏳待确认':'❌未授权'}</div>
+            ${m.contact?`<div class="venue-addr">📞 ${m.contact}</div>`:''}
+            ${m.note?`<div class="model-note">${m.note}</div>`:''}
+            <div class="model-actions"><button class="btn btn-s btn-sm" onclick="useModel('${m.id}')">📋 引用到方案</button></div>
+        </div>`).join('');
+}
+function delModel(id){ let l=sg(SK.M)||[]; l=l.filter(m=>m.id!==id); ss(SK.M,l); renderModel(); toast('已删除'); }
+function useModel(id){ const m=(sg(SK.M)||[]).find(x=>x.id===id); if(m){ $('f-model').value=$('f-model').value?$('f-model').value+', '+m.name:m.name; toast('已引用到方案'); } }
+$('modelForm').addEventListener('submit',e=>{
+    e.preventDefault();
+    const m={id:Date.now().toString(),name:$('m-name').value.trim(),styles:$('m-styles').value.trim(),contact:$('m-contact').value.trim(),avail:$('m-avail').value,auth:$('m-auth').value,note:$('m-note').value.trim()};
+    if(!m.name){toast('请输入模特名称','er');return;}
+    const list=sg(SK.M)||[]; list.push(m); ss(SK.M,list);
+    ['m-name','m-styles','m-contact','m-note'].forEach(k=>$(k).value='');
+    $('m-avail').value='available'; $('m-auth').value='pending';
+    renderModel(); toast('模特已添加','ok');
+});
+
+// ===== Templates =====
+let currentPlanData = null;
+
+function renderTpl() {
+    const list=sg(SK.T)||[];
+    $('t-tpl').textContent=list.length;
+    $('tpl-total').textContent=`共 ${list.length} 个模板`;
+    if(!list.length){ $('tpl-list').innerHTML='<div class="eq-empty">暂无模板，生成方案后可保存为模板</div>'; return; }
+    $('tpl-list').innerHTML=list.map(t=>`
+        <div class="tpl-card">
+            <div class="tpl-name">📑 ${t.name} <button class="btn-i2" onclick="delTpl('${t.id}')">✕</button></div>
+            ${t.desc?`<div class="tpl-desc">${t.desc}</div>`:''}
+            <div style="font-size:.72rem;color:var(--t3);margin-bottom:.5rem;">${t.count||0} 次使用 · ${new Date(t.at).toLocaleDateString()}</div>
+            <div class="tpl-actions"><button class="btn btn-p btn-sm" onclick="useTpl('${t.id}')">⚡ 使用此模板</button></div>
+            <div class="tpl-use-form" id="tpl-form-${t.id}">
+                <div class="fg"><label>新拍摄主题</label><input id="tpl-theme-${t.id}" placeholder="输入新主题，快速生成"></div>
+                <div style="display:flex;gap:.4rem;"><button class="btn btn-p btn-sm" onclick="genFromTpl('${t.id}')">⚡ 生成</button><button class="btn btn-s btn-sm" onclick="document.getElementById('tpl-form-${t.id}').classList.remove('active')">收起</button></div>
+            </div>
+        </div>`).join('');
+}
+function delTpl(id){ let l=sg(SK.T)||[]; l=l.filter(t=>t.id!==id); ss(SK.T,l); renderTpl(); toast('已删除'); }
+function useTpl(id){ document.getElementById('tpl-form-'+id).classList.toggle('active'); }
+function genFromTpl(id) {
+    const tpl=(sg(SK.T)||[]).find(t=>t.id===id);
+    const theme=document.getElementById('tpl-theme-'+id).value.trim();
+    if(!theme){toast('请输入新主题','er');return;}
+    const inp=tpl.input||{};
+    $('f-theme').value=theme; $('f-style').value=inp.style||''; $('f-model').value=inp.modelDesc||'';
+    $('f-scene').value=inp.scene||''; $('f-mood').value=inp.mood||''; $('f-dur').value=inp.duration||'2小时';
+    $('f-people').value=inp.people||'1'; $('f-extra').value=inp.extra||'';
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-cnt').forEach(c=>c.classList.remove('active'));
+    document.querySelector('[data-tab="gen"]').classList.add('active');
+    $('tab-gen').classList.add('active');
+    tpl.count=(tpl.count||0)+1;
+    const list=sg(SK.T)||[]; const idx=list.findIndex(t=>t.id===id); if(idx>-1)list[idx]=tpl; ss(SK.T,list);
+    $('briefForm').dispatchEvent(new Event('submit'));
+}
+function saveAsTemplate() {
+    if(!currentPlanData){toast('先生成一个方案','er');return;}
+    const name=$('tpl-name').value.trim(),desc=$('tpl-desc').value.trim();
+    if(!name){toast('请输入模板名称','er');return;}
+    const tpl={id:Date.now().toString(),name,desc,input:currentPlanData.input,sections:currentPlanData.sections,count:0,at:new Date().toISOString()};
+    const list=sg(SK.T)||[]; list.push(tpl); ss(SK.T,list);
+    $('tpl-name').value=''; $('tpl-desc').value='';
+    renderTpl(); toast('模板已保存','ok');
+}
+
+// ===== Plan Generation =====
+const baseSections = [
+    {ti:'📍 地点推荐',ic:'📍',c:['上海老洋行酒店式公寓 — 1920年代Art Deco装修，暖色木地板、老式黄铜灯具','广州沙面岛欧式建筑群 — 百年老建筑，罗马柱、拱形窗、老式阳台','重庆山前旧租界 — 依山而建的老式石库门建筑群，层次感强']},
+    {ti:'🧍 摆姿指导',ic:'🧍',c:['坐在老式皮沙发上，一腿蜷曲，另一腿自然垂落，目光看向窗外','站立于落地窗前，侧身45度，手指轻触窗框，头微微侧倾','倚靠在复古梳妆台旁，手持老式梳子，眼神朦胧望向镜头外','躺在老式浴缸边缘，半身出水，手臂轻搭在浴缸边沿','坐于老式木椅上，双脚蜷起，下巴微收，营造私密感','站立于复古书架前，抽出一本书，眼神若有所思','倚靠拱形门框，手指轻触颈部锁骨，展现颈部线条','俯身于老式床铺，白色床单半遮身体，眼神神秘慵懒','立于老式壁炉旁，手持烛台，光影塑造立体感','坐在梳妆镜前，从镜中捕捉背影或侧影']},
+    {ti:'💄 妆造建议',ic:'💄',c:['【发型】自然黑长直或慵懒卷发，复古发夹或丝绒发带','【妆容】哑光雾面底妆，大地色系眼妆，砖红或复古正红唇色','【服装】黑色蕾丝吊带、白色宽松衬衫、丝绒睡袍','【配饰】珍珠耳环、金色复古手表、细链条项链']},
+    {ti:'🎬 道具清单',ic:'🎬',c:['老式胶片相机（可选）— 增加复古质感','香薰蜡烛/烛台 — 营造暖色光影氛围','干花束（玫瑰、满天星）— 置于床头或梳妆台','老式书籍或杂志 — 英文原版或年代感旧书','丝绸眼罩或蕾丝扇子 — 增添私密慵懒感','烟雾机/干冰 — 制造朦胧神秘感','老式行李箱 — 复古皮箱作为拍摄道具']},
+    {ti:'🌤️ 天气建议',ic:'🌤️',c:['【最佳】阴天或小雨 — 漫射光线柔和，避免硬阴影','【备选】晴天傍晚16:00-18:00 — 柔和侧逆光','【不建议】正午强光 — 室内硬光难以控制']},
+    {ti:'📷 器材推荐',ic:'📷',c:[]},
+    {ti:'🔭 焦段推荐',ic:'🔭',c:['【35mm】环境人像首选，交代场景，叙事感强','【50mm】最接近人眼视角，真实自然','【85mm】人像黄金焦段，优秀背景虚化','【135mm】强烈空间压缩感，特写专用','【推荐组合】35mm + 85mm 双镜头组合']},
+    {ti:'⏰ 时间安排',ic:'⏰',c:['14:00-14:30 模特到场，沟通妆造，挑选服装','14:30-15:30 化妆造型，测试光线，确定机位','15:30-15:45 模特热身、摆姿练习','15:45-17:15 正式拍摄（约1.5小时），分场景进行','17:15-17:30 休息，补充水分','17:30-18:00 弱光场景拍摄','18:00-18:30 收尾，确认素材，补拍镜头']},
+    {ti:'🎨 后期调色',ic:'🎨',c:['【整体】低饱和度、高对比度、暖色温（3200K-4000K）','【色调】Film LUT风格，参考Kodak Portra 400胶片','【肤色】保留细节不过曝，暖调中略带粉感','【阴影】适当压暗，增加神秘感','【颗粒】轻微胶片颗粒（10-15%），增强复古质感']},
+    {ti:'⚠️ 注意事项',ic:'⚠️',c:['提前与模特沟通拍摄边界，确保共识','室内注意安全，确认消防通道','使用烟雾注意通风','保护模特隐私，RAW不外传','带备用电池和存储卡','准备暖宝宝，模特可能需露肤']}
+];
+
+function buildEqSection() {
+    const eq=(sg(SK.EQ)||[]);
+    if(!eq.length) return {ti:'📷 器材推荐',ic:'📷',c:['【建议】设备库为空，建议添加已有设备','【机身】全画幅微单/单反，高感表现优秀','【镜头】35mm f/1.4（环境）、85mm f/1.4（人像）','【补光】暖色LED补光灯、反光板']};
+    const byCat={}; Object.keys(CATS).forEach(k=>byCat[k]=[]); eq.forEach(e=>{ if(byCat[e.c]) byCat[e.c].push(e); });
+    const lines=[];
+    if(byCat.camera.length) lines.push(`【已有相机】${byCat.camera.map(e=>e.n).join('、')}`);
+    if(byCat.lens.length) lines.push(`【已有镜头】${byCat.lens.map(e=>e.n).join('、')}`);
+    if(byCat.light.length) lines.push(`【已有灯光】${byCat.light.map(e=>e.n).join('、')}`);
+    if(byCat.tripod.length) lines.push(`【稳定设备】${byCat.tripod.map(e=>e.n).join('、')}`);
+    if(byCat.filter.length) lines.push(`【滤镜附件】${byCat.filter.map(e=>e.n).join('、')}`);
+    lines.push('【补充】如需特定场景，可考虑租借额外设备');
+    return {ti:'📷 器材推荐',ic:'📷',c:lines};
+}
+
+function genPlan(input) {
+    const sections=baseSections.map(s=>s.ti==='📷 器材推荐'?buildEqSection():s);
+    return {title:input.theme||'未命名方案',input,sections,savedAt:new Date().toISOString(),images:[]};
+}
+
+// ===== Image Generation =====
+async function generateImage(prompt, planId) {
+    if (!API_KEY) {
+        toast('请先设置 API Key','er');
+        promptApiKey();
+        return null;
+    }
+
+    const WORKER_URL = 'https://photo-workflow-img.photomagic.workers.dev/imageGeneration';
+
+    try {
+        const response = await fetch(WORKER_URL + '?key=' + encodeURIComponent(API_KEY), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt })
+        });
+
+        if (!response.ok) {
+            let errMsg = `HTTP ${response.status}`;
+            try {
+                const errData = await response.json();
+                errMsg = errData.error?.message || errData.message || JSON.stringify(errData);
+            } catch {}
+            throw new Error(errMsg);
+        }
+
+        const data = await response.json();
+        let imgUrl = null;
+
+        if (data.imageUrl) {
+            imgUrl = data.imageUrl;
+        } else {
+            const candidates = [
+                data.raw?.image_urls?.[0],
+                data.raw?.data?.[0]?.url || data.raw?.data?.[0]?.base64,
+                data.raw?.images?.[0]?.url || data.raw?.images?.[0],
+                data.raw?.output?.url,
+                data.raw?.result?.url,
+                data.raw?.url
+            ];
+            for (const c of candidates) {
+                if (c && typeof c === 'string' && (c.startsWith('http') || c.startsWith('data:'))) {
+                    imgUrl = c;
+                    break;
+                }
+            }
+        }
+
+        if (!imgUrl) {
+            throw new Error('API 返回格式未知: ' + JSON.stringify(data).slice(0, 200));
+        }
+
+        if (planId) {
+            const plans = sg(SK.P) || [];
+            const idx = plans.findIndex(p => p.id === planId);
+            if (idx > -1) {
+                plans[idx].images = plans[idx].images || [];
+                plans[idx].images.push({ url: imgUrl, prompt, at: new Date().toISOString() });
+                ss(SK.P, plans);
+            }
+        }
+        return imgUrl;
+
+    } catch (e) {
+        const msg = e.message || String(e);
+        toast('生图失败: ' + msg, 'er');
+        console.error('[生图] 错误:', msg);
+        return null;
+    }
+}
+
+function buildImagePrompt(plan) {
+    const inp = plan.input;
+    const theme = inp.theme || '';
+    const style = inp.style || '摄影';
+    const model = inp.modelDesc || '';
+    const scene = inp.scene || '';
+    const mood = inp.mood || '';
+
+    return `专业摄影，${theme}，${style}风格，${model ? '模特：'+model+'，' : ''}${scene ? '场景：'+scene+'，' : ''}情绪：${mood}，电影感构图，暖色调，复古胶片质感，高细节，8K`;
+}
+
+function renderImageGallery(plan) {
+    const images = plan.images || [];
+    const galleryId = `img-gallery-${plan.id}`;
+
+    let html = `<div class="img-gallery" id="${galleryId}">
+        <h4>🖼️ 例图生成</h4>
+        <div class="img-gen-form">
+            <input type="text" id="img-prompt-${plan.id}" value="${buildImagePrompt(plan)}" placeholder="输入生图提示词">
+            <button class="btn btn-i" onclick="genImgForPlan('${plan.id}')" id="gen-img-btn-${plan.id}">🎨 生成</button>
+        </div>
+        <div class="img-grid" id="img-grid-${plan.id}">`;
+
+    if (images.length > 0) {
+        html += images.map(img => `
+            <div class="img-card">
+                <img src="${img.url}" alt="generated" onclick="previewImg('${img.url}')">
+                <div class="img-card-info">${new Date(img.at).toLocaleString()}</div>
+            </div>`).join('');
+    }
+
+    html += '</div></div>';
+    return html;
+}
+
+async function genImgForPlan(planId) {
+    const plans = sg(SK.P) || [];
+    const plan = plans.find(p => p.id === planId);
+    if (!plan) { toast('方案不存在','er'); return; }
+
+    const prompt = $(`img-prompt-${planId}`).value.trim();
+    if (!prompt) { toast('请输入生图提示词','er'); return; }
+
+    const btn = $(`gen-img-btn-${planId}`);
+    const grid = $(`img-grid-${planId}`);
+
+    btn.disabled = true;
+    btn.textContent = '⏳ 生成中...';
+
+    // Show loading
+    const loadingId = `img-loading-${planId}`;
+    grid.innerHTML += `<div class="img-loading" id="${loadingId}">正在生成图片，请稍候...</div>`;
+
+    const imgUrl = await generateImage(prompt, planId);
+
+    // Remove loading
+    const loading = $(loadingId);
+    if (loading) loading.remove();
+
+    btn.disabled = false;
+    btn.textContent = '🎨 生成';
+
+    if (imgUrl) {
+        // Refresh gallery
+        const newPlan = (sg(SK.P)||[]).find(p=>p.id===planId);
+        if (newPlan) {
+            const g = $(galleryId);
+            if (g) g.replaceWith(renderImageGalleryDiv(newPlan));
+        }
+        toast('图片已生成','ok');
+    }
+}
+
+function renderImageGalleryDiv(plan) {
+    const images = plan.images || [];
+    const galleryId = `img-gallery-${plan.id}`;
+    const div = document.createElement('div');
+    div.className = 'img-gallery';
+    div.id = galleryId;
+    div.innerHTML = `
+        <h4>🖼️ 例图生成</h4>
+        <div class="img-gen-form">
+            <input type="text" id="img-prompt-${plan.id}" value="${buildImagePrompt(plan)}" placeholder="输入生图提示词">
+            <button class="btn btn-i" onclick="genImgForPlan('${plan.id}')" id="gen-img-btn-${plan.id}">🎨 生成</button>
+        </div>
+        <div class="img-grid" id="img-grid-${plan.id}">
+            ${images.map(img => `
+                <div class="img-card">
+                    <img src="${img.url}" alt="generated" onclick="previewImg('${img.url}')">
+                    <div class="img-card-info">${new Date(img.at).toLocaleString()}</div>
+                </div>`).join('')}
+        </div>`;
+    return div;
+}
+
+function previewImg(url) {
+    $('imgModalSrc').src = url;
+    $('imgModal').classList.add('active');
+}
+
+function closeImgModal() {
+    $('imgModal').classList.remove('active');
+}
+
+function promptApiKey() {
+    const key = prompt('请输入 MiniMax API Key（用于生成例图）:');
+    if (key && key.trim()) {
+        setApiKey(key.trim());
+        toast('API Key 已保存','ok');
+    }
+}
+
+// ===== Render Plan =====
+let currentPlanId = null;
+let currentPlanText = '';
+
+function renderPlanContent(plan) {
+    currentPlanData = plan;
+    currentPlanId = plan.id;
+    $('tplSavePanel').style.display = 'block';
+    $('tplSaveHint').style.display = 'none';
+    $('planSavedAt').textContent = new Date(plan.savedAt).toLocaleString();
+
+    const metaHtml = `<div class="plan-meta"><div class="mtag"><strong>主题</strong><span>${plan.input?.theme||'待定'}</span></div><div class="mtag"><strong>风格</strong><span>${plan.input?.style||'待定'}</span></div><div class="mtag"><strong>时长</strong><span>${plan.input?.duration||'待定'}</span></div><div class="mtag"><strong>人数</strong><span>${plan.input?.people||1}人</span></div></div>`;
+
+    const sectionsHtml = plan.sections.map(s=>`
+        <div class="ps"><div class="ps-hdr"><div class="ps-icon">${s.ic}</div><h3 class="ps-title">${s.ti}</h3></div><div class="ps-cnt"><ul>${s.c.map(c=>`<li>${c}</li>`).join('')}</ul></div></div>`).join('');
+
+    const imgGallery = renderImageGallery(plan);
+
+    return metaHtml + sectionsHtml + imgGallery;
+}
+
+// ===== Plan Storage =====
+function getPlans(){return sg(SK.P)||[]}
+function savePlans(l){ss(SK.P,l)}
+function savePlan(plan){const ps=getPlans();plan.id=Date.now().toString();ps.unshift(plan);if(ps.length>50)ps.pop();savePlans(ps);return plan.id}
+function delPlan(id){let ps=getPlans();ps=ps.filter(p=>p.id!==id);savePlans(ps)}
+
+function loadPlan(id){
+    const plan=getPlans().find(p=>p.id===id);
+    if(!plan){toast('方案不存在','er');return;}
+    const inp=plan.input||{};
+    $('f-theme').value=inp.theme||''; $('f-style').value=inp.style||''; $('f-model').value=inp.modelDesc||'';
+    $('f-scene').value=inp.scene||''; $('f-mood').value=inp.mood||''; $('f-dur').value=inp.duration||'2小时';
+    $('f-people').value=inp.people||'1'; $('f-extra').value=inp.extra||'';
+    currentPlanData=plan;
+    $('tplSavePanel').style.display='block';
+    $('tplSaveHint').style.display='none';
+    $('outCnt').innerHTML=renderPlanContent(plan);
+    $('outEmpty').classList.remove('active'); $('outLoad').classList.remove('active'); $('outCnt').classList.add('active');
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-cnt').forEach(c=>c.classList.remove('active'));
+    document.querySelector('[data-tab="gen"]').classList.add('active');
+    $('tab-gen').classList.add('active');
+    renderHistMini();
+}
+
+async function handleSubmit(e){
+    e.preventDefault();
+    const input={theme:$('f-theme').value.trim(),style:$('f-style').value,modelDesc:$('f-model').value.trim(),scene:$('f-scene').value.trim(),mood:$('f-mood').value.trim(),duration:$('f-dur').value,people:$('f-people').value,extra:$('f-extra').value.trim()};
+    if(!input.theme&&!input.modelDesc){toast('请填写主题或模特特征','er');return;}
+    $('outEmpty').classList.remove('active'); $('outCnt').classList.remove('active'); $('outLoad').classList.add('active');
+    $('genBtn').disabled=true;
+    await new Promise(r=>setTimeout(r,900));
+    try{
+        const plan=genPlan(input);
+        savePlan(plan);
+        currentPlanData=plan;
+        $('tplSavePanel').style.display='block';
+        $('tplSaveHint').style.display='none';
+        $('outCnt').innerHTML=renderPlanContent(plan);
+        renderHistMini(); updateBadge();
+        $('outLoad').classList.remove('active'); $('outCnt').classList.add('active');
+        toast('方案已生成并保存','ok');
+    }catch(e){toast('生成失败','er');$('outLoad').classList.remove('active');$('outEmpty').classList.add('active');}
+    finally{$('genBtn').disabled=false;}
+}
+$('briefForm').addEventListener('submit',handleSubmit);
+
+// ===== History =====
+function renderHistMini(){
+    const ps=getPlans().slice(0,5);
+    $('histMiniCount').textContent=`${getPlans().length} 条`;
+    $('histMini').innerHTML=ps.length?ps.map(p=>{
+        const d=new Date(p.savedAt);
+        return`<div class="hist-item" onclick="loadPlan('${p.id}')"><div class="hist-title">${p.title}</div><div class="hist-meta"><span>${p.input?.style||'待定'}</span><span>${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}</span></div></div>`;
+    }).join(''):'<div class="hist-empty">暂无历史</div>';
+}
+function renderHistFull(){
+    const ps=getPlans();
+    $('t-hist').textContent=ps.length;
+    $('histFullCount').textContent=`${ps.length} 条`;
+    $('histHeaderCount').textContent=`${ps.length} 条方案`;
+    $('clearAllBtn').style.display=ps.length?'block':'none';
+    $('histFull').innerHTML=ps.length?ps.map(p=>{
+        const d=new Date(p.savedAt);
+        const imgCount = (p.images||[]).length;
+        return`<div class="hist-item"><div class="hist-title">${p.title} ${imgCount?`<span style="font-size:.65rem;color:var(--ac);">🖼️${imgCount}</span>`:''}</div><div class="hist-meta"><span>${p.input?.style||'待定'}</span><span>${d.toLocaleString()}</span></div><div class="hist-actions"><button class="btn btn-s btn-sm" onclick="loadPlan('${p.id}')">查看</button><button class="btn btn-d btn-sm" onclick="delPlan('${p.id}');renderHistFull();renderHistMini();updateBadge();">删除</button><button class="btn btn-i btn-sm" onclick="exportPlanPdf('${p.id}')">📄 PDF</button></div></div>`;
+    }).join(''):'<div class="hist-empty">暂无历史记录</div>';
+}
+function clearAllHistory(){if(!confirm('确定清空全部历史？'))return;savePlans([]);renderHistFull();renderHistMini();updateBadge();toast('已清空','ok');}
+function updateBadge(){$('t-eq').textContent=(sg(SK.EQ)||[]).length;$('t-venue').textContent=(sg(SK.V)||[]).length;$('t-model').textContent=(sg(SK.M)||[]).length;$('t-tpl').textContent=(sg(SK.T)||[]).length;$('t-hist').textContent=getPlans().length;}
+
+// ===== Quick Venue =====
+function renderQuickVenue(){
+    const venues=(sg(SK.V)||[]).slice(0,3);
+    $('quickVenue').innerHTML=venues.length?venues.map(v=>`
+        <div style="padding:.4rem 0;border-bottom:1px solid var(--bd);font-size:.78rem;">
+            <div style="font-weight:600;margin-bottom:.2rem;">📍 ${v.name}</div>
+            ${v.styles?`<div style="color:var(--t3);font-size:.7rem;">${v.styles}</div>`:''}
+        </div>`).join(''):'<div style="font-size:.78rem;color:var(--t3);">场地库为空</div>';
+}
+
+// ===== PDF Export =====
+async function exportPlanPdf(id) {
+    const plan=getPlans().find(p=>p.id===id);
+    if(!plan){toast('方案不存在','er');return;}
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const pageW = doc.internal.pageSize.getWidth();
+    let y=15;
+    doc.setFontSize(16); doc.setTextColor(232,93,4); doc.text(plan.title, pageW/2, y, {align:'center'}); y+=10;
+    doc.setFontSize(9); doc.setTextColor(160);
+    doc.text(`风格:${plan.input?.style||'待定'} | 时长:${plan.input?.duration||'待定'} | 人数:${plan.input?.people||1}人 | ${new Date(plan.savedAt).toLocaleString()}`, pageW/2, y, {align:'center'}); y+=8;
+    doc.setDrawColor(200); doc.line(15,y,pageW-15,y); y+=6;
+    plan.sections.forEach(s=>{
+        if(y>270){doc.addPage();y=15;}
+        doc.setFontSize(11); doc.setTextColor(50); doc.setFont('','bold'); doc.text(s.ti,15,y); y+=5;
+        doc.setFontSize(8); doc.setTextColor(100); doc.setFont('','normal');
+        s.c.forEach(c=>{
+            const lines=doc.splitTextToSize('• '+c, pageW-30);
+            if(y+lines.length*4>275){doc.addPage();y=10;}
+            doc.text(lines,15,y); y+=lines.length*4+1;
+        });
+        y+=3;
+    });
+    doc.save(`拍摄方案_${plan.title}_${new Date().toLocaleDateString().replace(/\//g,'-')}.pdf`);
+    toast('PDF 已下载','ok');
+}
+
+// ===== Copy =====
+function copyCurrentPlan(){
+    if(!currentPlanData) return;
+    const text=currentPlanData.sections.map(s=>`${s.ti}\n${s.c.join('\n')}`).join('\n\n');
+    navigator.clipboard.writeText(text).then(()=>toast('已复制','ok')).catch(()=>toast('复制失败','er'));
+}
+
+// ===== Actions Bar =====
+function getActionsHtml() {
+    return `<div class="actions">
+        <button class="btn btn-s btn-sm" onclick="copyCurrentPlan()">📋 复制</button>
+        <button class="btn btn-s btn-sm" onclick="exportPlanPdfCurrent()">📄 PDF</button>
+        ${currentPlanId ? `<button class="btn btn-i btn-sm" onclick="genImgForPlan('${currentPlanId}')" id="action-gen-img-btn">🎨 例图</button>` : ''}
+        <button class="btn btn-d btn-sm" onclick="delCurrentPlan()">🗑️ 删除</button>
+    </div>`;
+}
+
+async function exportPlanPdfCurrent() {
+    if(!currentPlanData){toast('先生成方案','er');return;}
+    await exportPlanPdf(currentPlanData.id);
+}
+
+function delCurrentPlan(){
+    if(!currentPlanData) return;
+    if(!confirm('确定删除当前方案？'))return;
+    delPlan(currentPlanData.id);
+    currentPlanData=null;
+    $('outCnt').classList.remove('active');$('outEmpty').classList.add('active');
+    $('tplSavePanel').style.display='none';$('tplSaveHint').style.display='block';
+    renderHistMini();renderHistFull();updateBadge();
+    toast('已删除','ok');
+}
+
+// ===== Backup =====
+function updateBackupStats(){
+    const ps=getPlans().length,eq=(sg(SK.EQ)||[]).length,ven=(sg(SK.V)||[]).length,mod=(sg(SK.M)||[]).length,tpl=(sg(SK.T)||[]).length;
+    $('backupStats').textContent=`${ps} 个方案，${eq} 件设备，${ven} 个场地，${mod} 位模特，${tpl} 个模板`;
+}
+function exportData(){
+    const data={plans:getPlans(),equipment:sg(SK.EQ)||[],venues:sg(SK.V)||[],models:sg(SK.M)||[],templates:sg(SK.T)||[],exportedAt:new Date().toISOString(),version:1};
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download=`photo_workflow_backup_${new Date().toISOString().slice(0,10)}.json`;a.click();
+    URL.revokeObjectURL(url);
+    toast('备份文件已下载','ok');
+}
+function importData(){
+    const file=$('importFile').files[0];
+    if(!file){toast('请先选择文件','er');return;}
+    const reader=new FileReader();
+    reader.onload=e=>{
+        try{
+            const data=JSON.parse(e.target.result);
+            if(!data.version){toast('无效的备份文件','er');return;}
+            let added=0;
+            if(data.plans){const ps=getPlans();data.plans.forEach(p=>{if(!ps.some(x=>x.id===p.id)){ps.push(p);added++;}});savePlans(ps);}
+            if(data.equipment){const eq=sg(SK.EQ)||[];data.equipment.forEach(e=>{if(!eq.some(x=>x.id===e.id)){eq.push(e);added++;}});ss(SK.EQ,eq);}
+            if(data.venues){const ven=sg(SK.V)||[];data.venues.forEach(v=>{if(!ven.some(x=>x.id===v.id)){ven.push(v);added++;}});ss(SK.V,ven);}
+            if(data.models){const mod=sg(SK.M)||[];data.models.forEach(m=>{if(!mod.some(x=>x.id===m.id)){mod.push(m);added++;}});ss(SK.M,mod);}
+            if(data.templates){const tpl=sg(SK.T)||[];data.templates.forEach(t=>{if(!tpl.some(x=>x.id===t.id)){tpl.push(t);added++;}});ss(SK.T,tpl);}
+            updateBadge();renderHistMini();renderHistFull();
+            toast(`导入成功，添加了 ${added} 条记录`,'ok');
+        }catch(err){toast('导入失败：'+err.message,'er');}
+    };
+    reader.readAsText(file);
+}
+
+// ===== Init =====
+updateBadge();renderHistMini();renderQuickVenue();
+</script>
+</body>
+</html>
