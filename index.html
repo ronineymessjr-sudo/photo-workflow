@@ -592,6 +592,243 @@
             .scroll-progress {
                 left: 0 !important;
             }
+        /* ===== Hero Marquee3D ===== */
+        .hero-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 500;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity .8s cubic-bezier(.4,0,.2,1), transform .8s cubic-bezier(.4,0,.2,1);
+            overflow: hidden;
+        }
+        .hero-overlay.hidden {
+            opacity: 0;
+            transform: scale(1.05);
+            pointer-events: none;
+        }
+        .hero-title-area {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            text-align: center;
+            pointer-events: none;
+        }
+        .hero-title {
+            font-size: clamp(2.5rem, 6vw, 5rem);
+            font-weight: 900;
+            letter-spacing: -.04em;
+            line-height: 1.1;
+            background: linear-gradient(135deg, #d4840a 0%, #f0c060 40%, #d4840a 70%, #a06008 100%);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 3s ease-in-out infinite;
+            text-shadow: none;
+            filter: drop-shadow(0 0 30px rgba(212,132,10,0.3));
+        }
+        @keyframes shimmer {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        .hero-subtitle {
+            margin-top: .75rem;
+            font-size: clamp(.85rem, 1.5vw, 1.1rem);
+            color: var(--t2);
+            font-weight: 400;
+            letter-spacing: .15em;
+            text-transform: uppercase;
+        }
+        .hero-enter-btn {
+            position: absolute;
+            bottom: 12%;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            padding: .75rem 2.5rem;
+            background: transparent;
+            border: 1px solid rgba(212,132,10,0.4);
+            border-radius: 999px;
+            color: var(--ac);
+            font-size: .9rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            letter-spacing: .08em;
+            transition: all .3s ease;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        .hero-enter-btn:hover {
+            background: rgba(212,132,10,0.15);
+            border-color: var(--ac);
+            box-shadow: 0 0 30px rgba(212,132,10,0.2);
+            transform: translateX(-50%) translateY(-2px);
+        }
+        .hero-enter-btn svg {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            margin-left: .5rem;
+            vertical-align: middle;
+            transition: transform .3s;
+        }
+        .hero-enter-btn:hover svg {
+            transform: translateX(4px);
+        }
+
+        /* Marquee3D Container */
+        .marquee3d-wrap {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 300px;
+            overflow: hidden;
+        }
+        .marquee3d-inner {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 16px;
+            transform: translateX(-100px) translateY(0px) translateZ(-100px) rotateX(20deg) rotateY(-10deg) rotateZ(20deg);
+        }
+        .marquee-col {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .marquee-col.scroll-up {
+            animation: marqueeUp var(--dur, 20s) linear infinite;
+        }
+        .marquee-col.scroll-down {
+            animation: marqueeDown var(--dur, 20s) linear infinite;
+        }
+        .marquee-col.paused {
+            animation-play-state: paused;
+        }
+        @keyframes marqueeUp {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-50%); }
+        }
+        @keyframes marqueeDown {
+            0% { transform: translateY(-50%); }
+            100% { transform: translateY(0); }
+        }
+
+        /* Photo Card */
+        .photo-card {
+            width: 160px;
+            height: 200px;
+            border-radius: var(--radius);
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.04);
+            cursor: pointer;
+            transition: all .3s ease;
+            flex-shrink: 0;
+            position: relative;
+        }
+        .photo-card:hover {
+            border-color: rgba(212,132,10,0.3);
+            background: rgba(255,255,255,0.08);
+            transform: scale(1.05);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 20px rgba(212,132,10,0.1);
+        }
+        .photo-card img {
+            width: 100%;
+            height: 130px;
+            object-fit: cover;
+            display: block;
+            transition: transform .5s ease;
+        }
+        .photo-card:hover img {
+            transform: scale(1.1);
+        }
+        .photo-card-info {
+            padding: 10px 12px;
+        }
+        .photo-card-title {
+            font-size: .78rem;
+            font-weight: 600;
+            color: var(--t1);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .photo-card-meta {
+            font-size: .65rem;
+            color: var(--t3);
+            margin-top: 3px;
+            display: flex;
+            gap: 8px;
+        }
+        .photo-card-meta span {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        /* Fade Masks */
+        .hero-fade-top {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 25%;
+            background: linear-gradient(to bottom, var(--bg), transparent);
+            pointer-events: none;
+            z-index: 5;
+        }
+        .hero-fade-bottom {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 25%;
+            background: linear-gradient(to top, var(--bg), transparent);
+            pointer-events: none;
+            z-index: 5;
+        }
+        .hero-fade-left {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            width: 25%;
+            background: linear-gradient(to right, var(--bg), transparent);
+            pointer-events: none;
+            z-index: 5;
+        }
+        .hero-fade-right {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            width: 25%;
+            background: linear-gradient(to left, var(--bg), transparent);
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .photo-card { width: 120px; height: 160px; }
+            .photo-card img { height: 95px; }
+            .photo-card-info { padding: 8px; }
+            .photo-card-title { font-size: .7rem; }
+            .photo-card-meta { font-size: .6rem; }
+            .marquee3d-inner { gap: 10px; }
+            .marquee-col { gap: 10px; }
+            .hero-enter-btn { bottom: 8%; padding: .6rem 2rem; font-size: .8rem; }
+        }
             .tab-cnt { padding: 1rem; }
             .grid { grid-template-columns: 1fr; }
             .col-side { display: none; }
@@ -645,6 +882,28 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
     </aside>
+
+    <!-- Hero Marquee3D Cover -->
+    <div class="hero-overlay" id="heroOverlay">
+        <div class="hero-fade-top"></div>
+        <div class="hero-fade-bottom"></div>
+        <div class="hero-fade-left"></div>
+        <div class="hero-fade-right"></div>
+
+        <div class="hero-title-area">
+            <div class="hero-title">PhotoStudio</div>
+            <div class="hero-subtitle">摄影方案 · 智能工作流</div>
+        </div>
+
+        <div class="marquee3d-wrap" id="marquee3dWrap">
+            <div class="marquee3d-inner" id="marquee3dInner"></div>
+        </div>
+
+        <button class="hero-enter-btn" id="heroEnterBtn">
+            进入工作台
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+    </div>
 
     <!-- Main Content -->
     <main class="main-content">
@@ -873,6 +1132,84 @@
 <div class="toast" id="toast"></div>
 
 <script>
+// ===== Hero Marquee3D =====
+(function() {
+    const photos = [
+        { title: '都市霓虹', camera: 'Sony A7M4', lens: '35mm f/1.4', seed: 'city-neon' },
+        { title: '胶片人像', camera: 'Canon R6', lens: '85mm f/1.2', seed: 'film-portrait' },
+        { title: '自然光影', camera: 'Nikon Z8', lens: '70-200mm', seed: 'natural-light' },
+        { title: '复古私房', camera: 'Fuji X-T5', lens: '56mm f/1.2', seed: 'vintage-room' },
+        { title: '街头纪实', camera: 'Leica M11', lens: '28mm f/2', seed: 'street-photo' },
+        { title: '金色黄昏', camera: 'Sony A7M4', lens: '24-70mm', seed: 'golden-hour' },
+        { title: '情绪暗调', camera: 'Canon R5', lens: '50mm f/1.4', seed: 'moody-dark' },
+        { title: '柔光少女', camera: 'Nikon Z6II', lens: '85mm f/1.8', seed: 'soft-girl' },
+        { title: '建筑线条', camera: 'Sony A7R5', lens: '16-35mm', seed: 'architecture' },
+        { title: '古风汉服', camera: 'Fuji GFX', lens: '80mm f/1.7', seed: 'hanfu-style' },
+        { title: '运动瞬间', camera: 'Canon R3', lens: '400mm f/2.8', seed: 'sports-moment' },
+        { title: '微距世界', camera: 'Nikon Z8', lens: '105mm Macro', seed: 'macro-world' },
+    ];
+
+    function createCard(photo) {
+        const card = document.createElement('div');
+        card.className = 'photo-card';
+        card.innerHTML = `
+            <img src="https://picsum.photos/seed/${photo.seed}/320/260" alt="${photo.title}" loading="lazy">
+            <div class="photo-card-info">
+                <div class="photo-card-title">${photo.title}</div>
+                <div class="photo-card-meta">
+                    <span>📷 ${photo.camera}</span>
+                    <span>🔭 ${photo.lens}</span>
+                </div>
+            </div>
+        `;
+        return card;
+    }
+
+    function createColumn(photoList, direction) {
+        const col = document.createElement('div');
+        col.className = `marquee-col ${direction}`;
+        // Duplicate for seamless loop
+        const allCards = [...photoList, ...photoList];
+        allCards.forEach(p => col.appendChild(createCard(p)));
+        return col;
+    }
+
+    const half = Math.ceil(photos.length / 2);
+    const first = photos.slice(0, half);
+    const second = photos.slice(half);
+
+    const inner = document.getElementById('marquee3dInner');
+    inner.appendChild(createColumn(first, 'scroll-up'));
+    inner.appendChild(createColumn(second, 'scroll-down'));
+    inner.appendChild(createColumn(second, 'scroll-down'));
+    inner.appendChild(createColumn(first, 'scroll-up'));
+
+    // Pause on hover
+    const wrap = document.getElementById('marquee3dWrap');
+    wrap.addEventListener('mouseenter', () => {
+        wrap.querySelectorAll('.marquee-col').forEach(c => c.classList.add('paused'));
+    });
+    wrap.addEventListener('mouseleave', () => {
+        wrap.querySelectorAll('.marquee-col').forEach(c => c.classList.remove('paused'));
+    });
+
+    // Enter button
+    const hero = document.getElementById('heroOverlay');
+    const enterBtn = document.getElementById('heroEnterBtn');
+    enterBtn.addEventListener('click', () => {
+        hero.classList.add('hidden');
+        setTimeout(() => { hero.style.display = 'none'; }, 800);
+    });
+
+    // Also allow clicking anywhere on the title area
+    document.querySelector('.hero-title-area').style.pointerEvents = 'auto';
+    document.querySelector('.hero-title-area').style.cursor = 'pointer';
+    document.querySelector('.hero-title-area').addEventListener('click', () => {
+        hero.classList.add('hidden');
+        setTimeout(() => { hero.style.display = 'none'; }, 800);
+    });
+})();
+
 // ===== Sidebar Toggle =====
 (function() {
     const sidebar = document.getElementById('sidebar');
