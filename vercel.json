@@ -1,11 +1,11 @@
 {
-  "version": 2,
-  "builds": [
-    { "src": "index.html", "use": "@vercel/static" },
-    { "src": "api/**/*.js", "use": "@vercel/node" }
+  "rewrites": [
+    { "source": "/imageGeneration", "destination": "/api/imageGeneration" },
+    { "source": "/(.*)", "destination": "/" }
   ],
-  "routes": [
-    { "src": "/imageGeneration", "dest": "/api/imageGeneration.js" },
-    { "src": "/(.*)", "dest": "/index.html" }
-  ]
+  "functions": {
+    "api/imageGeneration.js": {
+      "runtime": "nodejs18.x"
+    }
+  }
 }
