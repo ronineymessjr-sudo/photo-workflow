@@ -527,10 +527,7 @@
         .img-modal-close { position: absolute; top: 1.2rem; right: 1.2rem; font-size: 1.4rem; color: #fff; cursor: pointer; background: rgba(255,255,255,.15); border: none; border-radius: 50%; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; transition: background .15s; }
         .img-modal-close:hover { background: rgba(255,255,255,.3); }
 
-        /* ===== API Key input ===== */
-        .api-key-notice { background: rgba(212,132,10,.1); border: 1px solid rgba(212,132,10,.3); border-radius: var(--radius-sm); padding: .65rem .8rem; font-size: .78rem; color: var(--ac); margin-bottom: .8rem; display: flex; align-items: center; gap: .45rem; }
-        .api-key-notice input { flex: 1; padding: .35rem .55rem; font-size: .78rem; }
-        .api-key-notice button { padding: .35rem .65rem; font-size: .72rem; }
+
 
         /* ===== Scrollbar ===== */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -895,12 +892,6 @@
 // ===== Storage Keys =====
 const SK = { P:'pw_plans', EQ:'pw_eq', V:'pw_venues', M:'pw_models', T:'pw_tpl' };
 
-// ===== API Config =====
-const HARDCODE_API_KEY = 'sk-cp-13x46aYVSblxG_QO9pR1WjcTKo7KJCVdKUO831LQis76zrRMZOwBjoglVbMmV8_pQ5CGMaQyVODkuF61aZOcIi-bjtIJK2m_E6Z3fn988OnIWcVl_4ikkFM';
-let API_KEY = localStorage.getItem('pw_api_key') || HARDCODE_API_KEY;
-
-function setApiKey(k) { API_KEY = k; localStorage.setItem('pw_api_key', k); }
-
 // ===== Utils =====
 const $ = id => document.getElementById(id);
 const toast = (m,t='i') => { const el=$('toast'); el.textContent=m; el.className=`toast show ${t==='i'?'ok':t}`; setTimeout(()=>el.className='toast',3000); };
@@ -1099,57 +1090,27 @@ function genPlan(input) {
     return {title:input.theme||'未命名方案',input,sections,savedAt:new Date().toISOString(),images:[]};
 }
 
-// ===== Image Generation =====
+// ===== Image Generation (Pollinations - 免费无需API Key) =====
 async function generateImage(prompt, planId) {
-    if (!API_KEY) {
-        toast('请先设置 API Key','er');
-        promptApiKey();
-        return null;
-    }
-
-    const WORKER_URL = '/imageGeneration';
+    // Pollinations 免费图片生成 API
+    const encodedPrompt = encodeURIComponent(prompt);
+    const seed = Math.floor(Math.random() * 1000000);
+    const imgUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&seed=${seed}&nologo=true`;
 
     try {
-        const response = await fetch(WORKER_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt })
+        // Pollinations 是同步返回图片 URL，直接可用
+        // 但为了确保图片生成完成，我们 fetch 一下
+        toast('正在生成图片...', 'i');
+
+        // 预加载图片确保可用
+        await new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = resolve;
+            img.onerror = reject;
+            img.src = imgUrl;
+            // 超时 30 秒
+            setTimeout(() => reject(new Error('生成超时')), 30000);
         });
-
-        if (!response.ok) {
-            let errMsg = `HTTP ${response.status}`;
-            try {
-                const errData = await response.json();
-                errMsg = errData.error?.message || errData.message || JSON.stringify(errData);
-            } catch {}
-            throw new Error(errMsg);
-        }
-
-        const data = await response.json();
-        let imgUrl = null;
-
-        if (data.imageUrl) {
-            imgUrl = data.imageUrl;
-        } else {
-            const candidates = [
-                data.raw?.image_urls?.[0],
-                data.raw?.data?.[0]?.url || data.raw?.data?.[0]?.base64,
-                data.raw?.images?.[0]?.url || data.raw?.images?.[0],
-                data.raw?.output?.url,
-                data.raw?.result?.url,
-                data.raw?.url
-            ];
-            for (const c of candidates) {
-                if (c && typeof c === 'string' && (c.startsWith('http') || c.startsWith('data:'))) {
-                    imgUrl = c;
-                    break;
-                }
-            }
-        }
-
-        if (!imgUrl) {
-            throw new Error('API 返回格式未知: ' + JSON.stringify(data).slice(0, 200));
-        }
 
         if (planId) {
             const plans = sg(SK.P) || [];
@@ -1160,6 +1121,8 @@ async function generateImage(prompt, planId) {
                 ss(SK.P, plans);
             }
         }
+
+        toast('图片生成成功!', 'i');
         return imgUrl;
 
     } catch (e) {
@@ -1272,14 +1235,6 @@ function previewImg(url) {
 
 function closeImgModal() {
     $('imgModal').classList.remove('active');
-}
-
-function promptApiKey() {
-    const key = prompt('请输入 MiniMax API Key（用于生成例图）:');
-    if (key && key.trim()) {
-        setApiKey(key.trim());
-        toast('API Key 已保存','ok');
-    }
 }
 
 // ===== Render Plan =====
