@@ -1,0 +1,7 @@
+{
+  "buildCommand": null,
+  "outputDirectory": ".",
+  "rewrites": [
+    { "source": "/imageGeneration", "destination": "/api/imageGeneration" }
+  ]
+}

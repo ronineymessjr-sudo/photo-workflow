@@ -1107,7 +1107,7 @@ async function generateImage(prompt, planId) {
         return null;
     }
 
-    const WORKER_URL = 'https://photo-workflow-img.photomagic.workers.dev/imageGeneration';
+    const WORKER_URL = '/imageGeneration';
 
     try {
         const response = await fetch(WORKER_URL, {
