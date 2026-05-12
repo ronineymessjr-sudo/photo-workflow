@@ -67,10 +67,13 @@
 
         /* ===== App Layout ===== */
         .app-layout {
-            display: flex;
+            display: none;
             min-height: 100vh;
             position: relative;
             z-index: 1;
+        }
+        .app-layout.visible {
+            display: flex;
         }
 
         /* ===== Sidebar ===== */
@@ -1193,21 +1196,25 @@
         wrap.querySelectorAll('.marquee-col').forEach(c => c.classList.remove('paused'));
     });
 
-    // Enter button
+    // Enter button - switch to main app
     const hero = document.getElementById('heroOverlay');
+    const appLayout = document.querySelector('.app-layout');
     const enterBtn = document.getElementById('heroEnterBtn');
-    enterBtn.addEventListener('click', () => {
+    
+    function enterApp() {
         hero.classList.add('hidden');
-        setTimeout(() => { hero.style.display = 'none'; }, 800);
-    });
+        setTimeout(() => { 
+            hero.style.display = 'none'; 
+            appLayout.classList.add('visible');
+        }, 800);
+    }
+    
+    enterBtn.addEventListener('click', enterApp);
 
     // Also allow clicking anywhere on the title area
     document.querySelector('.hero-title-area').style.pointerEvents = 'auto';
     document.querySelector('.hero-title-area').style.cursor = 'pointer';
-    document.querySelector('.hero-title-area').addEventListener('click', () => {
-        hero.classList.add('hidden');
-        setTimeout(() => { hero.style.display = 'none'; }, 800);
-    });
+    document.querySelector('.hero-title-area').addEventListener('click', enterApp);
 })();
 
 // ===== Sidebar Toggle =====
