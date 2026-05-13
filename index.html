@@ -1101,7 +1101,10 @@
                             </form>
                             <div class="backup-section">
                                 <h3>快速添加</h3>
-                                <div class="backup-btns"><button class="btn btn-s btn-sm" onclick="addSampleEq()">+ 常见设备模板</button></div>
+                                <div class="backup-btns">
+                                    <button class="btn btn-s btn-sm" onclick="addSampleData()">+ 一键添加全部示例</button>
+                                    <button class="btn btn-s btn-sm" onclick="addSampleEq()">+ 仅设备</button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1401,13 +1404,64 @@ const CATS = { camera:{n:'📷 相机机身',ic:'📷'}, lens:{n:'🔭 镜头',i
 
 // ===== Sample Data =====
 const sampleEq = [
-    {n:'Sony A7M4',c:'camera',note:'主力机，2023年购入'},{n:'Sony A7R5',c:'camera',note:'高像素备机'},{n:'Sony 35mm f/1.8',c:'lens',note:'挂机头'},{n:'Sony 85mm f/1.4 GM',c:'lens',note:'人像王'},{n:'Sony 135mm f/1.8 GM',c:'lens',note:'空气切割机'},{n:'Sigma 24-70mm f/2.8',c:'lens',note:'变焦万金油'},{n:'Godox AD600 Pro',c:'light',note:'外拍主力灯'},{n:'Godox AD200',c:'light',note:'便携补光'},{n:'Aputure 60x',c:'light',note:'视频常亮灯'},{n:'Manfrotto 190XPRO',c:'tripod',note:'碳纤维三脚架'},{n:'DJI RS3 Pro',c:'tripod',note:'稳定器'},{n:'B+W 77mm ND8',c:'filter',note:'减光镜'},{n:'B+W 77mm CPL',c:'filter',note:'偏振镜'}
+    // 相机机身
+    {n:'Sony A7M4',c:'camera',note:'主力机，3300万像素，2023年购入'},{n:'Sony A7R5',c:'camera',note:'高像素备机，6100万像素，旗舰级'},{n:'Canon R6 Mark II',c:'camera',note:'视频主力，4K120p无裁切'},{n:'Fujifilm X-T5',c:'camera',note:'文艺复古，直出色彩绝美'},{n:'Nikon Z8',c:'camera',note:'全能旗舰，堆栈式传感器'},
+    // 镜头
+    {n:'Sony 35mm f/1.4 GM',c:'lens',note:'挂机首选，氛围感人像'},{n:'Sony 85mm f/1.4 GM II',c:'lens',note:'人像王，空气切割刀'},{n:'Sony 135mm f/1.8 GM',c:'lens',note:'特写神器，背景虚化极致'},{n:'Sony 24-70mm f/2.8 GM II',c:'lens',note:'变焦万金油，婚礼必备'},{n:'Sony 70-200mm f/2.8 GM II',c:'lens',note:'长焦变焦，演唱会/运动'},{n:'Sigma 35mm f/1.4 DG DN Art',c:'lens',note:'性价比之选'},{n:'Sigma 85mm f/1.4 DG DN Art',c:'lens',note:'平民人像王'},
+    // 灯光设备
+    {n:'Godox AD600 Pro',c:'light',note:'外拍主力灯，回电快，功率足'},{n:'Godox AD200 Pro',c:'light',note:'便携口袋灯，外拍必备'},{n:'Godox V1',c:'light',note:'圆形闪光灯，柔和光质'},{n:'Aputure 300d II',c:'light',note:'视频常亮灯，直播间用'},{n:'Aputure MC',c:'light',note:'迷你补光灯，桌面小场景'},{n:'NiceFoto K4 4灯组',c:'light',note:'小型影棚灯，证件照/电商'},
+    // 三脚架/稳定器
+    {n:'Manfrotto 190XPRO',c:'tripod',note:'碳纤维脚架，轻便稳固'},{n:'DJI RS3 Pro',c:'tripod',note:'三轴稳定器，视频拍摄'},{n:'DJI RS3 Mini',c:'tripod',note:'轻量稳定器，单手可持'},{n:'iFootage 鲨鱼滑轨',c:'tripod',note:'电动轨道，电影感镜头'},
+    // 滤镜/附件
+    {n:'B+W 77mm ND1000',c:'filter',note:'减光镜，长曝光必备'},{n:'B+W 77mm CPL',c:'filter',note:'偏振镜，消除反光'},{n:'NiSi 100mm V6 套装',c:'filter',note:'渐变滤镜，风光神器'},{n:'天利 82mm ND64',c:'filter',note:'可变ND镜，一镜多用'},
+    // 其他
+    {n:'Profoto B10 Plus',c:'other',note:'保富图外拍灯，轻便专业'},{n:'Pixel X2 引闪器',c:'other',note:'无线引闪，支持TTL'},{n:'神牛 R1-C RGB 补光灯',c:'other',note:'RGB氛围灯，创意光效'},{n:'百诺 C2690TB1 背包',c:'other',note:'专业摄影包，双肩背负'},
+    // 音频
+    {n:'RODE NTG5',c:'audio',note:'枪式麦克风，指向性强'},{n:'RODE Wireless GO II',c:'audio',note:'无线领夹麦，Vlog神器'},{n:'DJI Mic 2',c:'audio',note:'一拖二无线麦，降噪出色'}
 ];
+
+const sampleVenues = [
+    {name:'废弃工厂 / 赛博朋克风',addr:'城市东区旧工业区',styles:'赛博朋克,工业风,夜景,暗调',contact:'',note:'铁锈管道、水泥墙、霓虹灯，适合情绪人像'},
+    {name:'复古酒店 / 民国风',addr:'法租界历史建筑',styles:'复古,民国,私房,法式',contact:'需提前预约',note:'古董家具、丝绒窗帘、老式浴缸，氛围感拉满'},
+    {name:'海边礁石 / 自然光',addr:'城市北边海岸线',styles:'自然,海边,日落,小清新',contact:'',note:'礁石沙滩、悬崖灯塔、日出日落绝佳机位'},
+    {name:'咖啡馆 / 日常感',addr:'市中心老街',styles:'日常,咖啡馆,闺蜜,小清新',contact:'周末需预约',note:'复古装修、落地窗、下午茶时光，适合糖水片'},
+    {name:'天台 / 城市夜景',addr:'CBD商圈高层',styles:'夜景,城市,时尚,情绪',contact:'联系物业',note:'俯瞰城市霓虹，车轨灯光，绝佳夜景机位'},
+    {name:'森林草坪 / 户外森系',addr:'城市郊国家森林公园',styles:'森系,户外,小清新,古风',contact:'门票自理',note:'参天大树、草地溪流、晨雾缭绕，绿野仙踪'},
+    {name:'老弄堂 / 怀旧上海',addr:'老城厢旧址',styles:'复古,市井,怀旧,胶片',contact:'',note:'斑驳墙面、老式电线、烟火气，上海风情'},
+    {name:'纯色影棚 / 百变背景',addr:'创意园区A栋3楼',styles:'商业,证件,电商,素描',contact:'186xxxx8888',note:'20种背景纸、各类道具、专业灯光，可拍各类型'}
+];
+
+const sampleModels = [
+    {name:'林小雨',styles:'小清新,私房,古风',contact:'138xxxx1122',avail:'available',auth:'authorized',note:'身高168，长发及腰，皮肤白皙，气质温婉。擅长文艺清新、复古胶片风格'},
+    {name:'苏糖糖',styles:'时尚,商业,运动',contact:'139xxxx3344',avail:'booked',auth:'authorized',note:'身高175，身材匀称，五官立体。专业模特，镜头感极强，可驾驭各种风格'},
+    {name:'陈墨',styles:'男性,情绪,文艺',contact:'137xxxx5566',avail:'available',auth:'pending',note:'身高182，短发，棱角分明。擅长情绪人像、文艺气质、时尚街拍'},
+    {name:'李梦瑶',styles:'私房,情绪,古风',contact:'136xxxx7788',avail:'available',auth:'authorized',note:'身高165，身材火辣，表现力强。私房、情绪类拍摄经验丰富'},
+    {name:'王子豪',styles:'商业,时装,杂志',contact:'135xxxx9900',avail:'available',auth:'authorized',note:'身高188，职业男模，知名时尚杂志御用。高级感十足'},
+    {name:'赵兮兮',styles:'二次元,Cosplay,古风',contact:'134xxxx1212',avail:'available',auth:'authorized',note:'身高160，可爱系，Cosplay玩家。精通各类角色扮演，古风妆容出色'},
+    {name:'周深',styles:'黑白,艺术,特写',contact:'133xxxx3434',avail:'booked',auth:'authorized',note:'身高180，骨相完美。艺术感强，适合黑白肖像、创意特写'},
+    {name:'吴朵朵',styles:'少女,氧气,日常',contact:'132xxxx5656',avail:'available',auth:'authorized',note:'身高163，婴儿肥，少女感。氧气少女、居家日常、日系写真'}
+];
+
+function addSampleData() {
+    const eq = sg(SK.EQ)||[];
+    const v = sg(SK.V)||[];
+    const m = sg(SK.M)||[];
+    let added = {eq:0, v:0, m:0};
+    sampleEq.forEach(s => { if(!eq.some(e=>e.n===s.n)) { eq.push({...s,id:Date.now().toString()+Math.random(),at:new Date().toISOString()}); added.eq++; } });
+    sampleVenues.forEach(s => { if(!v.some(x=>x.name===s.name)) { v.push({...s,id:Date.now().toString()+Math.random(),at:new Date().toISOString()}); added.v++; } });
+    sampleModels.forEach(s => { if(!m.some(x=>x.name===s.name)) { m.push({...s,id:Date.now().toString()+Math.random(),at:new Date().toISOString()}); added.m++; } });
+    if(added.eq>0||added.v>0||added.m>0) {
+        ss(SK.EQ,eq); ss(SK.V,v); ss(SK.M,m);
+        renderEq(); renderVenue(); renderModel();
+        toast(`已添加 ${added.eq} 件设备、${added.v} 个场地、${added.m} 位模特`,'ok');
+    }
+}
 
 function addSampleEq() {
     const list = sg(SK.EQ)||[];
-    sampleEq.forEach(s => { if(!list.some(e=>e.n===s.n)) list.push({...s,id:Date.now().toString()+Math.random(),at:new Date().toISOString()}) });
-    ss(SK.EQ,list); renderEq(); toast(`已添加 ${sampleEq.length} 件示例设备`,'ok');
+    let count = 0;
+    sampleEq.forEach(s => { if(!list.some(e=>e.n===s.n)) { list.push({...s,id:Date.now().toString()+Math.random(),at:new Date().toISOString()}); count++; } });
+    ss(SK.EQ,list); renderEq(); toast(`已添加 ${count} 件示例设备`,'ok');
 }
 
 // ===== Equipment =====
