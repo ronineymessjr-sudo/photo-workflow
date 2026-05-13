@@ -687,9 +687,13 @@
             position: relative;
             z-index: 10;
             display: flex;
+            flex-direction: row;
             gap: 1.5rem;
             justify-content: center;
-            flex-wrap: wrap;
+            align-items: stretch;
+            flex-wrap: nowrap;
+            max-width: 900px;
+            margin: 0 auto;
         }
         .role-card {
             width: 220px;
@@ -890,9 +894,9 @@
         }
         .role-modal-close:hover { background: rgba(255,255,255,0.1); }
         /* Responsive */
-        @media (max-width: 768px) {
-            .role-cards { flex-direction: column; align-items: center; }
-            .role-card { width: 90%; max-width: 280px; }
+        @media (max-width: 900px) {
+            .role-cards { flex-direction: column; align-items: center; flex-wrap: wrap; }
+            .role-card { width: 90%; max-width: 320px; }
             .hero-bg { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(4, 1fr); }
         }
             .tab-cnt { padding: 1rem; }
