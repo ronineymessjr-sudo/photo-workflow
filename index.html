@@ -2093,7 +2093,57 @@ function renderPlanContent(plan) {
         </div>
     `;
 
-    return metaHtml + sectionsHtml + imgGallery + commHtml;
+    // 添加调色方案
+    const colorPlan = getColorGradingPlan(plan.input?.style);
+    const colorHtml = `
+        <div class="ps" style="margin-top:1.5rem;border-top:2px solid var(--ac);padding-top:1rem">
+            <div class="ps-hdr"><div class="ps-icon">🎨</div><h3 class="ps-title">调色方案</h3></div>
+            <div class="ps-cnt">
+                <h4 style="color:var(--ac);margin:.8rem 0 .4rem;font-size:.85rem">推荐 LUT</h4>
+                <div style="display:flex;flex-wrap:wrap;gap:.4rem">${colorPlan.lut.map(l=>`<span class="eq-tag">${l}</span>`).join('')}</div>
+                
+                <h4 style="color:var(--ac);margin:.8rem 0 .4rem;font-size:.85rem">Lightroom 预设</h4>
+                <div style="display:flex;flex-wrap:wrap;gap:.4rem">${colorPlan.preset.map(p=>`<span class="eq-tag">${p}</span>`).join('')}</div>
+                
+                <h4 style="color:var(--ac);margin:.8rem 0 .4rem;font-size:.85rem">仿色思路</h4>
+                <ul>
+                    <li><strong>主色调：</strong>${colorPlan.colorTheory.mainTone}</li>
+                    <li><strong>对比度：</strong>${colorPlan.colorTheory.contrast}</li>
+                    <li><strong>饱和度：</strong>${colorPlan.colorTheory.saturation}</li>
+                    <li><strong>色调分离：</strong>${colorPlan.colorTheory.colorSplit}</li>
+                    <li><strong>黑位：</strong>${colorPlan.colorTheory.blackPoint}</li>
+                    <li><strong>白位：</strong>${colorPlan.colorTheory.whitePoint}</li>
+                </ul>
+                
+                <h4 style="color:var(--ac);margin:.8rem 0 .4rem;font-size:.85rem">基础参数 (Lightroom/ACR)</h4>
+                <div style="background:var(--bg2);padding:.6rem;border-radius:var(--radius-sm);font-size:.75rem;font-family:monospace">
+                    色温: ${colorPlan.params.temp} | 色调: ${colorPlan.params.tint}<br>
+                    曝光: ${colorPlan.params.exposure} | 对比度: ${colorPlan.params.contrast}<br>
+                    高光: ${colorPlan.params.highlights} | 阴影: ${colorPlan.params.shadows}<br>
+                    白色: ${colorPlan.params.whites} | 黑色: ${colorPlan.params.blacks}<br>
+                    清晰度: ${colorPlan.params.clarity} | 自然饱和度: ${colorPlan.params.vibrance}
+                </div>
+                
+                <h4 style="color:var(--ac);margin:.8rem 0 .4rem;font-size:.85rem">HSL 调整</h4>
+                <div style="background:var(--bg2);padding:.6rem;border-radius:var(--radius-sm);font-size:.72rem">
+                    ${Object.entries(colorPlan.hsl).map(([c,v])=>`<span style="color:var(--t2)">${c}:</span> ${v}`).join('<br>')}
+                </div>
+                
+                <h4 style="color:var(--ac);margin:.8rem 0 .4rem;font-size:.85rem">曲线调整</h4>
+                <p style="font-size:.8rem;color:var(--t2)">${colorPlan.curve}</p>
+                
+                <h4 style="color:var(--ac);margin:.8rem 0 .4rem;font-size:.85rem">最佳光线</h4>
+                <p style="font-size:.8rem;color:var(--t2)">☀️ ${colorPlan.bestLight}</p>
+                
+                <h4 style="color:var(--ac);margin:.8rem 0 .4rem;font-size:.85rem">教程链接</h4>
+                <div style="display:flex;flex-direction:column;gap:.3rem">
+                    ${colorPlan.tutorials.map(t=>`<a href="${t.url}" target="_blank" class="tool-link">📺 ${t.title}</a>`).join('')}
+                </div>
+            </div>
+        </div>
+    `;
+
+    return metaHtml + sectionsHtml + imgGallery + commHtml + colorHtml;
 }
 
 // 获取不同风格的沟通话术
@@ -2143,6 +2193,337 @@ function getCommunicationTips(style) {
         emotion: ['"想一下上次吃到特别好吃的食物"', '"播放符合主题的音乐"', '"摄影师示范动作，你跟着模仿"'],
         avoid: ['不要说"笑一个"、"自然一点"、"脸再小一点"']
     };
+}
+
+// ===== 调色方案数据 =====
+function getColorGradingPlan(style) {
+    const plans = {
+        '时尚': {
+            lut: ['Kodak 2383 (电影胶片)', 'Fuji 3510 (日系通透)', 'VisionColor M31 (青橙电影)'],
+            preset: ['Peter McKinnon Pack', 'Mango Street Preset', 'VSCO A6'],
+            colorTheory: {
+                mainTone: '青橙色调 - 高光偏橙，阴影偏青',
+                contrast: '高对比度 (+20~+30)',
+                saturation: '中等饱和，肤色微降 (-5~-10)',
+                colorSplit: '高光: 色相30 饱和15 | 阴影: 色相200 饱和10',
+                blackPoint: '黑位上提 (+10~+15)，避免死黑',
+                whitePoint: '白位下压 (-5~-10)，保留高光细节'
+            },
+            params: {
+                temp: '4800K (微冷)',
+                tint: '+5~+10 (微品)',
+                exposure: '-0.3~-0.5 (压暗)',
+                contrast: '+20',
+                highlights: '-60',
+                shadows: '+30',
+                whites: '-10',
+                blacks: '+10',
+                clarity: '+10',
+                vibrance: '+10'
+            },
+            hsl: {
+                orange: '色相+5 饱和-10 明度+5 (肤色)',
+                yellow: '色相-10 饱和-5 (去黄)',
+                green: '色相+30 饱和-20 (偏青)',
+                blue: '色相-20 饱和+10 (深蓝)',
+                aqua: '色相-15 饱和+15 (青色)'
+            },
+            curve: 'RGB: S型曲线增强对比 | 红: 高光微抬 | 蓝: 阴影微抬',
+            bestLight: '黄金时段 (日出后/日落前30分钟) 或 室内柔光',
+            tutorials: [
+                {title: '青橙色调三步走', url: 'https://www.bilibili.com/video/BV1Jpg7zoEk4/'},
+                {title: 'Lightroom电影调色', url: 'https://www.bilibili.com/video/BV1hS4y1k7zR/'}
+            ]
+        },
+        '复古': {
+            lut: ['Kodak Portra 400 (人像胶片)', 'Fuji 400H (日系复古)', 'Cineon (电影扫描)'],
+            preset: ['RNI Films', 'Mastin Labs Fuji Original', 'VSCO Portra 400'],
+            colorTheory: {
+                mainTone: '暖黄复古调 - 低对比，高光溢出感',
+                contrast: '中低对比度 (-10~-20)',
+                saturation: '低饱和 (-15~-25)',
+                colorSplit: '高光: 色相45 饱和20 (暖黄) | 阴影: 色相30 饱和10 (橙)',
+                blackPoint: '黑位大幅上提 (+20~+30)，灰蒙感',
+                whitePoint: '白位微抬 (+5)，胶片高光溢出'
+            },
+            params: {
+                temp: '5500K~6000K (暖)',
+                tint: '+10~+15 (品红)',
+                exposure: '+0.3~+0.5 (提亮)',
+                contrast: '-15',
+                highlights: '+20 (胶片高光)',
+                shadows: '+40 (提暗部)',
+                whites: '+10',
+                blacks: '+25',
+                clarity: '-10 (柔化)',
+                vibrance: '-10'
+            },
+            hsl: {
+                orange: '色相+10 饱和-5 明度+10',
+                yellow: '色相-5 饱和+10 明度+5',
+                green: '色相+20 饱和-30 明度-10',
+                blue: '色相+10 饱和-20 明度-5'
+            },
+            curve: 'RGB: 左下角上抬 (提黑) | 右上角微抬 (高光溢出) | 中间微凹',
+            bestLight: '下午3-5点窗边漫射光 或 阴天',
+            tutorials: [
+                {title: '胶片调色思路', url: 'https://www.bilibili.com/video/BV1a34y1X7Jp/'},
+                {title: 'Portra 400仿色', url: 'https://www.bilibili.com/video/BV1Z54y1V7kF/'}
+            ]
+        },
+        '文艺': {
+            lut: ['Fuji 400H', 'Kodak Portra 160', 'Cinestyle (低对比)'],
+            preset: ['VSCO A4/A5/A6', 'RNI All Films 5', 'Mastin Labs Portra Pushed'],
+            colorTheory: {
+                mainTone: '青绿冷调 - 低对比，空气感',
+                contrast: '低对比度 (-15~-25)',
+                saturation: '低饱和 (-20~-30)',
+                colorSplit: '高光: 色相150 饱和10 (青绿) | 阴影: 色相200 饱和15 (蓝青)',
+                blackPoint: '黑位上提 (+15~+25)，雾感',
+                whitePoint: '白位保持或微抬'
+            },
+            params: {
+                temp: '4500K~4800K (冷)',
+                tint: '-5~-10 (绿)',
+                exposure: '+0.2',
+                contrast: '-20',
+                highlights: '-30',
+                shadows: '+30',
+                whites: '+5',
+                blacks: '+20',
+                clarity: '-15',
+                vibrance: '-15'
+            },
+            hsl: {
+                orange: '色相+5 饱和-15 明度+10',
+                yellow: '色相+15 饱和-20 明度+5',
+                green: '色相-20 饱和-15 明度+5',
+                aqua: '色相+10 饱和+10 明度+5',
+                blue: '色相-10 饱和-10 明度+5'
+            },
+            curve: 'RGB: 左下角大幅上抬 | 中间平缓 | 右上角微抬',
+            bestLight: '上午9-11点 或 阴天漫射光',
+            tutorials: [
+                {title: '日系小清新调色', url: 'https://www.bilibili.com/video/BV1AE411c7Wc/'},
+                {title: '低对比空气感', url: 'https://www.bilibili.com/video/BV1uT4y1P7CX/'}
+            ]
+        },
+        '性感': {
+            lut: ['Kodak 2393 (暖调电影)', 'Red Giant LUTs (商业)', 'FilmConvert Pro (暖肤)'],
+            preset: ['Sleeklens Fashion', 'PR LUTs Cinematic', 'Lutify.me Warm'],
+            colorTheory: {
+                mainTone: '暖调金棕 - 中高对比，肤色通透',
+                contrast: '中高对比 (+10~+20)',
+                saturation: '中等饱和，肤色微暖',
+                colorSplit: '高光: 色相35 饱和20 (金橙) | 阴影: 色相20 饱和10 (暖棕)',
+                blackPoint: '黑位微提 (+5~+10)',
+                whitePoint: '白位微压 (-5)'
+            },
+            params: {
+                temp: '5200K~5600K (暖)',
+                tint: '+5',
+                exposure: '-0.2',
+                contrast: '+15',
+                highlights: '-40',
+                shadows: '+20',
+                whites: '-5',
+                blacks: '+8',
+                clarity: '+5',
+                vibrance: '+5'
+            },
+            hsl: {
+                orange: '色相-5 饱和+5 明度+10 (肤色通透)',
+                yellow: '色相+5 饱和-10 明度+5',
+                red: '色相+5 饱和-5 明度+5 (唇色)'
+            },
+            curve: 'RGB: S型曲线 | 红: 高光抬 | 蓝: 阴影压',
+            bestLight: '黄金时段 或 室内暖光',
+            tutorials: [
+                {title: '商业人像调色', url: 'https://www.bilibili.com/video/BV1Zt411g7Pb/'},
+                {title: '暖调肤色处理', url: 'https://www.bilibili.com/video/BV1fW411u7Lz/'}
+            ]
+        },
+        '古风': {
+            lut: ['Kodak 5219 (古装电影)', 'Fuji Eterna (东方色调)', 'CineStill 800T (夜景古风)'],
+            preset: ['RNI Agfa Vista', 'Mastin Labs Fuji 400H', '古风专用LUT包'],
+            colorTheory: {
+                mainTone: '青绿/暖黄古韵 - 低饱和，水墨感',
+                contrast: '中低对比 (-5~-15)',
+                saturation: '低饱和 (-20~-30)',
+                colorSplit: '高光: 色相40 饱和15 (暖黄) | 阴影: 色相160 饱和20 (青绿)',
+                blackPoint: '黑位上提 (+15~+20)，宣纸感',
+                whitePoint: '白位微抬 (+5)'
+            },
+            params: {
+                temp: '5000K~5500K',
+                tint: '-5~+5',
+                exposure: '+0.1',
+                contrast: '-10',
+                highlights: '-20',
+                shadows: '+25',
+                whites: '+5',
+                blacks: '+18',
+                clarity: '-5',
+                vibrance: '-20'
+            },
+            hsl: {
+                orange: '色相+10 饱和-20 明度+5',
+                yellow: '色相+20 饱和-15 明度+10',
+                green: '色相-30 饱和-25 明度-5 (墨绿)',
+                aqua: '色相-20 饱和+10 明度-10 (青)',
+                blue: '色相+20 饱和-30 明度-10'
+            },
+            curve: 'RGB: 左下角上抬 | 中间平缓 | 右上角微凹',
+            bestLight: '下午 或 阴天 (柔光)',
+            tutorials: [
+                {title: '古风调色教程', url: 'https://www.bilibili.com/video/BV1vJ411H7dF/'},
+                {title: '汉服人像后期', url: 'https://www.bilibili.com/video/BV1cW411u7Xy/'}
+            ]
+        },
+        '情绪': {
+            lut: ['Kodak 5219/5229 (电影暗调)', 'CineStyle (低对比)', 'FilmConvert (胶片感)'],
+            preset: ['VSCO M5/M6 (暗调)', 'RNI Ilford (黑白)', 'Mastin Labs Pushed'],
+            colorTheory: {
+                mainTone: '冷调/低饱和 - 高对比暗部，情绪感',
+                contrast: '高对比 (+20~+30)',
+                saturation: '低饱和 (-30~-40)',
+                colorSplit: '高光: 色相220 饱和10 (冷蓝) | 阴影: 色相250 饱和15 (深蓝)',
+                blackPoint: '黑位下压 (-10~-20)，深沉感',
+                whitePoint: '白位下压 (-15~-20)'
+            },
+            params: {
+                temp: '4200K~4500K (冷)',
+                tint: '-10~-15 (绿)',
+                exposure: '-0.5~-1.0',
+                contrast: '+25',
+                highlights: '-50',
+                shadows: '-20',
+                whites: '-20',
+                blacks: '-15',
+                clarity: '+15',
+                vibrance: '-25'
+            },
+            hsl: {
+                orange: '色相+10 饱和-30 明度-10',
+                yellow: '色相+20 饱和-40 明度-15',
+                green: '色相-20 饱和-50 明度-20',
+                blue: '色相-10 饱和+10 明度-10'
+            },
+            curve: 'RGB: 强S曲线 | 左下角下压 | 右上角下压',
+            bestLight: '阴天 或 黄昏后蓝调时刻',
+            tutorials: [
+                {title: '情绪片调色', url: 'https://www.bilibili.com/video/BV1xJ411s7aD/'},
+                {title: '暗调电影感', url: 'https://www.bilibili.com/video/BV1AE411c7Wc/'}
+            ]
+        },
+        '街拍': {
+            lut: ['Kodak Portra 400', 'Fuji Superia', 'CineStill 400Dynamic'],
+            preset: ['VSCO A7/B5', 'RNI Kodak Portra', 'Peter McKinnon'],
+            colorTheory: {
+                mainTone: '高对比/高饱和 - 真实感',
+                contrast: '中高对比 (+10~+20)',
+                saturation: '中等或高饱和 (+5~+15)',
+                colorSplit: '高光: 色相45 饱和10 | 阴影: 色相200 饱和8',
+                blackPoint: '黑位保持或微压',
+                whitePoint: '白位保持'
+            },
+            params: {
+                temp: '5000K~5500K',
+                tint: '0',
+                exposure: '0',
+                contrast: '+15',
+                highlights: '-30',
+                shadows: '+10',
+                whites: '0',
+                blacks: '-5',
+                clarity: '+10',
+                vibrance: '+10'
+            },
+            hsl: {
+                orange: '色相0 饱和+5 明度+5',
+                yellow: '色相-5 饱和+10 明度0',
+                green: '色相+10 饱和-10 明度0',
+                blue: '色相-10 饱和+10 明度-5'
+            },
+            curve: 'RGB: 微S曲线',
+            bestLight: '黄金时段 或 夜景霓虹',
+            tutorials: [
+                {title: '街头摄影调色', url: 'https://www.bilibili.com/video/BV1tW411u7Yz/'},
+                {title: '城市夜景调色', url: 'https://www.bilibili.com/video/BV1Js411g7CM/'}
+            ]
+        },
+        '商业': {
+            lut: ['Red Giant (商业)', 'FilmConvert Pro', 'DaVinci Resolve Built-in'],
+            preset: ['Sleeklens Commercial', 'PR LUTs Product', '商业人像LUT'],
+            colorTheory: {
+                mainTone: '中性/干净 - 高对比，细节丰富',
+                contrast: '中高对比 (+10~+20)',
+                saturation: '中等饱和，真实还原',
+                colorSplit: '高光: 色相微暖 | 阴影: 中性',
+                blackPoint: '黑位保持',
+                whitePoint: '白位保持'
+            },
+            params: {
+                temp: '5200K~5600K',
+                tint: '0',
+                exposure: '0',
+                contrast: '+15',
+                highlights: '-40',
+                shadows: '+20',
+                whites: '-5',
+                blacks: '0',
+                clarity: '+10',
+                vibrance: '+5'
+            },
+            hsl: {
+                orange: '肤色调整为主',
+                yellow: '产品颜色还原'
+            },
+            curve: 'RGB: 标准S曲线',
+            bestLight: '影棚标准灯光 或 自然光+反光板',
+            tutorials: [
+                {title: '商业产品调色', url: 'https://www.bilibili.com/video/BV1ZW411u7Xz/'},
+                {title: '电商人像后期', url: 'https://www.bilibili.com/video/BV1Et411g7Pb/'}
+            ]
+        },
+        '婚纱': {
+            lut: ['Kodak Portra 400', 'Fuji 400H', 'VSCO Film Pack'],
+            preset: ['VSCO A1/A2', 'Mastin Labs Portra', 'RNI Wedding'],
+            colorTheory: {
+                mainTone: '暖白/粉调 - 中低对比，梦幻感',
+                contrast: '中低对比 (-5~-15)',
+                saturation: '低饱和 (-10~-20)',
+                colorSplit: '高光: 色相330 饱和8 (粉) | 阴影: 色相30 饱和5 (暖)',
+                blackPoint: '黑位上提 (+10~+15)',
+                whitePoint: '白位微抬 (+5)，白纱通透'
+            },
+            params: {
+                temp: '5400K~5800K (暖)',
+                tint: '+5~+10 (粉)',
+                exposure: '+0.2',
+                contrast: '-10',
+                highlights: '-30',
+                shadows: '+20',
+                whites: '+10',
+                blacks: '+12',
+                clarity: '-5',
+                vibrance: '-10'
+            },
+            hsl: {
+                orange: '色相+5 饱和-10 明度+15 (肤色通透)',
+                yellow: '色相+10 饱和-15 明度+10',
+                red: '色相+10 饱和-10 明度+5'
+            },
+            curve: 'RGB: 左下角上抬 | 右上角微抬',
+            bestLight: '黄金时段户外 或 室内柔光',
+            tutorials: [
+                {title: '婚纱调色教程', url: 'https://www.bilibili.com/video/BV1cW411u7Xy/'},
+                {title: '白纱通透处理', url: 'https://www.bilibili.com/video/BV1Zt411g7Pb/'}
+            ]
+        }
+    };
+    
+    return plans[style] || plans['文艺'];
 }
 
 // ===== Plan Storage =====
