@@ -508,6 +508,17 @@
         .backup-section h3 { font-size: .82rem; font-weight: 600; margin-bottom: .8rem; color: var(--t2); }
         .backup-btns { display: flex; gap: .55rem; flex-wrap: wrap; }
 
+        /* ===== Tools & Checklist ===== */
+        .tool-section { margin-bottom: 1rem; }
+        .tool-section h4 { font-size: .75rem; color: var(--t3); margin-bottom: .4rem; font-weight: 600; }
+        .tool-link { display: block; padding: .35rem 0; color: var(--t2); font-size: .75rem; text-decoration: none; border-bottom: 1px solid transparent; transition: all .2s; }
+        .tool-link:hover { color: var(--ac); border-bottom-color: rgba(212,132,10,0.3); }
+        .checklist { display: flex; flex-direction: column; gap: .4rem; }
+        .check-item { display: flex; align-items: center; gap: .5rem; font-size: .75rem; color: var(--t2); cursor: pointer; padding: .2rem 0; }
+        .check-item:hover { color: var(--t1); }
+        .check-item input[type="checkbox"] { width: 14px; height: 14px; accent-color: var(--ac); }
+        .check-item input:checked + span { text-decoration: line-through; color: var(--t3); }
+
         /* ===== Toast ===== */
         .toast {
             position: fixed;
@@ -1092,6 +1103,54 @@
                         <div class="panel">
                             <div class="p-head"><h2>快速场地</h2></div>
                             <div class="p-body" id="quickVenue"></div>
+                        </div>
+                    </div>
+
+                    <!-- 专业工具 -->
+                    <div class="side-panel">
+                        <div class="panel">
+                            <div class="p-head"><h2>🛠️ 专业工具</h2></div>
+                            <div class="p-body">
+                                <div class="tool-section">
+                                    <h4>📍 勘景/光线</h4>
+                                    <a href="https://www.photopills.com/" target="_blank" class="tool-link">PhotoPills - 太阳轨迹预测</a>
+                                    <a href="https://www.windy.com/" target="_blank" class="tool-link">Windy - 云层天气预测</a>
+                                    <a href="https://www.sunearthtools.com/" target="_blank" class="tool-link">Sun Surveyor - 光线模拟</a>
+                                    <a href="https://www.google.com/earth/" target="_blank" class="tool-link">Google Earth - 卫星勘景</a>
+                                </div>
+                                <div class="tool-section">
+                                    <h4>🎨 LUT/预设</h4>
+                                    <a href="https://groundcontrolcolor.com/free-luts/" target="_blank" class="tool-link">Ground Control - 免费LUT</a>
+                                    <a href="https://lutify.me/" target="_blank" class="tool-link">Lutify.me - 电影LUT</a>
+                                    <a href="https://www.iwltbap.com/" target="_blank" class="tool-link">IWLTBAP - 胶片模拟</a>
+                                </div>
+                                <div class="tool-section">
+                                    <h4>💡 灵感参考</h4>
+                                    <a href="https://www.pinterest.com/" target="_blank" class="tool-link">Pinterest - 情绪板</a>
+                                    <a href="https://www.behance.net/" target="_blank" class="tool-link">Behance - 高质量作品</a>
+                                    <a href="https://500px.com/" target="_blank" class="tool-link">500px - 摄影作品</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 拍摄清单 -->
+                    <div class="side-panel">
+                        <div class="panel">
+                            <div class="p-head"><h2>📋 拍摄清单</h2></div>
+                            <div class="p-body">
+                                <div class="checklist">
+                                    <label class="check-item"><input type="checkbox" class="ck"> 勘景踩点（2次）</label>
+                                    <label class="check-item"><input type="checkbox" class="ck"> 检查天气/光线</label>
+                                    <label class="check-item"><input type="checkbox" class="ck"> 确认器材（电池/卡）</label>
+                                    <label class="check-item"><input type="checkbox" class="ck"> 与模特确认时间地点</label>
+                                    <label class="check-item"><input type="checkbox" class="ck"> 准备道具/服装</label>
+                                    <label class="check-item"><input type="checkbox" class="ck"> 提前30分钟到场</label>
+                                    <label class="check-item"><input type="checkbox" class="ck"> 给模特看参考图</label>
+                                    <label class="check-item"><input type="checkbox" class="ck"> 拍摄中及时回看</label>
+                                    <label class="check-item"><input type="checkbox" class="ck"> 备份RAW文件</label>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </aside>
@@ -2016,7 +2075,74 @@ function renderPlanContent(plan) {
 
     const imgGallery = renderImageGallery(plan);
 
-    return metaHtml + sectionsHtml + imgGallery;
+    // 添加模特沟通话术
+    const communicationTips = getCommunicationTips(plan.input?.style);
+    const commHtml = `
+        <div class="ps" style="margin-top:1.5rem;border-top:2px solid var(--ac);padding-top:1rem">
+            <div class="ps-hdr"><div class="ps-icon">💬</div><h3 class="ps-title">模特沟通话术</h3></div>
+            <div class="ps-cnt">
+                <h4 style="color:var(--ac);margin:.8rem 0 .4rem;font-size:.85rem">开场破冰</h4>
+                <ul>${communicationTips.icebreaker.map(c=>`<li>${c}</li>`).join('')}</ul>
+                <h4 style="color:var(--ac);margin:.8rem 0 .4rem;font-size:.85rem">万能引导话术</h4>
+                <ul>${communicationTips.poses.map(c=>`<li>${c}</li>`).join('')}</ul>
+                <h4 style="color:var(--ac);margin:.8rem 0 .4rem;font-size:.85rem">情绪调动</h4>
+                <ul>${communicationTips.emotion.map(c=>`<li>${c}</li>`).join('')}</ul>
+                <h4 style="color:var(--ac);margin:.8rem 0 .4rem;font-size:.85rem">禁忌用语（绝对避免）</h4>
+                <ul style="color:#ef4444">${communicationTips.avoid.map(c=>`<li>${c}</li>`).join('')}</ul>
+            </div>
+        </div>
+    `;
+
+    return metaHtml + sectionsHtml + imgGallery + commHtml;
+}
+
+// 获取不同风格的沟通话术
+function getCommunicationTips(style) {
+    const tips = {
+        '时尚': {
+            icebreaker: ['"今天我们要拍的是杂志封面感，气场要打开"', '"想象你是T台上的超模，全世界都在看你"'],
+            poses: ['"下巴微收，眼神穿透镜头"', '"肩膀一高一低，打破对称感"', '"想象头顶有根线把你往上拉"'],
+            emotion: ['"播放节奏感强的音乐，跟着节拍摆"', '"想象刚收到一个好消息"'],
+            avoid: ['不要说"笑一个"，要说"嘴角带一点弧度"']
+        },
+        '复古': {
+            icebreaker: ['"今天我们穿越回民国/80年代"', '"想象你是老电影里的女主角"'],
+            poses: ['"眼神略带忧郁，看向远方"', '"手轻轻搭在椅背上，慵懒一点"', '"头微微侧，露出颈部线条"'],
+            emotion: ['"想象你在等一封很久没来的信"', '"播放老爵士乐，跟着旋律放松"'],
+            avoid: ['不要说"看镜头笑"，要说"眼神飘向镜头边缘"']
+        },
+        '文艺': {
+            icebreaker: ['"今天拍的是电影感画面，情绪要细腻"', '"想象你是一个有故事的人"'],
+            poses: ['"不要看镜头，看向我手指的方向"', '"用手拨弄头发，自然一点"', '"背靠墙，身体放松"'],
+            emotion: ['"想象你在一个安静的午后发呆"', '"播放轻音乐，闭上眼睛深呼吸"'],
+            avoid: ['不要说"表情自然一点"，要说"想象你刚睡醒的样子"']
+        },
+        '性感': {
+            icebreaker: ['"今天拍的是自信的女性魅力"', '"你的身体语言要表达自我欣赏"'],
+            poses: ['"身体呈S曲线，重心放在一条腿上"', '"手轻抚颈部或锁骨，自信一点"', '"眼神要媚而不俗"'],
+            emotion: ['"想象你刚洗完澡照镜子，很满意自己的状态"', '"播放R&B音乐，跟着节奏扭动"'],
+            avoid: ['绝对不要说"再性感一点"，要说"再自信一点"']
+        },
+        '古风': {
+            icebreaker: ['"今天我们拍的是古代仕女/侠客"', '"想象你穿越到了唐宋/明清"'],
+            poses: ['"兰花指，手腕要有弧度"', '"眼神含情，似看非看"', '"身体微微前倾，行礼的姿态"'],
+            emotion: ['"想象你是深闺中的大小姐，心事重重"', '"播放古风音乐，跟着旋律入戏"'],
+            avoid: ['不要说"现代一点"，要说"再古典含蓄一点"']
+        },
+        '情绪': {
+            icebreaker: ['"今天拍的是内心戏，要释放情绪"', '"不用笑，我们要的是真实"'],
+            poses: ['"眼神放空，不要聚焦"', '"身体蜷缩或舒展，看你当下感受"', '"手可以遮脸或抓头发"'],
+            emotion: ['"想一件让你难过或愤怒的事"', '"播放后摇/情绪音乐，让情绪流淌"', '"不需要表演，做你自己"'],
+            avoid: ['绝对不要说"开心一点"或"笑一个"']
+        }
+    };
+    
+    return tips[style] || {
+        icebreaker: ['"我们先聊聊天，不用急着拍"', '"今天时间很充裕，慢慢找感觉"'],
+        poses: ['"头往左边偏一点，保持"', '"想象你在等迟到30分钟的朋友"', '"闭眼深呼吸三次，第三次呼气睁眼看我"'],
+        emotion: ['"想一下上次吃到特别好吃的食物"', '"播放符合主题的音乐"', '"摄影师示范动作，你跟着模仿"'],
+        avoid: ['不要说"笑一个"、"自然一点"、"脸再小一点"']
+    };
 }
 
 // ===== Plan Storage =====
