@@ -1989,32 +1989,33 @@ async function genImgForPlan(planId) {
     const plan = plans.find(p => p.id === planId);
     if (!plan) { toast('方案不存在','er'); return; }
 
-    const prompt = $(`img-prompt-${planId}`).value.trim();
-    if (!prompt) { toast('请输入生图提示词','er'); return; }
+    const prompt = $(`img-prompt-${planId}`);
+    const promptText = prompt ? prompt.value.trim() : '';
+    if (!promptText) { toast('请输入生图提示词','er'); return; }
 
     const btn = $(`gen-img-btn-${planId}`);
     const grid = $(`img-grid-${planId}`);
 
-    btn.disabled = true;
-    btn.textContent = '⏳ 生成中...';
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ 生成中...'; }
 
     // Show loading
-    const loadingId = `img-loading-${planId}`;
-    grid.innerHTML += `<div class="img-loading" id="${loadingId}">正在生成图片，请稍候...</div>`;
+    if (grid) {
+        grid.innerHTML += `<div class="img-loading" id="img-loading-${planId}">正在生成图片，请稍候...</div>`;
+    }
 
-    const imgUrl = await generateImage(prompt, planId);
+    const imgUrl = await generateImage(promptText, planId);
 
     // Remove loading
-    const loading = $(loadingId);
+    const loading = $(`img-loading-${planId}`);
     if (loading) loading.remove();
 
-    btn.disabled = false;
-    btn.textContent = '🎨 生成';
+    if (btn) { btn.disabled = false; btn.textContent = '🎨 生成'; }
 
     if (imgUrl) {
         // Refresh gallery
         const newPlan = (sg(SK.P)||[]).find(p=>p.id===planId);
         if (newPlan) {
+            const galleryId = `img-gallery-${planId}`;
             const g = $(galleryId);
             if (g) g.replaceWith(renderImageGalleryDiv(newPlan));
         }
