@@ -901,6 +901,9 @@
             .col-side { display: none; }
         }
     </style>
+    <!-- Animation Libraries -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" />
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet" />
 </head>
 <body>
 <div class="app-layout visible">
@@ -1659,14 +1662,17 @@ function renderEq() {
     Object.keys(CATS).forEach(k=>byCat[k]=[]);
     list.forEach(e=>{ if(byCat[e.c]) byCat[e.c].push(e); else byCat.other.push(e); });
     let html='';
+    let delay = 0;
     Object.keys(CATS).forEach(k=>{
         const items=byCat[k]; if(!items.length) return;
         const cat=CATS[k];
-        html+=`<div class="eq-cat"><div class="eq-cat-hdr"><span class="eq-cat-icon">${cat.ic}</span><span class="eq-cat-name">${cat.n}</span><span class="eq-cat-n">${items.length} 件</span></div>`;
-        html+=items.map(e=>`<div class="eq-item"><span class="eq-item-name">${e.n}</span>${e.note?`<span class="eq-item-note">${e.note}</span>`:''}<div class="eq-item-actions"><button class="btn-i2" onclick="delEq('${e.id}')" title="删除">✕</button></div></div>`).join('');
+        html+=`<div class="eq-cat" data-aos="fade-up" data-aos-delay="${delay}"><div class="eq-cat-hdr"><span class="eq-cat-icon">${cat.ic}</span><span class="eq-cat-name">${cat.n}</span><span class="eq-cat-n">${items.length} 件</span></div>`;
+        html+=items.map((e,i)=>`<div class="eq-item" data-aos="fade-right" data-aos-delay="${delay+i*50}"><span class="eq-item-name">${e.n}</span>${e.note?`<span class="eq-item-note">${e.note}</span>`:''}<div class="eq-item-actions"><button class="btn-i2" onclick="delEq('${e.id}')" title="删除">✕</button></div></div>`).join('');
         html+='</div>';
+        delay += 100;
     });
     $('eq-list').innerHTML=html||'<div class="eq-empty">设备库为空，添加你的第一件设备</div>';
+    if(typeof AOS !== 'undefined') AOS.refresh();
 }
 function delEq(id){ let l=sg(SK.EQ)||[]; l=l.filter(e=>e.id!==id); ss(SK.EQ,l); renderEq(); toast('已删除'); }
 $('eqForm').addEventListener('submit',e=>{
@@ -2606,6 +2612,16 @@ function importData(){
 
 // ===== Init =====
 updateBadge();renderHistMini();renderQuickVenue();
+</script>
+<!-- AOS Animation Library -->
+<script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+<script>
+  AOS.init({
+    duration: 600,
+    easing: 'ease-out-cubic',
+    once: true,
+    offset: 50
+  });
 </script>
 </body>
 </html>
