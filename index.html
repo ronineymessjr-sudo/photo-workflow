@@ -1109,7 +1109,13 @@
                 </aside>
                 <section>
                     <div class="panel">
-                        <div class="p-head"><h2>我的设备</h2><span id="eq-total" style="font-size:.72rem;color:var(--t3)"></span></div>
+                        <div class="p-head">
+                            <h2>我的设备</h2>
+                            <div style="display:flex;gap:.5rem;align-items:center">
+                                <input type="text" id="eq-search" placeholder="🔍 搜索设备..." style="padding:.4rem .8rem;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius-sm);color:var(--t1);font-size:.8rem;width:150px" oninput="renderEq()">
+                                <span id="eq-total" style="font-size:.72rem;color:var(--t3)"></span>
+                            </div>
+                        </div>
                         <div class="p-body" id="eq-list"></div>
                     </div>
                 </section>
@@ -1137,7 +1143,13 @@
                 </aside>
                 <section>
                     <div class="panel">
-                        <div class="p-head"><h2>场地列表</h2><span id="venue-total" style="font-size:.72rem;color:var(--t3)"></span></div>
+                        <div class="p-head">
+                            <h2>场地列表</h2>
+                            <div style="display:flex;gap:.5rem;align-items:center">
+                                <input type="text" id="venue-search" placeholder="🔍 搜索场地..." style="padding:.4rem .8rem;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius-sm);color:var(--t1);font-size:.8rem;width:150px" oninput="renderVenue()">
+                                <span id="venue-total" style="font-size:.72rem;color:var(--t3)"></span>
+                            </div>
+                        </div>
                         <div class="p-body" id="venue-list"></div>
                     </div>
                 </section>
@@ -1628,7 +1640,12 @@ function addSampleEq() {
 
 // ===== Equipment =====
 function renderEq() {
-    const list = sg(SK.EQ)||[];
+    let list = sg(SK.EQ)||[];
+    // Search filter
+    const searchTerm = $('eq-search')?.value?.trim().toLowerCase() || '';
+    if (searchTerm) {
+        list = list.filter(e => e.n.toLowerCase().includes(searchTerm) || (e.note && e.note.toLowerCase().includes(searchTerm)));
+    }
     $('t-eq').textContent = list.length;
     $('eq-total').textContent = `共 ${list.length} 件`;
     const byCat = {};
@@ -1644,7 +1661,7 @@ function renderEq() {
         html+='</div>';
         delay += 100;
     });
-    $('eq-list').innerHTML=html||'<div class="eq-empty">设备库为空，添加你的第一件设备</div>';
+    $('eq-list').innerHTML=html||'<div class="eq-empty">' + (searchTerm ? '未找到匹配的设备' : '设备库为空，添加你的第一件设备') + '</div>';
     if(typeof AOS !== 'undefined') AOS.refresh();
 }
 function delEq(id){ let l=sg(SK.EQ)||[]; l=l.filter(e=>e.id!==id); ss(SK.EQ,l); renderEq(); toast('已删除'); }
@@ -1658,12 +1675,17 @@ $('eqForm').addEventListener('submit',e=>{
 
 // ===== Venue =====
 function renderVenue() {
-    const list=sg(SK.V)||[];
+    let list=sg(SK.V)||[];
+    // Search filter
+    const searchTerm = $('venue-search')?.value?.trim().toLowerCase() || '';
+    if (searchTerm) {
+        list = list.filter(v => v.name.toLowerCase().includes(searchTerm) || (v.addr && v.addr.toLowerCase().includes(searchTerm)) || (v.styles && v.styles.toLowerCase().includes(searchTerm)));
+    }
     $('t-venue').textContent=list.length;
     $('venue-total').textContent=`共 ${list.length} 个场地`;
-    if(!list.length){ $('venue-list').innerHTML='<div class="eq-empty">场地库为空</div>'; return; }
+    if(!list.length){ $('venue-list').innerHTML='<div class="eq-empty">' + (searchTerm ? '未找到匹配的场地' : '场地库为空') + '</div>'; return; }
     $('venue-list').innerHTML=list.map(v=>`
-        <div class="venue-card">
+        <div class="venue-card" data-aos="fade-up">
             <div class="venue-name">📍 ${v.name} <button class="btn-i2" onclick="delVenue('${v.id}')" title="删除" style="margin-left:auto;">✕</button></div>
             ${v.styles?`<div class="venue-tags">${v.styles.split(',').map(s=>`<span class="venue-tag style-tag">${s.trim()}</span>`).join('')}</div>`:''}
             ${v.addr?`<div class="venue-addr">📌 ${v.addr}</div>`:''}
@@ -1671,6 +1693,7 @@ function renderVenue() {
             ${v.note?`<div class="venue-note">${v.note}</div>`:''}
             <div class="venue-actions"><button class="btn btn-s btn-sm" onclick="useVenue('${v.id}')">📋 引用到方案</button></div>
         </div>`).join('');
+    if(typeof AOS !== 'undefined') AOS.refresh();
 }
 function delVenue(id){ let l=sg(SK.V)||[]; l=l.filter(v=>v.id!==id); ss(SK.V,l); renderVenue(); toast('已删除'); }
 function useVenue(id){ const v=(sg(SK.V)||[]).find(x=>x.id===id); if(v){ $('f-scene').value=$('f-scene').value?$('f-scene').value+', '+v.name:v.name; toast('已引用到场景'); } }
