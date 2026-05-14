@@ -906,110 +906,12 @@
     </style>
 </head>
 <body>
-<!-- Hero Role Selector -->
-<div class="hero-overlay" id="heroOverlay">
-    <div class="hero-bg" id="heroBg"></div>
-
-    <div class="hero-header">
-        <div class="hero-logo">PhotoStudio</div>
-        <div class="hero-tagline">摄影方案 · 智能工作流</div>
-        <div class="hero-role-hint">选择你的身份，开始创作</div>
-    </div>
-
-    <div class="role-cards">
-        <!-- 摄影师 -->
-        <div class="role-card" onclick="selectRole('photographer')">
-            <span class="role-card-icon">📷</span>
-            <div class="role-card-name">摄影师</div>
-            <div class="role-card-desc">掌控全局，创意无限</div>
-            <ul class="role-card-features">
-                <li>AI 生成拍摄方案</li>
-                <li>管理设备/场地/模特</li>
-                <li>导出 PDF 方案书</li>
-                <li>数据备份与恢复</li>
-            </ul>
-            <button class="role-card-enter">进入工作台 →</button>
-        </div>
-
-        <!-- 模特 -->
-        <div class="role-card" onclick="selectRole('model')">
-            <span class="role-card-icon">✨</span>
-            <div class="role-card-name">模特</div>
-            <div class="role-card-desc">专注表现，留下精彩</div>
-            <ul class="role-card-features">
-                <li>查看拍摄方案</li>
-                <li>管理个人资料</li>
-                <li>浏览历史记录</li>
-                <li>收藏灵感图集</li>
-            </ul>
-            <button class="role-card-enter">开始创作 →</button>
-        </div>
-
-        <!-- 助理 -->
-        <div class="role-card" onclick="selectRole('assistant')">
-            <span class="role-card-icon">🛠️</span>
-            <div class="role-card-name">助理</div>
-            <div class="role-card-desc">协助管理，高效执行</div>
-            <ul class="role-card-features">
-                <li>管理设备库</li>
-                <li>管理场地库</li>
-                <li>管理模特库</li>
-                <li>创建方案模板</li>
-            </ul>
-            <button class="role-card-enter">协助管理 →</button>
-        </div>
-    </div>
-</div>
-
-<!-- Role Switch Modal -->
-<div class="role-modal" id="roleModal">
-    <div class="role-modal-content">
-        <div class="role-modal-title">切换身份</div>
-        <div class="role-modal-list">
-            <div class="role-modal-item" data-role="photographer" onclick="switchRole('photographer')">
-                <span class="role-modal-item-icon">📷</span>
-                <div class="role-modal-item-info">
-                    <div class="role-modal-item-name">摄影师</div>
-                    <div class="role-modal-item-desc">完整功能，方案管理</div>
-                </div>
-                <span class="role-modal-item-check" id="check-photographer">✓</span>
-            </div>
-            <div class="role-modal-item" data-role="model" onclick="switchRole('model')">
-                <span class="role-modal-item-icon">✨</span>
-                <div class="role-modal-item-info">
-                    <div class="role-modal-item-name">模特</div>
-                    <div class="role-modal-item-desc">查看方案，资料管理</div>
-                </div>
-                <span class="role-modal-item-check" id="check-model">✓</span>
-            </div>
-            <div class="role-modal-item" data-role="assistant" onclick="switchRole('assistant')">
-                <span class="role-modal-item-icon">🛠️</span>
-                <div class="role-modal-item-info">
-                    <div class="role-modal-item-name">助理</div>
-                    <div class="role-modal-item-desc">协助管理，高效执行</div>
-                </div>
-                <span class="role-modal-item-check" id="check-assistant">✓</span>
-            </div>
-        </div>
-        <button class="role-modal-close" onclick="closeRoleModal()">取消</button>
-    </div>
-</div>
-
-<div class="app-layout">
+<div class="app-layout visible">
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
             <span class="brand-dot"></span>
             <span class="brand-text">PhotoStudio</span>
-        </div>
-        <!-- Role Switcher -->
-        <div class="role-switcher" id="roleSwitcher" onclick="openRoleModal()">
-            <span class="role-switcher-icon" id="currentRoleIcon">📷</span>
-            <div class="role-switcher-info">
-                <div class="role-switcher-label">当前身份</div>
-                <div class="role-switcher-name" id="currentRoleName">摄影师</div>
-            </div>
-            <span class="role-switcher-arrow">›</span>
         </div>
         <nav class="sidebar-nav">
             <button class="nav-item active" data-tab="gen" data-role="photographer,model,assistant">
