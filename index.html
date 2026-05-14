@@ -1358,21 +1358,6 @@
     };
     const ROLE_KEY = 'pw_role';
 
-    // Background photo grid
-    const seeds = [
-        'city-neon', 'film-portrait', 'natural-light', 'vintage-room',
-        'street-photo', 'golden-hour', 'moody-dark', 'soft-girl',
-        'architecture', 'hanfu-style', 'sports-moment', 'macro-world'
-    ];
-    const heroBg = document.getElementById('heroBg');
-    seeds.forEach(seed => {
-        const img = document.createElement('img');
-        img.src = `https://picsum.photos/seed/${seed}/400/300`;
-        img.alt = '';
-        img.loading = 'lazy';
-        heroBg.appendChild(img);
-    });
-
     // Apply role to UI - show all nav items (no role restriction)
     window.applyRole = function(role) {
         document.querySelectorAll('.nav-item').forEach(item => {
