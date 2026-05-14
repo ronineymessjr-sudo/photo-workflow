@@ -1285,18 +1285,14 @@
 
     // Apply role to UI
     window.applyRole = function(role) {
-        const info = ROLES[role] || ROLES.photographer;
-        document.getElementById('currentRoleIcon').textContent = info.icon;
-        document.getElementById('currentRoleName').textContent = info.name;
-
-        // Show/hide nav items
+        // Show/hide nav items based on role
         document.querySelectorAll('.nav-item').forEach(item => {
             const allowed = item.dataset.role ? item.dataset.role.split(',') : [];
             item.style.display = allowed.includes(role) ? '' : 'none';
         });
 
         // Auto-select first visible tab
-        const firstVisible = document.querySelector('.nav-item[data-tab]:visible');
+        const firstVisible = document.querySelector('.nav-item:not([style*="none"])');
         if (firstVisible) {
             document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
             document.querySelectorAll('.tab-cnt').forEach(x => x.classList.remove('active'));
@@ -1305,11 +1301,6 @@
             const tabEl = document.getElementById(tabId);
             if (tabEl) tabEl.classList.add('active');
         }
-
-        // Update role modal active state
-        document.querySelectorAll('.role-modal-item').forEach(item => {
-            item.classList.toggle('active', item.dataset.role === role);
-        });
     };
 
     // Open role modal
@@ -1329,26 +1320,8 @@
         applyRole(role);
     };
 
-    // Close role modal
-    window.closeRoleModal = function() {
-        document.getElementById('roleModal').classList.remove('show');
-    };
-
-    // Close modal on backdrop click
-    document.getElementById('roleModal').addEventListener('click', function(e) {
-        if (e.target === this) closeRoleModal();
-    });
-
-    // Init: check if role is already set
-    let savedRole;
-    try { savedRole = localStorage.getItem(ROLE_KEY); } catch(e) {}
-    if (savedRole && ROLES[savedRole]) {
-        // Skip hero, apply role directly
-        const hero = document.getElementById('heroOverlay');
-        hero.style.display = 'none';
-        document.querySelector('.app-layout').classList.add('visible');
-        applyRole(savedRole);
-    }
+    // Init: apply default photographer role
+    applyRole('photographer');
 })();
 
 // ===== Sidebar Toggle =====
@@ -1378,10 +1351,10 @@ const ss = (k,v) => { try { localStorage.setItem(k,JSON.stringify(v)); return tr
 
 // ===== Tabs =====
 document.querySelectorAll('.nav-item').forEach(b => b.addEventListener('click', () => {
-    // Check role permission
+    // Check role permission (default to photographer if no role set)
     const allowed = b.dataset.role ? b.dataset.role.split(',') : [];
     let currentRole;
-    try { currentRole = localStorage.getItem('pw_role'); } catch(e) {}
+    try { currentRole = localStorage.getItem('pw_role') || 'photographer'; } catch(e) { currentRole = 'photographer'; }
     if (!allowed.includes(currentRole)) return;
 
     document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
