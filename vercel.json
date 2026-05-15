@@ -1,7 +1,6 @@
 {
   "rewrites": [
-    { "source": "/imageGeneration", "destination": "/api/imageGeneration" },
-    { "source": "/(.*)", "destination": "/" }
+    { "source": "/imageGeneration", "destination": "/api/imageGeneration" }
   ],
   "functions": {
     "api/imageGeneration.js": {
