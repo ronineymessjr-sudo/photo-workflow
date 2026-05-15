@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>摄影方案 · Photo Atelier</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -52,6 +54,11 @@
         h1, h2, h3, .serif { font-family: var(--font-serif); }
         h1 { font-weight: 600; letter-spacing: -0.02em; }
         h2 { font-weight: 600; letter-spacing: -0.01em; }
+        
+        /* Lucide Icons */
+        .lucide { width: 1em; height: 1em; stroke-width: 1.5; vertical-align: middle; }
+        .icon-btn { display: inline-flex; align-items: center; gap: .35rem; }
+        .icon-btn .lucide { width: 1.1em; height: 1.1em; }
 
         /* ===== Background Effects ===== */
         body::before {
@@ -61,10 +68,11 @@
             z-index: 0;
             pointer-events: none;
             background:
-                radial-gradient(ellipse 800px 600px at 20% 30%, rgba(255, 107, 107, 0.06) 0%, transparent 60%),
-                radial-gradient(ellipse 600px 500px at 80% 70%, rgba(78, 205, 196, 0.05) 0%, transparent 60%),
-                radial-gradient(ellipse 400px 400px at 60% 20%, rgba(255, 107, 107, 0.04) 0%, transparent 50%);
-            animation: bgPulse 8s ease-in-out infinite;
+                radial-gradient(ellipse 1000px 800px at 15% 20%, rgba(255, 107, 107, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse 800px 600px at 85% 80%, rgba(78, 205, 196, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse 600px 500px at 50% 50%, rgba(255, 107, 107, 0.04) 0%, transparent 40%),
+                radial-gradient(ellipse 400px 400px at 70% 30%, rgba(78, 205, 196, 0.05) 0%, transparent 40%);
+            animation: bgPulse 12s ease-in-out infinite;
         }
         body::after {
             content: '';
@@ -72,50 +80,68 @@
             inset: 0;
             z-index: 0;
             pointer-events: none;
-            background-image: radial-gradient(rgba(255,255,255,0.025) 1px, transparent 1px);
-            background-size: 40px 40px;
-            animation: gridDrift 40s linear infinite;
+            background-image: 
+                radial-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                radial-gradient(rgba(255,255,255,0.015) 1px, transparent 1px);
+            background-size: 60px 60px, 30px 30px;
+            background-position: 0 0, 15px 15px;
+            animation: gridDrift 60s linear infinite;
         }
         @keyframes gridDrift {
-            0% { background-position: 0 0; }
-            100% { background-position: 40px 40px; }
+            0% { background-position: 0 0, 15px 15px; }
+            100% { background-position: 60px 60px, 45px 45px; }
         }
         @keyframes bgPulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.8; transform: scale(1.05); }
+            0%, 100% { opacity: 1; transform: scale(1) rotate(0deg); }
+            33% { opacity: 0.85; transform: scale(1.02) rotate(1deg); }
+            66% { opacity: 0.9; transform: scale(1.01) rotate(-1deg); }
         }
-        /* Floating orbs */
+        /* Floating orbs - 更细腻的光晕效果 */
         .bg-orb {
             position: fixed;
             border-radius: 50%;
-            filter: blur(80px);
+            filter: blur(100px);
             pointer-events: none;
             z-index: 0;
         }
         .bg-orb-1 {
-            width: 400px;
-            height: 400px;
-            background: rgba(255, 107, 107, 0.08);
-            top: -100px;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(255, 107, 107, 0.12) 0%, rgba(255, 107, 107, 0.03) 50%, transparent 70%);
+            top: -150px;
             right: -100px;
-            animation: float1 20s ease-in-out infinite;
+            animation: float1 25s ease-in-out infinite;
         }
         .bg-orb-2 {
-            width: 300px;
-            height: 300px;
-            background: rgba(78, 205, 196, 0.06);
-            bottom: 10%;
-            left: -50px;
-            animation: float2 25s ease-in-out infinite;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(78, 205, 196, 0.1) 0%, rgba(78, 205, 196, 0.02) 50%, transparent 70%);
+            bottom: 5%;
+            left: -100px;
+            animation: float2 30s ease-in-out infinite;
+        }
+        .bg-orb-3 {
+            width: 350px;
+            height: 350px;
+            background: radial-gradient(circle, rgba(255, 107, 107, 0.08) 0%, transparent 60%);
+            top: 40%;
+            right: 20%;
+            animation: float3 35s ease-in-out infinite;
         }
         @keyframes float1 {
             0%, 100% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(-30px, 30px) scale(1.1); }
-            66% { transform: translate(20px, -20px) scale(0.95); }
+            25% { transform: translate(-40px, 30px) scale(1.15); }
+            50% { transform: translate(-20px, 60px) scale(0.95); }
+            75% { transform: translate(30px, 20px) scale(1.05); }
         }
         @keyframes float2 {
             0%, 100% { transform: translate(0, 0) scale(1); }
-            50% { transform: translate(40px, -30px) scale(1.15); }
+            33% { transform: translate(50px, -40px) scale(1.2); }
+            66% { transform: translate(20px, -60px) scale(0.9); }
+        }
+        @keyframes float3 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-30px, -30px) scale(1.1); }
         }
 
         /* ===== App Layout ===== */
@@ -524,6 +550,17 @@
         .img-gen-form { margin-top: .8rem; display: flex; gap: .5rem; }
         .img-gen-form input { flex: 1; }
         .img-loading { display: flex; align-items: center; justify-content: center; height: 160px; color: var(--t3); font-size: .82rem; }
+        
+        /* 9宫格样式 */
+        .img-batch { margin-bottom: 1.5rem; }
+        .img-batch-title { font-size: .8rem; color: var(--t2); margin-bottom: .8rem; padding-bottom: .4rem; border-bottom: 1px solid var(--bd); }
+        .img-grid-9 { display: grid; grid-template-columns: repeat(3, 1fr); gap: .6rem; }
+        .img-card-9 { border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--bd); background: var(--bg); transition: transform .15s, box-shadow .15s; aspect-ratio: 1; }
+        .img-card-9:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); border-color: var(--ac); }
+        .img-card-9 img { width: 100%; height: 100%; object-fit: cover; display: block; cursor: pointer; }
+        .img-card-info-9 { padding: .35rem .5rem; font-size: .65rem; display: flex; flex-direction: column; gap: .1rem; }
+        .img-pose { color: var(--t1); font-weight: 500; }
+        .img-angle { color: var(--t3); font-size: .6rem; }
 
         /* ===== History ===== */
         .hist-list { max-height: 420px; overflow-y: auto; }
@@ -995,6 +1032,7 @@
 <!-- Floating Background Orbs -->
 <div class="bg-orb bg-orb-1"></div>
 <div class="bg-orb bg-orb-2"></div>
+<div class="bg-orb bg-orb-3"></div>
 
 <!-- Role Selector -->
 <div id="roleOverlay" style="position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;background:var(--bg);">
@@ -1007,15 +1045,15 @@
         <p style="color:var(--t3);font-size:.85rem;margin-bottom:2rem;">选择你的身份，开始创作</p>
         <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
             <button onclick="enterApp('photographer')" style="display:flex;flex-direction:column;align-items:center;gap:.75rem;padding:1.5rem 2rem;background:var(--bg3);border:1px solid var(--bd);border-radius:var(--radius);color:var(--t1);cursor:pointer;transition:all .3s;min-width:140px;font-family:inherit;" onmouseover="this.style.borderColor='rgba(255,107,107,0.4)';this.style.transform='translateY(-4px)'" onmouseout="this.style.borderColor='var(--bd)';this.style.transform='none'">
-                <span style="font-size:2rem;">📷</span>
+                <i data-lucide="camera" style="width:2.5rem;height:2.5rem;stroke-width:1.5;"></i>
                 <span style="font-size:.9rem;font-weight:500;">摄影师</span>
             </button>
             <button onclick="enterApp('model')" style="display:flex;flex-direction:column;align-items:center;gap:.75rem;padding:1.5rem 2rem;background:var(--bg3);border:1px solid var(--bd);border-radius:var(--radius);color:var(--t1);cursor:pointer;transition:all .3s;min-width:140px;font-family:inherit;" onmouseover="this.style.borderColor='rgba(78,205,196,0.4)';this.style.transform='translateY(-4px)'" onmouseout="this.style.borderColor='var(--bd)';this.style.transform='none'">
-                <span style="font-size:2rem;">✨</span>
+                <i data-lucide="sparkles" style="width:2.5rem;height:2.5rem;stroke-width:1.5;"></i>
                 <span style="font-size:.9rem;font-weight:500;">模特</span>
             </button>
             <button onclick="enterApp('assistant')" style="display:flex;flex-direction:column;align-items:center;gap:.75rem;padding:1.5rem 2rem;background:var(--bg3);border:1px solid var(--bd);border-radius:var(--radius);color:var(--t1);cursor:pointer;transition:all .3s;min-width:140px;font-family:inherit;" onmouseover="this.style.borderColor='rgba(255,255,255,0.2)';this.style.transform='translateY(-4px)'" onmouseout="this.style.borderColor='var(--bd)';this.style.transform='none'">
-                <span style="font-size:2rem;">🛠️</span>
+                <i data-lucide="wrench" style="width:2.5rem;height:2.5rem;stroke-width:1.5;"></i>
                 <span style="font-size:.9rem;font-weight:500;">助理</span>
             </button>
         </div>
@@ -1907,46 +1945,81 @@ function genPlan(input) {
 }
 
 // ===== Image Generation (Pollinations - 免费无需API Key) =====
-async function generateImage(prompt, planId) {
-    // Pollinations 免费图片生成 API
-    const encodedPrompt = encodeURIComponent(prompt);
-    const seed = Math.floor(Math.random() * 1000000);
-    const imgUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&seed=${seed}&nologo=true`;
+// 9种不同的拍摄角度/姿势/场景变体
+const POSE_VARIANTS = [
+    { angle: '正面半身', pose: '自然站立', desc: '面对镜头，肩膀微侧' },
+    { angle: '侧面全身', pose: '侧身回眸', desc: '身体侧对，转头看镜头' },
+    { angle: '45度角', pose: '优雅坐姿', desc: '斜侧角度，坐于场景' },
+    { angle: '仰拍', pose: '抬头仰望', desc: '低角度拍摄，显腿长' },
+    { angle: '俯拍', pose: '低头沉思', desc: '高角度拍摄，显脸小' },
+    { angle: '背影', pose: '背影杀', desc: '背对镜头，营造神秘感' },
+    { angle: '特写', pose: '面部特写', desc: '聚焦面部表情' },
+    { angle: '环境人像', pose: '融入场景', desc: '人物与环境互动' },
+    { angle: '动态抓拍', pose: '自然走动', desc: '行走中抓拍，自然感' }
+];
 
-    try {
-        // Pollinations 是同步返回图片 URL，直接可用
-        // 但为了确保图片生成完成，我们 fetch 一下
-        toast('正在生成图片...', 'i');
+async function generateImagesBatch(planId) {
+    const plans = sg(SK.P) || [];
+    const plan = plans.find(p => p.id === planId);
+    if (!plan) { toast('方案不存在', 'er'); return []; }
 
-        // 预加载图片确保可用
-        await new Promise((resolve, reject) => {
-            const img = new Image();
-            img.onload = resolve;
-            img.onerror = reject;
-            img.src = imgUrl;
-            // 超时 30 秒
-            setTimeout(() => reject(new Error('生成超时')), 30000);
-        });
+    const inp = plan.input;
+    const basePrompt = buildImagePrompt(plan);
+    const results = [];
 
-        if (planId) {
-            const plans = sg(SK.P) || [];
-            const idx = plans.findIndex(p => p.id === planId);
-            if (idx > -1) {
-                plans[idx].images = plans[idx].images || [];
-                plans[idx].images.push({ url: imgUrl, prompt, at: new Date().toISOString() });
-                ss(SK.P, plans);
-            }
+    toast('开始批量生成9张参考图...', 'i');
+
+    for (let i = 0; i < 9; i++) {
+        const variant = POSE_VARIANTS[i];
+        const prompt = `${basePrompt}，${variant.angle}，${variant.pose}，${variant.desc}`;
+        
+        try {
+            const encodedPrompt = encodeURIComponent(prompt);
+            const seed = Math.floor(Math.random() * 1000000) + i * 1000;
+            const imgUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&seed=${seed}&nologo=true`;
+
+            // 预加载
+            await new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = resolve;
+                img.onerror = reject;
+                img.src = imgUrl;
+                setTimeout(() => reject(new Error('超时')), 30000);
+            });
+
+            results.push({ 
+                url: imgUrl, 
+                prompt, 
+                variant: variant,
+                at: new Date().toISOString() 
+            });
+            
+            toast(`已生成 ${i + 1}/9 张`, 'i');
+        } catch (e) {
+            console.error(`第${i+1}张生成失败:`, e);
         }
-
-        toast('图片生成成功!', 'i');
-        return imgUrl;
-
-    } catch (e) {
-        const msg = e.message || String(e);
-        toast('生图失败: ' + msg, 'er');
-        console.error('[生图] 错误:', msg);
-        return null;
     }
+
+    // 保存到方案
+    if (results.length > 0) {
+        const plans = sg(SK.P) || [];
+        const idx = plans.findIndex(p => p.id === planId);
+        if (idx > -1) {
+            plans[idx].images = plans[idx].images || [];
+            plans[idx].images.push(...results);
+            ss(SK.P, plans);
+        }
+        toast(`成功生成 ${results.length}/9 张参考图!`, 'ok');
+    } else {
+        toast('生成失败，请重试', 'er');
+    }
+
+    return results;
+}
+
+// 保留单张生成用于兼容
+async function generateImage(prompt, planId) {
+    return generateImagesBatch(planId);
 }
 
 function buildImagePrompt(plan) {
@@ -1968,7 +2041,7 @@ function renderImageGallery(plan) {
         <h4>🖼️ 例图生成</h4>
         <div class="img-gen-form">
             <input type="text" id="img-prompt-${plan.id}" value="${buildImagePrompt(plan)}" placeholder="输入生图提示词">
-            <button class="btn btn-i" onclick="genImgForPlan('${plan.id}')" id="gen-img-btn-${plan.id}">🎨 生成</button>
+            <button class="btn btn-i" onclick="genImgForPlan('${plan.id}')" id="gen-img-btn-${plan.id}">🎨 批量生成9张</button>
         </div>
         <div class="img-grid" id="img-grid-${plan.id}">`;
 
@@ -1996,7 +2069,7 @@ async function genImgForPlan(planId) {
     const btn = $(`gen-img-btn-${planId}`);
     const grid = $(`img-grid-${planId}`);
 
-    if (btn) { btn.disabled = true; btn.textContent = '⏳ 生成中...'; }
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ 批量生成中...'; }
 
     // Show loading
     if (grid) {
@@ -2009,7 +2082,7 @@ async function genImgForPlan(planId) {
     const loading = $(`img-loading-${planId}`);
     if (loading) loading.remove();
 
-    if (btn) { btn.disabled = false; btn.textContent = '🎨 生成'; }
+    if (btn) { btn.disabled = false; btn.textContent = '🎨 批量生成9张'; }
 
     if (imgUrl) {
         // Refresh gallery
@@ -2029,19 +2102,34 @@ function renderImageGalleryDiv(plan) {
     const div = document.createElement('div');
     div.className = 'img-gallery';
     div.id = galleryId;
+    
+    // 按批次分组显示（每批9张）
+    const batches = [];
+    for (let i = 0; i < images.length; i += 9) {
+        batches.push(images.slice(i, i + 9));
+    }
+    
     div.innerHTML = `
-        <h4>🖼️ 例图生成</h4>
+        <h4>🖼️ 例图生成 (${images.length}张)</h4>
         <div class="img-gen-form">
             <input type="text" id="img-prompt-${plan.id}" value="${buildImagePrompt(plan)}" placeholder="输入生图提示词">
-            <button class="btn btn-i" onclick="genImgForPlan('${plan.id}')" id="gen-img-btn-${plan.id}">🎨 生成</button>
+            <button class="btn btn-i" onclick="genImgForPlan('${plan.id}')" id="gen-img-btn-${plan.id}">🎨 批量生成9张</button>
         </div>
-        <div class="img-grid" id="img-grid-${plan.id}">
-            ${images.map(img => `
-                <div class="img-card">
-                    <img src="${img.url}" alt="generated" onclick="previewImg('${img.url}')">
-                    <div class="img-card-info">${new Date(img.at).toLocaleString()}</div>
-                </div>`).join('')}
-        </div>`;
+        ${batches.map((batch, batchIdx) => `
+            <div class="img-batch">
+                <div class="img-batch-title">第${batchIdx + 1}组 (${batch.length}张)</div>
+                <div class="img-grid-9">
+                    ${batch.map((img, idx) => `
+                        <div class="img-card-9">
+                            <img src="${img.url}" alt="${img.variant ? img.variant.pose : '参考图'}" onclick="previewImg('${img.url}')">
+                            <div class="img-card-info-9">
+                                <span class="img-pose">${img.variant ? img.variant.pose : '参考图'}</span>
+                                <span class="img-angle">${img.variant ? img.variant.angle : ''}</span>
+                            </div>
+                        </div>`).join('')}
+                </div>
+            </div>
+        `).join('')}`;
     return div;
 }
 
@@ -2631,6 +2719,103 @@ async function exportPlanPdf(id) {
     toast('PDF 已下载','ok');
 }
 
+// 导出模特专用PDF（仅包含模特需要的信息）
+async function exportModelPdf(id) {
+    const plan=getPlans().find(p=>p.id===id);
+    if(!plan){toast('方案不存在','er');return;}
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const pageW = doc.internal.pageSize.getWidth();
+    let y=15;
+    
+    // 标题
+    doc.setFontSize(18); doc.setTextColor(255,107,107); 
+    doc.text('拍摄参考指南', pageW/2, y, {align:'center'}); y+=12;
+    
+    // 主题信息
+    doc.setFontSize(12); doc.setTextColor(50); doc.setFont('','bold');
+    doc.text(plan.input?.theme || '拍摄主题', pageW/2, y, {align:'center'}); y+=8;
+    
+    // 基础信息
+    doc.setFontSize(9); doc.setTextColor(100); doc.setFont('','normal');
+    doc.text(`风格：${plan.input?.style||'待定'} | 时长：${plan.input?.duration||'待定'}`, pageW/2, y, {align:'center'}); y+=10;
+    doc.setDrawColor(200); doc.line(15,y,pageW-15,y); y+=8;
+    
+    // 只显示模特相关的内容（过滤掉器材、技术参数等）
+    const modelSections = plan.sections.filter(s => {
+        const title = s.ti.toLowerCase();
+        // 排除摄影师专业内容
+        return !title.includes('器材') && !title.includes('设备') && !title.includes('参数') && 
+               !title.includes('灯光') && !title.includes('技术') && !title.includes('后期') &&
+               !title.includes('备份') && !title.includes('存储');
+    });
+    
+    modelSections.forEach(s=>{
+        if(y>270){doc.addPage();y=15;}
+        doc.setFontSize(11); doc.setTextColor(50); doc.setFont('','bold'); 
+        doc.text(s.ti,15,y); y+=6;
+        doc.setFontSize(9); doc.setTextColor(80); doc.setFont('','normal');
+        s.c.forEach(c=>{
+            const lines=doc.splitTextToSize('• '+c, pageW-30);
+            if(y+lines.length*5>275){doc.addPage();y=10;}
+            doc.text(lines,15,y); y+=lines.length*5+2;
+        });
+        y+=5;
+    });
+    
+    // 添加参考图页面
+    if(plan.images && plan.images.length > 0) {
+        doc.addPage();
+        y=15;
+        doc.setFontSize(14); doc.setTextColor(255,107,107); 
+        doc.text('参考姿势', pageW/2, y, {align:'center'}); y+=10;
+        
+        // 显示前9张参考图
+        const refImages = plan.images.slice(0, 9);
+        const imgSize = 55;
+        const gap = 8;
+        const startX = 15;
+        let row = 0;
+        let col = 0;
+        
+        for(let i = 0; i < refImages.length; i++) {
+            if(i > 0 && i % 3 === 0) {
+                row++;
+                col = 0;
+            }
+            if(row >= 3) {
+                doc.addPage();
+                row = 0;
+                y = 15;
+            }
+            
+            const x = startX + col * (imgSize + gap);
+            const imgY = y + row * (imgSize + gap + 10);
+            
+            try {
+                // 添加图片占位框（实际图片需要base64编码）
+                doc.setDrawColor(200);
+                doc.rect(x, imgY, imgSize, imgSize);
+                doc.setFontSize(7); doc.setTextColor(150);
+                doc.text(`参考图 ${i+1}`, x + imgSize/2, imgY + imgSize/2, {align:'center'});
+                
+                // 添加姿势说明
+                const img = refImages[i];
+                if(img.variant) {
+                    doc.setFontSize(6); doc.setTextColor(100);
+                    doc.text(img.variant.pose, x + imgSize/2, imgY + imgSize + 4, {align:'center'});
+                }
+            } catch(e) {
+                console.log('图片添加失败', e);
+            }
+            col++;
+        }
+    }
+    
+    doc.save(`模特参考_${plan.title}_${new Date().toLocaleDateString().replace(/\//g,'-')}.pdf`);
+    toast('模特专用PDF已下载','ok');
+}
+
 // ===== Copy =====
 function copyCurrentPlan(){
     if(!currentPlanData) return;
@@ -2643,9 +2828,15 @@ function getActionsHtml() {
     return `<div class="actions">
         <button class="btn btn-s btn-sm" onclick="copyCurrentPlan()">📋 复制</button>
         <button class="btn btn-s btn-sm" onclick="exportPlanPdfCurrent()">📄 PDF</button>
-        ${currentPlanId ? `<button class="btn btn-i btn-sm" onclick="genImgForPlan('${currentPlanId}')" id="action-gen-img-btn">🎨 例图</button>` : ''}
+        <button class="btn btn-i btn-sm" onclick="exportModelPdfCurrent()">👤 模特版PDF</button>
+        ${currentPlanId ? `<button class="btn btn-i btn-sm" onclick="genImgForPlan('${currentPlanId}')" id="action-gen-img-btn">🎨 批量生成9张</button>` : ''}
         <button class="btn btn-d btn-sm" onclick="delCurrentPlan()">🗑️ 删除</button>
     </div>`;
+}
+
+async function exportModelPdfCurrent() {
+    if(!currentPlanData){toast('先生成方案','er');return;}
+    await exportModelPdf(currentPlanData.id);
 }
 
 async function exportPlanPdfCurrent() {
@@ -2710,6 +2901,11 @@ updateBadge();renderHistMini();renderQuickVenue();
     once: true,
     offset: 50
   });
+  
+  // Initialize Lucide icons
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
 </script>
 </body>
 </html>
