@@ -14,7 +14,7 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
-            /* Deep charcoal palette */
+            /* Dark mode (default) */
             --bg: #0c0c0e;
             --bg2: #141416;
             --bg3: #1c1c1f;
@@ -24,14 +24,12 @@
             --t1: #fafafa;
             --t2: rgba(255,255,255,0.55);
             --t3: rgba(255,255,255,0.3);
-            /* Accent colors - coral & teal */
             --ac: #ff6b6b;
             --ac2: #4ecdc4;
             --ach: #ff8585;
             --ac-glow: rgba(255,107,107,0.15);
             --ok: #22c55e;
             --er: #ef4444;
-            /* Organic shapes */
             --radius: 24px;
             --radius-sm: 16px;
             --radius-lg: 32px;
@@ -39,6 +37,58 @@
             --sidebar-collapsed: 72px;
             --font-serif: 'Playfair Display', Georgia, serif;
             --font-sans: 'Inter', -apple-system, sans-serif;
+            --shadow: 0 4px 24px rgba(0,0,0,0.4);
+        }
+        /* Light mode */
+        [data-theme="light"] {
+            --bg: #fafafa;
+            --bg2: #f5f5f5;
+            --bg3: #ebebeb;
+            --bg4: #e0e0e0;
+            --bd: rgba(0,0,0,0.08);
+            --bd2: rgba(0,0,0,0.15);
+            --t1: #1a1a1a;
+            --t2: rgba(0,0,0,0.6);
+            --t3: rgba(0,0,0,0.4);
+            --ac: #e85555;
+            --ac2: #3db8b0;
+            --ach: #f06565;
+            --ac-glow: rgba(232,85,85,0.1);
+            --shadow: 0 4px 24px rgba(0,0,0,0.1);
+        }
+        /* Sunrise mode (warm, 6-18) */
+        [data-theme="sunrise"] {
+            --bg: #fef9f3;
+            --bg2: #fdf5ec;
+            --bg3: #f9edd9;
+            --bg4: #f3e3c9;
+            --bd: rgba(180,140,80,0.15);
+            --bd2: rgba(180,140,80,0.25);
+            --t1: #2d2418;
+            --t2: rgba(45,36,24,0.65);
+            --t3: rgba(45,36,24,0.4);
+            --ac: #d4840a;
+            --ac2: #6b9b8a;
+            --ach: #e6991a;
+            --ac-glow: rgba(212,132,10,0.12);
+            --shadow: 0 4px 24px rgba(180,140,80,0.1);
+        }
+        /* Sunset mode (warm dark, 17-20) */
+        [data-theme="sunset"] {
+            --bg: #1a1410;
+            --bg2: #221c16;
+            --bg3: #2d251c;
+            --bg4: #3a3025;
+            --bd: rgba(255,180,100,0.08);
+            --bd2: rgba(255,180,100,0.15);
+            --t1: #fff5e6;
+            --t2: rgba(255,245,230,0.6);
+            --t3: rgba(255,245,230,0.35);
+            --ac: #ff9955;
+            --ac2: #88ccaa;
+            --ach: #ffaa66;
+            --ac-glow: rgba(255,153,85,0.15);
+            --shadow: 0 4px 24px rgba(0,0,0,0.5);
         }
         body {
             font-family: var(--font-sans);
@@ -284,6 +334,40 @@
             opacity: 0;
             position: absolute;
         }
+        /* Theme Switcher */
+        .theme-switcher {
+            padding: .6rem 1rem;
+            border-top: 1px solid var(--bd);
+            flex-shrink: 0;
+        }
+        .theme-btn {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            width: 100%;
+            padding: .5rem .75rem;
+            background: var(--bg3);
+            border: 1px solid var(--bd);
+            border-radius: var(--radius-sm);
+            color: var(--t2);
+            cursor: pointer;
+            transition: all 200ms;
+            font-family: inherit;
+            font-size: .75rem;
+        }
+        .theme-btn:hover {
+            background: var(--bg4);
+            color: var(--t1);
+            border-color: var(--bd2);
+        }
+        .theme-btn svg {
+            width: 1.1rem;
+            height: 1.1rem;
+            flex-shrink: 0;
+        }
+        .theme-label {
+            white-space: nowrap;
+        }
         .sidebar-toggle {
             padding: .8rem;
             display: flex;
@@ -360,6 +444,89 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        /* ===== Micro-interactions ===== */
+        .ripple {
+            position: relative;
+            overflow: hidden;
+        }
+        .ripple::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255,255,255,0.15);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.4s ease, height 0.4s ease, opacity 0.4s ease;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .ripple:active::after {
+            width: 200%;
+            height: 200%;
+            opacity: 1;
+            transition: 0s;
+        }
+        
+        /* Hover lift effect */
+        .hover-lift {
+            transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 300ms ease;
+        }
+        .hover-lift:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.3);
+        }
+        
+        /* Focus glow */
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--ac);
+            box-shadow: 0 0 0 3px var(--ac-glow);
+        }
+        
+        /* Button press effect */
+        .btn:active:not(:disabled) {
+            transform: scale(0.97);
+        }
+        
+        /* Smooth scroll */
+        html { scroll-behavior: smooth; }
+        
+        /* Selection color */
+        ::selection {
+            background: var(--ac);
+            color: white;
+        }
+        
+        /* Tooltip */
+        [data-tooltip] {
+            position: relative;
+        }
+        [data-tooltip]::before {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-4px);
+            padding: .4rem .6rem;
+            background: var(--bg4);
+            border: 1px solid var(--bd);
+            border-radius: 6px;
+            font-size: .7rem;
+            color: var(--t1);
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 200ms, transform 200ms;
+            z-index: 100;
+        }
+        [data-tooltip]:hover::before {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-8px);
+        }
+
         /* ===== Grid ===== */
         .grid { display: grid; grid-template-columns: 300px 1fr 260px; gap: 1.5rem; align-items: start; }
         @media(max-width: 1100px) { .grid { grid-template-columns: 1fr; } .col-side { display: none; } }
@@ -400,6 +567,42 @@
             font-family: var(--font-serif);
         }
         .p-body { padding: 1.5rem; }
+
+        /* ===== Skeleton Loading ===== */
+        .skeleton {
+            background: linear-gradient(90deg, var(--bg3) 25%, var(--bg4) 50%, var(--bg3) 75%);
+            background-size: 200% 100%;
+            animation: skeleton-shimmer 1.5s infinite;
+            border-radius: var(--radius-sm);
+        }
+        @keyframes skeleton-shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        .skeleton-text { height: 1rem; margin-bottom: .5rem; }
+        .skeleton-text.sm { height: .75rem; width: 60%; }
+        .skeleton-text.lg { height: 1.25rem; }
+        .skeleton-title { height: 1.5rem; width: 40%; margin-bottom: 1rem; }
+        .skeleton-card {
+            height: 120px;
+            border-radius: var(--radius);
+            margin-bottom: .75rem;
+        }
+        .skeleton-avatar { width: 40px; height: 40px; border-radius: 50%; }
+        .skeleton-btn { height: 2.5rem; width: 120px; }
+        
+        .loading-overlay {
+            position: absolute;
+            inset: 0;
+            background: var(--bg2);
+            display: flex;
+            flex-direction: column;
+            gap: .75rem;
+            padding: 1.5rem;
+            z-index: 10;
+            border-radius: var(--radius);
+        }
+        .loading-overlay.hidden { display: none; }
 
         /* ===== Form ===== */
         .fg { margin-bottom: 1rem; }
@@ -561,6 +764,120 @@
         .img-card-info-9 { padding: .35rem .5rem; font-size: .65rem; display: flex; flex-direction: column; gap: .1rem; }
         .img-pose { color: var(--t1); font-weight: 500; }
         .img-angle { color: var(--t3); font-size: .6rem; }
+        
+        /* Calendar Styles */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+        .calendar-header {
+            text-align: center;
+            padding: .5rem;
+            font-size: .75rem;
+            color: var(--t3);
+            font-weight: 500;
+        }
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: .4rem;
+            background: var(--bg2);
+            border-radius: var(--radius-sm);
+            font-size: .8rem;
+            cursor: pointer;
+            transition: all 200ms;
+            min-height: 60px;
+        }
+        .calendar-day:hover {
+            background: var(--bg3);
+        }
+        .calendar-day.today {
+            background: rgba(255,107,107,0.15);
+            border: 1px solid var(--ac);
+        }
+        .calendar-day.other-month {
+            opacity: 0.4;
+        }
+        .calendar-day-num {
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        .calendar-event-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--ac);
+        }
+        .schedule-item {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            padding: .75rem;
+            background: var(--bg2);
+            border-radius: var(--radius-sm);
+            margin-bottom: .5rem;
+            border-left: 3px solid var(--ac);
+        }
+        .schedule-date {
+            text-align: center;
+            min-width: 50px;
+        }
+        .schedule-date-day {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--ac);
+        }
+        .schedule-date-month {
+            font-size: .7rem;
+            color: var(--t3);
+        }
+        .schedule-info {
+            flex: 1;
+        }
+        .schedule-title {
+            font-weight: 500;
+            margin-bottom: .25rem;
+        }
+        .schedule-meta {
+            font-size: .75rem;
+            color: var(--t3);
+        }
+        .todo-item {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            padding: .6rem;
+            background: var(--bg2);
+            border-radius: var(--radius-sm);
+            margin-bottom: .4rem;
+        }
+        .todo-checkbox {
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--bd);
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 200ms;
+        }
+        .todo-checkbox.checked {
+            background: var(--ac);
+            border-color: var(--ac);
+        }
+        .todo-text {
+            flex: 1;
+            font-size: .85rem;
+        }
+        .todo-text.done {
+            text-decoration: line-through;
+            color: var(--t3);
+        }
 
         /* ===== History ===== */
         .hist-list { max-height: 420px; overflow-y: auto; }
@@ -1101,7 +1418,18 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
                 <span class="nav-label">数据备份</span>
             </button>
+            <button class="nav-item" data-tab="calendar" data-role="photographer">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <span class="nav-label">日程日历</span>
+            </button>
         </nav>
+        <!-- Theme Switcher -->
+        <div class="theme-switcher">
+            <button class="theme-btn" id="themeToggle" onclick="cycleTheme()" title="切换主题">
+                <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                <span class="theme-label" id="themeLabel">自动</span>
+            </button>
+        </div>
         <button class="sidebar-toggle" id="sidebarToggle">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
@@ -1401,6 +1729,25 @@
                 </div>
             </div>
         </div>
+        
+        <!-- 日程日历 -->
+        <div class="tab-cnt" id="tab-calendar">
+            <div style="max-width:900px;margin:0 auto;">
+                <div class="panel" style="margin-bottom:1rem;">
+                    <div class="p-head" style="justify-content:space-between">
+                        <h2>📅 拍摄日程</h2>
+                        <button class="btn btn-s btn-sm" onclick="addSchedule()">+ 添加日程</button>
+                    </div>
+                    <div class="p-body">
+                        <div id="calendarGrid" class="calendar-grid"></div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="p-head"><h2>📋 待办事项</h2></div>
+                    <div class="p-body" id="todoList"></div>
+                </div>
+            </div>
+        </div>
     </main>
 </div>
 
@@ -1413,6 +1760,55 @@
 <div class="toast" id="toast"></div>
 
 <script>
+// ===== Theme System =====
+(function() {
+    const THEMES = ['auto', 'dark', 'light', 'sunrise', 'sunset'];
+    const THEME_LABELS = { auto: '自动', dark: '暗色', light: '亮色', sunrise: '日出', sunset: '日落' };
+    const THEME_ICONS = {
+        auto: '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>',
+        dark: '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',
+        light: '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>',
+        sunrise: '<path d="M17 18a5 5 0 0 0-10 0"/><line x1="12" y1="9" x2="12" y2="2"/><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/><line x1="1" y1="18" x2="3" y2="18"/><line x1="21" y1="18" x2="23" y2="18"/><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/><line x1="23" y1="22" x2="1" y2="22"/><polyline points="8 6 12 2 16 6"/>',
+        sunset: '<path d="M17 18a5 5 0 0 0-10 0"/><line x1="12" y1="9" x2="12" y2="2"/><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/><line x1="1" y1="18" x2="3" y2="18"/><line x1="21" y1="18" x2="23" y2="18"/><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/><line x1="23" y1="22" x2="1" y2="22"/><polyline points="16 5 12 9 8 5"/>'
+    };
+    
+    let currentTheme = 'auto';
+    
+    function getAutoTheme() {
+        const hour = new Date().getHours();
+        if (hour >= 6 && hour < 17) return 'sunrise'; // 日出模式 (6:00-17:00)
+        if (hour >= 17 && hour < 20) return 'sunset'; // 日落模式 (17:00-20:00)
+        return 'dark'; // 夜间模式 (20:00-6:00)
+    }
+    
+    function applyTheme(theme) {
+        const actualTheme = theme === 'auto' ? getAutoTheme() : theme;
+        document.documentElement.setAttribute('data-theme', actualTheme);
+        
+        // Update button
+        const label = document.getElementById('themeLabel');
+        const icon = document.getElementById('themeIcon');
+        if (label) label.textContent = THEME_LABELS[theme];
+        if (icon) icon.innerHTML = THEME_ICONS[theme];
+    }
+    
+    window.cycleTheme = function() {
+        const idx = THEMES.indexOf(currentTheme);
+        currentTheme = THEMES[(idx + 1) % THEMES.length];
+        try { localStorage.setItem('pw_theme', currentTheme); } catch(e) {}
+        applyTheme(currentTheme);
+    };
+    
+    // Init theme
+    try { currentTheme = localStorage.getItem('pw_theme') || 'auto'; } catch(e) {}
+    applyTheme(currentTheme);
+    
+    // Auto-update every minute if in auto mode
+    setInterval(function() {
+        if (currentTheme === 'auto') applyTheme('auto');
+    }, 60000);
+})();
+
 // ===== Role System & App Entry =====
 (function() {
     const ROLE_KEY = 'pw_role';
@@ -1498,6 +1894,7 @@ function initTabs() {
             if(tab==='tpl') renderTpl();
             if(tab==='hist') renderHistFull();
             if(tab==='backup') updateBackupStats();
+            if(tab==='calendar') { renderCalendar(); renderSchedules(); }
         });
     });
 }
@@ -2228,7 +2625,137 @@ function renderPlanContent(plan) {
         </div>
     `;
 
-    return metaHtml + sectionsHtml + imgGallery + commHtml + colorHtml;
+    // AI智能推荐
+    const aiRecommend = getAIRecommendations(plan.input);
+    const aiHtml = `
+        <div class="ps" style="margin-top:1.5rem;border-top:2px solid var(--ac2);padding-top:1rem">
+            <div class="ps-hdr"><div class="ps-icon">🤖</div><h3 class="ps-title">AI 智能推荐</h3></div>
+            <div class="ps-cnt">
+                <h4 style="color:var(--ac2);margin:.8rem 0 .4rem;font-size:.85rem">推荐器材组合</h4>
+                <div style="display:flex;flex-wrap:wrap;gap:.4rem">${aiRecommend.equipment.map(e=>`<span class="eq-tag" style="background:rgba(78,205,196,0.1);border-color:rgba(78,205,196,0.3)">${e}</span>`).join('')}</div>
+                
+                <h4 style="color:var(--ac2);margin:.8rem 0 .4rem;font-size:.85rem">推荐场地类型</h4>
+                <ul>${aiRecommend.venues.map(v=>`<li>${v}</li>`).join('')}</ul>
+                
+                <h4 style="color:var(--ac2);margin:.8rem 0 .4rem;font-size:.85rem">拍摄时间建议</h4>
+                <p style="font-size:.8rem;color:var(--t2)">🕐 ${aiRecommend.bestTime}</p>
+                
+                <h4 style="color:var(--ac2);margin:.8rem 0 .4rem;font-size:.85rem">参考摄影师/作品</h4>
+                <div style="display:flex;flex-direction:column;gap:.3rem">${aiRecommend.references.map(r=>`<a href="${r.url}" target="_blank" class="tool-link">📸 ${r.name}</a>`).join('')}</div>
+                
+                <h4 style="color:var(--ac2);margin:.8rem 0 .4rem;font-size:.85rem">专业提示</h4>
+                <ul>${aiRecommend.tips.map(t=>`<li>${t}</li>`).join('')}</ul>
+            </div>
+        </div>
+    `;
+
+    return metaHtml + sectionsHtml + imgGallery + commHtml + colorHtml + aiHtml;
+}
+
+// AI智能推荐
+function getAIRecommendations(input) {
+    const style = input?.style || '';
+    const theme = input?.theme || '';
+    const mood = input?.mood || '';
+    
+    const recommendations = {
+        '时尚': {
+            equipment: ['85mm f/1.4 人像镜皇', '35mm f/1.4 环境人像', '外拍灯 + 柔光箱', '反光板', '烟雾机'],
+            venues: ['现代建筑天台', '极简白墙工作室', '城市CBD街景', '工业风loft'],
+            bestTime: '下午3-5点（黄金光）或阴天（柔和漫射光）',
+            references: [
+                { name: 'Annie Leibovitz 人像作品', url: 'https://www.annie-leibovitz.com/' },
+                { name: 'Peter Lindbergh 时尚摄影', url: 'https://www.peterlindbergh.com/' }
+            ],
+            tips: ['使用大光圈虚化背景突出人物', '引导模特展现自信气场', '后期可增加对比度和饱和度']
+        },
+        '复古': {
+            equipment: ['50mm f/1.4 标准镜头', '暖色LED补光灯', '老式道具（收音机、电话）', '胶片滤镜', '柔焦镜'],
+            venues: ['老式洋房', '复古咖啡馆', '民国风酒店', '老街巷'],
+            bestTime: '清晨或傍晚（温暖柔和的光线）',
+            references: [
+                { name: '王家卫电影色调', url: 'https://www.youtube.com/results?search_query=wong+kar+wai+color+grading' },
+                { name: 'Kodak Portra 胶片风格', url: 'https://www.kodak.com/' }
+            ],
+            tips: ['降低饱和度，增加暖色调', '使用柔焦营造朦胧感', '加入颗粒感模拟胶片质感']
+        },
+        '文艺': {
+            equipment: ['50mm f/1.8', '自然光', '白色反光板', '小道具（书本、花束）'],
+            venues: ['书店', '咖啡馆', '公园草坪', '湖边', '老建筑'],
+            bestTime: '上午9-11点或下午4-6点',
+            references: [
+                { name: '川岛小鸟作品', url: 'https://www.instagram.com/kotorikawashima/' },
+                { name: '滨田英明风格', url: 'https://www.instagram.com/hamadahideaki/' }
+            ],
+            tips: ['保持画面干净简洁', '捕捉自然表情和动作', '后期保持清新通透感']
+        },
+        '性感': {
+            equipment: ['85mm f/1.4', '柔光箱', '蜂巢罩', '黑色背景布', '精油/水珠'],
+            venues: ['私密影棚', '酒店房间', '浴缸场景', '落地窗前'],
+            bestTime: '夜间或可控光源环境',
+            references: [
+                { name: 'Helmut Newton 作品', url: 'https://www.helmutnewton.com/' }
+            ],
+            tips: ['注意光线塑造身体曲线', '保持专业沟通，尊重模特边界', '使用阴影增加神秘感']
+        },
+        '街拍': {
+            equipment: ['35mm f/2 或 28mm', '高速SD卡', '轻便相机包', '备用电池'],
+            venues: ['老城区街道', '市场', '地铁站', '商业街', '公园'],
+            bestTime: '早上7-9点或傍晚5-7点',
+            references: [
+                { name: 'Henri Cartier-Bresson', url: 'https://www.henricartierbresson.org/' },
+                { name: 'Bruce Gilden 街拍风格', url: 'https://www.instagram.com/brucegildenstudio/' }
+            ],
+            tips: ['预判场景，提前构图', '快速对焦，抓拍瞬间', '融入环境，不打扰被摄者']
+        },
+        '古风': {
+            equipment: ['85mm 人像镜头', '外拍灯', '烟饼', '古风道具（扇子、灯笼）'],
+            venues: ['古镇', '园林', '寺庙', '古建筑', '竹林'],
+            bestTime: '清晨薄雾或黄昏',
+            references: [
+                { name: '汉服摄影作品集', url: 'https://www.xiaohongshu.com/search_result?keyword=汉服摄影' }
+            ],
+            tips: ['配合烟饼营造仙气', '后期增加青绿色调', '注意服装与环境协调']
+        },
+        '婚纱': {
+            equipment: ['85mm f/1.4', '35mm f/1.4', '外拍灯', '反光板', '头纱、捧花'],
+            venues: ['教堂', '海边', '草坪', '城堡', '城市地标'],
+            bestTime: '黄金时段（日出后/日落前1小时）',
+            references: [
+                { name: 'Jose Villa 婚纱摄影', url: 'https://www.josevilla.com/' }
+            ],
+            tips: ['捕捉情感互动瞬间', '注意婚纱裙摆的飘逸感', '后期保持浪漫柔和色调']
+        },
+        '商业': {
+            equipment: ['中画幅相机', '专业灯光系统', '三脚架', '色卡', '电脑联机拍摄'],
+            venues: ['专业影棚', '品牌门店', '产品展示空间'],
+            bestTime: '可控光源环境，时间不限',
+            references: [
+                { name: '商业摄影案例', url: 'https://www.behance.net/search/projects?field=photography' }
+            ],
+            tips: ['精确控制光线和色彩', '与客户确认创意方向', '保留足够后期空间']
+        },
+        '情绪': {
+            equipment: ['50mm f/1.4', '自然光或单灯', '黑色背景', '简单道具'],
+            venues: ['空旷房间', '废弃建筑', '雨天窗边', '黄昏户外'],
+            bestTime: '阴天或黄昏',
+            references: [
+                { name: 'Sarah Moon 作品', url: 'https://www.sarahmoon.com/' }
+            ],
+            tips: ['引导真实情绪表达', '使用暗调营造氛围', '后期可增加颗粒和暗角']
+        }
+    };
+    
+    // 匹配风格
+    let matched = recommendations['时尚']; // 默认
+    for (const key of Object.keys(recommendations)) {
+        if (style.includes(key) || theme.includes(key) || mood.includes(key)) {
+            matched = recommendations[key];
+            break;
+        }
+    }
+    
+    return matched;
 }
 
 // 获取不同风格的沟通话术
@@ -2889,8 +3416,139 @@ function importData(){
     reader.readAsText(file);
 }
 
+// ===== Calendar & Schedule =====
+const SK_SCHED = 'pw_schedule';
+const SK_TODO = 'pw_todos';
+
+function renderCalendar() {
+    const grid = $('calendarGrid');
+    if (!grid) return;
+    
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startDay = firstDay.getDay();
+    const daysInMonth = lastDay.getDate();
+    
+    const schedules = sg(SK_SCHED) || [];
+    const days = ['日', '一', '二', '三', '四', '五', '六'];
+    
+    let html = days.map(d => `<div class="calendar-header">${d}</div>`).join('');
+    
+    // Previous month days
+    const prevMonth = new Date(year, month, 0);
+    for (let i = startDay - 1; i >= 0; i--) {
+        const day = prevMonth.getDate() - i;
+        html += `<div class="calendar-day other-month"><span class="calendar-day-num">${day}</span></div>`;
+    }
+    
+    // Current month days
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const hasEvent = schedules.some(s => s.date === dateStr);
+        const isToday = day === now.getDate();
+        
+        html += `<div class="calendar-day${isToday ? ' today' : ''}" onclick="showDaySchedules('${dateStr}')">
+            <span class="calendar-day-num">${day}</span>
+            ${hasEvent ? '<span class="calendar-event-dot"></span>' : ''}
+        </div>`;
+    }
+    
+    // Next month days
+    const remaining = 42 - (startDay + daysInMonth);
+    for (let day = 1; day <= remaining; day++) {
+        html += `<div class="calendar-day other-month"><span class="calendar-day-num">${day}</span></div>`;
+    }
+    
+    grid.innerHTML = html;
+}
+
+function renderSchedules() {
+    const schedules = sg(SK_SCHED) || [];
+    const now = new Date();
+    const upcoming = schedules.filter(s => new Date(s.date) >= now).sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    if (upcoming.length === 0) {
+        $('todoList').innerHTML = '<p style="color:var(--t3);text-align:center;padding:2rem">暂无拍摄日程</p>';
+        return;
+    }
+    
+    const months = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+    $('todoList').innerHTML = upcoming.slice(0, 5).map(s => {
+        const d = new Date(s.date);
+        return `<div class="schedule-item">
+            <div class="schedule-date">
+                <div class="schedule-date-day">${d.getDate()}</div>
+                <div class="schedule-date-month">${months[d.getMonth()]}</div>
+            </div>
+            <div class="schedule-info">
+                <div class="schedule-title">${s.title}</div>
+                <div class="schedule-meta">${s.time || ''} ${s.location || ''}</div>
+            </div>
+            <button class="btn-i2" onclick="deleteSchedule('${s.id}')">✕</button>
+        </div>`;
+    }).join('');
+}
+
+window.addSchedule = function() {
+    const date = prompt('拍摄日期 (YYYY-MM-DD):', new Date().toISOString().split('T')[0]);
+    if (!date) return;
+    const title = prompt('拍摄主题:');
+    if (!title) return;
+    const time = prompt('拍摄时间 (可选):') || '';
+    const location = prompt('拍摄地点 (可选):') || '';
+    
+    const schedules = sg(SK_SCHED) || [];
+    schedules.push({
+        id: Date.now().toString(),
+        date, title, time, location,
+        createdAt: new Date().toISOString()
+    });
+    ss(SK_SCHED, schedules);
+    renderCalendar();
+    renderSchedules();
+    toast('日程已添加', 'ok');
+};
+
+window.deleteSchedule = function(id) {
+    if (!confirm('确定删除此日程？')) return;
+    const schedules = sg(SK_SCHED) || [];
+    ss(SK_SCHED, schedules.filter(s => s.id !== id));
+    renderCalendar();
+    renderSchedules();
+    toast('日程已删除', 'ok');
+};
+
+window.showDaySchedules = function(dateStr) {
+    const schedules = sg(SK_SCHED) || [];
+    const daySchedules = schedules.filter(s => s.date === dateStr);
+    if (daySchedules.length === 0) {
+        if (confirm(`${dateStr} 暂无日程，是否添加？`)) {
+            const title = prompt('拍摄主题:');
+            if (title) {
+                schedules.push({
+                    id: Date.now().toString(),
+                    date: dateStr, title,
+                    time: prompt('拍摄时间 (可选):') || '',
+                    location: prompt('拍摄地点 (可选):') || '',
+                    createdAt: new Date().toISOString()
+                });
+                ss(SK_SCHED, schedules);
+                renderCalendar();
+                renderSchedules();
+                toast('日程已添加', 'ok');
+            }
+        }
+    } else {
+        alert(`${dateStr} 日程:\n${daySchedules.map(s => `• ${s.title} ${s.time} ${s.location}`).join('\n')}`);
+    }
+};
+
 // ===== Init =====
-updateBadge();renderHistMini();renderQuickVenue();
+updateBadge();renderHistMini();renderQuickVenue();renderCalendar();renderSchedules();
 </script>
 <!-- AOS Animation Library -->
 <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
