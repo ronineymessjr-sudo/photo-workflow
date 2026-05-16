@@ -1815,7 +1815,10 @@
                 <div class="panel">
                     <div class="p-head" style="justify-content:space-between">
                         <h2>📋 待办事项</h2>
-                        <button class="btn btn-s btn-sm" onclick="exportToFeishu()">📤 导出到飞书</button>
+                        <div style="display:flex;gap:.5rem;">
+                            <button class="btn btn-s btn-sm" onclick="exportToFeishu()">📤 同步到飞书日历</button>
+                            <button class="btn btn-s btn-sm" onclick="syncToFeishuBitable()">📊 同步到多维表格</button>
+                        </div>
                     </div>
                     <div class="p-body" id="todoList"></div>
                 </div>
@@ -3769,6 +3772,90 @@ function formatICSDate(date) {
     const d = new Date(date);
     return d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z/, 'Z');
 }
+
+// 同步到飞书多维表格
+window.syncToFeishuBitable = async function() {
+    const schedules = sg(SK_SCHED) || [];
+    const venues = sg(SK_VENUE) || [];
+    const models = sg(SK_MODEL) || [];
+    const plans = sg(SK_PLAN) || [];
+    
+    if (schedules.length === 0 && venues.length === 0 && models.length === 0 && plans.length === 0) {
+        toast('没有数据可同步', 'er');
+        return;
+    }
+    
+    toast('正在同步到飞书多维表格...', 'i');
+    
+    try {
+        const results = {};
+        
+        // 同步日程
+        if (schedules.length > 0) {
+            const scheduleRecords = schedules.map(s => ({
+                '主题': s.title,
+                '日期': s.date,
+                '时间': s.time || '',
+                '地点': s.location || '',
+                '状态': '待拍摄'
+            }));
+            results.schedules = await window.api.writeToFeishuBitable('schedules', scheduleRecords);
+        }
+        
+        // 同步场地
+        if (venues.length > 0) {
+            const venueRecords = venues.map(v => ({
+                '场地名称': v.name,
+                '地址': v.location || '',
+                '类型': v.type || '室内',
+                '标签': v.tags ? v.tags.join(',') : '',
+                '备注': v.note || ''
+            }));
+            results.venues = await window.api.writeToFeishuBitable('venues', venueRecords);
+        }
+        
+        // 同步模特
+        if (models.length > 0) {
+            const modelRecords = models.map(m => ({
+                '姓名': m.name,
+                '联系方式': m.contact || '',
+                '特征': m.traits || '',
+                '标签': m.tags ? m.tags.join(',') : '',
+                '备注': m.note || ''
+            }));
+            results.models = await window.api.writeToFeishuBitable('models', modelRecords);
+        }
+        
+        // 同步方案
+        if (plans.length > 0) {
+            const planRecords = plans.map(p => ({
+                '方案名称': p.input?.theme || '未命名方案',
+                '风格': p.input?.style || '',
+                '场景': p.input?.scene || '',
+                '情绪': p.input?.mood || '',
+                '创建时间': new Date(p.timestamp).toISOString()
+            }));
+            results.plans = await window.api.writeToFeishuBitable('plans', planRecords);
+        }
+        
+        // 统计结果
+        let totalSynced = 0;
+        let totalFailed = 0;
+        for (const key in results) {
+            if (results[key].success) {
+                totalSynced += results[key].synced || 0;
+                totalFailed += (results[key].total || 0) - (results[key].synced || 0);
+            }
+        }
+        
+        toast(`同步完成: ${totalSynced} 成功, ${totalFailed} 失败`, totalFailed > 0 ? 'er' : 'ok');
+        console.log('Bitable sync results:', results);
+        
+    } catch (e) {
+        toast('同步失败: ' + e.message, 'er');
+        console.error('Bitable sync error:', e);
+    }
+};
 
 // ===== Init =====
 updateBadge();renderHistMini();renderQuickVenue();renderCalendar();renderSchedules();

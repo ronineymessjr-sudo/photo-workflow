@@ -8,6 +8,14 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const FEISHU_APP_ID = 'cli_a90a10b74af85bd9';
 const FEISHU_APP_SECRET = 'k626pzEQO2adxuhZhty2If81t0BwIdzr';
 
+// 飞书多维表格配置
+const FEISHU_BITABLE = {
+  schedules: { app_token: 'IeTubz0IJaW31asIcpec3Q9znkg', table_id: 'tbl3bLzlKfA2tnli' },
+  venues: { app_token: 'G88ebeTj4aFscFst3jscKrWunjh', table_id: 'tblQvOK4Lj5Ba2PS' },
+  models: { app_token: 'ZGwtbqZpNahQfJsAkIOcQrZ3ntf', table_id: 'tblwzEsBiS9gpKdQ' },
+  plans: { app_token: 'RVlrb6rKla7BAnsMj0vcryDznGf', table_id: 'tblzim7PKRvx2tec' }
+};
+
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
@@ -169,12 +177,15 @@ async function handleFeishuCalendarSync(uid, body) {
 }
 
 async function handleFeishuBitable(uid, body) {
-  const { app_token, table_id, records } = body;
-  if (!app_token || !table_id || !records) return { status: 400, body: { error: '缺少参数' } };
+  const { table, records } = body;
+  if (!table || !records) return { status: 400, body: { error: '缺少 table 或 records 参数' } };
+
+  const config = FEISHU_BITABLE[table];
+  if (!config) return { status: 400, body: { error: `未知的表格类型: ${table}` } };
 
   const results = [];
   for (const record of records) {
-    const r = await feishuApi(`/open-apis/bitable/v1/apps/${app_token}/tables/${table_id}/records`, 'POST', { fields: record });
+    const r = await feishuApi(`/open-apis/bitable/v1/apps/${config.app_token}/tables/${config.table_id}/records`, 'POST', { fields: record });
     results.push({ success: r.code === 0, record_id: r.data?.record_id, error: r.msg });
   }
 
