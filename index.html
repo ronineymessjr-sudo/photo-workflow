@@ -2354,7 +2354,7 @@ function addSampleEq() {
 function renderEq() {
     let list = sg(SK.EQ)||[];
     // Search filter
-    const searchTerm = $('eq-search')?.value?.trim().toLowerCase() || '';
+    const searchTerm = ($('eq-search') && $('eq-search').value && $('eq-search').value.trim().toLowerCase()) || '';
     if (searchTerm) {
         list = list.filter(e => e.n.toLowerCase().includes(searchTerm) || (e.note && e.note.toLowerCase().includes(searchTerm)));
     }
@@ -2389,7 +2389,7 @@ $('eqForm').addEventListener('submit',e=>{
 function renderVenue() {
     let list=sg(SK.V)||[];
     // Search filter
-    const searchTerm = $('venue-search')?.value?.trim().toLowerCase() || '';
+    const searchTerm = ($('venue-search') && $('venue-search').value && $('venue-search').value.trim().toLowerCase()) || '';
     if (searchTerm) {
         list = list.filter(v => v.name.toLowerCase().includes(searchTerm) || (v.addr && v.addr.toLowerCase().includes(searchTerm)) || (v.styles && v.styles.toLowerCase().includes(searchTerm)));
     }
@@ -2736,7 +2736,7 @@ function renderPlanContent(plan) {
     $('tplSaveHint').style.display = 'none';
     $('planSavedAt').textContent = new Date(plan.savedAt).toLocaleString();
 
-    const metaHtml = `<div class="plan-meta"><div class="mtag"><strong>主题</strong><span>${plan.input?.theme||'待定'}</span></div><div class="mtag"><strong>风格</strong><span>${plan.input?.style||'待定'}</span></div><div class="mtag"><strong>时长</strong><span>${plan.input?.duration||'待定'}</span></div><div class="mtag"><strong>人数</strong><span>${plan.input?.people||1}人</span></div></div>`;
+    const metaHtml = `<div class="plan-meta"><div class="mtag"><strong>主题</strong><span>${plan.input && plan.input.theme||'待定'}</span></div><div class="mtag"><strong>风格</strong><span>${plan.input && plan.input.style||'待定'}</span></div><div class="mtag"><strong>时长</strong><span>${plan.input && plan.input.duration||'待定'}</span></div><div class="mtag"><strong>人数</strong><span>${plan.input && plan.input.people||1}人</span></div></div>`;
 
     const sectionsHtml = plan.sections.map(s=>`
         <div class="ps"><div class="ps-hdr"><div class="ps-icon">${s.ic}</div><h3 class="ps-title">${s.ti}</h3></div><div class="ps-cnt"><ul>${s.c.map(c=>`<li>${c}</li>`).join('')}</ul></div></div>`).join('');
@@ -2744,7 +2744,7 @@ function renderPlanContent(plan) {
     const imgGallery = renderImageGallery(plan);
 
     // 添加模特沟通话术
-    const communicationTips = getCommunicationTips(plan.input?.style);
+    const communicationTips = getCommunicationTips(plan.input && plan.input.style);
     const commHtml = `
         <div class="ps" style="margin-top:1.5rem;border-top:2px solid var(--ac);padding-top:1rem">
             <div class="ps-hdr"><div class="ps-icon">💬</div><h3 class="ps-title">模特沟通话术</h3></div>
@@ -2762,7 +2762,7 @@ function renderPlanContent(plan) {
     `;
 
     // 添加调色方案
-    const colorPlan = getColorGradingPlan(plan.input?.style);
+    const colorPlan = getColorGradingPlan(plan.input && plan.input.style);
     const colorHtml = `
         <div class="ps" style="margin-top:1.5rem;border-top:2px solid var(--ac);padding-top:1rem">
             <div class="ps-hdr"><div class="ps-icon">🎨</div><h3 class="ps-title">调色方案</h3></div>
@@ -2840,9 +2840,9 @@ function renderPlanContent(plan) {
 
 // AI智能推荐
 function getAIRecommendations(input) {
-    const style = input?.style || '';
-    const theme = input?.theme || '';
-    const mood = input?.mood || '';
+    const style = input && input.style || '';
+    const theme = input && input.theme || '';
+    const mood = input && input.mood || '';
     
     const recommendations = {
         '时尚': {
@@ -3377,7 +3377,7 @@ function renderHistMini(){
     $('histMiniCount').textContent=`${getPlans().length} 条`;
     $('histMini').innerHTML=ps.length?ps.map(p=>{
         const d=new Date(p.savedAt);
-        return`<div class="hist-item" onclick="loadPlan('${p.id}')"><div class="hist-title">${p.title}</div><div class="hist-meta"><span>${p.input?.style||'待定'}</span><span>${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}</span></div></div>`;
+        return`<div class="hist-item" onclick="loadPlan('${p.id}')"><div class="hist-title">${p.title}</div><div class="hist-meta"><span>${p.input && p.input.style||'待定'}</span><span>${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}</span></div></div>`;
     }).join(''):'<div class="hist-empty">暂无历史</div>';
 }
 function renderHistFull(){
@@ -3389,7 +3389,7 @@ function renderHistFull(){
     $('histFull').innerHTML=ps.length?ps.map(p=>{
         const d=new Date(p.savedAt);
         const imgCount = (p.images||[]).length;
-        return`<div class="hist-item"><div class="hist-title">${p.title} ${imgCount?`<span style="font-size:.65rem;color:var(--ac);">🖼️${imgCount}</span>`:''}</div><div class="hist-meta"><span>${p.input?.style||'待定'}</span><span>${d.toLocaleString()}</span></div><div class="hist-actions"><button class="btn btn-s btn-sm" onclick="loadPlan('${p.id}')">查看</button><button class="btn btn-d btn-sm" onclick="delPlan('${p.id}');renderHistFull();renderHistMini();updateBadge();">删除</button><button class="btn btn-i btn-sm" onclick="exportPlanPdf('${p.id}')">📄 PDF</button></div></div>`;
+        return`<div class="hist-item"><div class="hist-title">${p.title} ${imgCount?`<span style="font-size:.65rem;color:var(--ac);">🖼️${imgCount}</span>`:''}</div><div class="hist-meta"><span>${p.input && p.input.style||'待定'}</span><span>${d.toLocaleString()}</span></div><div class="hist-actions"><button class="btn btn-s btn-sm" onclick="loadPlan('${p.id}')">查看</button><button class="btn btn-d btn-sm" onclick="delPlan('${p.id}');renderHistFull();renderHistMini();updateBadge();">删除</button><button class="btn btn-i btn-sm" onclick="exportPlanPdf('${p.id}')">📄 PDF</button></div></div>`;
     }).join(''):'<div class="hist-empty">暂无历史记录</div>';
 }
 function clearAllHistory(){if(!confirm('确定清空全部历史？'))return;savePlans([]);renderHistFull();renderHistMini();updateBadge();toast('已清空','ok');}
@@ -3415,7 +3415,7 @@ async function exportPlanPdf(id) {
     let y=15;
     doc.setFontSize(16); doc.setTextColor(232,93,4); doc.text(plan.title, pageW/2, y, {align:'center'}); y+=10;
     doc.setFontSize(9); doc.setTextColor(160);
-    doc.text(`风格:${plan.input?.style||'待定'} | 时长:${plan.input?.duration||'待定'} | 人数:${plan.input?.people||1}人 | ${new Date(plan.savedAt).toLocaleString()}`, pageW/2, y, {align:'center'}); y+=8;
+    doc.text(`风格:${plan.input && plan.input.style||'待定'} | 时长:${plan.input && plan.input.duration||'待定'} | 人数:${plan.input && plan.input.people||1}人 | ${new Date(plan.savedAt).toLocaleString()}`, pageW/2, y, {align:'center'}); y+=8;
     doc.setDrawColor(200); doc.line(15,y,pageW-15,y); y+=6;
     plan.sections.forEach(s=>{
         if(y>270){doc.addPage();y=15;}
@@ -3447,11 +3447,11 @@ async function exportModelPdf(id) {
     
     // 主题信息
     doc.setFontSize(12); doc.setTextColor(50); doc.setFont('','bold');
-    doc.text(plan.input?.theme || '拍摄主题', pageW/2, y, {align:'center'}); y+=8;
+    doc.text(plan.input && plan.input.theme || '拍摄主题', pageW/2, y, {align:'center'}); y+=8;
     
     // 基础信息
     doc.setFontSize(9); doc.setTextColor(100); doc.setFont('','normal');
-    doc.text(`风格：${plan.input?.style||'待定'} | 时长：${plan.input?.duration||'待定'}`, pageW/2, y, {align:'center'}); y+=10;
+    doc.text(`风格：${plan.input && plan.input.style||'待定'} | 时长：${plan.input && plan.input.duration||'待定'}`, pageW/2, y, {align:'center'}); y+=10;
     doc.setDrawColor(200); doc.line(15,y,pageW-15,y); y+=8;
     
     // 只显示模特相关的内容（过滤掉器材、技术参数等）
@@ -3846,10 +3846,10 @@ window.syncToFeishuBitable = async function() {
         // 同步方案
         if (plans.length > 0) {
             const planRecords = plans.map(p => ({
-                '方案名称': p.input?.theme || '未命名方案',
-                '风格': p.input?.style || '',
-                '场景': p.input?.scene || '',
-                '情绪': p.input?.mood || '',
+                '方案名称': p.input && p.input.theme || '未命名方案',
+                '风格': p.input && p.input.style || '',
+                '场景': p.input && p.input.scene || '',
+                '情绪': p.input && p.input.mood || '',
                 '创建时间': new Date(p.timestamp).toISOString()
             }));
             results.plans = await window.api.writeToFeishuBitable('plans', planRecords);
