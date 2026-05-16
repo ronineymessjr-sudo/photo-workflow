@@ -1991,24 +1991,41 @@
         } catch (e) { console.log('Sync error:', e); }
     }
 
-    // Check auth state on load
-    const token = localStorage.getItem(TOKEN_KEY);
-    const user = localStorage.getItem(USER_KEY);
-    const role = localStorage.getItem(ROLE_KEY);
+    // Check auth state on load (with error handling for mobile browsers)
+    let token = null, user = null, role = null;
+    try {
+        token = localStorage.getItem(TOKEN_KEY);
+        user = localStorage.getItem(USER_KEY);
+        role = localStorage.getItem(ROLE_KEY);
+    } catch (e) {
+        console.log('localStorage not available, using session mode');
+    }
 
     if (token && user) {
-        const userData = JSON.parse(user);
-        document.getElementById('welcomeEmail').textContent = userData.email;
-        if (role) {
-            // Already logged in and has role - skip overlays
-            document.getElementById('loginOverlay').style.display = 'none';
-            document.getElementById('roleOverlay').style.display = 'none';
-            document.getElementById('appLayout').style.display = 'flex';
-            setTimeout(function() { initTabs(); loadServerData(); }, 100);
-        } else {
-            // Logged in but no role - show role selector
-            document.getElementById('loginOverlay').style.display = 'none';
-            document.getElementById('roleOverlay').style.display = 'flex';
+        try {
+            const userData = JSON.parse(user);
+            const welcomeEl = document.getElementById('welcomeEmail');
+            if (welcomeEl) welcomeEl.textContent = userData.email;
+            if (role) {
+                // Already logged in and has role - skip overlays
+                const loginOverlay = document.getElementById('loginOverlay');
+                const roleOverlay = document.getElementById('roleOverlay');
+                const appLayout = document.getElementById('appLayout');
+                if (loginOverlay) loginOverlay.style.display = 'none';
+                if (roleOverlay) roleOverlay.style.display = 'none';
+                if (appLayout) {
+                    appLayout.style.display = 'flex';
+                    setTimeout(function() { initTabs(); loadServerData(); }, 100);
+                }
+            } else {
+                // Logged in but no role - show role selector
+                const loginOverlay = document.getElementById('loginOverlay');
+                const roleOverlay = document.getElementById('roleOverlay');
+                if (loginOverlay) loginOverlay.style.display = 'none';
+                if (roleOverlay) roleOverlay.style.display = 'flex';
+            }
+        } catch (e) {
+            console.error('Auth check error:', e);
         }
     }
 })();
