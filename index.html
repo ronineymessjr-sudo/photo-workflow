@@ -1047,7 +1047,7 @@
         /* ===== Badge (used in sidebar nav) ===== */
         .badge { font-size: .62rem; padding: .1rem .4rem; background: rgba(255,255,255,.08); border-radius: 10px; color: var(--t3); }
 
-        /* ===== Responsive: Mobile Bottom Tab Bar ===== */
+        /* ===== Responsive: iOS App Store Style Bottom Tab Bar ===== */
         @media (max-width: 768px) {
             .sidebar {
                 position: fixed;
@@ -1057,46 +1057,67 @@
                 right: 0;
                 width: 100% !important;
                 min-height: unset;
-                height: 60px;
+                height: 49px;
                 flex-direction: row;
                 border-right: none;
-                border-top: 1px solid var(--bd);
+                border-top: none;
+                background: rgba(28, 28, 30, 0.85);
+                backdrop-filter: blur(20px) saturate(180%);
+                -webkit-backdrop-filter: blur(20px) saturate(180%);
                 z-index: 200;
+                padding-bottom: env(safe-area-inset-bottom, 0);
             }
             .sidebar-brand { display: none; }
             .sidebar-nav {
                 flex-direction: row;
-                padding: 0 .25rem;
+                justify-content: space-around;
+                align-items: center;
+                padding: 0;
                 gap: 0;
-                overflow-x: auto;
-                overflow-y: hidden;
-                -webkit-overflow-scrolling: touch;
-                scrollbar-width: none;
+                width: 100%;
+                height: 100%;
             }
-            .sidebar-nav::-webkit-scrollbar { display: none; }
             .nav-item {
                 flex-direction: column;
-                gap: .15rem;
-                padding: .5rem .6rem;
-                border-left: none;
-                border-top: 3px solid transparent;
+                gap: 2px;
+                padding: 4px 0 6px;
+                border: none;
                 border-radius: 0;
-                font-size: .6rem;
-                min-width: 56px;
-                flex-shrink: 0;
+                font-size: 10px;
+                min-width: 48px;
+                flex: 1;
+                max-width: 80px;
+                color: rgba(255, 255, 255, 0.4);
+                background: transparent;
+                transition: color 0.2s ease;
             }
             .nav-item.active {
-                border-left-color: transparent;
-                border-top-color: var(--ac);
-                background: var(--ac-glow);
+                border: none;
+                background: transparent;
+                color: var(--ac);
             }
-            .nav-item svg { width: 18px; height: 18px; }
-            .nav-label { opacity: 1 !important; font-size: .58rem; }
+            .nav-item svg { 
+                width: 24px; 
+                height: 24px;
+                stroke-width: 1.8;
+                opacity: 0.6;
+                transition: opacity 0.2s ease;
+            }
+            .nav-item.active svg {
+                opacity: 1;
+            }
+            .nav-label { 
+                opacity: 1 !important; 
+                font-size: 10px;
+                font-weight: 500;
+                letter-spacing: -0.2px;
+                margin-top: 1px;
+            }
             .nav-badge { display: none; }
             .sidebar-toggle { display: none; }
             .main-content {
                 margin-left: 0 !important;
-                padding-bottom: 70px;
+                padding-bottom: calc(49px + env(safe-area-inset-bottom, 0px));
             }
             .scroll-progress {
                 left: 0 !important;
@@ -1894,12 +1915,14 @@
 
     window.api = {
         base: API_BASE,
-        async request(path, method = 'GET', body = null) {
-            const opts = { method, headers: { 'Content-Type': 'application/json' } };
+        request: async function(path, method, body) {
+            method = method || 'GET';
+            body = body || null;
+            const opts = { method: method, headers: { 'Content-Type': 'application/json' } };
             const token = localStorage.getItem(TOKEN_KEY);
-            if (token) opts.headers.Authorization = `Bearer ${token}`;
+            if (token) opts.headers.Authorization = 'Bearer ' + token;
             if (body) opts.body = JSON.stringify(body);
-            const r = await fetch(`${API_BASE}${path}`, opts);
+            const r = await fetch(API_BASE + path, opts);
             return r.json();
         },
         login(email, password) { return this.request('/auth/login', 'POST', { email, password }); },
@@ -2051,7 +2074,7 @@ const SK = { P:'pw_plans', EQ:'pw_eq', V:'pw_venues', M:'pw_models', T:'pw_tpl' 
 
 // ===== Utils =====
 const $ = id => document.getElementById(id);
-const toast = (m,t='i') => { const el=$('toast'); el.textContent=m; el.className=`toast show ${t==='i'?'ok':t}`; setTimeout(()=>el.className='toast',3000); };
+const toast = function(m,t) { t=t||'i'; const el=$('toast'); el.textContent=m; el.className='toast show '+(t==='i'?'ok':t); setTimeout(function(){el.className='toast'},3000); };
 const sg = k => { try { return JSON.parse(localStorage.getItem(k))||null } catch(e) { return null } };
 const ss = (k,v) => { try { localStorage.setItem(k,JSON.stringify(v)); return true } catch(e) { return false } };
 
