@@ -68,30 +68,40 @@
             --t1: #1a1a1a;
             --t2: rgba(0,0,0,0.6);
             --t3: rgba(0,0,0,0.4);
-            --ac: #e85555;
+            --ac: #d4605a;
             --ac2: #3db8b0;
-            --ach: #f06565;
-            --ac-glow: rgba(232,85,85,0.1);
+            --ach: #e0706a;
+            --ac-glow: rgba(212,96,90,0.15);
             --shadow: 0 4px 24px rgba(0,0,0,0.08);
             --dot-color: rgba(0,0,0,0.04);
             --dot-color2: rgba(0,0,0,0.03);
         }
         /* Sunrise mode (warm, 6-18) */
         [data-theme="sunrise"] {
-            --bg: #fef9f3;
-            --bg2: #fdf5ec;
-            --bg3: #f9edd9;
-            --bg4: #f3e3c9;
-            --bd: rgba(180,140,80,0.15);
-            --bd2: rgba(180,140,80,0.25);
-            --t1: #2d2418;
-            --t2: rgba(45,36,24,0.65);
-            --t3: rgba(45,36,24,0.4);
-            --ac: #d4840a;
-            --ac2: #6b9b8a;
-            --ach: #e6991a;
-            --ac-glow: rgba(212,132,10,0.12);
-            --shadow: 0 4px 24px rgba(180,140,80,0.1);
+            --bg: #fffcf7;
+            --bg2: #fff8ee;
+            --bg3: #fff3e0;
+            --bg4: #f5e6d0;
+            --bg-sidebar: linear-gradient(180deg, #fffdf9 0%, #fff9f0 100%);
+            --bg-panel: linear-gradient(145deg, #ffffff 0%, #fffcf7 100%);
+            --bg-subtle: rgba(180,140,80,0.06);
+            --bg-subtle2: rgba(180,140,80,0.1);
+            --border-subtle: rgba(180,140,80,0.1);
+            --border-subtle2: rgba(180,140,80,0.15);
+            --inset-top: rgba(255,255,255,0.9);
+            --inset-top-hover: rgba(255,255,255,1);
+            --bd: rgba(180,140,80,0.12);
+            --bd2: rgba(180,140,80,0.2);
+            --t1: #3d2e1a;
+            --t2: rgba(61,46,26,0.65);
+            --t3: rgba(61,46,26,0.4);
+            --ac: #c87a2a;
+            --ac2: #5a9e8a;
+            --ach: #d98e3a;
+            --ac-glow: rgba(200,122,42,0.12);
+            --shadow: 0 4px 24px rgba(180,140,80,0.08);
+            --dot-color: rgba(180,140,80,0.04);
+            --dot-color2: rgba(180,140,80,0.03);
         }
         /* Sunset mode (warm dark, 17-20) */
         [data-theme="sunset"] {
@@ -99,6 +109,14 @@
             --bg2: #221c16;
             --bg3: #2d251c;
             --bg4: #3a3025;
+            --bg-sidebar: linear-gradient(180deg, rgba(26,20,16,0.95) 0%, rgba(18,14,10,0.98) 100%);
+            --bg-panel: linear-gradient(145deg, rgba(30,24,18,0.8) 0%, rgba(26,20,16,0.6) 100%);
+            --bg-subtle: rgba(255,180,100,0.05);
+            --bg-subtle2: rgba(255,180,100,0.08);
+            --border-subtle: rgba(255,180,100,0.06);
+            --border-subtle2: rgba(255,180,100,0.1);
+            --inset-top: rgba(255,180,100,0.04);
+            --inset-top-hover: rgba(255,180,100,0.06);
             --bd: rgba(255,180,100,0.08);
             --bd2: rgba(255,180,100,0.15);
             --t1: #fff5e6;
@@ -109,6 +127,8 @@
             --ach: #ffaa66;
             --ac-glow: rgba(255,153,85,0.15);
             --shadow: 0 4px 24px rgba(0,0,0,0.5);
+            --dot-color: rgba(255,180,100,0.02);
+            --dot-color2: rgba(255,180,100,0.015);
         }
         body {
             font-family: var(--font-sans);
@@ -256,14 +276,14 @@
             width: 12px;
             height: 12px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #ff6b6b 0%, #ff8585 100%);
-            box-shadow: 0 0 16px rgba(255,107,107,0.5), 0 0 32px rgba(255,107,107,0.25);
+            background: linear-gradient(135deg, var(--ac) 0%, var(--ach) 100%);
+            box-shadow: 0 0 16px var(--ac-glow);
             animation: pulse 2s ease-in-out infinite;
             flex-shrink: 0;
         }
         @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 16px rgba(255,107,107,0.5), 0 0 32px rgba(255,107,107,0.25); }
-            50% { box-shadow: 0 0 24px rgba(255,133,133,0.7), 0 0 48px rgba(255,133,133,0.35); }
+            0%, 100% { box-shadow: 0 0 16px var(--ac-glow); }
+            50% { box-shadow: 0 0 24px var(--ac-glow); }
         }
         .brand-text {
             font-size: 1.1rem;
@@ -565,16 +585,16 @@
             transition: all 400ms cubic-bezier(0.4, 0, 0.2, 1);
         }
         .panel:hover {
-            border-color: rgba(255,107,107,0.15);
+            border-color: var(--ac-glow);
             box-shadow: 
-                0 8px 32px rgba(0,0,0,0.5),
-                0 0 40px rgba(255,107,107,0.08),
+                0 8px 32px var(--shadow),
+                0 0 40px var(--ac-glow),
                 inset 0 1px 0 var(--inset-top-hover);
         }
         .p-head { 
             padding: 1.2rem 1.5rem; 
             border-bottom: 1px solid var(--bd); 
-            background: linear-gradient(90deg, rgba(255,107,107,0.03) 0%, transparent 50%);
+            background: linear-gradient(90deg, var(--ac-glow) 0%, transparent 50%);
             display: flex; 
             align-items: center; 
             justify-content: space-between; 
@@ -686,13 +706,14 @@
             opacity: 1;
         }
         .btn-p { 
-            background: linear-gradient(135deg, #ff6b6b 0%, #ff8585 100%); 
+            background: linear-gradient(135deg, var(--ac) 0%, var(--ach) 100%); 
             color: #fff; 
-            box-shadow: 0 4px 16px rgba(255,107,107,0.25);
+            box-shadow: 0 4px 16px var(--ac-glow);
         }
         .btn-p:hover:not(:disabled) { 
             transform: translateY(-2px); 
-            box-shadow: 0 8px 24px rgba(255,107,107,0.4);
+            box-shadow: 0 8px 24px var(--ac-glow);
+            filter: brightness(1.08);
         }
         .btn-p:disabled { opacity: .5; cursor: not-allowed; transform: none; }
         .btn-s { 
@@ -703,7 +724,7 @@
         .btn-s:hover { 
             background: var(--bg4); 
             color: var(--t1); 
-            border-color: rgba(255,107,107,0.2);
+            border-color: var(--ac-glow);
             transform: translateY(-1px);
         }
         .btn-d { background: rgba(239,68,68,.1); color: var(--er); border: 1px solid rgba(239,68,68,.2); }
@@ -713,7 +734,7 @@
         .btn-sm { padding: .45rem 1rem; font-size: .75rem; }
         .btn-xs { padding: .28rem .6rem; font-size: .7rem; }
         .btn-i2 { padding: .35rem; background: transparent; border: none; color: var(--t3); cursor: pointer; border-radius: 8px; transition: all 200ms ease; }
-        .btn-i2:hover { background: rgba(255,107,107,0.1); color: var(--ac); }
+        .btn-i2:hover { background: var(--ac-glow); color: var(--ac); }
         .btn-i2::before { display: none; }
         .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; }
 
@@ -816,7 +837,7 @@
             background: var(--bg3);
         }
         .calendar-day.today {
-            background: rgba(255,107,107,0.15);
+            background: var(--ac-glow);
             border: 1px solid var(--ac);
         }
         .calendar-day.other-month {
@@ -1381,7 +1402,7 @@
         </div>
         <p style="color:var(--t3);font-size:.85rem;margin-bottom:2rem;">选择你的身份，开始创作</p>
         <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
-            <button onclick="enterApp('photographer')" style="display:flex;flex-direction:column;align-items:center;gap:.75rem;padding:1.5rem 2rem;background:var(--bg3);border:1px solid var(--bd);border-radius:var(--radius);color:var(--t1);cursor:pointer;transition:all .3s;min-width:140px;font-family:inherit;" onmouseover="this.style.borderColor='rgba(255,107,107,0.4)';this.style.transform='translateY(-4px)'" onmouseout="this.style.borderColor='var(--bd)';this.style.transform='none'">
+            <button onclick="enterApp('photographer')" style="display:flex;flex-direction:column;align-items:center;gap:.75rem;padding:1.5rem 2rem;background:var(--bg3);border:1px solid var(--bd);border-radius:var(--radius);color:var(--t1);cursor:pointer;transition:all .3s;min-width:140px;font-family:inherit;" onmouseover="this.style.borderColor='var(--ac)';this.style.transform='translateY(-4px)'" onmouseout="this.style.borderColor='var(--bd)';this.style.transform='none'">
                 <i data-lucide="camera" style="width:2.5rem;height:2.5rem;stroke-width:1.5;"></i>
                 <span style="font-size:.9rem;font-weight:500;">摄影师</span>
             </button>
