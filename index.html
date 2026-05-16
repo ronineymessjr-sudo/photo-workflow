@@ -1392,13 +1392,41 @@
 <div class="bg-orb bg-orb-2"></div>
 <div class="bg-orb bg-orb-3"></div>
 
-<!-- Role Selector -->
-<div id="roleOverlay" style="position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;background:var(--bg);">
-    <div style="text-align:center;max-width:600px;padding:2rem;">
+<!-- Login Overlay -->
+<div id="loginOverlay" style="position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;background:var(--bg);">
+    <div style="text-align:center;max-width:400px;padding:2rem;width:100%;">
         <div style="margin-bottom:2rem;">
             <span class="brand-dot" style="display:inline-block;width:16px;height:16px;margin-bottom:1rem;"></span>
             <h1 style="font-family:var(--font-serif);font-size:2.5rem;font-weight:600;letter-spacing:-0.03em;margin-bottom:.5rem;">Photo<span style="color:var(--ac);font-style:italic;">Atelier</span></h1>
             <p style="color:var(--t2);font-size:.95rem;">摄影方案 · 智能工作流</p>
+        </div>
+        <div id="loginForm" style="background:var(--bg3);border:1px solid var(--bd);border-radius:var(--radius);padding:1.5rem;text-align:left;">
+            <h3 style="margin-bottom:1rem;text-align:center;">登录 / 注册</h3>
+            <div style="margin-bottom:1rem;">
+                <label style="display:block;font-size:.8rem;color:var(--t3);margin-bottom:.3rem;">邮箱</label>
+                <input type="email" id="loginEmail" placeholder="your@email.com" style="width:100%;padding:.6rem .8rem;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius-sm);color:var(--t1);font-family:inherit;">
+            </div>
+            <div style="margin-bottom:1.5rem;">
+                <label style="display:block;font-size:.8rem;color:var(--t3);margin-bottom:.3rem;">密码</label>
+                <input type="password" id="loginPassword" placeholder="输入密码" style="width:100%;padding:.6rem .8rem;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius-sm);color:var(--t1);font-family:inherit;">
+            </div>
+            <button onclick="handleLogin()" class="btn btn-p" style="width:100%;">登录 / 注册</button>
+            <p style="margin-top:1rem;font-size:.75rem;color:var(--t3);text-align:center;">首次登录自动注册账号</p>
+        </div>
+        <div id="loginLoading" style="display:none;margin-top:1rem;">
+            <div class="skeleton skeleton-text" style="width:60%;margin:0 auto;"></div>
+            <p style="font-size:.8rem;color:var(--t3);margin-top:.5rem;">正在连接服务器...</p>
+        </div>
+    </div>
+</div>
+
+<!-- Role Selector (After Login) -->
+<div id="roleOverlay" style="position:fixed;inset:0;z-index:998;display:none;align-items:center;justify-content:center;background:var(--bg);">
+    <div style="text-align:center;max-width:600px;padding:2rem;">
+        <div style="margin-bottom:2rem;">
+            <span class="brand-dot" style="display:inline-block;width:16px;height:16px;margin-bottom:1rem;"></span>
+            <h1 style="font-family:var(--font-serif);font-size:2.5rem;font-weight:600;letter-spacing:-0.03em;margin-bottom:.5rem;">欢迎回来</h1>
+            <p style="color:var(--t2);font-size:.95rem;" id="welcomeEmail"></p>
         </div>
         <p style="color:var(--t3);font-size:.85rem;margin-bottom:2rem;">选择你的身份，开始创作</p>
         <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
@@ -1415,6 +1443,7 @@
                 <span style="font-size:.9rem;font-weight:500;">助理</span>
             </button>
         </div>
+        <button onclick="logout()" style="margin-top:2rem;background:none;border:none;color:var(--t3);font-size:.8rem;cursor:pointer;">退出登录</button>
     </div>
 </div>
 
@@ -1853,9 +1882,75 @@
     }, 60000);
 })();
 
-// ===== Role System & App Entry =====
+// ===== Auth System & App Entry =====
 (function() {
+    const API_BASE = 'https://photo-workflow.vercel.app/api';
+    const TOKEN_KEY = 'pw_token';
+    const USER_KEY = 'pw_user';
     const ROLE_KEY = 'pw_role';
+
+    window.api = {
+        base: API_BASE,
+        async request(path, method = 'GET', body = null) {
+            const opts = { method, headers: { 'Content-Type': 'application/json' } };
+            const token = localStorage.getItem(TOKEN_KEY);
+            if (token) opts.headers.Authorization = `Bearer ${token}`;
+            if (body) opts.body = JSON.stringify(body);
+            const r = await fetch(`${API_BASE}${path}`, opts);
+            return r.json();
+        },
+        login(email, password) { return this.request('/auth/login', 'POST', { email, password }); },
+        getSchedules() { return this.request('/schedules'); },
+        createSchedule(data) { return this.request('/schedules', 'POST', data); },
+        deleteSchedule(id) { return this.request(`/schedules/${id}`, 'DELETE'); },
+        getPlans() { return this.request('/plans'); },
+        createPlan(data) { return this.request('/plans', 'POST', data); },
+        syncToFeishuCalendar(schedules) { return this.request('/feishu/sync-calendar', 'POST', { schedules }); },
+        writeToFeishuBitable(app_token, table_id, records) { return this.request('/feishu/bitable', 'POST', { app_token, table_id, records }); }
+    };
+
+    // Login handler
+    window.handleLogin = async function() {
+        const email = document.getElementById('loginEmail').value.trim();
+        const password = document.getElementById('loginPassword').value;
+        if (!email || !password) { toast('请输入邮箱和密码', 'er'); return; }
+
+        document.getElementById('loginForm').style.display = 'none';
+        document.getElementById('loginLoading').style.display = 'block';
+
+        try {
+            const res = await window.api.login(email, password);
+            if (res.success) {
+                localStorage.setItem(TOKEN_KEY, res.token);
+                localStorage.setItem(USER_KEY, JSON.stringify(res.user));
+                document.getElementById('welcomeEmail').textContent = res.user.email;
+                showRoleSelector();
+                toast('登录成功', 'ok');
+            } else {
+                toast(res.error || '登录失败', 'er');
+                document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('loginLoading').style.display = 'none';
+            }
+        } catch (e) {
+            toast('网络错误: ' + e.message, 'er');
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('loginLoading').style.display = 'none';
+        }
+    };
+
+    // Logout
+    window.logout = function() {
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(USER_KEY);
+        localStorage.removeItem(ROLE_KEY);
+        location.reload();
+    };
+
+    // Show role selector after login
+    function showRoleSelector() {
+        document.getElementById('loginOverlay').style.display = 'none';
+        document.getElementById('roleOverlay').style.display = 'flex';
+    }
 
     // Enter app with selected role
     window.enterApp = function(role) {
@@ -1873,18 +1968,45 @@
             appLayout.style.transition = 'opacity 400ms ease';
             setTimeout(function() { appLayout.style.opacity = '1'; }, 50);
         }
-        // Init tabs after app is visible
         setTimeout(function() { initTabs(); }, 100);
+        // Load data from server
+        loadServerData();
     };
 
-    // Check if role already saved - skip overlay
-    var savedRole;
-    try { savedRole = localStorage.getItem(ROLE_KEY); } catch(e) {}
-    if (savedRole) {
-        var overlay = document.getElementById('roleOverlay');
-        var appLayout = document.getElementById('appLayout');
-        if (overlay) overlay.style.display = 'none';
-        if (appLayout) appLayout.style.display = 'flex';
+    // Load data from server
+    async function loadServerData() {
+        try {
+            const schedules = await window.api.getSchedules();
+            if (schedules.schedules) {
+                // Merge with local data
+                const local = JSON.parse(localStorage.getItem('pw_schedule') || '[]');
+                const merged = [...local, ...schedules.schedules.filter(s => !local.find(l => l.id === s.id))];
+                localStorage.setItem('pw_schedule', JSON.stringify(merged));
+                renderCalendar();
+                renderSchedules();
+            }
+        } catch (e) { console.log('Sync error:', e); }
+    }
+
+    // Check auth state on load
+    const token = localStorage.getItem(TOKEN_KEY);
+    const user = localStorage.getItem(USER_KEY);
+    const role = localStorage.getItem(ROLE_KEY);
+
+    if (token && user) {
+        const userData = JSON.parse(user);
+        document.getElementById('welcomeEmail').textContent = userData.email;
+        if (role) {
+            // Already logged in and has role - skip overlays
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('roleOverlay').style.display = 'none';
+            document.getElementById('appLayout').style.display = 'flex';
+            setTimeout(function() { initTabs(); loadServerData(); }, 100);
+        } else {
+            // Logged in but no role - show role selector
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('roleOverlay').style.display = 'flex';
+        }
     }
 })();
 
@@ -3537,7 +3659,7 @@ function renderSchedules() {
     }).join('');
 }
 
-window.addSchedule = function() {
+window.addSchedule = async function() {
     const date = prompt('拍摄日期 (YYYY-MM-DD):', new Date().toISOString().split('T')[0]);
     if (!date) return;
     const title = prompt('拍摄主题:');
@@ -3545,22 +3667,36 @@ window.addSchedule = function() {
     const time = prompt('拍摄时间 (可选):') || '';
     const location = prompt('拍摄地点 (可选):') || '';
     
+    // Save to local
     const schedules = sg(SK_SCHED) || [];
-    schedules.push({
+    const newSchedule = {
         id: Date.now().toString(),
         date, title, time, location,
         createdAt: new Date().toISOString()
-    });
+    };
+    schedules.push(newSchedule);
     ss(SK_SCHED, schedules);
+    
+    // Sync to server
+    try {
+        await window.api.createSchedule(newSchedule);
+    } catch (e) { console.log('Server sync failed:', e); }
+    
     renderCalendar();
     renderSchedules();
     toast('日程已添加', 'ok');
 };
 
-window.deleteSchedule = function(id) {
+window.deleteSchedule = async function(id) {
     if (!confirm('确定删除此日程？')) return;
     const schedules = sg(SK_SCHED) || [];
     ss(SK_SCHED, schedules.filter(s => s.id !== id));
+    
+    // Delete from server
+    try {
+        await window.api.deleteSchedule(id);
+    } catch (e) { console.log('Server delete failed:', e); }
+    
     renderCalendar();
     renderSchedules();
     toast('日程已删除', 'ok');
@@ -3591,51 +3727,28 @@ window.showDaySchedules = function(dateStr) {
     }
 };
 
-// 导出日程到飞书（生成 .ics 文件）
-window.exportToFeishu = function() {
+// 导出日程到飞书（直接同步到飞书日历）
+window.exportToFeishu = async function() {
     const schedules = sg(SK_SCHED) || [];
     if (schedules.length === 0) {
         toast('暂无日程可导出', 'er');
         return;
     }
     
-    // 生成 iCalendar (.ics) 格式
-    let icsContent = 'BEGIN:VCALENDAR\n';
-    icsContent += 'VERSION:2.0\n';
-    icsContent += 'PRODID:-//Photo Atelier//拍摄日程//CN\n';
-    icsContent += 'CALSCALE:GREGORIAN\n';
-    icsContent += 'METHOD:PUBLISH\n';
+    toast('正在同步到飞书日历...', 'i');
     
-    schedules.forEach(s => {
-        const date = s.date.replace(/-/g, '');
-        const time = s.time ? s.time.replace(/:/g, '') : '090000';
-        const uid = s.id + '@photoatelier.app';
-        
-        icsContent += 'BEGIN:VEVENT\n';
-        icsContent += `DTSTART;TZID=Asia/Shanghai:${date}T${time}\n`;
-        icsContent += `DTEND;TZID=Asia/Shanghai:${date}T${String(parseInt(time.slice(0,2)) + 2).padStart(2,'0')}${time.slice(2)}\n`;
-        icsContent += `SUMMARY:${escapeICSText(s.title)}\n`;
-        icsContent += `DESCRIPTION:${escapeICSText('拍摄日程 - ' + s.title)}\n`;
-        if (s.location) icsContent += `LOCATION:${escapeICSText(s.location)}\n`;
-        icsContent += `UID:${uid}\n`;
-        icsContent += `CREATED:${formatICSDate(new Date(s.createdAt))}\n`;
-        icsContent += 'END:VEVENT\n';
-    });
-    
-    icsContent += 'END:VCALENDAR';
-    
-    // 下载文件
-    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `拍摄日程_${new Date().toLocaleDateString().replace(/\//g, '-')}.ics`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    toast('日程已导出，请导入飞书日历', 'ok');
+    try {
+        const result = await window.api.syncToFeishuCalendar(schedules);
+        if (result.success) {
+            toast(`成功同步 ${result.synced}/${result.total} 条日程到飞书`, 'ok');
+            console.log('Sync results:', result.results);
+        } else {
+            toast('同步失败: ' + (result.error || '未知错误'), 'er');
+        }
+    } catch (e) {
+        toast('同步失败: ' + e.message, 'er');
+        console.error('Feishu sync error:', e);
+    }
     
     // 显示导入指引
     setTimeout(() => {
