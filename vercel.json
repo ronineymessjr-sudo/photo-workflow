@@ -1,8 +1,13 @@
 {
   "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/index.js" },
     { "source": "/imageGeneration", "destination": "/api/imageGeneration" }
   ],
   "functions": {
+    "api/index.js": {
+      "runtime": "nodejs18.x",
+      "maxDuration": 30
+    },
     "api/imageGeneration.js": {
       "runtime": "nodejs18.x"
     }

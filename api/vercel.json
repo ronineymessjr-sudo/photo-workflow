@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "functions": {
+    "api/index.js": {
+      "maxDuration": 30
+    }
+  },
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/index.js" }
+  ],
+  "env": {
+    "SUPABASE_URL": "@supabase_url",
+    "SUPABASE_KEY": "@supabase_key",
+    "FEISHU_APP_ID": "@feishu_app_id",
+    "FEISHU_APP_SECRET": "@feishu_app_secret"
+  }
+}
