@@ -1784,7 +1784,10 @@
                     </div>
                 </div>
                 <div class="panel">
-                    <div class="p-head"><h2>📋 待办事项</h2></div>
+                    <div class="p-head" style="justify-content:space-between">
+                        <h2>📋 待办事项</h2>
+                        <button class="btn btn-s btn-sm" onclick="exportToFeishu()">📤 导出到飞书</button>
+                    </div>
                     <div class="p-body" id="todoList"></div>
                 </div>
             </div>
@@ -3587,6 +3590,72 @@ window.showDaySchedules = function(dateStr) {
         alert(`${dateStr} 日程:\n${daySchedules.map(s => `• ${s.title} ${s.time} ${s.location}`).join('\n')}`);
     }
 };
+
+// 导出日程到飞书（生成 .ics 文件）
+window.exportToFeishu = function() {
+    const schedules = sg(SK_SCHED) || [];
+    if (schedules.length === 0) {
+        toast('暂无日程可导出', 'er');
+        return;
+    }
+    
+    // 生成 iCalendar (.ics) 格式
+    let icsContent = 'BEGIN:VCALENDAR\n';
+    icsContent += 'VERSION:2.0\n';
+    icsContent += 'PRODID:-//Photo Atelier//拍摄日程//CN\n';
+    icsContent += 'CALSCALE:GREGORIAN\n';
+    icsContent += 'METHOD:PUBLISH\n';
+    
+    schedules.forEach(s => {
+        const date = s.date.replace(/-/g, '');
+        const time = s.time ? s.time.replace(/:/g, '') : '090000';
+        const uid = s.id + '@photoatelier.app';
+        
+        icsContent += 'BEGIN:VEVENT\n';
+        icsContent += `DTSTART;TZID=Asia/Shanghai:${date}T${time}\n`;
+        icsContent += `DTEND;TZID=Asia/Shanghai:${date}T${String(parseInt(time.slice(0,2)) + 2).padStart(2,'0')}${time.slice(2)}\n`;
+        icsContent += `SUMMARY:${escapeICSText(s.title)}\n`;
+        icsContent += `DESCRIPTION:${escapeICSText('拍摄日程 - ' + s.title)}\n`;
+        if (s.location) icsContent += `LOCATION:${escapeICSText(s.location)}\n`;
+        icsContent += `UID:${uid}\n`;
+        icsContent += `CREATED:${formatICSDate(new Date(s.createdAt))}\n`;
+        icsContent += 'END:VEVENT\n';
+    });
+    
+    icsContent += 'END:VCALENDAR';
+    
+    // 下载文件
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `拍摄日程_${new Date().toLocaleDateString().replace(/\//g, '-')}.ics`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast('日程已导出，请导入飞书日历', 'ok');
+    
+    // 显示导入指引
+    setTimeout(() => {
+        alert('📤 导入飞书日历步骤：\n\n1. 打开飞书 → 日历\n2. 点击右上角「···」→「导入日历」\n3. 选择刚下载的 .ics 文件\n4. 完成导入\n\n💡 提示：也可导入到苹果日历、Google 日历等');
+    }, 500);
+};
+
+function escapeICSText(text) {
+    return text
+        .replace(/\\/g, '\\\\')
+        .replace(/;/g, '\\;')
+        .replace(/,/g, '\\,')
+        .replace(/\n/g, '\\n')
+        .replace(/\r/g, '');
+}
+
+function formatICSDate(date) {
+    const d = new Date(date);
+    return d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z/, 'Z');
+}
 
 // ===== Init =====
 updateBadge();renderHistMini();renderQuickVenue();renderCalendar();renderSchedules();
