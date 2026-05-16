@@ -2052,8 +2052,8 @@ const SK = { P:'pw_plans', EQ:'pw_eq', V:'pw_venues', M:'pw_models', T:'pw_tpl' 
 // ===== Utils =====
 const $ = id => document.getElementById(id);
 const toast = (m,t='i') => { const el=$('toast'); el.textContent=m; el.className=`toast show ${t==='i'?'ok':t}`; setTimeout(()=>el.className='toast',3000); };
-const sg = k => { try { return JSON.parse(localStorage.getItem(k))||null } catch { return null } };
-const ss = (k,v) => { try { localStorage.setItem(k,JSON.stringify(v)); return true } catch { return false } };
+const sg = k => { try { return JSON.parse(localStorage.getItem(k))||null } catch(e) { return null } };
+const ss = (k,v) => { try { localStorage.setItem(k,JSON.stringify(v)); return true } catch(e) { return false } };
 
 // ===== Tabs =====
 function initTabs() {
