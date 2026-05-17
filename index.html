@@ -1733,6 +1733,10 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
                 <span class="nav-label">资源库</span>
             </button>
+            <button class="nav-item" data-tab="dashboard" data-role="photographer,assistant">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                <span class="nav-label">数据看板</span>
+            </button>
         </nav>
         <!-- Theme Switcher -->
         <div class="theme-switcher">
@@ -1978,6 +1982,142 @@
                     </div>
                 </section>
                 <aside></aside>
+            </div>
+        </div>
+
+        <!-- ============ 数据看板 ============ -->
+        <div class="tab-cnt" id="tab-dashboard">
+            <div class="grid">
+                <section style="grid-column: 1 / -1;">
+                    <!-- 顶部统计卡片 -->
+                    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem;">
+                        <div class="panel" style="text-align:center;">
+                            <div style="font-size:2rem;font-weight:600;color:var(--ac);" id="stat-shoots">23</div>
+                            <div style="font-size:.8rem;color:var(--t3);margin-top:.25rem;">本月拍摄</div>
+                            <div style="font-size:.7rem;color:#4ade80;margin-top:.25rem;">↑ 15%</div>
+                        </div>
+                        <div class="panel" style="text-align:center;">
+                            <div style="font-size:2rem;font-weight:600;color:var(--ac);" id="stat-completion">87%</div>
+                            <div style="font-size:.8rem;color:var(--t3);margin-top:.25rem;">完成率</div>
+                            <div style="width:80%;height:4px;background:var(--bg2);border-radius:2px;margin:.5rem auto 0;overflow:hidden;">
+                                <div style="width:87%;height:100%;background:var(--ac);border-radius:2px;"></div>
+                            </div>
+                        </div>
+                        <div class="panel" style="text-align:center;">
+                            <div style="font-size:2rem;font-weight:600;color:var(--ac);" id="stat-clients">12</div>
+                            <div style="font-size:.8rem;color:var(--t3);margin-top:.25rem;">活跃客户</div>
+                            <div style="font-size:.7rem;color:#4ade80;margin-top:.25rem;">+ 3 新增</div>
+                        </div>
+                        <div class="panel" style="text-align:center;">
+                            <div style="font-size:2rem;font-weight:600;color:var(--ac);" id="stat-equipment">76%</div>
+                            <div style="font-size:.8rem;color:var(--t3);margin-top:.25rem;">设备使用率</div>
+                            <div style="width:80%;height:4px;background:var(--bg2);border-radius:2px;margin:.5rem auto 0;overflow:hidden;">
+                                <div style="width:76%;height:100%;background:var(--ac);border-radius:2px;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 图表区域 -->
+                    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;margin-bottom:1.5rem;">
+                        <div class="panel">
+                            <div class="p-head"><h2>拍摄趋势</h2></div>
+                            <div class="p-body">
+                                <div style="height:150px;display:flex;align-items:flex-end;justify-content:space-between;padding:1rem 0;gap:.5rem;">
+                                    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:.25rem;">
+                                        <div style="width:100%;height:60%;background:linear-gradient(180deg,var(--ac),transparent);border-radius:4px 4px 0 0;opacity:.6;"></div>
+                                        <span style="font-size:.65rem;color:var(--t3);">1月</span>
+                                    </div>
+                                    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:.25rem;">
+                                        <div style="width:100%;height:72%;background:linear-gradient(180deg,var(--ac),transparent);border-radius:4px 4px 0 0;opacity:.7;"></div>
+                                        <span style="font-size:.65rem;color:var(--t3);">2月</span>
+                                    </div>
+                                    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:.25rem;">
+                                        <div style="width:100%;height:80%;background:linear-gradient(180deg,var(--ac),transparent);border-radius:4px 4px 0 0;opacity:.8;"></div>
+                                        <span style="font-size:.65rem;color:var(--t3);">3月</span>
+                                    </div>
+                                    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:.25rem;">
+                                        <div style="width:100%;height:88%;background:linear-gradient(180deg,var(--ac),transparent);border-radius:4px 4px 0 0;opacity:.9;"></div>
+                                        <span style="font-size:.65rem;color:var(--t3);">4月</span>
+                                    </div>
+                                    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:.25rem;">
+                                        <div style="width:100%;height:92%;background:linear-gradient(180deg,var(--ac),transparent);border-radius:4px 4px 0 0;"></div>
+                                        <span style="font-size:.65rem;color:var(--t3);">5月</span>
+                                    </div>
+                                    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:.25rem;">
+                                        <div style="width:100%;height:100%;background:linear-gradient(180deg,var(--ac),transparent);border-radius:4px 4px 0 0;"></div>
+                                        <span style="font-size:.65rem;color:var(--t3);">6月</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel">
+                            <div class="p-head"><h2>客户类型分布</h2></div>
+                            <div class="p-body" style="display:flex;align-items:center;gap:1.5rem;">
+                                <div style="width:100px;height:100px;border-radius:50%;background:conic-gradient(var(--ac) 0deg 144deg, #4ade80 144deg 270deg, #60a5fa 270deg 360deg);"></div>
+                                <div style="display:flex;flex-direction:column;gap:.5rem;">
+                                    <div style="display:flex;align-items:center;gap:.5rem;"><span style="width:8px;height:8px;border-radius:50%;background:var(--ac);"></span><span style="font-size:.75rem;color:var(--t2);">新客户 40%</span></div>
+                                    <div style="display:flex;align-items:center;gap:.5rem;"><span style="width:8px;height:8px;border-radius:50%;background:#4ade80;"></span><span style="font-size:.75rem;color:var(--t2);">老客户 35%</span></div>
+                                    <div style="display:flex;align-items:center;gap:.5rem;"><span style="width:8px;height:8px;border-radius:50%;background:#60a5fa;"></span><span style="font-size:.75rem;color:var(--t2);">复购 25%</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 排行榜 -->
+                    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;margin-bottom:1.5rem;">
+                        <div class="panel">
+                            <div class="p-head"><h2>热门场地 TOP5</h2></div>
+                            <div class="p-body">
+                                <div style="display:flex;flex-direction:column;gap:.75rem;">
+                                    <div style="display:flex;align-items:center;gap:.75rem;"><span style="width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#ffd700,#ffaa00);display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:600;">1</span><span style="flex:1;font-size:.8rem;color:var(--t1);">复古酒店</span><span style="font-size:.75rem;color:var(--ac);font-weight:500;">15次</span></div>
+                                    <div style="display:flex;align-items:center;gap:.75rem;"><span style="width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#c0c0c0,#a0a0a0);display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:600;">2</span><span style="flex:1;font-size:.8rem;color:var(--t1);">天台</span><span style="font-size:.75rem;color:var(--ac);font-weight:500;">12次</span></div>
+                                    <div style="display:flex;align-items:center;gap:.75rem;"><span style="width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#cd7f32,#b87333);display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:600;">3</span><span style="flex:1;font-size:.8rem;color:var(--t1);">影棚</span><span style="font-size:.75rem;color:var(--ac);font-weight:500;">10次</span></div>
+                                    <div style="display:flex;align-items:center;gap:.75rem;"><span style="width:20px;height:20px;border-radius:50%;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:.65rem;color:var(--t3);">4</span><span style="flex:1;font-size:.8rem;color:var(--t1);">咖啡馆</span><span style="font-size:.75rem;color:var(--t3);">8次</span></div>
+                                    <div style="display:flex;align-items:center;gap:.75rem;"><span style="width:20px;height:20px;border-radius:50%;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:.65rem;color:var(--t3);">5</span><span style="flex:1;font-size:.8rem;color:var(--t1);">公园</span><span style="font-size:.75rem;color:var(--t3);">6次</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel">
+                            <div class="p-head"><h2>设备使用 TOP5</h2></div>
+                            <div class="p-body">
+                                <div style="display:flex;flex-direction:column;gap:.75rem;">
+                                    <div style="display:flex;align-items:center;gap:.75rem;"><span style="width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#ffd700,#ffaa00);display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:600;">1</span><span style="flex:1;font-size:.8rem;color:var(--t1);">A7M4</span><span style="font-size:.75rem;color:var(--ac);font-weight:500;">45次</span></div>
+                                    <div style="display:flex;align-items:center;gap:.75rem;"><span style="width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#c0c0c0,#a0a0a0);display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:600;">2</span><span style="flex:1;font-size:.8rem;color:var(--t1);">85mm</span><span style="font-size:.75rem;color:var(--ac);font-weight:500;">38次</span></div>
+                                    <div style="display:flex;align-items:center;gap:.75rem;"><span style="width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#cd7f32,#b87333);display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:600;">3</span><span style="flex:1;font-size:.8rem;color:var(--t1);">闪光灯</span><span style="font-size:.75rem;color:var(--ac);font-weight:500;">32次</span></div>
+                                    <div style="display:flex;align-items:center;gap:.75rem;"><span style="width:20px;height:20px;border-radius:50%;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:.65rem;color:var(--t3);">4</span><span style="flex:1;font-size:.8rem;color:var(--t1);">反光板</span><span style="font-size:.75rem;color:var(--t3);">28次</span></div>
+                                    <div style="display:flex;align-items:center;gap:.75rem;"><span style="width:20px;height:20px;border-radius:50%;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:.65rem;color:var(--t3);">5</span><span style="flex:1;font-size:.8rem;color:var(--t1);">三脚架</span><span style="font-size:.75rem;color:var(--t3);">20次</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 客户分析 -->
+                    <div class="panel">
+                        <div class="p-head"><h2>客户分析</h2></div>
+                        <div class="p-body">
+                            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;text-align:center;">
+                                <div>
+                                    <div style="font-size:1.5rem;color:var(--ac);margin-bottom:.25rem;">★★★★★</div>
+                                    <div style="font-size:.8rem;color:var(--t3);">客户满意度</div>
+                                    <div style="font-size:1.2rem;font-weight:600;color:var(--t1);margin-top:.25rem;">4.8/5</div>
+                                </div>
+                                <div>
+                                    <div style="font-size:1.5rem;color:#4ade80;margin-bottom:.25rem;">68%</div>
+                                    <div style="font-size:.8rem;color:var(--t3);">复购率</div>
+                                    <div style="font-size:.75rem;color:#4ade80;margin-top:.25rem;">↑ 8%</div>
+                                </div>
+                                <div>
+                                    <div style="display:flex;justify-content:center;gap:.5rem;margin-bottom:.25rem;">
+                                        <span style="padding:.15rem .4rem;background:rgba(255,107,107,0.2);border-radius:4px;font-size:.65rem;color:var(--ac);">个人45%</span>
+                                        <span style="padding:.15rem .4rem;background:rgba(74,222,128,0.2);border-radius:4px;font-size:.65rem;color:#4ade80;">工作室35%</span>
+                                        <span style="padding:.15rem .4rem;background:rgba(96,165,250,0.2);border-radius:4px;font-size:.65rem;color:#60a5fa;">企业20%</span>
+                                    </div>
+                                    <div style="font-size:.8rem;color:var(--t3);">客户类型占比</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
             </div>
         </div>
 

@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据看板 - Photo Workflow</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0c0c0e;
+            --bg-secondary: rgba(30, 30, 35, 0.6);
+            --bg-card: rgba(40, 40, 48, 0.4);
+            --accent: #ff6b6b;
+            --accent-light: #ff8585;
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --text-muted: rgba(255, 255, 255, 0.5);
+            --border: rgba(255, 255, 255, 0.1);
+            --success: #4ade80;
+            --warning: #fbbf24;
+            --info: #60a5fa;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            margin-top: 5px;
+            font-size: 14px;
+        }
+
+        /* Grid Layout */
+        .dashboard {
+            display: grid;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Stats Cards Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+        }
+
+        /* Card Base */
+        .card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(255, 107, 107, 0.1);
+        }
+
+        /* Stat Card */
+        .stat-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent), var(--accent-light));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .stat-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .trend-up {
+            color: var(--success);
+        }
+
+        .trend-down {
+            color: var(--accent);
+        }
+
+        .badge {
+            background: rgba(255, 107, 107, 0.2);
+            color: var(--accent);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            margin-top: 12px;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent-light));
+            border-radius: 3px;
+            transition: width 1s ease-out;
+        }
+
+        /* Charts Section */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chart-card {
+            min-height: 300px;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .chart-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .chart-subtitle {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* Line Chart */
+        .line-chart {
+            position: relative;
+            height: 200px;
+            margin-top: 20px;
+        }
+
+        .chart-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .grid-line {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .chart-content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 30px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            padding: 0 10px;
+        }
+
+        .chart-line {
+            position: absolute;
+            top: 0;
+            left: 10px;
+            right: 10px;
+            bottom: 0;
+        }
+
+        .chart-line svg {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+
+        .chart-line path {
+            fill: none;
+            stroke: var(--accent);
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            filter: drop-shadow(0 0 8px rgba(255, 107, 107, 0.5));
+        }
+
+        .chart-line .area {
+            fill: url(#gradient);
+            stroke: none;
+        }
+
+        .chart-points {
+            position: absolute;
+            top: 0;
+            left: 10px;
+            right: 10px;
+            bottom: 0;
+            pointer-events: none;
+        }
+
+        .point {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: var(--accent);
+            border: 2px solid var(--bg-primary);
+            border-radius: 50%;
+            transform: translate(-50%, 50%);
+            box-shadow: 0 0 10px rgba(255, 107, 107, 0.6);
+        }
+
+        .chart-labels {
+            position: absolute;
+            bottom: 0;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* Pie Chart */
+        .pie-chart-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            padding: 20px 0;
+        }
+
+        .pie-chart {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background: conic-gradient(
+                var(--accent) 0deg 144deg,
+                var(--info) 144deg 270deg,
+                var(--success) 270deg 360deg
+            );
+            position: relative;
+            box-shadow: 0 0 30px rgba(255, 107, 107, 0.2);
+        }
+
+        .pie-chart::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100px;
+            height: 100px;
+            background: var(--bg-card);
+            border-radius: 50%;
+        }
+
+        .pie-legend {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+
+        .legend-color.new { background: var(--accent); }
+        .legend-color.old { background: var(--info); }
+        .legend-color.return { background: var(--success); }
+
+        .legend-label {
+            color: var(--text-secondary);
+        }
+
+        .legend-value {
+            color: var(--text-primary);
+            font-weight: 600;
+            margin-left: auto;
+        }
+
+        /* Tables */
+        .tables-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .tables-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .table-card {
+            overflow: hidden;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .table-title {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table tr {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .data-table tr:last-child {
+            border-bottom: none;
+        }
+
+        .data-table td {
+            padding: 12px 8px;
+            font-size: 13px;
+        }
+
+        .data-table .rank {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .data-table .rank-1 { background: linear-gradient(135deg, #ffd700, #ffb700); color: #000; }
+        .data-table .rank-2 { background: linear-gradient(135deg, #c0c0c0, #a0a0a0); color: #000; }
+        .data-table .rank-3 { background: linear-gradient(135deg, #cd7f32, #b87333); color: #fff; }
+        .data-table .rank-other { background: rgba(255, 255, 255, 0.1); color: var(--text-secondary); }
+
+        .data-table .name {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .data-table .count {
+            color: var(--accent);
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .data-table .bar-cell {
+            width: 40%;
+        }
+
+        .mini-bar {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .mini-bar-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 2px;
+            transition: width 1s ease-out;
+        }
+
+        /* Customer Analysis */
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .analysis-card {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* Star Rating */
+        .star-rating {
+            display: flex;
+            gap: 4px;
+        }
+
+        .star {
+            font-size: 24px;
+            color: rgba(255, 255, 255, 0.2);
+            transition: color 0.3s ease;
+        }
+
+        .star.active {
+            color: var(--warning);
+            text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+        }
+
+        .rating-text {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .rating-label {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* Customer Types */
+        .customer-types {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .type-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .type-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .type-icon.personal { background: rgba(255, 107, 107, 0.2); }
+        .type-icon.studio { background: rgba(96, 165, 250, 0.2); }
+        .type-icon.enterprise { background: rgba(74, 222, 128, 0.2); }
+
+        .type-info {
+            flex: 1;
+        }
+
+        .type-name {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .type-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Repurchase Rate */
+        .repurchase-display {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .repurchase-value {
+            font-size: 48px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent), var(--accent-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .repurchase-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+
+        /* Animations */
+        @keyframes countUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .animate-in {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+
+        .stat-card:nth-child(1) { animation-delay: 0.1s; }
+        .stat-card:nth-child(2) { animation-delay: 0.2s; }
+        .stat-card:nth-child(3) { animation-delay: 0.3s; }
+        .stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            body {
+                padding: 12px;
+            }
+
+            .header h1 {
+                font-size: 22px;
+            }
+
+            .stat-value {
+                font-size: 28px;
+            }
+
+            .charts-grid,
+            .tables-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .pie-chart-container {
+                flex-direction: column;
+                gap: 24px;
+            }
+        }
+
+        /* Loading State */
+        .skeleton {
+            background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 4px;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>数据看板</h1>
+        <p>实时监控您的摄影业务数据</p>
+    </div>
+
+    <div class="dashboard">
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="card stat-card animate-in">
+                <div class="stat-label">本月拍摄数</div>
+                <div class="stat-value" data-target="23">0</div>
+                <div class="stat-meta">
+                    <span class="trend-up">↑15%</span>
+                    <span style="color: var(--text-muted);">环比上月</span>
+                </div>
+            </div>
+
+            <div class="card stat-card animate-in">
+                <div class="stat-label">完成率</div>
+                <div class="stat-value" data-target="87" data-suffix="%">0%</div>
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 0%;" data-width="87%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card stat-card animate-in">
+                <div class="stat-label">活跃客户数</div>
+                <div class="stat-value" data-target="12">0</div>
+                <div class="stat-meta">
+                    <span class="badge">+3</span>
+                    <span style="color: var(--text-muted);">本月新增</span>
+                </div>
+            </div>
+
+            <div class="card stat-card animate-in">
+                <div class="stat-label">设备使用率</div>
+                <div class="stat-value" data-target="76" data-suffix="%">0%</div>
+                <div class="stat-meta">
+                    <span style="color: var(--text-muted);">设备周转效率</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-grid">
+            <div class="card chart-card">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">拍摄趋势</div>
+                        <div class="chart-subtitle">近6个月拍摄数量</div>
+                    </div>
+                </div>
+                <div class="line-chart">
+                    <svg width="0" height="0" style="position: absolute;">
+                        <defs>
+                            <linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" style="stop-color:#ff6b6b;stop-opacity:0.3" />
+                                <stop offset="100%" style="stop-color:#ff6b6b;stop-opacity:0" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <div class="chart-grid">
+                        <div class="grid-line"></div>
+                        <div class="grid-line"></div>
+                        <div class="grid-line"></div>
+                        <div class="grid-line"></div>
+                        <div class="grid-line"></div>
+                    </div>
+                    <div class="chart-line">
+                        <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+                            <path class="area" d="M0,70 L20,60 L40,50 L60,40 L80,35 L100,25 L100,100 L0,100 Z"></path>
+                            <path class="line" d="M0,70 L20,60 L40,50 L60,40 L80,35 L100,25"></path>
+                        </svg>
+                    </div>
+                    <div class="chart-points">
+                        <div class="point" style="left: 0%; bottom: 30%;"></div>
+                        <div class="point" style="left: 20%; bottom: 40%;"></div>
+                        <div class="point" style="left: 40%; bottom: 50%;"></div>
+                        <div class="point" style="left: 60%; bottom: 60%;"></div>
+                        <div class="point" style="left: 80%; bottom: 65%;"></div>
+                        <div class="point" style="left: 100%; bottom: 75%;"></div>
+                    </div>
+                    <div class="chart-labels">
+                        <span>1月</span>
+                        <span>2月</span>
+                        <span>3月</span>
+                        <span>4月</span>
+                        <span>5月</span>
+                        <span>6月</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card chart-card">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">客户类型分布</div>
+                        <div class="chart-subtitle">按客户来源统计</div>
+                    </div>
+                </div>
+                <div class="pie-chart-container">
+                    <div class="pie-chart"></div>
+                    <div class="pie-legend">
+                        <div class="legend-item">
+                            <div class="legend-color new"></div>
+                            <span class="legend-label">新客户</span>
+                            <span class="legend-value">40%</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color old"></div>
+                            <span class="legend-label">老客户</span>
+                            <span class="legend-value">35%</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color return"></div>
+                            <span class="legend-label">复购客户</span>
+                            <span class="legend-value">25%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tables -->
+        <div class="tables-grid">
+            <div class="card table-card">
+                <div class="table-header">
+                    <div class="table-title">热门场地排行</div>
+                    <span style="font-size: 12px; color: var(--text-muted);">TOP 5</span>
+                </div>
+                <table class="data-table">
+                    <tr>
+                        <td><div class="rank rank-1">1</div></td>
+                        <td class="name">复古酒店</td>
+                        <td class="bar-cell">
+                            <div class="mini-bar">
+                                <div class="mini-bar-fill" style="width: 0%;" data-width="100%"></div>
+                            </div>
+                        </td>
+                        <td class="count">15次</td>
+                    </tr>
+                    <tr>
+                        <td><div class="rank rank-2">2</div></td>
+                        <td class="name">天台</td>
+                        <td class="bar-cell">
+                            <div class="mini-bar">
+                                <div class="mini-bar-fill" style="width: 0%;" data-width="80%"></div>
+                            </div>
+                        </td>
+                        <td class="count">12次</td>
+                    </tr>
+                    <tr>
+                        <td><div class="rank rank-3">3</div></td>
+                        <td class="name">影棚</td>
+                        <td class="bar-cell">
+                            <div class="mini-bar">
+                                <div class="mini-bar-fill" style="width: 0%;" data-width="67%"></div>
+                            </div>
+                        </td>
+                        <td class="count">10次</td>
+                    </tr>
+                    <tr>
+                        <td><div class="rank rank-other">4</div></td>
+                        <td class="name">咖啡馆</td>
+                        <td class="bar-cell">
+                            <div class="mini-bar">
+                                <div class="mini-bar-fill" style="width: 0%;" data-width="53%"></div>
+                            </div>
+                        </td>
+                        <td class="count">8次</td>
+                    </tr>
+                    <tr>
+                        <td><div class="rank rank-other">5</div></td>
+                        <td class="name">公园</td>
+                        <td class="bar-cell">
+                            <div class="mini-bar">
+                                <div class="mini-bar-fill" style="width: 0%;" data-width="40%"></div>
+                            </div>
+                        </td>
+                        <td class="count">6次</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="card table-card">
+                <div class="table-header">
+                    <div class="table-title">设备使用排行</div>
+                    <span style="font-size: 12px; color: var(--text-muted);">TOP 5</span>
+                </div>
+                <table class="data-table">
+                    <tr>
+                        <td><div class="rank rank-1">1</div></td>
+                        <td class="name">A7M4</td>
+                        <td class="bar-cell">
+                            <div class="mini-bar">
+                                <div class="mini-bar-fill" style="width: 0%;" data-width="100%"></div>
+                            </div>
+                        </td>
+                        <td class="count">45次</td>
+                    </tr>
+                    <tr>
+                        <td><div class="rank rank-2">2</div></td>
+                        <td class="name">85mm</td>
+                        <td class="bar-cell">
+                            <div class="mini-bar">
+                                <div class="mini-bar-fill" style="width: 0%;" data-width="84%"></div>
+                            </div>
+                        </td>
+                        <td class="count">38次</td>
+                    </tr>
+                    <tr>
+                        <td><div class="rank rank-3">3</div></td>
+                        <td class="name">闪光灯</td>
+                        <td class="bar-cell">
+                            <div class="mini-bar">
+                                <div class="mini-bar-fill" style="width: 0%;" data-width="71%"></div>
+                            </div>
+                        </td>
+                        <td class="count">32次</td>
+                    </tr>
+                    <tr>
+                        <td><div class="rank rank-other">4</div></td>
+                        <td class="name">反光板</td>
+                        <td class="bar-cell">
+                            <div class="mini-bar">
+                                <div class="mini-bar-fill" style="width: 0%;" data-width="62%"></div>
+                            </div>
+                        </td>
+                        <td class="count">28次</td>
+                    </tr>
+                    <tr>
+                        <td><div class="rank rank-other">5</div></td>
+                        <td class="name">三脚架</td>
+                        <td class="bar-cell">
+                            <div class="mini-bar">
+                                <div class="mini-bar-fill" style="width: 0%;" data-width="44%"></div>
+                            </div>
+                        </td>
+                        <td class="count">20次</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Customer Analysis -->
+        <div class="analysis-grid">
+            <div class="card analysis-card">
+                <div class="chart-title">客户满意度</div>
+                <div class="star-rating">
+                    <span class="star active">★</span>
+                    <span class="star active">★</span>
+                    <span class="star active">★</span>
+                    <span class="star active">★</span>
+                    <span class="star active">★</span>
+                </div>
+                <div class="rating-text">5.0</div>
+                <div class="rating-label">基于 23 个评价</div>
+            </div>
+
+            <div class="card analysis-card">
+                <div class="chart-title">复购率</div>
+                <div class="repurchase-display">
+                    <div class="repurchase-value" data-target="68">0%</div>
+                    <div class="repurchase-label">客户复购比例</div>
+                </div>
+                <div class="stat-meta" style="justify-content: center;">
+                    <span class="trend-up">↑8%</span>
+                    <span style="color: var(--text-muted);">较上季度</span>
+                </div>
+            </div>
+
+            <div class="card analysis-card">
+                <div class="chart-title">客户类型占比</div>
+                <div class="customer-types">
+                    <div class="type-item">
+                        <div class="type-icon personal">👤</div>
+                        <div class="type-info">
+                            <div class="type-name">个人客户</div>
+                            <div class="type-value">45%</div>
+                        </div>
+                    </div>
+                    <div class="type-item">
+                        <div class="type-icon studio">📷</div>
+                        <div class="type-info">
+                            <div class="type-name">工作室</div>
+                            <div class="type-value">35%</div>
+                        </div>
+                    </div>
+                    <div class="type-item">
+                        <div class="type-icon enterprise">🏢</div>
+                        <div class="type-info">
+                            <div class="type-name">企业客户</div>
+                            <div class="type-value">20%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Number counting animation
+        function animateNumbers() {
+            var counters = document.querySelectorAll('.stat-value[data-target], .repurchase-value[data-target]');
+            counters.forEach(function(counter) {
+                var target = parseInt(counter.getAttribute('data-target'));
+                var suffix = counter.getAttribute('data-suffix') || '';
+                var duration = 1500;
+                var start = 0;
+                var startTime = null;
+
+                function updateCount(currentTime) {
+                    if (!startTime) startTime = currentTime;
+                    var progress = currentTime - startTime;
+                    var percentage = Math.min(progress / duration, 1);
+                    var easeOut = 1 - Math.pow(1 - percentage, 3);
+                    var current = Math.floor(easeOut * target);
+                    counter.textContent = current + suffix;
+
+                    if (progress < duration) {
+                        requestAnimationFrame(updateCount);
+                    } else {
+                        counter.textContent = target + suffix;
+                    }
+                }
+
+                requestAnimationFrame(updateCount);
+            });
+        }
+
+        // Progress bar animation
+        function animateProgressBars() {
+            var bars = document.querySelectorAll('.progress-fill[data-width], .mini-bar-fill[data-width]');
+            bars.forEach(function(bar) {
+                var width = bar.getAttribute('data-width');
+                setTimeout(function() {
+                    bar.style.width = width;
+                }, 300);
+            });
+        }
+
+        // Star rating animation
+        function animateStars() {
+            var stars = document.querySelectorAll('.star');
+            stars.forEach(function(star, index) {
+                setTimeout(function() {
+                    star.style.transform = 'scale(1.2)';
+                    setTimeout(function() {
+                        star.style.transform = 'scale(1)';
+                    }, 200);
+                }, index * 100);
+            });
+        }
+
+        // Initialize animations when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                animateNumbers();
+                animateProgressBars();
+                animateStars();
+            }, 100);
+        });
+
+        // Intersection Observer for scroll animations
+        if ('IntersectionObserver' in window) {
+            var observer = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            document.querySelectorAll('.card').forEach(function(card) {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                observer.observe(card);
+            });
+        }
+    </script>
+</body>
+</html>
