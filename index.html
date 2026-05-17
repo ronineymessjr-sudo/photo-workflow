@@ -917,6 +917,33 @@
             margin-bottom: .5rem;
             border-left: 3px solid var(--ac);
         }
+        /* Drag and Drop Styles */
+        .draggable {
+            cursor: grab;
+            user-select: none;
+        }
+        .draggable:active {
+            cursor: grabbing;
+        }
+        .dragging {
+            opacity: 0.5;
+            transform: scale(1.02);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        .drag-over {
+            border-top: 2px solid var(--ac);
+        }
+        .drag-handle {
+            cursor: grab;
+            padding: 0.25rem;
+            color: var(--t3);
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+        .drag-handle:hover {
+            opacity: 1;
+            color: var(--ac);
+        }
         .schedule-date {
             text-align: center;
             min-width: 50px;
@@ -4542,9 +4569,10 @@ function renderSchedules() {
     }
     
     const months = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
-    $('todoList').innerHTML = upcoming.slice(0, 5).map(s => {
+    $('todoList').innerHTML = upcoming.map((s, index) => {
         const d = new Date(s.date);
-        return `<div class="schedule-item">
+        return `<div class="schedule-item draggable" draggable="true" data-id="${s.id}" data-index="${index}">
+            <div class="drag-handle" style="margin-right:0.5rem;">⋮⋮</div>
             <div class="schedule-date">
                 <div class="schedule-date-day">${d.getDate()}</div>
                 <div class="schedule-date-month">${months[d.getMonth()]}</div>
@@ -4556,6 +4584,67 @@ function renderSchedules() {
             <button class="btn-i2" onclick="deleteSchedule('${s.id}')">✕</button>
         </div>`;
     }).join('');
+    
+    // 初始化拖拽
+    initDragAndDrop();
+}
+
+function initDragAndDrop() {
+    const items = document.querySelectorAll('.draggable');
+    let draggedItem = null;
+    
+    items.forEach(item => {
+        item.addEventListener('dragstart', function(e) {
+            draggedItem = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        });
+        
+        item.addEventListener('dragend', function() {
+            this.classList.remove('dragging');
+            draggedItem = null;
+            document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+        });
+        
+        item.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            if (this !== draggedItem) {
+                this.classList.add('drag-over');
+            }
+        });
+        
+        item.addEventListener('dragleave', function() {
+            this.classList.remove('drag-over');
+        });
+        
+        item.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+            
+            if (draggedItem && this !== draggedItem) {
+                const draggedId = draggedItem.getAttribute('data-id');
+                const targetId = this.getAttribute('data-id');
+                
+                // 获取当前日程列表
+                const schedules = sg(SK_SCHED) || [];
+                const draggedIndex = schedules.findIndex(s => s.id === draggedId);
+                const targetIndex = schedules.findIndex(s => s.id === targetId);
+                
+                if (draggedIndex > -1 && targetIndex > -1) {
+                    // 交换位置
+                    const [removed] = schedules.splice(draggedIndex, 1);
+                    schedules.splice(targetIndex, 0, removed);
+                    
+                    // 保存
+                    ss(SK_SCHED, schedules);
+                    
+                    // 重新渲染
+                    renderSchedules();
+                    toast('日程顺序已更新', 'ok');
+                }
+            }
+        });
+    });
 }
 
 window.addSchedule = async function() {
