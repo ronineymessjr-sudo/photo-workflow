@@ -2119,6 +2119,75 @@
                     </div>
                 </section>
             </div>
+            <script>
+            // 加载看板数据
+            (function loadDashboard() {
+                var API_BASE = 'https://photo-workflow.vercel.app/api';
+                var token = localStorage.getItem('pw_token');
+                if (!token) return;
+                
+                fetch(API_BASE + '/dashboard/stats', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.stats) {
+                        // 更新顶部统计
+                        var shootsEl = document.getElementById('stat-shoots');
+                        var completionEl = document.getElementById('stat-completion');
+                        var clientsEl = document.getElementById('stat-clients');
+                        var equipmentEl = document.getElementById('stat-equipment');
+                        
+                        if (shootsEl) shootsEl.textContent = data.stats.monthShoots;
+                        if (completionEl) completionEl.textContent = data.stats.completionRate + '%';
+                        if (clientsEl) clientsEl.textContent = data.stats.activeClients;
+                        if (equipmentEl) equipmentEl.textContent = data.stats.equipmentRate + '%';
+                        
+                        // 更新增长率
+                        var growthEls = document.querySelectorAll('#tab-dashboard .panel:first-child .panel:first-child div:last-child');
+                        if (growthEls[0] && data.stats.monthGrowth >= 0) {
+                            growthEls[0].textContent = '↑ ' + data.stats.monthGrowth + '%';
+                            growthEls[0].style.color = '#4ade80';
+                        }
+                    }
+                    
+                    // 更新趋势图
+                    if (data.trends && data.trends.length === 6) {
+                        var bars = document.querySelectorAll('#tab-dashboard .panel:nth-child(2) .panel:first-child .p-body > div > div');
+                        data.trends.forEach(function(trend, i) {
+                            if (bars[i]) {
+                                var bar = bars[i].querySelector('div');
+                                var label = bars[i].querySelector('span');
+                                if (bar) {
+                                    var maxCount = Math.max.apply(Math, data.trends.map(function(t) { return t.count; }));
+                                    var height = maxCount > 0 ? (trend.count / maxCount * 100) : 0;
+                                    bar.style.height = Math.max(height, 10) + '%';
+                                }
+                                if (label) label.textContent = trend.month;
+                            }
+                        });
+                    }
+                    
+                    // 更新热门场地
+                    if (data.topVenues) {
+                        var venueList = document.querySelector('#tab-dashboard .panel:nth-child(3) .panel:first-child .p-body > div');
+                        if (venueList) {
+                            venueList.innerHTML = data.topVenues.map(function(v, i) {
+                                var colors = ['#ffd700', '#c0c0c0', '#cd7f32'];
+                                var bg = i < 3 ? 'linear-gradient(135deg,' + colors[i] + ',' + (i === 0 ? '#ffaa00' : i === 1 ? '#a0a0a0' : '#b87333') + ')' : 'var(--bg2)';
+                                var color = i < 3 ? '#000' : 'var(--t3)';
+                                return '<div style="display:flex;align-items:center;gap:.75rem;">' +
+                                    '<span style="width:20px;height:20px;border-radius:50%;background:' + bg + ';display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:600;color:' + color + ';">' + v.rank + '</span>' +
+                                    '<span style="flex:1;font-size:.8rem;color:var(--t1);">' + v.name + '</span>' +
+                                    '<span style="font-size:.75rem;color:' + (i < 3 ? 'var(--ac)' : 'var(--t3)') + ';font-weight:500;">' + v.count + '次</span>' +
+                                '</div>';
+                            }).join('');
+                        }
+                    }
+                })
+                .catch(function(e) { console.log('Dashboard load error:', e); });
+            })();
+            </script>
         </div>
 
         <!-- ============ 模特库 ============ -->
