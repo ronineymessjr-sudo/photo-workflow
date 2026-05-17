@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://ronineymessjr-sudo.github.io/photo-workflow/sitemap.xml

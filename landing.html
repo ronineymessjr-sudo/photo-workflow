@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 驱动的摄影方案工作流 | PhotoAtelier - 智能拍摄方案生成工具</title>
+  <meta name="description" content="PhotoAtelier 是一款 AI 驱动的摄影方案工作流工具，智能生成拍摄方案，管理日程、场地与模特资源，支持飞书协同，让摄影团队高效协作。">
+  <meta name="keywords" content="摄影方案, AI摄影, 拍摄方案生成, 摄影工作流, 飞书协同, 摄影日程管理, 场地管理, 模特资源管理, 摄影团队协作">
+  <meta name="author" content="PhotoAtelier">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://photoatelier.com/landing">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="AI 驱动的摄影方案工作流 | PhotoAtelier">
+  <meta property="og:description" content="从创意到执行，智能生成拍摄方案，管理日程、场地与模特资源。免费开始使用。">
+  <meta property="og:url" content="https://photoatelier.com/landing">
+  <meta property="og:site_name" content="PhotoAtelier">
+  <meta property="og:locale" content="zh_CN">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="AI 驱动的摄影方案工作流 | PhotoAtelier">
+  <meta name="twitter:description" content="从创意到执行，智能生成拍摄方案，管理日程、场地与模特资源。">
+
+  <style>
+    /* ========== CSS Variables ========== */
+    :root {
+      --bg-primary: #0c0c0e;
+      --bg-secondary: #141418;
+      --bg-card: rgba(255, 255, 255, 0.04);
+      --bg-card-hover: rgba(255, 255, 255, 0.08);
+      --text-primary: #f0f0f2;
+      --text-secondary: #9a9aae;
+      --text-muted: #6b6b80;
+      --accent: #ff6b6b;
+      --accent-hover: #ff8585;
+      --accent-glow: rgba(255, 107, 107, 0.15);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-hover: rgba(255, 255, 255, 0.15);
+      --glass-bg: rgba(20, 20, 24, 0.7);
+      --glass-border: rgba(255, 255, 255, 0.06);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 20px;
+      --radius-xl: 28px;
+      --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.3);
+      --shadow-glow: 0 0 60px rgba(255, 107, 107, 0.08);
+      --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+      --max-width: 1200px;
+      --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ========== Reset & Base ========== */
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.7;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    img {
+      max-width: 100%;
+      display: block;
+    }
+
+    /* ========== Utility ========== */
+    .container {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ========== Animations ========== */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 20px rgba(255, 107, 107, 0.1); }
+      50% { box-shadow: 0 0 40px rgba(255, 107, 107, 0.25); }
+    }
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .animate-in {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+
+    .animate-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ========== Navigation ========== */
+    .nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 16px 0;
+      transition: background var(--transition), backdrop-filter var(--transition);
+    }
+
+    .nav.scrolled {
+      background: var(--glass-bg);
+      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-logo {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: var(--text-primary);
+    }
+
+    .nav-logo span {
+      color: var(--accent);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 14px;
+      color: var(--text-secondary);
+      transition: color var(--transition);
+    }
+
+    .nav-links a:hover {
+      color: var(--text-primary);
+    }
+
+    .nav-cta {
+      display: inline-block;
+      padding: 8px 20px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: var(--radius-sm);
+      transition: background var(--transition), transform var(--transition);
+    }
+
+    .nav-cta:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+    }
+
+    /* ========== Hero ========== */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 24px 80px;
+      overflow: hidden;
+    }
+
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+
+    .hero-bg::before {
+      content: '';
+      position: absolute;
+      top: -20%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 800px;
+      height: 800px;
+      background: radial-gradient(circle, rgba(255, 107, 107, 0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-bg::after {
+      content: '';
+      position: absolute;
+      bottom: -10%;
+      right: -10%;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(100, 100, 255, 0.05) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 60% 50% at 50% 50%, black 20%, transparent 100%);
+      -webkit-mask-image: radial-gradient(ellipse 60% 50% at 50% 50%, black 20%, transparent 100%);
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      max-width: 720px;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 32px;
+      animation: fadeInUp 0.8s ease forwards;
+    }
+
+    .hero-badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulseGlow 2s ease-in-out infinite;
+    }
+
+    .hero h1 {
+      font-size: clamp(32px, 6vw, 56px);
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -1.5px;
+      margin-bottom: 20px;
+      animation: fadeInUp 0.8s ease 0.15s forwards;
+      opacity: 0;
+    }
+
+    .hero h1 .highlight {
+      background: linear-gradient(135deg, var(--accent), #ff9a9a);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-desc {
+      font-size: clamp(16px, 2.5vw, 18px);
+      color: var(--text-secondary);
+      line-height: 1.8;
+      margin-bottom: 40px;
+      max-width: 560px;
+      margin-left: auto;
+      margin-right: auto;
+      animation: fadeInUp 0.8s ease 0.3s forwards;
+      opacity: 0;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+      animation: fadeInUp 0.8s ease 0.45s forwards;
+      opacity: 0;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 32px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(255, 107, 107, 0.3);
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 32px;
+      background: var(--bg-card);
+      color: var(--text-primary);
+      font-size: 16px;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: background var(--transition), border-color var(--transition), transform var(--transition);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-hover);
+      transform: translateY(-2px);
+    }
+
+    .btn-arrow {
+      display: inline-block;
+      transition: transform var(--transition);
+    }
+
+    .btn-secondary:hover .btn-arrow {
+      transform: translateY(3px);
+    }
+
+    /* ========== Section Common ========== */
+    section {
+      padding: 100px 0;
+    }
+
+    .section-label {
+      display: inline-block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: clamp(28px, 4vw, 40px);
+      font-weight: 700;
+      letter-spacing: -1px;
+      line-height: 1.2;
+      margin-bottom: 16px;
+    }
+
+    .section-desc {
+      font-size: 16px;
+      color: var(--text-secondary);
+      max-width: 560px;
+      line-height: 1.8;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 64px;
+    }
+
+    .section-header .section-desc {
+      margin: 0 auto;
+    }
+
+    /* ========== Features ========== */
+    .features {
+      background: var(--bg-secondary);
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+
+    .feature-card {
+      position: relative;
+      padding: 36px;
+      background: var(--glass-bg);
+      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+      overflow: hidden;
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 107, 107, 0.3), transparent);
+      opacity: 0;
+      transition: opacity var(--transition);
+    }
+
+    .feature-card:hover {
+      border-color: var(--border-hover);
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-card);
+    }
+
+    .feature-card:hover::before {
+      opacity: 1;
+    }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent-glow);
+      border-radius: var(--radius-md);
+      margin-bottom: 20px;
+      font-size: 22px;
+    }
+
+    .feature-card h3 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      letter-spacing: -0.3px;
+    }
+
+    .feature-card p {
+      font-size: 15px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+
+    /* ========== Workflow ========== */
+    .workflow {
+      position: relative;
+    }
+
+    .workflow-steps {
+      display: flex;
+      align-items: flex-start;
+      gap: 24px;
+      position: relative;
+    }
+
+    .workflow-steps::before {
+      content: '';
+      position: absolute;
+      top: 40px;
+      left: 80px;
+      right: 80px;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), rgba(255, 107, 107, 0.1));
+      z-index: 0;
+    }
+
+    .workflow-step {
+      flex: 1;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .step-number {
+      width: 80px;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      background: var(--bg-secondary);
+      border: 2px solid var(--border);
+      border-radius: 50%;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--accent);
+      transition: border-color var(--transition), background var(--transition);
+    }
+
+    .workflow-step:hover .step-number {
+      border-color: var(--accent);
+      background: var(--accent-glow);
+    }
+
+    .workflow-step h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .workflow-step p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      padding: 0 8px;
+    }
+
+    /* ========== Testimonials ========== */
+    .testimonials {
+      background: var(--bg-secondary);
+    }
+
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+
+    .testimonial-card {
+      padding: 32px;
+      background: var(--glass-bg);
+      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      transition: border-color var(--transition), transform var(--transition);
+    }
+
+    .testimonial-card:hover {
+      border-color: var(--border-hover);
+      transform: translateY(-2px);
+    }
+
+    .testimonial-card.featured {
+      grid-column: 1 / -1;
+      max-width: 640px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .testimonial-stars {
+      color: #fbbf24;
+      font-size: 16px;
+      margin-bottom: 16px;
+      letter-spacing: 2px;
+    }
+
+    .testimonial-text {
+      font-size: 16px;
+      line-height: 1.8;
+      color: var(--text-primary);
+      margin-bottom: 20px;
+    }
+
+    .testimonial-author {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .testimonial-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), #ff9a9a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .testimonial-info h4 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .testimonial-info span {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* ========== CTA ========== */
+    .cta {
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-glow {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(255, 107, 107, 0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .cta-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .cta h2 {
+      font-size: clamp(28px, 4vw, 40px);
+      font-weight: 700;
+      letter-spacing: -1px;
+      margin-bottom: 16px;
+    }
+
+    .cta p {
+      font-size: 16px;
+      color: var(--text-secondary);
+      margin-bottom: 36px;
+    }
+
+    .cta-note {
+      display: block;
+      margin-top: 16px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* ========== Footer ========== */
+    .footer {
+      padding: 40px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .footer-copy {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 24px;
+      list-style: none;
+    }
+
+    .footer-links a {
+      font-size: 14px;
+      color: var(--text-muted);
+      transition: color var(--transition);
+    }
+
+    .footer-links a:hover {
+      color: var(--text-primary);
+    }
+
+    /* ========== Responsive ========== */
+    @media (max-width: 768px) {
+      .nav-links {
+        display: none;
+      }
+
+      .hero {
+        padding: 100px 24px 60px;
+        min-height: auto;
+      }
+
+      .hero-actions {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .btn-primary,
+      .btn-secondary {
+        width: 100%;
+        max-width: 300px;
+        justify-content: center;
+      }
+
+      section {
+        padding: 64px 0;
+      }
+
+      .section-header {
+        margin-bottom: 40px;
+      }
+
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .workflow-steps {
+        flex-direction: column;
+        gap: 40px;
+      }
+
+      .workflow-steps::before {
+        top: 0;
+        bottom: 0;
+        left: 39px;
+        right: auto;
+        width: 2px;
+        height: auto;
+        background: linear-gradient(180deg, var(--accent), rgba(255, 107, 107, 0.1));
+      }
+
+      .workflow-step {
+        text-align: left;
+        display: flex;
+        align-items: flex-start;
+        gap: 20px;
+      }
+
+      .step-number {
+        margin: 0;
+        flex-shrink: 0;
+        width: 64px;
+        height: 64px;
+        font-size: 22px;
+      }
+
+      .workflow-step-text {
+        padding-top: 14px;
+      }
+
+      .testimonials-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .testimonial-card.featured {
+        grid-column: auto;
+        max-width: none;
+      }
+
+      .footer-inner {
+        flex-direction: column;
+        text-align: center;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .feature-card {
+        padding: 24px;
+      }
+
+      .testimonial-card {
+        padding: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ========== Navigation ========== -->
+  <nav class="nav" id="nav" role="navigation" aria-label="主导航">
+    <div class="container nav-inner">
+      <a href="index.html" class="nav-logo" aria-label="PhotoAtelier 首页">Photo<span>Atelier</span></a>
+      <ul class="nav-links">
+        <li><a href="#features">功能介绍</a></li>
+        <li><a href="#workflow">使用流程</a></li>
+        <li><a href="#testimonials">用户评价</a></li>
+      </ul>
+      <a href="index.html" class="nav-cta">免费开始</a>
+    </div>
+  </nav>
+
+  <!-- ========== Hero ========== -->
+  <header class="hero" id="hero">
+    <div class="hero-bg" aria-hidden="true">
+      <div class="hero-grid"></div>
+    </div>
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="hero-badge-dot" aria-hidden="true"></span>
+        AI 驱动摄影工作流
+      </div>
+      <h1>AI 驱动的<br><span class="highlight">摄影方案工作流</span></h1>
+      <p class="hero-desc">从创意到执行，智能生成拍摄方案，管理日程、场地与模特资源。让每一次拍摄都有条不紊。</p>
+      <div class="hero-actions">
+        <a href="index.html" class="btn-primary" role="button">
+          免费开始使用
+          <span aria-hidden="true">&rarr;</span>
+        </a>
+        <a href="#features" class="btn-secondary" role="button">
+          了解更多
+          <span class="btn-arrow" aria-hidden="true">&darr;</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========== Features ========== -->
+  <section class="features" id="features" aria-labelledby="features-title">
+    <div class="container">
+      <div class="section-header animate-in">
+        <span class="section-label">核心功能</span>
+        <h2 class="section-title" id="features-title">为摄影团队打造的智能工具</h2>
+        <p class="section-desc">覆盖拍摄方案全生命周期，从创意构思到落地执行，一站式解决。</p>
+      </div>
+      <div class="features-grid">
+        <article class="feature-card animate-in">
+          <div class="feature-icon" aria-hidden="true">&#x1f4a1;</div>
+          <h3>智能方案生成</h3>
+          <p>AI 根据主题、风格、场景自动生成完整拍摄方案，包含分镜设计、光线布置、道具建议，让创意快速落地。</p>
+        </article>
+        <article class="feature-card animate-in">
+          <div class="feature-icon" aria-hidden="true">&#x1f4c5;</div>
+          <h3>日程管理</h3>
+          <p>拍摄日程一键同步飞书日历，支持多维表格数据管理，团队协作更高效，告别手动排期的混乱。</p>
+        </article>
+        <article class="feature-card animate-in">
+          <div class="feature-icon" aria-hidden="true">&#x1f4da;</div>
+          <h3>资源库</h3>
+          <p>场地、模特、设备统一管理，标签分类快速检索，告别散落各处的表格和聊天记录。</p>
+        </article>
+        <article class="feature-card animate-in">
+          <div class="feature-icon" aria-hidden="true">&#x1f4f1;</div>
+          <h3>多端同步</h3>
+          <p>桌面端和移动端完美适配，数据云端存储，随时随地查看方案，现场拍摄也能随时调用。</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== Workflow ========== -->
+  <section class="workflow" id="workflow" aria-labelledby="workflow-title">
+    <div class="container">
+      <div class="section-header animate-in">
+        <span class="section-label">使用流程</span>
+        <h2 class="section-title" id="workflow-title">三步完成拍摄方案</h2>
+        <p class="section-desc">简单三步，从想法到可执行的拍摄方案。</p>
+      </div>
+      <div class="workflow-steps animate-in">
+        <div class="workflow-step">
+          <div class="step-number" aria-hidden="true">1</div>
+          <div class="workflow-step-text">
+            <h3>输入拍摄需求</h3>
+            <p>描述拍摄主题、风格偏好、场景需求，AI 理解你的创意意图。</p>
+          </div>
+        </div>
+        <div class="workflow-step">
+          <div class="step-number" aria-hidden="true">2</div>
+          <div class="workflow-step-text">
+            <h3>AI 生成方案</h3>
+            <p>自动生成包含分镜、光线、道具、排期的完整拍摄方案。</p>
+          </div>
+        </div>
+        <div class="workflow-step">
+          <div class="step-number" aria-hidden="true">3</div>
+          <div class="workflow-step-text">
+            <h3>同步到飞书执行</h3>
+            <p>一键同步日程到飞书日历，团队协同高效执行。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== Testimonials ========== -->
+  <section class="testimonials" id="testimonials" aria-labelledby="testimonials-title">
+    <div class="container">
+      <div class="section-header animate-in">
+        <span class="section-label">用户评价</span>
+        <h2 class="section-title" id="testimonials-title">他们正在使用 PhotoAtelier</h2>
+        <p class="section-desc">来自真实摄影师和工作室的使用反馈。</p>
+      </div>
+      <div class="testimonials-grid">
+        <article class="testimonial-card featured animate-in">
+          <div class="testimonial-stars" aria-label="5 星好评">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+          <p class="testimonial-text">"方案生成太方便了，以前要花半天写的方案现在 5 分钟搞定。AI 理解能力很强，给出的分镜建议经常能给我带来新的灵感。强烈推荐给每一个独立摄影师。"</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar" aria-hidden="true">王</div>
+            <div class="testimonial-info">
+              <h4>摄影师小王</h4>
+              <span>独立摄影师 / 商业摄影</span>
+            </div>
+          </div>
+        </article>
+        <article class="testimonial-card animate-in">
+          <div class="testimonial-stars" aria-label="5 星好评">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+          <p class="testimonial-text">"团队用飞书协同，日程同步功能帮了大忙。以前排期要反复确认，现在一键同步，所有人都能看到最新安排。"</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar" aria-hidden="true">李</div>
+            <div class="testimonial-info">
+              <h4>工作室负责人李姐</h4>
+              <span>光影工作室 / 创始人</span>
+            </div>
+          </div>
+        </article>
+        <article class="testimonial-card animate-in">
+          <div class="testimonial-stars" aria-label="5 星好评">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+          <p class="testimonial-text">"资源库功能解决了我们最大的痛点。场地和模特信息终于不用再翻聊天记录了，标签检索非常高效。"</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar" aria-hidden="true">张</div>
+            <div class="testimonial-info">
+              <h4>摄影总监张磊</h4>
+              <span>某电商品牌 / 视觉团队</span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== CTA ========== -->
+  <section class="cta" id="cta" aria-labelledby="cta-title">
+    <div class="cta-glow" aria-hidden="true"></div>
+    <div class="container cta-content animate-in">
+      <h2 id="cta-title">准备好提升你的摄影工作流了吗？</h2>
+      <p>加入数百位摄影师的行列，用 AI 重新定义拍摄方案。</p>
+      <a href="index.html" class="btn-primary" role="button" style="font-size: 18px; padding: 16px 40px;">
+        立即免费体验
+        <span aria-hidden="true">&rarr;</span>
+      </a>
+      <span class="cta-note">无需信用卡，永久免费</span>
+    </div>
+  </section>
+
+  <!-- ========== Footer ========== -->
+  <footer class="footer" role="contentinfo">
+    <div class="container footer-inner">
+      <p class="footer-copy">&copy; 2025 PhotoAtelier. All rights reserved.</p>
+      <ul class="footer-links">
+        <li><a href="#">隐私政策</a></li>
+        <li><a href="#">使用条款</a></li>
+      </ul>
+    </div>
+  </footer>
+
+  <!-- ========== JavaScript ========== -->
+  <script>
+    (function() {
+      'use strict';
+
+      // Nav scroll effect
+      var nav = document.getElementById('nav');
+      var scrollThreshold = 40;
+
+      function onScroll() {
+        if (window.pageYOffset > scrollThreshold) {
+          if (nav.className.indexOf('scrolled') === -1) {
+            nav.className = nav.className + ' scrolled';
+          }
+        } else {
+          nav.className = nav.className.replace(' scrolled', '');
+        }
+      }
+
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+
+      // Intersection Observer for animations
+      var animateElements = document.querySelectorAll('.animate-in');
+
+      if ('IntersectionObserver' in window) {
+        var observer = new IntersectionObserver(function(entries) {
+          for (var i = 0; i < entries.length; i++) {
+            if (entries[i].isIntersecting) {
+              entries[i].target.classList.add('visible');
+              observer.unobserve(entries[i].target);
+            }
+          }
+        }, {
+          threshold: 0.15,
+          rootMargin: '0px 0px -40px 0px'
+        });
+
+        for (var i = 0; i < animateElements.length; i++) {
+          observer.observe(animateElements[i]);
+        }
+      } else {
+        // Fallback: show all elements immediately
+        for (var j = 0; j < animateElements.length; j++) {
+          animateElements[j].classList.add('visible');
+        }
+      }
+
+      // Smooth scroll for anchor links
+      var anchorLinks = document.querySelectorAll('a[href^="#"]');
+
+      for (var k = 0; k < anchorLinks.length; k++) {
+        anchorLinks[k].addEventListener('click', function(e) {
+          var targetId = this.getAttribute('href');
+          if (targetId && targetId.length > 1) {
+            var targetEl = document.querySelector(targetId);
+            if (targetEl) {
+              e.preventDefault();
+              var offsetTop = targetEl.getBoundingClientRect().top + window.pageYOffset - 80;
+              window.scrollTo({
+                top: offsetTop,
+                behavior: 'smooth'
+              });
+            }
+          }
+        });
+      }
+    })();
+  </script>
+
+</body>
+</html>
