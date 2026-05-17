@@ -1398,11 +1398,196 @@
             transition: all .2s;
         }
         .role-modal-close:hover { background: rgba(255,255,255,0.1); }
+
+        /* ===== Login Overlay Enhancements ===== */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .login-container {
+            animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .login-card {
+            background: rgba(20, 20, 22, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--bd);
+            border-radius: var(--radius);
+            padding: 1.8rem;
+            text-align: left;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.4), inset 0 1px 0 var(--inset-top);
+            transition: border-color 0.3s ease;
+        }
+        .login-card:hover {
+            border-color: var(--bd2);
+        }
+        .login-divider {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+        .login-divider::before,
+        .login-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--bd2), transparent);
+        }
+        .login-divider span {
+            font-size: .7rem;
+            color: var(--t3);
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        #loginOverlay input {
+            transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+        }
+        #loginOverlay input:focus {
+            border-color: var(--ac);
+            box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.15);
+            outline: none;
+            background: var(--bg2);
+        }
+        #loginOverlay .btn-p {
+            transition: transform 0.2s ease, box-shadow 0.3s ease, filter 0.3s ease;
+        }
+        #loginOverlay .btn-p:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+        }
+        #loginOverlay .btn-p:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 6px rgba(255, 107, 107, 0.2);
+        }
+
+        /* ===== Step Indicator ===== */
+        .step-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            margin-bottom: 1.5rem;
+            padding: 0 0.2rem;
+        }
+        .step-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex: 1;
+            position: relative;
+        }
+        .step-item:not(:last-child)::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--bd);
+            margin: 0 0.5rem;
+            transition: background 0.3s ease;
+        }
+        .step-item.completed:not(:last-child)::after {
+            background: var(--ac);
+        }
+        .step-num {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .7rem;
+            font-weight: 600;
+            background: var(--bg3);
+            color: var(--t3);
+            border: 1px solid var(--bd);
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+        .step-item.active .step-num {
+            background: var(--ac);
+            color: #fff;
+            border-color: var(--ac);
+            box-shadow: 0 0 12px var(--ac-glow);
+        }
+        .step-item.completed .step-num {
+            background: var(--ac);
+            color: #fff;
+            border-color: var(--ac);
+        }
+        .step-label {
+            font-size: .68rem;
+            color: var(--t3);
+            white-space: nowrap;
+            transition: color 0.3s ease;
+        }
+        .step-item.active .step-label {
+            color: var(--t1);
+            font-weight: 500;
+        }
+        .step-item.completed .step-label {
+            color: var(--t2);
+        }
+        .step-section {
+            position: relative;
+            padding-top: 0.5rem;
+        }
+        .step-section-title {
+            font-size: .72rem;
+            font-weight: 600;
+            color: var(--ac);
+            margin-bottom: 0.8rem;
+            letter-spacing: .03em;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .step-section-title::before {
+            content: '';
+            width: 3px;
+            height: 12px;
+            background: var(--ac);
+            border-radius: 2px;
+        }
+
+        /* ===== Form Input Transition Enhancement ===== */
+        #briefForm .fg {
+            transition: transform 0.2s ease, opacity 0.3s ease;
+        }
+        #briefForm .fg:hover {
+            transform: translateX(2px);
+        }
+        #briefForm input,
+        #briefForm textarea,
+        #briefForm select {
+            transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease, transform 0.2s ease;
+        }
+        #briefForm input:focus,
+        #briefForm textarea:focus,
+        #briefForm select:focus {
+            transform: translateY(-1px);
+        }
+
+        /* ===== Gen Button Loading State ===== */
+        .btn-loading {
+            pointer-events: none;
+            opacity: 0.8;
+        }
+        .btn-loading .btn-loading-icon {
+            display: inline-block;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .role-cards { flex-direction: column; align-items: center; }
             .role-card { width: 90%; max-width: 320px; }
             .hero-bg { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(4, 1fr); }
+            .step-label { display: none; }
+            .step-item:not(:last-child)::after { margin: 0 0.3rem; }
         }
             .tab-cnt { padding: 1rem; }
             .grid { grid-template-columns: 1fr; }
@@ -1421,14 +1606,15 @@
 
 <!-- Login Overlay -->
 <div id="loginOverlay" style="position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;background:var(--bg);">
-    <div style="text-align:center;max-width:400px;padding:2rem;width:100%;">
-        <div style="margin-bottom:2rem;">
+    <div class="login-container" style="text-align:center;max-width:400px;padding:2rem;width:100%;">
+        <div style="margin-bottom:0.5rem;">
             <span class="brand-dot" style="display:inline-block;width:16px;height:16px;margin-bottom:1rem;"></span>
             <h1 style="font-family:var(--font-serif);font-size:2.5rem;font-weight:600;letter-spacing:-0.03em;margin-bottom:.5rem;">Photo<span style="color:var(--ac);font-style:italic;">Atelier</span></h1>
             <p style="color:var(--t2);font-size:.95rem;">摄影方案 · 智能工作流</p>
         </div>
-        <div id="loginForm" style="background:var(--bg3);border:1px solid var(--bd);border-radius:var(--radius);padding:1.5rem;text-align:left;">
-            <h3 style="margin-bottom:1rem;text-align:center;">登录 / 注册</h3>
+        <div class="login-divider"><span>开始创作</span></div>
+        <div id="loginForm" class="login-card">
+            <h3 style="margin-bottom:1.2rem;text-align:center;font-size:1.05rem;">登录 / 注册</h3>
             <div style="margin-bottom:1rem;">
                 <label style="display:block;font-size:.8rem;color:var(--t3);margin-bottom:.3rem;">邮箱</label>
                 <input type="email" id="loginEmail" placeholder="your@email.com" style="width:100%;padding:.6rem .8rem;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius-sm);color:var(--t1);font-family:inherit;">
@@ -1545,26 +1731,57 @@
                         <div class="p-head"><h2>创意需求</h2></div>
                         <div class="p-body">
                             <form id="briefForm">
-                                <div class="fg"><label>拍摄主题</label><input id="f-theme" placeholder="如：都市时尚夜景" value="复古电影感私房"></div>
-                                <div class="fg"><label>风格定位</label>
-                                    <select id="f-style">
-                                        <option value="">选择风格</option><option value="时尚">时尚杂志风</option><option value="复古" selected>复古胶片风</option>
-                                        <option value="文艺">文艺清新</option><option value="性感">私房性感</option><option value="街拍">街头街拍</option>
-                                        <option value="运动">运动活力</option><option value="古风">古风汉服</option><option value="婚纱">婚纱婚礼</option>
-                                        <option value="商业">商业广告</option><option value="情绪">情绪人像</option>
-                                    </select>
-                                </div>
-                                <div class="fg"><label>模特特征</label><textarea id="f-model" placeholder="外貌、身材、气质">身高168，黑色长发，偏瘦，气质慵懒神秘，肤质白皙</textarea></div>
-                                <div class="fg"><label>场景偏好</label><textarea id="f-scene" placeholder="拍摄场景">老式酒店房间，复古家具，落地窗，老式浴缸</textarea></div>
-                                <div class="fg"><label>预期情绪</label><input id="f-mood" value="慵懒、神秘、暧昧"></div>
-                                <div class="g2">
-                                    <div class="fg"><label>拍摄时长</label>
-                                        <select id="f-dur"><option>1小时</option><option selected>2小时</option><option>3小时</option><option>半天</option><option>全天</option></select>
+                                <!-- Step Indicator -->
+                                <div class="step-indicator" id="stepIndicator">
+                                    <div class="step-item active" data-step="1">
+                                        <div class="step-num">1</div>
+                                        <span class="step-label">基本信息</span>
                                     </div>
-                                    <div class="fg"><label>人数</label><input id="f-people" type="number" value="1" min="1"></div>
+                                    <div class="step-item" data-step="2">
+                                        <div class="step-num">2</div>
+                                        <span class="step-label">详细描述</span>
+                                    </div>
+                                    <div class="step-item" data-step="3">
+                                        <div class="step-num">3</div>
+                                        <span class="step-label">附加要求</span>
+                                    </div>
                                 </div>
-                                <div class="fg"><label>其他要求</label><textarea id="f-extra" placeholder="服装、道具等">暖色调，复古质感，烟雾效果</textarea></div>
-                                <button type="submit" class="btn btn-p" id="genBtn">⚡ 生成并保存</button>
+
+                                <!-- Step 1: 基本信息 -->
+                                <div class="step-section" data-step-section="1">
+                                    <div class="step-section-title">基本信息</div>
+                                    <div class="fg"><label>拍摄主题</label><input id="f-theme" placeholder="如：都市时尚夜景" value="复古电影感私房"></div>
+                                    <div class="fg"><label>风格定位</label>
+                                        <select id="f-style">
+                                            <option value="">选择风格</option><option value="时尚">时尚杂志风</option><option value="复古" selected>复古胶片风</option>
+                                            <option value="文艺">文艺清新</option><option value="性感">私房性感</option><option value="街拍">街头街拍</option>
+                                            <option value="运动">运动活力</option><option value="古风">古风汉服</option><option value="婚纱">婚纱婚礼</option>
+                                            <option value="商业">商业广告</option><option value="情绪">情绪人像</option>
+                                        </select>
+                                    </div>
+                                    <div class="fg"><label>预期情绪</label><input id="f-mood" value="慵懒、神秘、暧昧"></div>
+                                </div>
+
+                                <!-- Step 2: 详细描述 -->
+                                <div class="step-section" data-step-section="2">
+                                    <div class="step-section-title">详细描述</div>
+                                    <div class="fg"><label>模特特征</label><textarea id="f-model" placeholder="外貌、身材、气质">身高168，黑色长发，偏瘦，气质慵懒神秘，肤质白皙</textarea></div>
+                                    <div class="fg"><label>场景偏好</label><textarea id="f-scene" placeholder="拍摄场景">老式酒店房间，复古家具，落地窗，老式浴缸</textarea></div>
+                                    <div class="g2">
+                                        <div class="fg"><label>拍摄时长</label>
+                                            <select id="f-dur"><option>1小时</option><option selected>2小时</option><option>3小时</option><option>半天</option><option>全天</option></select>
+                                        </div>
+                                        <div class="fg"><label>人数</label><input id="f-people" type="number" value="1" min="1"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Step 3: 附加要求 -->
+                                <div class="step-section" data-step-section="3">
+                                    <div class="step-section-title">附加要求</div>
+                                    <div class="fg"><label>其他要求</label><textarea id="f-extra" placeholder="服装、道具等">暖色调，复古质感，烟雾效果</textarea></div>
+                                </div>
+
+                                <button type="submit" class="btn btn-p" id="genBtn" style="width:100%;margin-top:0.5rem;">⚡ 生成并保存</button>
                             </form>
 
                             <!-- 案例参考 -->
@@ -3367,6 +3584,7 @@ function loadPlan(id){
     $('f-theme').value=inp.theme||''; $('f-style').value=inp.style||''; $('f-model').value=inp.modelDesc||'';
     $('f-scene').value=inp.scene||''; $('f-mood').value=inp.mood||''; $('f-dur').value=inp.duration||'2小时';
     $('f-people').value=inp.people||'1'; $('f-extra').value=inp.extra||'';
+    if(window._updateStepIndicator)window._updateStepIndicator();
     currentPlanData=plan;
     $('tplSavePanel').style.display='block';
     $('tplSaveHint').style.display='none';
@@ -3381,10 +3599,14 @@ function loadPlan(id){
 
 async function handleSubmit(e){
     e.preventDefault();
+    const btn=$('genBtn');
+    const btnOrigHTML=btn.innerHTML;
+    btn.classList.add('btn-loading');
+    btn.innerHTML='<span class="btn-loading-icon">⟳</span> 生成中...';
     const input={theme:$('f-theme').value.trim(),style:$('f-style').value,modelDesc:$('f-model').value.trim(),scene:$('f-scene').value.trim(),mood:$('f-mood').value.trim(),duration:$('f-dur').value,people:$('f-people').value,extra:$('f-extra').value.trim()};
-    if(!input.theme&&!input.modelDesc){toast('请填写主题或模特特征','er');return;}
+    if(!input.theme&&!input.modelDesc){toast('请填写主题或模特特征','er');btn.classList.remove('btn-loading');btn.innerHTML=btnOrigHTML;return;}
     $('outEmpty').classList.remove('active'); $('outCnt').classList.remove('active'); $('outLoad').classList.add('active');
-    $('genBtn').disabled=true;
+    btn.disabled=true;
     await new Promise(r=>setTimeout(r,900));
     try{
         const plan=genPlan(input);
@@ -3397,9 +3619,40 @@ async function handleSubmit(e){
         $('outLoad').classList.remove('active'); $('outCnt').classList.add('active');
         toast('方案已生成并保存','ok');
     }catch(e){toast('生成失败','er');$('outLoad').classList.remove('active');$('outEmpty').classList.add('active');}
-    finally{$('genBtn').disabled=false;}
+    finally{btn.disabled=false;btn.classList.remove('btn-loading');btn.innerHTML=btnOrigHTML;}
 }
 $('briefForm').addEventListener('submit',handleSubmit);
+
+// ===== Step Indicator Logic =====
+(function initStepIndicator(){
+    const form=$('briefForm');
+    if(!form)return;
+    const stepFields={
+        1:['f-theme','f-style','f-mood'],
+        2:['f-model','f-scene','f-dur','f-people'],
+        3:['f-extra']
+    };
+    function updateSteps(){
+        const items=document.querySelectorAll('#stepIndicator .step-item');
+        let currentActive=1;
+        for(let s=1;s<=3;s++){
+            const fields=stepFields[s];
+            const hasContent=fields.some(id=>{const el=$(id);return el&&(el.value&&el.value.trim()!=='');});
+            if(hasContent)currentActive=s;
+        }
+        items.forEach(item=>{
+            const step=parseInt(item.dataset.step);
+            item.classList.remove('active','completed');
+            if(step<currentActive)item.classList.add('completed');
+            else if(step===currentActive)item.classList.add('active');
+        });
+    }
+    form.addEventListener('input',updateSteps);
+    form.addEventListener('change',updateSteps);
+    // Allow external triggers (e.g. loadPlan)
+    window._updateStepIndicator=updateSteps;
+    updateSteps();
+})();
 
 // ===== History =====
 function renderHistMini(){
