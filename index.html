@@ -341,14 +341,31 @@
             text-align: left;
             width: 100%;
         }
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 0;
+            background: var(--ac);
+            border-radius: 0 4px 4px 0;
+            transition: width 0.2s ease;
+        }
         .nav-item:hover {
             background: var(--bg-subtle);
             color: var(--t1);
+        }
+        .nav-item:hover::before {
+            width: 3px;
         }
         .nav-item.active {
             border-left-color: var(--ac);
             background: var(--ac-glow);
             color: var(--t1);
+        }
+        .nav-item.active::before {
+            width: 3px;
         }
         .nav-item svg {
             width: 20px;
@@ -591,10 +608,25 @@
                 0 4px 24px rgba(0,0,0,0.4),
                 inset 0 1px 0 var(--inset-top);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
+            position: relative;
+        }
+        .panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.03), transparent);
+            transition: left 0.5s;
+            pointer-events: none;
         }
         .panel:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        .panel:hover::before {
+            left: 100%;
         }
         .p-head { 
             padding: 1.2rem 1.5rem; 
@@ -615,9 +647,9 @@
 
         /* ===== Skeleton Loading ===== */
         .skeleton {
-            background: linear-gradient(90deg, var(--bg3) 25%, var(--bg4) 50%, var(--bg3) 75%);
+            background: linear-gradient(90deg, var(--bg2) 25%, var(--bg3) 50%, var(--bg2) 75%);
             background-size: 200% 100%;
-            animation: skeleton-shimmer 1.5s infinite;
+            animation: shimmer 1.5s infinite;
             border-radius: var(--radius-sm);
         }
         @keyframes skeleton-shimmer {
@@ -662,13 +694,13 @@
             color: var(--t1);
             font-size: .85rem;
             font-family: inherit;
-            transition: border-color .2s, box-shadow .2s;
+            transition: all 0.2s ease;
         }
         textarea { min-height: 70px; resize: vertical; line-height: 1.5; }
         input:focus, textarea:focus, select:focus {
             outline: none;
             border-color: var(--ac);
-            box-shadow: 0 0 0 3px var(--ac-glow);
+            box-shadow: 0 0 0 3px rgba(255,107,107,0.15);
         }
         input::placeholder, textarea::placeholder { color: var(--t3); }
         select {
@@ -684,7 +716,7 @@
         .btn {
             display: inline-flex;
             align-items: center;
-            justify-content: center;
+            justify: center;
             gap: .4rem;
             padding: .65rem 1.4rem;
             font-size: .8rem;
@@ -709,6 +741,22 @@
         }
         .btn:hover::before {
             opacity: 1;
+        }
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255,255,255,0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.3s, height 0.3s;
+        }
+        .btn:active::after {
+            width: 200px;
+            height: 200px;
         }
         .btn-p { 
             background: linear-gradient(135deg, var(--ac) 0%, var(--ach) 100%); 
@@ -835,11 +883,12 @@
             border-radius: var(--radius-sm);
             font-size: .8rem;
             cursor: pointer;
-            transition: all 200ms;
+            transition: all 0.2s ease;
             min-height: 60px;
         }
         .calendar-day:hover {
-            background: var(--bg3);
+            background: rgba(255,107,107,0.1);
+            transform: scale(1.1);
         }
         .calendar-day.today {
             background: var(--ac-glow);
@@ -1007,7 +1056,7 @@
             position: fixed;
             bottom: 2rem;
             left: 50%;
-            transform: translateX(-50%) translateY(80px) scale(.92);
+            transform: translateX(-50%) translateY(20px);
             padding: .75rem 1.4rem;
             background: rgba(34, 34, 37, 0.85);
             backdrop-filter: blur(16px);
@@ -1017,13 +1066,13 @@
             color: var(--t1);
             font-size: .82rem;
             opacity: 0;
-            transition: all .35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
             z-index: 9999;
             box-shadow: 0 8px 32px rgba(0,0,0,0.4);
             white-space: nowrap;
         }
         .toast.show {
-            transform: translateX(-50%) translateY(0) scale(1);
+            transform: translateX(-50%) translateY(0);
             opacity: 1;
         }
         .toast.ok { border-color: rgba(34,197,94,.4); }
@@ -1620,6 +1669,43 @@
             .grid { grid-template-columns: 1fr; }
             .col-side { display: none; }
         }
+
+        /* ===== Advanced Animations ===== */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        @keyframes ripple {
+            to { transform: scale(4); opacity: 0; }
+        }
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* 入场动画类 */
+        .animate-in { animation: fadeInUp 0.5s ease-out forwards; }
+        .animate-in-delay-1 { animation-delay: 0.1s; opacity: 0; }
+        .animate-in-delay-2 { animation-delay: 0.2s; opacity: 0; }
+        .animate-in-delay-3 { animation-delay: 0.3s; opacity: 0; }
     </style>
     <!-- Animation Libraries -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" />
