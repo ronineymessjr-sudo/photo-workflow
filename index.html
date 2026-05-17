@@ -3906,6 +3906,53 @@ async function handleSubmit(e){
 }
 $('briefForm').addEventListener('submit',handleSubmit);
 
+// ===== Global Search =====
+(function initGlobalSearch() {
+    var searchInput = document.getElementById('globalSearch');
+    if (!searchInput) return;
+    
+    var searchTimeout = null;
+    searchInput.addEventListener('input', function(e) {
+        clearTimeout(searchTimeout);
+        var query = e.target.value.trim().toLowerCase();
+        if (query.length < 1) return;
+        
+        searchTimeout = setTimeout(function() {
+            // 搜索方案
+            var plans = sg(SK_PLAN) || [];
+            var matches = plans.filter(function(p) {
+                return (p.input && p.input.theme && p.input.theme.toLowerCase().indexOf(query) > -1) ||
+                       (p.input && p.input.style && p.input.style.toLowerCase().indexOf(query) > -1);
+            });
+            
+            // 搜索日程
+            var schedules = sg(SK_SCHED) || [];
+            var schedMatches = schedules.filter(function(s) {
+                return (s.title && s.title.toLowerCase().indexOf(query) > -1) ||
+                       (s.location && s.location.toLowerCase().indexOf(query) > -1);
+            });
+            
+            // 显示结果
+            if (matches.length > 0) {
+                toast('找到 ' + matches.length + ' 个相关方案', 'ok');
+                showTab('tpl');
+            } else if (schedMatches.length > 0) {
+                toast('找到 ' + schedMatches.length + ' 个相关日程', 'ok');
+                showTab('calendar');
+            } else {
+                toast('未找到相关内容', 'er');
+            }
+        }, 300);
+    });
+    
+    searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            e.target.dispatchEvent(new Event('input'));
+        }
+    });
+})();
+
 // ===== Step Indicator Logic =====
 (function initStepIndicator(){
     const form=$('briefForm');
