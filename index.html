@@ -1701,6 +1701,178 @@
             to { transform: translateY(0); opacity: 1; }
         }
 
+        /* ===== 高级动效 ===== */
+        /* 1. 页面切换过渡动画 */
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes rotateIn {
+            from { opacity: 0; transform: rotate(-10deg) scale(0.9); }
+            to { opacity: 1; transform: rotate(0) scale(1); }
+        }
+
+        /* Tab 切换动画 */
+        .tab-cnt {
+            animation: slideInRight 0.3s ease-out;
+        }
+
+        /* 2. 鼠标跟随光效（Spotlight Effect） */
+        .spotlight-container {
+            position: relative;
+        }
+        .spotlight-container::before {
+            content: '';
+            position: absolute;
+            top: var(--mouse-y, 50%);
+            left: var(--mouse-x, 50%);
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255,107,107,0.15) 0%, transparent 70%);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .spotlight-container:hover::before {
+            opacity: 1;
+        }
+
+        /* 3. 打字机效果 */
+        @keyframes typing {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+        @keyframes blink {
+            50% { border-color: transparent; }
+        }
+        .typewriter {
+            overflow: hidden;
+            white-space: nowrap;
+            border-right: 2px solid var(--ac);
+            animation: typing 2s steps(20) forwards, blink 0.8s step-end infinite;
+        }
+
+        /* 4. 呼吸效果（Breathing） */
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.02); opacity: 0.9; }
+        }
+        .breathing {
+            animation: breathe 3s ease-in-out infinite;
+        }
+
+        /* 5. 悬浮效果（Floating） */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        /* 6. 旋转加载器 */
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        @keyframes spin-reverse {
+            to { transform: rotate(-360deg); }
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--bg2);
+            border-top-color: var(--ac);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        .spinner-dual {
+            position: relative;
+        }
+        .spinner-dual::before,
+        .spinner-dual::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            border: 3px solid transparent;
+        }
+        .spinner-dual::before {
+            width: 40px;
+            height: 40px;
+            border-top-color: var(--ac);
+            animation: spin 1s linear infinite;
+        }
+        .spinner-dual::after {
+            width: 30px;
+            height: 30px;
+            border-bottom-color: var(--ac);
+            animation: spin-reverse 0.8s linear infinite;
+        }
+
+        /* 7. 脉冲光环 */
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); opacity: 1; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+        .pulse-ring {
+            position: relative;
+        }
+        .pulse-ring::before {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border: 2px solid var(--ac);
+            border-radius: inherit;
+            animation: pulse-ring 2s ease-out infinite;
+        }
+
+        /* 8. 抖动效果（Shake） */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        .shake {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        /* 9. 果冻效果（Jelly） */
+        @keyframes jelly {
+            0%, 100% { transform: scale(1, 1); }
+            25% { transform: scale(0.9, 1.1); }
+            50% { transform: scale(1.1, 0.9); }
+            75% { transform: scale(0.95, 1.05); }
+        }
+        .jelly:hover {
+            animation: jelly 0.5s ease;
+        }
+
+        /* 10. 渐变边框动画 */
+        @keyframes gradient-rotate {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .gradient-border {
+            position: relative;
+            background: var(--bg3);
+            border-radius: 12px;
+        }
+        .gradient-border::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 14px;
+            background: linear-gradient(45deg, var(--ac), #ff8585, var(--ac));
+            background-size: 200% 200%;
+            animation: gradient-rotate 3s ease infinite;
+            z-index: -1;
+        }
+
         /* 入场动画类 */
         .animate-in { animation: fadeInUp 0.5s ease-out forwards; }
         .animate-in-delay-1 { animation-delay: 0.1s; opacity: 0; }
@@ -2537,8 +2709,16 @@
         location.reload();
     };
 
-    // Keyboard shortcuts
-    document.addEventListener('keydown', function(e) {
+    // Mouse spotlight effect
+document.addEventListener('mousemove', function(e) {
+    var x = (e.clientX / window.innerWidth) * 100;
+    var y = (e.clientY / window.innerHeight) * 100;
+    document.documentElement.style.setProperty('--mouse-x', x + '%');
+    document.documentElement.style.setProperty('--mouse-y', y + '%');
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
         if (e.ctrlKey || e.metaKey) {
             if (e.key === 'n' || e.key === 'N') {
                 e.preventDefault();
