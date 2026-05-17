@@ -226,6 +226,38 @@
             right: 20%;
             animation: float3 35s ease-in-out infinite;
         }
+
+        /* Language Switcher */
+        .lang-switcher {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 100;
+            display: flex;
+            gap: 0.5rem;
+            background: var(--bg3);
+            padding: 0.25rem;
+            border-radius: 8px;
+            border: 1px solid var(--bd);
+        }
+        .lang-btn {
+            padding: 0.25rem 0.5rem;
+            border: none;
+            background: transparent;
+            color: var(--t2);
+            font-size: 0.75rem;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        .lang-btn:hover {
+            color: var(--t1);
+        }
+        .lang-btn.active {
+            background: var(--ac);
+            color: white;
+        }
+
         @keyframes float1 {
             0%, 100% { transform: translate(0, 0) scale(1); }
             25% { transform: translate(-40px, 30px) scale(1.15); }
@@ -1565,6 +1597,40 @@
             box-shadow: 0 2px 6px rgba(255, 107, 107, 0.2);
         }
 
+        /* Particle Background */
+        .particles-container {
+            position: fixed;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--ac);
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: float-particle 15s infinite;
+        }
+        @keyframes float-particle {
+            0%, 100% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.3;
+            }
+            90% {
+                opacity: 0.3;
+            }
+            100% {
+                transform: translateY(-100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
         /* ===== Step Indicator ===== */
         .step-indicator {
             display: flex;
@@ -1905,6 +1971,135 @@
         .animate-in-delay-1 { animation-delay: 0.1s; opacity: 0; }
         .animate-in-delay-2 { animation-delay: 0.2s; opacity: 0; }
         .animate-in-delay-3 { animation-delay: 0.3s; opacity: 0; }
+
+        /* Context Menu */
+        .context-menu {
+            position: fixed;
+            background: var(--bg3);
+            border: 1px solid var(--bd);
+            border-radius: 8px;
+            padding: 0.25rem 0;
+            min-width: 150px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            z-index: 1000;
+            display: none;
+            animation: scaleIn 0.1s ease;
+        }
+        .context-menu.show {
+            display: block;
+        }
+        .context-menu-item {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--t1);
+            transition: background 0.1s;
+        }
+        .context-menu-item:hover {
+            background: var(--bg2);
+        }
+        .context-menu-item.delete {
+            color: #ef4444;
+        }
+        .context-menu-item.delete:hover {
+            background: rgba(239,68,68,0.1);
+        }
+        .context-menu-divider {
+            height: 1px;
+            background: var(--bd);
+            margin: 0.25rem 0;
+        }
+
+        /* Keyboard Shortcuts Panel */
+        .shortcuts-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .shortcuts-modal.show {
+            display: flex;
+            animation: fadeIn 0.2s ease;
+        }
+        .shortcuts-panel {
+            background: var(--bg3);
+            border: 1px solid var(--bd);
+            border-radius: 16px;
+            padding: 1.5rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .shortcuts-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--bd);
+        }
+        .shortcuts-list {
+            display: grid;
+            gap: 0.5rem;
+        }
+        .shortcut-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+        }
+        .shortcut-key {
+            display: flex;
+            gap: 0.25rem;
+        }
+        kbd {
+            background: var(--bg2);
+            border: 1px solid var(--bd);
+            border-radius: 4px;
+            padding: 0.15rem 0.4rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+            color: var(--t1);
+        }
+    </style>     /* Image Upload Styles */
+        .image-upload-area {
+            border: 2px dashed var(--bd);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--bg2);
+        }
+        .image-upload-area:hover {
+            border-color: var(--ac);
+            background: var(--ac-glow);
+        }
+        .image-upload-area.dragover {
+            border-color: var(--ac);
+            background: rgba(255,107,107,0.1);
+        }
+        .image-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 8px;
+            object-fit: cover;
+            margin: 0.5rem;
+        }
+        .image-preview-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
     </style>
     <!-- Animation Libraries -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" />
@@ -1915,6 +2110,12 @@
 <div class="bg-orb bg-orb-1"></div>
 <div class="bg-orb bg-orb-2"></div>
 <div class="bg-orb bg-orb-3"></div>
+
+<!-- Language Switcher -->
+<div class="lang-switcher">
+    <button class="lang-btn active" onclick="setLanguage('zh')" data-lang="zh">中文</button>
+    <button class="lang-btn" onclick="setLanguage('en')" data-lang="en">EN</button>
+</div>
 
 <!-- Mobile Header -->
 <div class="mobile-header" style="display:none;">
@@ -1928,7 +2129,9 @@
 
 <!-- Login Overlay -->
 <div id="loginOverlay" style="position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;background:var(--bg);">
-    <div class="login-container" style="text-align:center;max-width:380px;padding:2rem;width:100%;">
+    <!-- Particle Background -->
+    <div class="particles-container" id="particlesContainer"></div>
+    <div class="login-container" style="position:relative;z-index:1;text-align:center;max-width:380px;padding:2rem;width:100%;">
         <!-- Google 风格 Logo -->
         <div style="margin-bottom:2.5rem;">
             <svg width="48" height="48" viewBox="0 0 48 48" style="margin:0 auto 1rem;display:block;">
@@ -1940,21 +2143,21 @@
                 <line x1="2" y1="24" x2="16" y2="24" stroke="var(--ac)" stroke-width="1.5"/>
                 <line x1="32" y1="24" x2="46" y2="24" stroke="var(--ac)" stroke-width="1.5"/>
             </svg>
-            <h1 style="font-family:var(--font-serif);font-size:1.8rem;font-weight:400;letter-spacing:-0.02em;margin-bottom:.3rem;color:var(--t1);">登录</h1>
-            <p style="color:var(--t3);font-size:.9rem;">继续使用 PhotoAtelier</p>
+            <h1 style="font-family:var(--font-serif);font-size:1.8rem;font-weight:400;letter-spacing:-0.02em;margin-bottom:.3rem;color:var(--t1);" data-i18n="login.title">登录</h1>
+            <p style="color:var(--t3);font-size:.9rem;" data-i18n="login.subtitle">继续使用 PhotoAtelier</p>
         </div>
         <!-- 登录卡片 -->
         <div id="loginForm" class="login-card" style="background:var(--bg3);border:1px solid var(--bd);border-radius:16px;padding:2rem;text-align:left;">
             <div style="margin-bottom:1.5rem;">
-                <label style="display:block;font-size:.85rem;color:var(--t2);margin-bottom:.5rem;font-weight:500;">邮箱地址</label>
-                <input type="email" id="loginEmail" placeholder="your@email.com" style="width:100%;padding:12px 16px;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;color:var(--t1);font-family:inherit;font-size:.95rem;transition:all .2s;">
+                <label style="display:block;font-size:.85rem;color:var(--t2);margin-bottom:.5rem;font-weight:500;" data-i18n="login.email">邮箱地址</label>
+                <input type="email" id="loginEmail" placeholder="your@email.com" data-i18n-placeholder="login.email" style="width:100%;padding:12px 16px;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;color:var(--t1);font-family:inherit;font-size:.95rem;transition:all .2s;">
             </div>
             <div style="margin-bottom:1.5rem;">
-                <label style="display:block;font-size:.85rem;color:var(--t2);margin-bottom:.5rem;font-weight:500;">密码</label>
-                <input type="password" id="loginPassword" placeholder="输入密码" style="width:100%;padding:12px 16px;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;color:var(--t1);font-family:inherit;font-size:.95rem;transition:all .2s;">
+                <label style="display:block;font-size:.85rem;color:var(--t2);margin-bottom:.5rem;font-weight:500;" data-i18n="login.password">密码</label>
+                <input type="password" id="loginPassword" placeholder="输入密码" data-i18n-placeholder="login.password" style="width:100%;padding:12px 16px;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;color:var(--t1);font-family:inherit;font-size:.95rem;transition:all .2s;">
             </div>
-            <button onclick="handleLogin()" class="btn btn-p" style="width:100%;padding:12px;border-radius:8px;font-size:.95rem;font-weight:500;margin-top:.5rem;">登录</button>
-            <p style="margin-top:1.5rem;font-size:.8rem;color:var(--t3);text-align:center;">首次登录将自动创建账号</p>
+            <button onclick="handleLogin()" class="btn btn-p" style="width:100%;padding:12px;border-radius:8px;font-size:.95rem;font-weight:500;margin-top:.5rem;" data-i18n="login.button">登录</button>
+            <p style="margin-top:1.5rem;font-size:.8rem;color:var(--t3);text-align:center;" data-i18n="login.hint">首次登录将自动创建账号</p>
         </div>
         <div id="loginLoading" style="display:none;margin-top:1.5rem;">
             <div style="width:24px;height:24px;border:2px solid var(--bd);border-top-color:var(--ac);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto;"></div>
@@ -2001,24 +2204,24 @@
         <nav class="sidebar-nav">
             <button class="nav-item active" data-tab="gen" data-role="photographer,model,assistant">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-                <span class="nav-label">方案生成</span>
+                <span class="nav-label" data-i18n="nav.gen">方案生成</span>
             </button>
             <button class="nav-item" data-tab="tpl" data-role="photographer,assistant">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-                <span class="nav-label">方案库</span>
+                <span class="nav-label" data-i18n="nav.tpl">方案库</span>
                 <span class="nav-badge" id="t-tpl">0</span>
             </button>
             <button class="nav-item" data-tab="calendar" data-role="photographer">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                <span class="nav-label">日程管理</span>
+                <span class="nav-label" data-i18n="nav.calendar">日程管理</span>
             </button>
             <button class="nav-item" data-tab="venue" data-role="photographer,assistant">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
-                <span class="nav-label">资源库</span>
+                <span class="nav-label" data-i18n="nav.venue">资源库</span>
             </button>
             <button class="nav-item" data-tab="dashboard" data-role="photographer,assistant">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                <span class="nav-label">数据看板</span>
+                <span class="nav-label" data-i18n="nav.dashboard">数据看板</span>
             </button>
         </nav>
         <!-- Theme Switcher -->
@@ -2063,7 +2266,7 @@
             <div class="grid">
                 <aside>
                     <div class="panel">
-                        <div class="p-head"><h2>创意需求</h2></div>
+                        <div class="p-head"><h2 data-i18n="gen.title">创意需求</h2></div>
                         <div class="p-body">
                             <form id="briefForm">
                                 <!-- Step Indicator -->
@@ -2085,8 +2288,8 @@
                                 <!-- Step 1: 基本信息 -->
                                 <div class="step-section" data-step-section="1">
                                     <div class="step-section-title">基本信息</div>
-                                    <div class="fg"><label>拍摄主题</label><input id="f-theme" placeholder="如：都市时尚夜景" value="复古电影感私房"></div>
-                                    <div class="fg"><label>风格定位</label>
+                                    <div class="fg"><label data-i18n="gen.theme">拍摄主题</label><input id="f-theme" placeholder="如：都市时尚夜景" value="复古电影感私房"></div>
+                                    <div class="fg"><label data-i18n="gen.style">风格定位</label>
                                         <select id="f-style">
                                             <option value="">选择风格</option><option value="时尚">时尚杂志风</option><option value="复古" selected>复古胶片风</option>
                                             <option value="文艺">文艺清新</option><option value="性感">私房性感</option><option value="街拍">街头街拍</option>
@@ -2094,29 +2297,44 @@
                                             <option value="商业">商业广告</option><option value="情绪">情绪人像</option>
                                         </select>
                                     </div>
-                                    <div class="fg"><label>预期情绪</label><input id="f-mood" value="慵懒、神秘、暧昧"></div>
+                                    <div class="fg"><label data-i18n="gen.mood">预期情绪</label><input id="f-mood" value="慵懒、神秘、暧昧"></div>
                                 </div>
 
                                 <!-- Step 2: 详细描述 -->
                                 <div class="step-section" data-step-section="2">
                                     <div class="step-section-title">详细描述</div>
-                                    <div class="fg"><label>模特特征</label><textarea id="f-model" placeholder="外貌、身材、气质">身高168，黑色长发，偏瘦，气质慵懒神秘，肤质白皙</textarea></div>
-                                    <div class="fg"><label>场景偏好</label><textarea id="f-scene" placeholder="拍摄场景">老式酒店房间，复古家具，落地窗，老式浴缸</textarea></div>
+                                    <div class="fg"><label data-i18n="gen.model">模特特征</label><textarea id="f-model" placeholder="外貌、身材、气质">身高168，黑色长发，偏瘦，气质慵懒神秘，肤质白皙</textarea></div>
+                                    <div class="fg"><label data-i18n="gen.scene">场景偏好</label><textarea id="f-scene" placeholder="拍摄场景">老式酒店房间，复古家具，落地窗，老式浴缸</textarea></div>
                                     <div class="g2">
-                                        <div class="fg"><label>拍摄时长</label>
+                                        <div class="fg"><label data-i18n="gen.duration">拍摄时长</label>
                                             <select id="f-dur"><option>1小时</option><option selected>2小时</option><option>3小时</option><option>半天</option><option>全天</option></select>
                                         </div>
-                                        <div class="fg"><label>人数</label><input id="f-people" type="number" value="1" min="1"></div>
+                                        <div class="fg"><label data-i18n="gen.people">人数</label><input id="f-people" type="number" value="1" min="1"></div>
                                     </div>
                                 </div>
 
                                 <!-- Step 3: 附加要求 -->
                                 <div class="step-section" data-step-section="3">
                                     <div class="step-section-title">附加要求</div>
-                                    <div class="fg"><label>其他要求</label><textarea id="f-extra" placeholder="服装、道具等">暖色调，复古质感，烟雾效果</textarea></div>
+                                    <div class="fg"><label data-i18n="gen.extra">其他要求</label><textarea id="f-extra" placeholder="服装、道具等">暖色调，复古质感，烟雾效果</textarea></div>
                                 </div>
 
-                                <button type="submit" class="btn btn-p" id="genBtn" style="width:100%;margin-top:0.5rem;">⚡ 生成并保存</button>
+                                <div class="fg" style="margin-top:1rem;">
+                                    <label>参考图片</label>
+                                    <div class="image-upload-area" id="imageUploadArea" onclick="document.getElementById('imageInput').click()">
+                                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--t3);margin:0 auto 0.5rem;">
+                                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                            <circle cx="8.5" cy="8.5" r="1.5"/>
+                                            <path d="M21 15l-5-5L5 21"/>
+                                        </svg>
+                                        <p style="color:var(--t3);font-size:0.85rem;">点击或拖拽上传图片</p>
+                                        <p style="color:var(--t3);font-size:0.7rem;margin-top:0.25rem;">支持 JPG、PNG、WebP</p>
+                                    </div>
+                                    <input type="file" id="imageInput" accept="image/*" multiple style="display:none;" onchange="handleImageUpload(this)">
+                                    <div class="image-preview-grid" id="imagePreviewGrid"></div>
+                                </div>
+
+                                <button type="submit" class="btn btn-p" id="genBtn" style="width:100%;margin-top:0.5rem;" data-i18n="gen.button">⚡ 生成并保存</button>
                             </form>
 
                             <!-- 案例参考 -->
@@ -2297,24 +2515,24 @@
                     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem;">
                         <div class="panel" style="text-align:center;">
                             <div style="font-size:2rem;font-weight:600;color:var(--ac);" id="stat-shoots">23</div>
-                            <div style="font-size:.8rem;color:var(--t3);margin-top:.25rem;">本月拍摄</div>
+                            <div style="font-size:.8rem;color:var(--t3);margin-top:.25rem;" data-i18n="dashboard.month">本月拍摄</div>
                             <div style="font-size:.7rem;color:#4ade80;margin-top:.25rem;">↑ 15%</div>
                         </div>
                         <div class="panel" style="text-align:center;">
                             <div style="font-size:2rem;font-weight:600;color:var(--ac);" id="stat-completion">87%</div>
-                            <div style="font-size:.8rem;color:var(--t3);margin-top:.25rem;">完成率</div>
+                            <div style="font-size:.8rem;color:var(--t3);margin-top:.25rem;" data-i18n="dashboard.completion">完成率</div>
                             <div style="width:80%;height:4px;background:var(--bg2);border-radius:2px;margin:.5rem auto 0;overflow:hidden;">
                                 <div style="width:87%;height:100%;background:var(--ac);border-radius:2px;"></div>
                             </div>
                         </div>
                         <div class="panel" style="text-align:center;">
                             <div style="font-size:2rem;font-weight:600;color:var(--ac);" id="stat-clients">12</div>
-                            <div style="font-size:.8rem;color:var(--t3);margin-top:.25rem;">活跃客户</div>
+                            <div style="font-size:.8rem;color:var(--t3);margin-top:.25rem;" data-i18n="dashboard.clients">活跃客户</div>
                             <div style="font-size:.7rem;color:#4ade80;margin-top:.25rem;">+ 3 新增</div>
                         </div>
                         <div class="panel" style="text-align:center;">
                             <div style="font-size:2rem;font-weight:600;color:var(--ac);" id="stat-equipment">76%</div>
-                            <div style="font-size:.8rem;color:var(--t3);margin-top:.25rem;">设备使用率</div>
+                            <div style="font-size:.8rem;color:var(--t3);margin-top:.25rem;" data-i18n="dashboard.equipment">设备使用率</div>
                             <div style="width:80%;height:4px;background:var(--bg2);border-radius:2px;margin:.5rem auto 0;overflow:hidden;">
                                 <div style="width:76%;height:100%;background:var(--ac);border-radius:2px;"></div>
                             </div>
@@ -2590,8 +2808,8 @@
             <div style="max-width:900px;margin:0 auto;">
                 <div class="panel" style="margin-bottom:1rem;">
                     <div class="p-head" style="justify-content:space-between">
-                        <h2>📅 拍摄日程</h2>
-                        <button class="btn btn-s btn-sm" onclick="addSchedule()">+ 添加日程</button>
+                        <h2 data-i18n="calendar.title">📅 拍摄日程</h2>
+                        <button class="btn btn-s btn-sm" onclick="addSchedule()" data-i18n="calendar.add">+ 添加日程</button>
                     </div>
                     <div class="p-body">
                         <div id="calendarGrid" class="calendar-grid"></div>
@@ -2601,7 +2819,7 @@
                     <div class="p-head" style="justify-content:space-between">
                         <h2>📋 待办事项</h2>
                         <div style="display:flex;gap:.5rem;">
-                            <button class="btn btn-s btn-sm" onclick="exportToFeishu()">📤 同步到飞书日历</button>
+                            <button class="btn btn-s btn-sm" onclick="exportToFeishu()" data-i18n="calendar.sync">📤 同步到飞书日历</button>
                             <button class="btn btn-s btn-sm" onclick="syncToFeishuBitable()">📊 同步到多维表格</button>
                         </div>
                     </div>
@@ -2621,6 +2839,143 @@
 <div class="toast" id="toast"></div>
 
 <script>
+// i18n System
+const i18n = {
+    zh: {
+        'nav.gen': '方案生成',
+        'nav.tpl': '方案库',
+        'nav.calendar': '日程管理',
+        'nav.venue': '资源库',
+        'nav.dashboard': '数据看板',
+        'login.title': '登录',
+        'login.subtitle': '继续使用 PhotoAtelier',
+        'login.email': '邮箱地址',
+        'login.password': '密码',
+        'login.button': '登录',
+        'login.hint': '首次登录将自动创建账号',
+        'gen.title': '创意需求',
+        'gen.theme': '拍摄主题',
+        'gen.style': '风格',
+        'gen.mood': '情绪',
+        'gen.model': '模特描述',
+        'gen.scene': '场景',
+        'gen.duration': '时长',
+        'gen.people': '人数',
+        'gen.extra': '其他要求',
+        'gen.button': '生成并保存',
+        'calendar.title': '拍摄日程',
+        'calendar.add': '添加日程',
+        'calendar.sync': '同步到飞书日历',
+        'dashboard.title': '数据看板',
+        'dashboard.month': '本月拍摄',
+        'dashboard.completion': '完成率',
+        'dashboard.clients': '活跃客户',
+        'dashboard.equipment': '设备使用率'
+    },
+    en: {
+        'nav.gen': 'Plan Gen',
+        'nav.tpl': 'Library',
+        'nav.calendar': 'Calendar',
+        'nav.venue': 'Resources',
+        'nav.dashboard': 'Dashboard',
+        'login.title': 'Sign In',
+        'login.subtitle': 'Continue to PhotoAtelier',
+        'login.email': 'Email',
+        'login.password': 'Password',
+        'login.button': 'Sign In',
+        'login.hint': 'First login will auto-create account',
+        'gen.title': 'Generate Plan',
+        'gen.theme': 'Theme',
+        'gen.style': 'Style',
+        'gen.mood': 'Mood',
+        'gen.model': 'Model Description',
+        'gen.scene': 'Scene',
+        'gen.duration': 'Duration',
+        'gen.people': 'People',
+        'gen.extra': 'Extra Requirements',
+        'gen.button': 'Generate & Save',
+        'calendar.title': 'Shooting Schedule',
+        'calendar.add': 'Add Schedule',
+        'calendar.sync': 'Sync to Feishu',
+        'dashboard.title': 'Dashboard',
+        'dashboard.month': 'This Month',
+        'dashboard.completion': 'Completion',
+        'dashboard.clients': 'Active Clients',
+        'dashboard.equipment': 'Equipment Usage'
+    }
+};
+
+let currentLang = localStorage.getItem('pw_lang') || 'zh';
+
+function setLanguage(lang) {
+    currentLang = lang;
+    localStorage.setItem('pw_lang', lang);
+
+    // Update buttons
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
+    });
+
+    // Update all translatable elements
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (i18n[lang] && i18n[lang][key]) {
+            el.textContent = i18n[lang][key];
+        }
+    });
+
+    // Update placeholders
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        if (i18n[lang] && i18n[lang][key]) {
+            el.placeholder = i18n[lang][key];
+        }
+    });
+}
+
+// Initialize language
+setLanguage(currentLang);
+
+// ===== Particle System =====
+function initParticles() {
+    const container = document.getElementById('particlesContainer');
+    if (!container) return;
+    
+    const particleCount = 30;
+    
+    for (let i = 0; i < particleCount; i++) {
+        createParticle(container, i);
+    }
+}
+
+function createParticle(container, index) {
+    const particle = document.createElement('div');
+    particle.className = 'particle';
+    
+    // Random properties
+    const size = Math.random() * 4 + 2;
+    const left = Math.random() * 100;
+    const delay = Math.random() * 15;
+    const duration = Math.random() * 10 + 10;
+    const opacity = Math.random() * 0.3 + 0.1;
+    
+    particle.style.cssText = `
+        width: ${size}px;
+        height: ${size}px;
+        left: ${left}%;
+        animation-delay: ${delay}s;
+        animation-duration: ${duration}s;
+        opacity: ${opacity};
+    `;
+    
+    container.appendChild(particle);
+}
+
+// Initialize particles on load
+if (document.getElementById('loginOverlay')) {
+    initParticles();
+}
+
 // ===== Theme System =====
 (function() {
     const THEMES = ['auto', 'dark', 'light', 'sunrise', 'sunset'];
@@ -2744,8 +3099,27 @@ document.addEventListener('mousemove', function(e) {
     document.documentElement.style.setProperty('--mouse-y', y + '%');
 });
 
+// Keyboard shortcuts panel
+function showShortcutsModal() {
+    const modal = document.getElementById('shortcutsModal');
+    if (modal) modal.classList.add('show');
+}
+
+function hideShortcutsModal() {
+    const modal = document.getElementById('shortcutsModal');
+    if (modal) modal.classList.remove('show');
+}
+
+function closeShortcutsModal(e) {
+    if (e.target.id === 'shortcutsModal') hideShortcutsModal();
+}
+
 // Keyboard shortcuts
 document.addEventListener('keydown', function(e) {
+        if (e.key === '?' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+            e.preventDefault();
+            showShortcutsModal();
+        }
         if (e.ctrlKey || e.metaKey) {
             if (e.key === 'n' || e.key === 'N') {
                 e.preventDefault();
@@ -2755,12 +3129,26 @@ document.addEventListener('keydown', function(e) {
                 // 保存当前表单
             }
         }
+        // Undo/Redo shortcuts
+        if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
+            if (e.key === 'z' || e.key === 'Z') {
+                e.preventDefault();
+                performUndo();
+            }
+        }
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey) {
+            if (e.key === 'z' || e.key === 'Z') {
+                e.preventDefault();
+                performRedo();
+            }
+        }
         if (e.key === 'Escape') {
             // 关闭弹窗等
             var sidebar = document.getElementById('sidebar');
             var overlay = document.getElementById('sidebarOverlay');
             if (sidebar) sidebar.classList.remove('open');
             if (overlay) overlay.classList.remove('show');
+            hideShortcutsModal();
         }
     });
 
@@ -4199,6 +4587,81 @@ async function handleSubmit(e){
 }
 $('briefForm').addEventListener('submit',handleSubmit);
 
+// ===== Image Upload Handling =====
+let uploadedImages = [];
+
+function handleImageUpload(input) {
+    const files = input.files;
+    if (!files || files.length === 0) return;
+
+    Array.from(files).forEach(file => {
+        if (!file.type.startsWith('image/')) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const imageData = {
+                id: Date.now() + Math.random().toString(36).substr(2, 9),
+                name: file.name,
+                data: e.target.result,
+                size: file.size
+            };
+            uploadedImages.push(imageData);
+            renderImagePreviews();
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+function renderImagePreviews() {
+    const grid = document.getElementById('imagePreviewGrid');
+    if (!grid) return;
+
+    grid.innerHTML = uploadedImages.map(img => `
+        <div style="position:relative;">
+            <img src="${img.data}" class="image-preview" alt="${img.name}">
+            <button onclick="removeImage('${img.id}')" style="position:absolute;top:-8px;right:-8px;width:20px;height:20px;border-radius:50%;background:var(--ac);color:white;border:none;cursor:pointer;font-size:12px;">×</button>
+        </div>
+    `).join('');
+}
+
+function removeImage(id) {
+    uploadedImages = uploadedImages.filter(img => img.id !== id);
+    renderImagePreviews();
+}
+
+// Drag and drop for image upload
+(function initImageDragDrop() {
+    const uploadArea = document.getElementById('imageUploadArea');
+    if (uploadArea) {
+        uploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', function() {
+            this.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files && files.length > 0) {
+                document.getElementById('imageInput').files = files;
+                handleImageUpload(document.getElementById('imageInput'));
+            }
+        });
+    }
+})();
+
+// Save images with plan
+function savePlanWithImages(plan) {
+    plan.images = uploadedImages;
+    savePlan(plan);
+    uploadedImages = [];
+    renderImagePreviews();
+}
+
 // ===== Global Search =====
 (function initGlobalSearch() {
     var searchInput = document.getElementById('globalSearch');
@@ -4511,6 +4974,127 @@ function importData(){
 // ===== Calendar & Schedule =====
 const SK_SCHED = 'pw_schedule';
 const SK_TODO = 'pw_todos';
+const SK_PLAN = 'pw_plans';
+const SK_VENUE = 'pw_venues';
+const SK_MODEL = 'pw_models';
+
+// ===== Undo/Redo Manager =====
+const UndoManager = {
+    history: [],
+    currentIndex: -1,
+    maxHistory: 50,
+    
+    save(state, type) {
+        // 如果不在历史末尾，删除后面的历史
+        if (this.currentIndex < this.history.length - 1) {
+            this.history = this.history.slice(0, this.currentIndex + 1);
+        }
+        
+        // 添加新状态
+        this.history.push({
+            type: type,
+            data: JSON.parse(JSON.stringify(state)),
+            timestamp: Date.now()
+        });
+        
+        // 限制历史记录数量
+        if (this.history.length > this.maxHistory) {
+            this.history.shift();
+        } else {
+            this.currentIndex++;
+        }
+    },
+    
+    undo() {
+        if (this.currentIndex > 0) {
+            this.currentIndex--;
+            return this.history[this.currentIndex];
+        }
+        return null;
+    },
+    
+    redo() {
+        if (this.currentIndex < this.history.length - 1) {
+            this.currentIndex++;
+            return this.history[this.currentIndex];
+        }
+        return null;
+    },
+    
+    canUndo() {
+        return this.currentIndex > 0;
+    },
+    
+    canRedo() {
+        return this.currentIndex < this.history.length - 1;
+    }
+};
+
+// Save initial state
+UndoManager.save({
+    schedules: sg(SK_SCHED) || [],
+    plans: sg(SK_PLAN) || []
+}, 'init');
+
+// Wrapper functions with undo support
+function saveScheduleWithUndo(schedule) {
+    const schedules = sg(SK_SCHED) || [];
+    schedules.push(schedule);
+    ss(SK_SCHED, schedules);
+    UndoManager.save({schedules: schedules, plans: sg(SK_PLAN) || []}, 'add_schedule');
+}
+
+function deleteScheduleWithUndo(id) {
+    const schedules = sg(SK_SCHED) || [];
+    const deleted = schedules.find(s => s.id === id);
+    const newSchedules = schedules.filter(s => s.id !== id);
+    ss(SK_SCHED, newSchedules);
+    UndoManager.save({schedules: newSchedules, plans: sg(SK_PLAN) || []}, 'delete_schedule');
+    return deleted;
+}
+
+function savePlanWithUndo(plan) {
+    const plans = sg(SK_PLAN) || [];
+    plans.push(plan);
+    ss(SK_PLAN, plans);
+    UndoManager.save({schedules: sg(SK_SCHED) || [], plans: plans}, 'add_plan');
+}
+
+function deletePlanWithUndo(id) {
+    const plans = sg(SK_PLAN) || [];
+    const deleted = plans.find(p => p.id === id);
+    const newPlans = plans.filter(p => p.id !== id);
+    ss(SK_PLAN, newPlans);
+    UndoManager.save({schedules: sg(SK_SCHED) || [], plans: newPlans}, 'delete_plan');
+    return deleted;
+}
+
+// Undo/Redo handlers
+function performUndo() {
+    const state = UndoManager.undo();
+    if (state) {
+        if (state.data.schedules) ss(SK_SCHED, state.data.schedules);
+        if (state.data.plans) ss(SK_PLAN, state.data.plans);
+        renderSchedules();
+        renderHistMini();
+        toast('已撤销', 'ok');
+    } else {
+        toast('没有可撤销的操作', 'er');
+    }
+}
+
+function performRedo() {
+    const state = UndoManager.redo();
+    if (state) {
+        if (state.data.schedules) ss(SK_SCHED, state.data.schedules);
+        if (state.data.plans) ss(SK_PLAN, state.data.plans);
+        renderSchedules();
+        renderHistMini();
+        toast('已重做', 'ok');
+    } else {
+        toast('没有可重做的操作', 'er');
+    }
+}
 
 function renderCalendar() {
     const grid = $('calendarGrid');
@@ -4587,6 +5171,101 @@ function renderSchedules() {
     
     // 初始化拖拽
     initDragAndDrop();
+    
+    // 初始化右键菜单
+    initContextMenus();
+}
+
+// Context Menu
+let contextMenuTarget = null;
+let contextMenuType = null;
+
+function showContextMenu(e, type, targetId) {
+    e.preventDefault();
+    contextMenuType = type;
+    contextMenuTarget = targetId;
+    
+    const menu = document.getElementById('contextMenu');
+    if (!menu) return;
+    
+    menu.style.left = e.pageX + 'px';
+    menu.style.top = e.pageY + 'px';
+    menu.classList.add('show');
+}
+
+function hideContextMenu() {
+    const menu = document.getElementById('contextMenu');
+    if (menu) menu.classList.remove('show');
+    contextMenuTarget = null;
+    contextMenuType = null;
+}
+
+function contextMenuAction(action) {
+    if (!contextMenuTarget || !contextMenuType) return;
+    
+    switch(action) {
+        case 'edit':
+            toast('编辑功能开发中', 'ok');
+            break;
+        case 'duplicate':
+            if (contextMenuType === 'schedule') {
+                duplicateSchedule(contextMenuTarget);
+            } else if (contextMenuType === 'plan') {
+                duplicatePlan(contextMenuTarget);
+            }
+            break;
+        case 'export':
+            toast('导出功能开发中', 'ok');
+            break;
+        case 'delete':
+            if (contextMenuType === 'schedule') {
+                deleteSchedule(contextMenuTarget);
+            } else if (contextMenuType === 'plan') {
+                deletePlan(contextMenuTarget);
+            }
+            break;
+    }
+    hideContextMenu();
+}
+
+function duplicateSchedule(id) {
+    const schedules = sg(SK_SCHED) || [];
+    const schedule = schedules.find(s => s.id === id);
+    if (schedule) {
+        const newSchedule = {...schedule, id: Date.now().toString(), title: schedule.title + ' (复制)'};
+        schedules.push(newSchedule);
+        ss(SK_SCHED, schedules);
+        renderSchedules();
+        toast('日程已复制', 'ok');
+    }
+}
+
+function duplicatePlan(id) {
+    const plans = sg(SK_PLAN) || [];
+    const plan = plans.find(p => p.id === id);
+    if (plan) {
+        const newPlan = {...plan, id: Date.now().toString(), input: {...plan.input, theme: plan.input.theme + ' (复制)'}};
+        plans.push(newPlan);
+        ss(SK_PLAN, plans);
+        renderHistMini();
+        toast('方案已复制', 'ok');
+    }
+}
+
+// Hide context menu on click outside
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.context-menu')) {
+        hideContextMenu();
+    }
+});
+
+// Add right-click listeners to schedule items
+function initContextMenus() {
+    document.querySelectorAll('.schedule-item').forEach(item => {
+        item.addEventListener('contextmenu', function(e) {
+            showContextMenu(e, 'schedule', this.getAttribute('data-id'));
+        });
+    });
 }
 
 function initDragAndDrop() {
@@ -4860,5 +5539,78 @@ updateBadge();renderHistMini();renderQuickVenue();renderCalendar();renderSchedul
     lucide.createIcons();
   }
 </script>
+
+<!-- Keyboard Shortcuts Modal -->
+<div class="shortcuts-modal" id="shortcutsModal" onclick="closeShortcutsModal(event)">
+    <div class="shortcuts-panel" onclick="event.stopPropagation()">
+        <div class="shortcuts-header">
+            <h3 style="margin:0;font-size:1.1rem;">⌨️ 键盘快捷键</h3>
+            <button class="btn-i2" onclick="hideShortcutsModal()">✕</button>
+        </div>
+        <div class="shortcuts-list">
+            <div class="shortcut-item">
+                <span>新建方案</span>
+                <div class="shortcut-key"><kbd>Ctrl</kbd><kbd>N</kbd></div>
+            </div>
+            <div class="shortcut-item">
+                <span>保存</span>
+                <div class="shortcut-key"><kbd>Ctrl</kbd><kbd>S</kbd></div>
+            </div>
+            <div class="shortcut-item">
+                <span>撤销</span>
+                <div class="shortcut-key"><kbd>Ctrl</kbd><kbd>Z</kbd></div>
+            </div>
+            <div class="shortcut-item">
+                <span>重做</span>
+                <div class="shortcut-key"><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>Z</kbd></div>
+            </div>
+            <div class="shortcut-item">
+                <span>搜索</span>
+                <div class="shortcut-key"><kbd>Ctrl</kbd><kbd>F</kbd></div>
+            </div>
+            <div class="shortcut-item">
+                <span>显示快捷键</span>
+                <div class="shortcut-key"><kbd>?</kbd></div>
+            </div>
+            <div class="shortcut-item">
+                <span>关闭弹窗/侧边栏</span>
+                <div class="shortcut-key"><kbd>Esc</kbd></div>
+            </div>
+            <div class="shortcut-item">
+                <span>切换主题</span>
+                <div class="shortcut-key"><kbd>Ctrl</kbd><kbd>T</kbd></div>
+            </div>
+            <div class="shortcut-item">
+                <span>上一个标签</span>
+                <div class="shortcut-key"><kbd>Ctrl</kbd><kbd>←</kbd></div>
+            </div>
+            <div class="shortcut-item">
+                <span>下一个标签</span>
+                <div class="shortcut-key"><kbd>Ctrl</kbd><kbd>→</kbd></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Context Menu -->
+<div class="context-menu" id="contextMenu">
+    <div class="context-menu-item" onclick="contextMenuAction('edit')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        编辑
+    </div>
+    <div class="context-menu-item" onclick="contextMenuAction('duplicate')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        复制
+    </div>
+    <div class="context-menu-item" onclick="contextMenuAction('export')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        导出
+    </div>
+    <div class="context-menu-divider"></div>
+    <div class="context-menu-item delete" onclick="contextMenuAction('delete')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+        删除
+    </div>
+</div>
 </body>
 </html>
