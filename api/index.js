@@ -201,6 +201,38 @@ async function handleFeishuToken() {
   }
 }
 
+// ===== Messages =====
+async function handleGetMessages(uid) {
+  const data = await sbQuery(`messages?user_id=eq.${uid}&select=*&order=created_at.desc`);
+  return { status: 200, body: { messages: data || [] } };
+}
+
+async function handleCreateMessage(uid, body) {
+  const data = await sbQuery('messages', 'POST', { ...body, user_id: uid });
+  return { status: 201, body: { message: data[0] } };
+}
+
+async function handleUpdateMessage(uid, id, body) {
+  const data = await sbQuery(`messages?id=eq.${id}`, 'PATCH', body);
+  return { status: 200, body: { success: true, message: data[0] } };
+}
+
+async function handleDeleteMessage(uid, id) {
+  await sbQuery(`messages?id=eq.${id}`, 'DELETE');
+  return { status: 200, body: { success: true } };
+}
+
+// ===== Public Message Submit (no auth required - for portfolio contact form) =====
+async function handlePublicMessage(body) {
+  const { name, email, phone, service_type, message } = body;
+  if (!name || !email) return { status: 400, body: { error: '姓名和邮箱为必填项' } };
+  const data = await sbQuery('messages', 'POST', {
+    name, email, phone: phone || '', service_type: service_type || '其他',
+    message: message || '', status: 'new', user_id: '00000000-0000-0000-0000-000000000000'
+  });
+  return { status: 201, body: { success: true, message: data[0] } };
+}
+
 // ===== Dashboard Stats (Real-time calculation) =====
 async function handleDashboardStats(uid) {
   const now = new Date();
@@ -365,6 +397,31 @@ module.exports = async (req, res) => {
       const uid = verifyToken(req.headers.authorization);
       if (!uid) result = { status: 401, body: { error: '未登录' } };
       else result = await handleDashboardStats(uid);
+    }
+    // Messages
+    else if (path === '/api/messages' && method === 'GET') {
+      const uid = verifyToken(req.headers.authorization);
+      if (!uid) result = { status: 401, body: { error: '未登录' } };
+      else result = await handleGetMessages(uid);
+    }
+    else if (path === '/api/messages' && method === 'POST') {
+      const uid = verifyToken(req.headers.authorization);
+      if (!uid) result = { status: 401, body: { error: '未登录' } };
+      else result = await handleCreateMessage(uid, body);
+    }
+    else if (path.startsWith('/api/messages/') && method === 'PATCH') {
+      const uid = verifyToken(req.headers.authorization);
+      if (!uid) result = { status: 401, body: { error: '未登录' } };
+      else result = await handleUpdateMessage(uid, path.split('/').pop(), body);
+    }
+    else if (path.startsWith('/api/messages/') && method === 'DELETE') {
+      const uid = verifyToken(req.headers.authorization);
+      if (!uid) result = { status: 401, body: { error: '未登录' } };
+      else result = await handleDeleteMessage(uid, path.split('/').pop());
+    }
+    // Public message submit (no auth - for portfolio)
+    else if (path === '/api/messages/public' && method === 'POST') {
+      result = await handlePublicMessage(body);
     }
     // Health
     else if (path === '/api/health') {

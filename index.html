@@ -2223,6 +2223,11 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
                 <span class="nav-label" data-i18n="nav.dashboard">数据看板</span>
             </button>
+            <button class="nav-item" data-tab="message" data-role="photographer,assistant">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                <span class="nav-label" data-i18n="nav.message">消息看板</span>
+                <span class="nav-badge" id="t-msg" style="display:none;">0</span>
+            </button>
         </nav>
         <!-- Theme Switcher -->
         <div class="theme-switcher">
@@ -2712,6 +2717,80 @@
             </script>
         </div>
 
+        <!-- ============ 消息看板 ============ -->
+        <div class="tab-cnt" id="tab-message">
+            <div class="grid">
+                <section style="grid-column: 1 / -1;">
+                    <!-- 顶部操作栏 -->
+                    <div class="panel" style="margin-bottom:1rem;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;">
+                            <div style="display:flex;align-items:center;gap:.75rem;">
+                                <h2 style="margin:0;font-size:1.1rem;">📬 消息看板</h2>
+                                <span id="msg-total" style="font-size:.75rem;color:var(--t3);padding:.2rem .6rem;background:var(--bg2);border-radius:20px;">0 条消息</span>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;">
+                                <div style="display:flex;gap:.25rem;">
+                                    <button class="btn btn-s btn-sm msg-filter active" data-filter="all" onclick="filterMessages('all')">全部</button>
+                                    <button class="btn btn-s btn-sm msg-filter" data-filter="new" onclick="filterMessages('new')">🆕 新消息</button>
+                                    <button class="btn btn-s btn-sm msg-filter" data-filter="pending" onclick="filterMessages('pending')">⏳ 处理中</button>
+                                    <button class="btn btn-s btn-sm msg-filter" data-filter="completed" onclick="filterMessages('completed')">✅ 已完成</button>
+                                </div>
+                                <select id="msg-type-filter" onchange="filterMessages()" style="padding:.35rem .6rem;border-radius:8px;border:1px solid var(--bd);background:var(--bg2);color:var(--t1);font-size:.75rem;">
+                                    <option value="all">所有类型</option>
+                                    <option value="人像摄影">人像摄影</option>
+                                    <option value="商业摄影">商业摄影</option>
+                                    <option value="风光摄影">风光摄影</option>
+                                    <option value="活动记录">活动记录</option>
+                                    <option value="后期修图">后期修图</option>
+                                    <option value="婚礼跟拍">婚礼跟拍</option>
+                                    <option value="其他">其他</option>
+                                </select>
+                                <input type="text" id="msg-search" placeholder="🔍 搜索姓名/邮箱..." oninput="filterMessages()" style="padding:.35rem .6rem;border-radius:8px;border:1px solid var(--bd);background:var(--bg2);color:var(--t1);font-size:.75rem;width:160px;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 消息统计卡片 -->
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:1rem;">
+                        <div class="panel" style="text-align:center;cursor:pointer;" onclick="filterMessages('new')">
+                            <div style="font-size:1.5rem;font-weight:600;color:#f59e0b;" id="msg-count-new">0</div>
+                            <div style="font-size:.75rem;color:var(--t3);">🆕 新消息</div>
+                        </div>
+                        <div class="panel" style="text-align:center;cursor:pointer;" onclick="filterMessages('pending')">
+                            <div style="font-size:1.5rem;font-weight:600;color:#3b82f6;" id="msg-count-pending">0</div>
+                            <div style="font-size:.75rem;color:var(--t3);">⏳ 处理中</div>
+                        </div>
+                        <div class="panel" style="text-align:center;cursor:pointer;" onclick="filterMessages('completed')">
+                            <div style="font-size:1.5rem;font-weight:600;color:#4ade80;" id="msg-count-completed">0</div>
+                            <div style="font-size:.75rem;color:var(--t3);">✅ 已完成</div>
+                        </div>
+                    </div>
+
+                    <!-- 消息列表 -->
+                    <div id="msg-list" style="display:flex;flex-direction:column;gap:.75rem;"></div>
+
+                    <!-- 空状态 -->
+                    <div id="msg-empty" style="display:none;text-align:center;padding:3rem 1rem;color:var(--t3);">
+                        <div style="font-size:3rem;margin-bottom:.5rem;">📭</div>
+                        <div style="font-size:.9rem;">暂无消息</div>
+                        <div style="font-size:.75rem;margin-top:.25rem;">来自作品集网站的客户咨询将显示在这里</div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- 消息详情弹窗 -->
+            <div id="msg-detail-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;justify-content:center;align-items:center;" onclick="if(event.target===this)closeMsgDetail()">
+                <div style="background:var(--bg1);border-radius:16px;width:90%;max-width:560px;max-height:80vh;overflow-y:auto;padding:1.5rem;border:1px solid var(--bd);">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                        <h3 id="msg-detail-name" style="margin:0;font-size:1.1rem;"></h3>
+                        <button onclick="closeMsgDetail()" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:1.2rem;">✕</button>
+                    </div>
+                    <div id="msg-detail-body" style="font-size:.85rem;color:var(--t2);line-height:1.6;"></div>
+                    <div id="msg-detail-actions" style="margin-top:1rem;display:flex;gap:.5rem;flex-wrap:wrap;"></div>
+                </div>
+            </div>
+        </div>
+
         <!-- ============ 模特库 ============ -->
         <div class="tab-cnt" id="tab-model">
             <div class="grid">
@@ -3051,7 +3130,12 @@ if (document.getElementById('loginOverlay')) {
         getPlans() { return this.request('/plans'); },
         createPlan(data) { return this.request('/plans', 'POST', data); },
         syncToFeishuCalendar(schedules) { return this.request('/feishu/sync-calendar', 'POST', { schedules }); },
-        writeToFeishuBitable(app_token, table_id, records) { return this.request('/feishu/bitable', 'POST', { app_token, table_id, records }); }
+        writeToFeishuBitable(app_token, table_id, records) { return this.request('/feishu/bitable', 'POST', { app_token, table_id, records }); },
+        // Messages
+        getMessages() { return this.request('/messages'); },
+        createMessage(data) { return this.request('/messages', 'POST', data); },
+        updateMessageStatus(id, status) { return this.request(`/messages/${id}`, 'PATCH', { status }); },
+        deleteMessage(id) { return this.request(`/messages/${id}`, 'DELETE'); }
     };
 
     // Login handler
@@ -3267,6 +3351,24 @@ const sg = k => { try { return JSON.parse(localStorage.getItem(k))||null } catch
 const ss = (k,v) => { try { localStorage.setItem(k,JSON.stringify(v)); return true } catch(e) { return false } };
 
 // ===== Tabs =====
+function showTab(tabName) {
+    document.querySelectorAll('.nav-item').forEach(function(x){x.classList.remove('active');});
+    document.querySelectorAll('.tab-cnt').forEach(function(x){x.classList.remove('active');});
+    var btn = document.querySelector('.nav-item[data-tab="'+tabName+'"]');
+    if (btn) btn.classList.add('active');
+    var tabEl = document.getElementById('tab-'+tabName);
+    if (tabEl) tabEl.classList.add('active');
+    // Trigger render
+    if(tabName==='eq') renderEq();
+    if(tabName==='venue') renderVenue();
+    if(tabName==='model') renderModel();
+    if(tabName==='tpl') renderTpl();
+    if(tabName==='hist') renderHistFull();
+    if(tabName==='backup') updateBackupStats();
+    if(tabName==='calendar') { renderCalendar(); renderSchedules(); }
+    if(tabName==='message') renderMessages();
+}
+
 function initTabs() {
     document.querySelectorAll('.nav-item').forEach(function(b) {
         // Remove old listeners by cloning
@@ -3275,23 +3377,7 @@ function initTabs() {
         clone.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-
-            document.querySelectorAll('.nav-item').forEach(function(x){x.classList.remove('active');});
-            document.querySelectorAll('.tab-cnt').forEach(function(x){x.classList.remove('active');});
-            clone.classList.add('active');
-            
-            var tabId = 'tab-'+clone.dataset.tab;
-            var tabEl = document.getElementById(tabId);
-            if (tabEl) tabEl.classList.add('active');
-            
-            var tab = clone.dataset.tab;
-            if(tab==='eq') renderEq();
-            if(tab==='venue') renderVenue();
-            if(tab==='model') renderModel();
-            if(tab==='tpl') renderTpl();
-            if(tab==='hist') renderHistFull();
-            if(tab==='backup') updateBackupStats();
-            if(tab==='calendar') { renderCalendar(); renderSchedules(); }
+            showTab(clone.dataset.tab);
         });
     });
 }
@@ -3302,6 +3388,233 @@ function initTabs() {
     try { savedRole = localStorage.getItem('pw_role'); } catch(e) {}
     if (savedRole) {
         initTabs();
+    }
+})();
+
+// ===== Message Board (消息看板) =====
+var _msgCache = [];
+var _msgFilter = 'all';
+
+function renderMessages() {
+    api.getMessages().then(function(res) {
+        if (res.messages) {
+            _msgCache = res.messages;
+        } else if (Array.isArray(res)) {
+            _msgCache = res;
+        } else {
+            _msgCache = [];
+        }
+        updateMsgStats();
+        filterMessages(_msgFilter);
+    }).catch(function(e) {
+        console.log('Messages load error:', e);
+        _msgCache = [];
+        updateMsgStats();
+        filterMessages(_msgFilter);
+    });
+}
+
+function updateMsgStats() {
+    var counts = { new: 0, pending: 0, completed: 0 };
+    _msgCache.forEach(function(m) {
+        if (counts[m.status] !== undefined) counts[m.status]++;
+        else counts.new++;
+    });
+    var elNew = document.getElementById('msg-count-new');
+    var elPend = document.getElementById('msg-count-pending');
+    var elComp = document.getElementById('msg-count-completed');
+    var elTotal = document.getElementById('msg-total');
+    var elBadge = document.getElementById('t-msg');
+    if (elNew) elNew.textContent = counts.new;
+    if (elPend) elPend.textContent = counts.pending;
+    if (elComp) elComp.textContent = counts.completed;
+    if (elTotal) elTotal.textContent = _msgCache.length + ' 条消息';
+    if (elBadge) {
+        if (counts.new > 0) {
+            elBadge.style.display = 'inline';
+            elBadge.textContent = counts.new;
+        } else {
+            elBadge.style.display = 'none';
+        }
+    }
+}
+
+function filterMessages(status) {
+    if (status) {
+        _msgFilter = status;
+        document.querySelectorAll('.msg-filter').forEach(function(b) {
+            b.classList.toggle('active', b.dataset.filter === status);
+        });
+    }
+    var typeFilter = document.getElementById('msg-type-filter');
+    var searchEl = document.getElementById('msg-search');
+    var typeVal = typeFilter ? typeFilter.value : 'all';
+    var searchVal = searchEl ? searchEl.value.trim().toLowerCase() : '';
+
+    var filtered = _msgCache.filter(function(m) {
+        if (_msgFilter !== 'all' && m.status !== _msgFilter) return false;
+        if (typeVal !== 'all' && m.service_type !== typeVal) return false;
+        if (searchVal) {
+            var hay = (m.name + ' ' + m.email + ' ' + (m.phone || '')).toLowerCase();
+            if (hay.indexOf(searchVal) === -1) return false;
+        }
+        return true;
+    });
+
+    var listEl = document.getElementById('msg-list');
+    var emptyEl = document.getElementById('msg-empty');
+    if (!listEl) return;
+
+    if (filtered.length === 0) {
+        listEl.innerHTML = '';
+        if (emptyEl) emptyEl.style.display = 'block';
+        return;
+    }
+    if (emptyEl) emptyEl.style.display = 'none';
+
+    var statusColors = { new: '#f59e0b', pending: '#3b82f6', completed: '#4ade80' };
+    var statusLabels = { new: '🆕 新消息', pending: '⏳ 处理中', completed: '✅ 已完成' };
+    var statusBg = { new: 'rgba(245,158,11,0.1)', pending: 'rgba(59,130,246,0.1)', completed: 'rgba(74,222,128,0.1)' };
+
+    listEl.innerHTML = filtered.map(function(m) {
+        var st = m.status || 'new';
+        var time = m.created_at ? new Date(m.created_at).toLocaleString('zh-CN') : '';
+        return '<div class="panel msg-card" style="cursor:pointer;border-left:3px solid ' + (statusColors[st]||statusColors.new) + ';transition:transform .15s,box-shadow .15s;" ' +
+            'onmouseenter="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 4px 12px rgba(0,0,0,0.1)\'" ' +
+            'onmouseleave="this.style.transform=\'none\';this.style.boxShadow=\'none\'" ' +
+            'onclick="openMsgDetail(\'' + m.id + '\')">' +
+            '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;">' +
+                '<div style="flex:1;min-width:0;">' +
+                    '<div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.4rem;">' +
+                        '<span style="font-weight:600;font-size:.9rem;color:var(--t1);">' + escHtml(m.name) + '</span>' +
+                        '<span style="padding:.1rem .4rem;border-radius:4px;font-size:.65rem;background:' + (statusBg[st]||statusBg.new) + ';color:' + (statusColors[st]||statusColors.new) + ';">' + (statusLabels[st]||statusLabels.new) + '</span>' +
+                        (m.service_type ? '<span style="padding:.1rem .4rem;border-radius:4px;font-size:.65rem;background:var(--bg2);color:var(--t3);">' + escHtml(m.service_type) + '</span>' : '') +
+                    '</div>' +
+                    '<div style="font-size:.75rem;color:var(--t3);display:flex;gap:.75rem;flex-wrap:wrap;">' +
+                        '<span>📧 ' + escHtml(m.email) + '</span>' +
+                        (m.phone ? '<span>📱 ' + escHtml(m.phone) + '</span>' : '') +
+                        (time ? '<span>🕐 ' + time + '</span>' : '') +
+                    '</div>' +
+                    (m.message ? '<div style="font-size:.8rem;color:var(--t2);margin-top:.4rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:400px;">' + escHtml(m.message) + '</div>' : '') +
+                '</div>' +
+            '</div>' +
+        '</div>';
+    }).join('');
+}
+
+function escHtml(s) {
+    if (!s) return '';
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function openMsgDetail(id) {
+    var m = _msgCache.find(function(x) { return x.id == id; });
+    if (!m) return;
+    var modal = document.getElementById('msg-detail-modal');
+    var nameEl = document.getElementById('msg-detail-name');
+    var bodyEl = document.getElementById('msg-detail-body');
+    var actEl = document.getElementById('msg-detail-actions');
+    if (!modal || !nameEl || !bodyEl || !actEl) return;
+
+    nameEl.textContent = m.name;
+    var time = m.created_at ? new Date(m.created_at).toLocaleString('zh-CN') : '未知';
+    bodyEl.innerHTML =
+        '<div style="display:grid;grid-template-columns:auto 1fr;gap:.5rem .75rem;font-size:.85rem;">' +
+            '<span style="color:var(--t3);">📧 邮箱</span><span>' + escHtml(m.email) + '</span>' +
+            (m.phone ? '<span style="color:var(--t3);">📱 电话</span><span>' + escHtml(m.phone) + '</span>' : '') +
+            (m.service_type ? '<span style="color:var(--t3);">📋 服务类型</span><span>' + escHtml(m.service_type) + '</span>' : '') +
+            '<span style="color:var(--t3);">🕐 时间</span><span>' + time + '</span>' +
+            '<span style="color:var(--t3);">📝 留言</span><span style="white-space:pre-wrap;">' + escHtml(m.message || '无') + '</span>' +
+        '</div>';
+
+    var st = m.status || 'new';
+    actEl.innerHTML = '';
+    if (st === 'new') {
+        actEl.innerHTML += '<button class="btn btn-s btn-sm" onclick="updateMsg(\'' + id + '\',\'pending\')">⏳ 标记处理中</button>';
+    }
+    if (st === 'pending') {
+        actEl.innerHTML += '<button class="btn btn-p btn-sm" onclick="updateMsg(\'' + id + '\',\'completed\')">✅ 标记完成</button>';
+    }
+    actEl.innerHTML += '<a class="btn btn-s btn-sm" href="mailto:' + escHtml(m.email) + (m.name ? '?subject=Re: ' + encodeURIComponent(m.name) + ' 的咨询' : '') + '" style="text-decoration:none;">📧 回复邮件</a>';
+    actEl.innerHTML += '<button class="btn btn-sm" style="color:#ef4444;border:1px solid rgba(239,68,68,0.3);" onclick="deleteMsg(\'' + id + '\')">🗑️ 删除</button>';
+
+    modal.style.display = 'flex';
+}
+
+function closeMsgDetail() {
+    var modal = document.getElementById('msg-detail-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+async function updateMsg(id, status) {
+    try {
+        await api.updateMessageStatus(id, status);
+        toast('状态已更新', 'ok');
+        closeMsgDetail();
+        renderMessages();
+    } catch (e) {
+        toast('更新失败: ' + (e.message || e), 'er');
+    }
+}
+
+async function deleteMsg(id) {
+    if (!confirm('确定删除此消息？')) return;
+    try {
+        await api.deleteMessage(id);
+        toast('消息已删除', 'ok');
+        closeMsgDetail();
+        renderMessages();
+    } catch (e) {
+        toast('删除失败: ' + (e.message || e), 'er');
+    }
+}
+
+// Auto-refresh messages every 30s when on message tab
+setInterval(function() {
+    var msgTab = document.getElementById('tab-message');
+    if (msgTab && msgTab.classList.contains('active')) {
+        renderMessages();
+    }
+}, 30000);
+
+// Background check for new messages every 60s (notification badge)
+var _lastMsgCount = 0;
+setInterval(function() {
+    var token = localStorage.getItem('pw_token');
+    if (!token) return;
+    api.getMessages().then(function(res) {
+        var msgs = res.messages || [];
+        var newCount = msgs.filter(function(m) { return m.status === 'new'; }).length;
+        if (newCount > _lastMsgCount && _lastMsgCount > 0) {
+            // New message arrived!
+            toast('📬 收到 ' + (newCount - _lastMsgCount) + ' 条新消息', 'ok');
+            // Browser notification
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification('PhotoAtelier 新消息', { body: '收到 ' + (newCount - _lastMsgCount) + ' 条新的客户咨询' });
+            }
+        }
+        _lastMsgCount = newCount;
+        // Update badge even when not on message tab
+        var badge = document.getElementById('t-msg');
+        if (badge) {
+            if (newCount > 0) {
+                badge.style.display = 'inline';
+                badge.textContent = newCount;
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+    }).catch(function() {});
+}, 60000);
+
+// Request notification permission on first login
+(function() {
+    if ('Notification' in window && Notification.permission === 'default') {
+        // Will request on first user interaction
+        document.addEventListener('click', function reqNotif() {
+            Notification.requestPermission();
+            document.removeEventListener('click', reqNotif);
+        }, { once: true });
     }
 })();
 
