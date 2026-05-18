@@ -1,3 +1,6 @@
-name = "photo-workflow"
-compatibility_date = "2024-12-01"
-pages_build_output_dir = "."
+name = "photo-workflow-img"
+main = "api/index.js"
+compatibility_date = "2024-01-01"
+
+[observability]
+enabled = true
