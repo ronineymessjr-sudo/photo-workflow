@@ -2519,28 +2519,26 @@
                     <!-- 顶部统计卡片 -->
                     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem;">
                         <div class="panel" style="text-align:center;">
-                            <div style="font-size:2rem;font-weight:600;color:var(--ac);" id="stat-shoots">23</div>
+                            <div style="font-size:2rem;font-weight:600;color:var(--ac);" id="stat-shoots" data-count="0">0</div>
                             <div style="font-size:.8rem;color:var(--t3);margin-top:.25rem;" data-i18n="dashboard.month">本月拍摄</div>
-                            <div style="font-size:.7rem;color:#4ade80;margin-top:.25rem;">↑ 15%</div>
+                            <div style="font-size:.7rem;color:var(--t3);margin-top:.25rem;" id="stat-growth">-</div>
                         </div>
                         <div class="panel" style="text-align:center;">
-                            <div style="font-size:2rem;font-weight:600;color:var(--ac);" id="stat-completion">87%</div>
+                            <div style="font-size:2rem;font-weight:600;color:var(--ac);" id="stat-completion" data-count="0">0%</div>
                             <div style="font-size:.8rem;color:var(--t3);margin-top:.25rem;" data-i18n="dashboard.completion">完成率</div>
                             <div style="width:80%;height:4px;background:var(--bg2);border-radius:2px;margin:.5rem auto 0;overflow:hidden;">
-                                <div style="width:87%;height:100%;background:var(--ac);border-radius:2px;"></div>
+                                <div id="stat-completion-bar" style="width:0%;height:100%;background:var(--ac);border-radius:2px;transition:width 1s ease;"></div>
                             </div>
                         </div>
                         <div class="panel" style="text-align:center;">
-                            <div style="font-size:2rem;font-weight:600;color:var(--ac);" id="stat-clients">12</div>
+                            <div style="font-size:2rem;font-weight:600;color:var(--ac);" id="stat-clients" data-count="0">0</div>
                             <div style="font-size:.8rem;color:var(--t3);margin-top:.25rem;" data-i18n="dashboard.clients">活跃客户</div>
-                            <div style="font-size:.7rem;color:#4ade80;margin-top:.25rem;">+ 3 新增</div>
+                            <div style="font-size:.7rem;color:var(--t3);margin-top:.25rem;" id="stat-new-clients">-</div>
                         </div>
                         <div class="panel" style="text-align:center;">
-                            <div style="font-size:2rem;font-weight:600;color:var(--ac);" id="stat-equipment">76%</div>
-                            <div style="font-size:.8rem;color:var(--t3);margin-top:.25rem;" data-i18n="dashboard.equipment">设备使用率</div>
-                            <div style="width:80%;height:4px;background:var(--bg2);border-radius:2px;margin:.5rem auto 0;overflow:hidden;">
-                                <div style="width:76%;height:100%;background:var(--ac);border-radius:2px;"></div>
-                            </div>
+                            <div style="font-size:2rem;font-weight:600;color:var(--ac);" id="stat-messages" data-count="0">0</div>
+                            <div style="font-size:.8rem;color:var(--t3);margin-top:.25rem;">消息咨询</div>
+                            <div style="font-size:.7rem;color:var(--t3);margin-top:.25rem;" id="stat-new-messages">-</div>
                         </div>
                     </div>
 
@@ -2549,71 +2547,18 @@
                         <div class="panel">
                             <div class="p-head"><h2>拍摄趋势</h2></div>
                             <div class="p-body">
-                                <div style="height:150px;display:flex;align-items:flex-end;justify-content:space-between;padding:1rem 0;gap:.5rem;">
+                                <div id="trend-chart" style="height:150px;display:flex;align-items:flex-end;justify-content:space-between;padding:1rem 0;gap:.5rem;">
                                     <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:.25rem;">
-                                        <div style="width:100%;height:60%;background:linear-gradient(180deg,var(--ac),transparent);border-radius:4px 4px 0 0;opacity:.6;"></div>
-                                        <span style="font-size:.65rem;color:var(--t3);">1月</span>
-                                    </div>
-                                    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:.25rem;">
-                                        <div style="width:100%;height:72%;background:linear-gradient(180deg,var(--ac),transparent);border-radius:4px 4px 0 0;opacity:.7;"></div>
-                                        <span style="font-size:.65rem;color:var(--t3);">2月</span>
-                                    </div>
-                                    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:.25rem;">
-                                        <div style="width:100%;height:80%;background:linear-gradient(180deg,var(--ac),transparent);border-radius:4px 4px 0 0;opacity:.8;"></div>
-                                        <span style="font-size:.65rem;color:var(--t3);">3月</span>
-                                    </div>
-                                    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:.25rem;">
-                                        <div style="width:100%;height:88%;background:linear-gradient(180deg,var(--ac),transparent);border-radius:4px 4px 0 0;opacity:.9;"></div>
-                                        <span style="font-size:.65rem;color:var(--t3);">4月</span>
-                                    </div>
-                                    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:.25rem;">
-                                        <div style="width:100%;height:92%;background:linear-gradient(180deg,var(--ac),transparent);border-radius:4px 4px 0 0;"></div>
-                                        <span style="font-size:.65rem;color:var(--t3);">5月</span>
-                                    </div>
-                                    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:.25rem;">
-                                        <div style="width:100%;height:100%;background:linear-gradient(180deg,var(--ac),transparent);border-radius:4px 4px 0 0;"></div>
-                                        <span style="font-size:.65rem;color:var(--t3);">6月</span>
+                                        <div style="width:100%;height:4px;background:linear-gradient(180deg,var(--ac),transparent);border-radius:4px 4px 0 0;transition:height 1s ease;"></div>
+                                        <span style="font-size:.65rem;color:var(--t3);">-</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="panel">
-                            <div class="p-head"><h2>客户类型分布</h2></div>
-                            <div class="p-body" style="display:flex;align-items:center;gap:1.5rem;">
-                                <div style="width:100px;height:100px;border-radius:50%;background:conic-gradient(var(--ac) 0deg 144deg, #4ade80 144deg 270deg, #60a5fa 270deg 360deg);"></div>
-                                <div style="display:flex;flex-direction:column;gap:.5rem;">
-                                    <div style="display:flex;align-items:center;gap:.5rem;"><span style="width:8px;height:8px;border-radius:50%;background:var(--ac);"></span><span style="font-size:.75rem;color:var(--t2);">新客户 40%</span></div>
-                                    <div style="display:flex;align-items:center;gap:.5rem;"><span style="width:8px;height:8px;border-radius:50%;background:#4ade80;"></span><span style="font-size:.75rem;color:var(--t2);">老客户 35%</span></div>
-                                    <div style="display:flex;align-items:center;gap:.5rem;"><span style="width:8px;height:8px;border-radius:50%;background:#60a5fa;"></span><span style="font-size:.75rem;color:var(--t2);">复购 25%</span></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 排行榜 -->
-                    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;margin-bottom:1.5rem;">
-                        <div class="panel">
-                            <div class="p-head"><h2>热门场地 TOP5</h2></div>
-                            <div class="p-body">
-                                <div style="display:flex;flex-direction:column;gap:.75rem;">
-                                    <div style="display:flex;align-items:center;gap:.75rem;"><span style="width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#ffd700,#ffaa00);display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:600;">1</span><span style="flex:1;font-size:.8rem;color:var(--t1);">复古酒店</span><span style="font-size:.75rem;color:var(--ac);font-weight:500;">15次</span></div>
-                                    <div style="display:flex;align-items:center;gap:.75rem;"><span style="width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#c0c0c0,#a0a0a0);display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:600;">2</span><span style="flex:1;font-size:.8rem;color:var(--t1);">天台</span><span style="font-size:.75rem;color:var(--ac);font-weight:500;">12次</span></div>
-                                    <div style="display:flex;align-items:center;gap:.75rem;"><span style="width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#cd7f32,#b87333);display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:600;">3</span><span style="flex:1;font-size:.8rem;color:var(--t1);">影棚</span><span style="font-size:.75rem;color:var(--ac);font-weight:500;">10次</span></div>
-                                    <div style="display:flex;align-items:center;gap:.75rem;"><span style="width:20px;height:20px;border-radius:50%;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:.65rem;color:var(--t3);">4</span><span style="flex:1;font-size:.8rem;color:var(--t1);">咖啡馆</span><span style="font-size:.75rem;color:var(--t3);">8次</span></div>
-                                    <div style="display:flex;align-items:center;gap:.75rem;"><span style="width:20px;height:20px;border-radius:50%;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:.65rem;color:var(--t3);">5</span><span style="flex:1;font-size:.8rem;color:var(--t1);">公园</span><span style="font-size:.75rem;color:var(--t3);">6次</span></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="panel">
-                            <div class="p-head"><h2>设备使用 TOP5</h2></div>
-                            <div class="p-body">
-                                <div style="display:flex;flex-direction:column;gap:.75rem;">
-                                    <div style="display:flex;align-items:center;gap:.75rem;"><span style="width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#ffd700,#ffaa00);display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:600;">1</span><span style="flex:1;font-size:.8rem;color:var(--t1);">A7M4</span><span style="font-size:.75rem;color:var(--ac);font-weight:500;">45次</span></div>
-                                    <div style="display:flex;align-items:center;gap:.75rem;"><span style="width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#c0c0c0,#a0a0a0);display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:600;">2</span><span style="flex:1;font-size:.8rem;color:var(--t1);">85mm</span><span style="font-size:.75rem;color:var(--ac);font-weight:500;">38次</span></div>
-                                    <div style="display:flex;align-items:center;gap:.75rem;"><span style="width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#cd7f32,#b87333);display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:600;">3</span><span style="flex:1;font-size:.8rem;color:var(--t1);">闪光灯</span><span style="font-size:.75rem;color:var(--ac);font-weight:500;">32次</span></div>
-                                    <div style="display:flex;align-items:center;gap:.75rem;"><span style="width:20px;height:20px;border-radius:50%;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:.65rem;color:var(--t3);">4</span><span style="flex:1;font-size:.8rem;color:var(--t1);">反光板</span><span style="font-size:.75rem;color:var(--t3);">28次</span></div>
-                                    <div style="display:flex;align-items:center;gap:.75rem;"><span style="width:20px;height:20px;border-radius:50%;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:.65rem;color:var(--t3);">5</span><span style="flex:1;font-size:.8rem;color:var(--t1);">三脚架</span><span style="font-size:.75rem;color:var(--t3);">20次</span></div>
-                                </div>
+                            <div class="p-head"><h2>热门场地</h2></div>
+                            <div class="p-body" id="venue-chart">
+                                <div style="text-align:center;padding:2rem 0;color:var(--t3);font-size:.85rem;">暂无数据</div>
                             </div>
                         </div>
                     </div>
@@ -2624,96 +2569,117 @@
                         <div class="p-body">
                             <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;text-align:center;">
                                 <div>
-                                    <div style="font-size:1.5rem;color:var(--ac);margin-bottom:.25rem;">★★★★★</div>
-                                    <div style="font-size:.8rem;color:var(--t3);">客户满意度</div>
-                                    <div style="font-size:1.2rem;font-weight:600;color:var(--t1);margin-top:.25rem;">4.8/5</div>
+                                    <div style="font-size:1.5rem;color:var(--ac);margin-bottom:.25rem;" id="stat-total-shoots" data-count="0">0</div>
+                                    <div style="font-size:.8rem;color:var(--t3);">总拍摄次数</div>
                                 </div>
                                 <div>
-                                    <div style="font-size:1.5rem;color:#4ade80;margin-bottom:.25rem;">68%</div>
-                                    <div style="font-size:.8rem;color:var(--t3);">复购率</div>
-                                    <div style="font-size:.75rem;color:#4ade80;margin-top:.25rem;">↑ 8%</div>
+                                    <div style="font-size:1.5rem;color:#4ade80;margin-bottom:.25rem;" id="stat-completed" data-count="0">0</div>
+                                    <div style="font-size:.8rem;color:var(--t3);">已完成</div>
                                 </div>
                                 <div>
-                                    <div style="display:flex;justify-content:center;gap:.5rem;margin-bottom:.25rem;">
-                                        <span style="padding:.15rem .4rem;background:rgba(255,107,107,0.2);border-radius:4px;font-size:.65rem;color:var(--ac);">个人45%</span>
-                                        <span style="padding:.15rem .4rem;background:rgba(74,222,128,0.2);border-radius:4px;font-size:.65rem;color:#4ade80;">工作室35%</span>
-                                        <span style="padding:.15rem .4rem;background:rgba(96,165,250,0.2);border-radius:4px;font-size:.65rem;color:#60a5fa;">企业20%</span>
-                                    </div>
-                                    <div style="font-size:.8rem;color:var(--t3);">客户类型占比</div>
+                                    <div style="font-size:1.5rem;color:#60a5fa;margin-bottom:.25rem;" id="stat-locations" data-count="0">0</div>
+                                    <div style="font-size:.8rem;color:var(--t3);">拍摄场地数</div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </section>
             </div>
+
             <script>
+            // 数字滚动动效
+            function animateCount(el, target, suffix) {
+                suffix = suffix || '';
+                var start = 0;
+                var duration = 1200;
+                var startTime = null;
+                function step(timestamp) {
+                    if (!startTime) startTime = timestamp;
+                    var progress = Math.min((timestamp - startTime) / duration, 1);
+                    var eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+                    var current = Math.round(eased * target);
+                    el.textContent = current + suffix;
+                    if (progress < 1) requestAnimationFrame(step);
+                }
+                requestAnimationFrame(step);
+            }
+
             // 加载看板数据
-            (function loadDashboard() {
-                var API_BASE = 'https://photo-workflow-img.photomagic.workers.dev/api';
+            function loadDashboard() {
                 var token = localStorage.getItem('pw_token');
                 if (!token) return;
-                
-                fetch(API_BASE + '/dashboard/stats', {
+
+                fetch(window.api.base + '/dashboard/stats', {
                     headers: { 'Authorization': 'Bearer ' + token }
                 })
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
-                    if (data.stats) {
-                        // 更新顶部统计
-                        var shootsEl = document.getElementById('stat-shoots');
-                        var completionEl = document.getElementById('stat-completion');
-                        var clientsEl = document.getElementById('stat-clients');
-                        var equipmentEl = document.getElementById('stat-equipment');
-                        
-                        if (shootsEl) shootsEl.textContent = data.stats.monthShoots;
-                        if (completionEl) completionEl.textContent = data.stats.completionRate + '%';
-                        if (clientsEl) clientsEl.textContent = data.stats.activeClients;
-                        if (equipmentEl) equipmentEl.textContent = data.stats.equipmentRate + '%';
-                        
-                        // 更新增长率
-                        var growthEls = document.querySelectorAll('#tab-dashboard .panel:first-child .panel:first-child div:last-child');
-                        if (growthEls[0] && data.stats.monthGrowth >= 0) {
-                            growthEls[0].textContent = '↑ ' + data.stats.monthGrowth + '%';
-                            growthEls[0].style.color = '#4ade80';
-                        }
+                    if (!data.stats) return;
+                    var stats = data.stats;
+
+                    // 顶部统计 - 数字滚动
+                    var shootsEl = document.getElementById('stat-shoots');
+                    var completionEl = document.getElementById('stat-completion');
+                    var clientsEl = document.getElementById('stat-clients');
+                    var messagesEl = document.getElementById('stat-messages');
+
+                    if (shootsEl) animateCount(shootsEl, stats.monthShoots || 0);
+                    if (completionEl) animateCount(completionEl, stats.completionRate || 0, '%');
+                    if (clientsEl) animateCount(clientsEl, stats.activeClients || 0);
+                    if (messagesEl) animateCount(messagesEl, stats.newClients || 0);
+
+                    // 增长率
+                    var growthEl = document.getElementById('stat-growth');
+                    if (growthEl) {
+                        var g = stats.monthGrowth || 0;
+                        growthEl.textContent = g > 0 ? '↑ ' + g + '%' : g < 0 ? '↓ ' + Math.abs(g) + '%' : '-';
+                        growthEl.style.color = g > 0 ? '#4ade80' : g < 0 ? '#ef4444' : 'var(--t3)';
                     }
-                    
-                    // 更新趋势图
-                    if (data.trends && data.trends.length === 6) {
-                        var bars = document.querySelectorAll('#tab-dashboard .panel:nth-child(2) .panel:first-child .p-body > div > div');
-                        data.trends.forEach(function(trend, i) {
-                            if (bars[i]) {
-                                var bar = bars[i].querySelector('div');
-                                var label = bars[i].querySelector('span');
-                                if (bar) {
-                                    var maxCount = Math.max.apply(Math, data.trends.map(function(t) { return t.count; }));
-                                    var height = maxCount > 0 ? (trend.count / maxCount * 100) : 0;
-                                    bar.style.height = Math.max(height, 10) + '%';
-                                }
-                                if (label) label.textContent = trend.month;
-                            }
-                        });
+
+                    // 完成率进度条
+                    var bar = document.getElementById('stat-completion-bar');
+                    if (bar) bar.style.width = (stats.completionRate || 0) + '%';
+
+                    // 趋势图
+                    if (data.trends && data.trends.length > 0) {
+                        var chart = document.getElementById('trend-chart');
+                        var maxCount = Math.max.apply(Math, data.trends.map(function(t) { return t.count; }));
+                        maxCount = Math.max(maxCount, 1);
+                        chart.innerHTML = data.trends.map(function(trend) {
+                            var h = Math.max((trend.count / maxCount * 100), 4);
+                            return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:.25rem;">' +
+                                '<div style="width:100%;height:' + h + '%;background:linear-gradient(180deg,var(--ac),transparent);border-radius:4px 4px 0 0;transition:height 1s ease;min-height:4px;"></div>' +
+                                '<span style="font-size:.65rem;color:var(--t3);">' + trend.month + '</span>' +
+                            '</div>';
+                        }).join('');
                     }
-                    
-                    // 更新热门场地
-                    if (data.topVenues) {
-                        var venueList = document.querySelector('#tab-dashboard .panel:nth-child(3) .panel:first-child .p-body > div');
-                        if (venueList) {
-                            venueList.innerHTML = data.topVenues.map(function(v, i) {
-                                var colors = ['#ffd700', '#c0c0c0', '#cd7f32'];
-                                var bg = i < 3 ? 'linear-gradient(135deg,' + colors[i] + ',' + (i === 0 ? '#ffaa00' : i === 1 ? '#a0a0a0' : '#b87333') + ')' : 'var(--bg2)';
+
+                    // 热门场地
+                    if (data.topVenues && data.topVenues.length > 0 && data.topVenues[0].count > 0) {
+                        var venueEl = document.getElementById('venue-chart');
+                        var colors = ['#ffd700,#ffaa00', '#c0c0c0,#a0a0a0', '#cd7f32,#b87333'];
+                        venueEl.innerHTML = '<div style="display:flex;flex-direction:column;gap:.75rem;">' +
+                            data.topVenues.map(function(v, i) {
+                                var bg = i < 3 ? 'linear-gradient(135deg,' + colors[i] + ')' : 'var(--bg2)';
                                 var color = i < 3 ? '#000' : 'var(--t3)';
                                 return '<div style="display:flex;align-items:center;gap:.75rem;">' +
                                     '<span style="width:20px;height:20px;border-radius:50%;background:' + bg + ';display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:600;color:' + color + ';">' + v.rank + '</span>' +
                                     '<span style="flex:1;font-size:.8rem;color:var(--t1);">' + v.name + '</span>' +
                                     '<span style="font-size:.75rem;color:' + (i < 3 ? 'var(--ac)' : 'var(--t3)') + ';font-weight:500;">' + v.count + '次</span>' +
                                 '</div>';
-                            }).join('');
-                        }
+                            }).join('') + '</div>';
                     }
+
+                    // 客户分析
+                    var totalEl = document.getElementById('stat-total-shoots');
+                    var completedEl = document.getElementById('stat-completed');
+                    var locationsEl = document.getElementById('stat-locations');
+                    if (totalEl) animateCount(totalEl, stats.totalShoots || 0);
+                    if (completedEl) animateCount(completedEl, stats.completedShoots || 0);
+                    if (locationsEl) animateCount(locationsEl, stats.activeClients || 0);
                 })
                 .catch(function(e) { console.log('Dashboard load error:', e); });
-            })();
+            }
             </script>
         </div>
 
@@ -3367,6 +3333,7 @@ function showTab(tabName) {
     if(tabName==='hist') renderHistFull();
     if(tabName==='backup') updateBackupStats();
     if(tabName==='calendar') { renderCalendar(); renderSchedules(); }
+    if(tabName==='dashboard') loadDashboard();
     if(tabName==='message') renderMessages();
 }
 

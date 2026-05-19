@@ -226,6 +226,7 @@ async function handleDashboardStats(uid) {
   const uniqueLocations = [...new Set(schedulesData.map(s => s.location).filter(Boolean))];
   const activeClients = uniqueLocations.length;
 
+  // 近6个月趋势
   const trends = [];
   for (let i = 5; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -235,6 +236,7 @@ async function handleDashboardStats(uid) {
     trends.push({ month: monthName, count });
   }
 
+  // 热门场地 TOP5（仅真实数据）
   const venueCounts = {};
   schedulesData.forEach(s => {
     if (s.location) venueCounts[s.location] = (venueCounts[s.location] || 0) + 1;
@@ -244,14 +246,10 @@ async function handleDashboardStats(uid) {
     .slice(0, 5)
     .map(([name, count], index) => ({ rank: index + 1, name, count }));
 
-  const defaultVenues = [
-    { rank: 1, name: '复古酒店', count: 15 },
-    { rank: 2, name: '天台', count: 12 },
-    { rank: 3, name: '影棚', count: 10 },
-    { rank: 4, name: '咖啡馆', count: 8 },
-    { rank: 5, name: '公园', count: 6 }
-  ];
-  const finalTopVenues = topVenues.length >= 5 ? topVenues : [...topVenues, ...defaultVenues.slice(topVenues.length)];
+  // 消息统计
+  const messages = await sbQuery(`messages?user_id=eq.${uid}&select=status`);
+  const messagesData = messages || [];
+  const newMessages = messagesData.filter(m => m.status === 'new').length;
 
   return [200, {
     stats: {
@@ -259,25 +257,12 @@ async function handleDashboardStats(uid) {
       monthGrowth: monthGrowth,
       completionRate: completionRate,
       activeClients: activeClients,
-      newClients: Math.max(0, currentMonthShoots - lastMonthShoots),
-      equipmentRate: 76
+      newClients: newMessages,
+      totalShoots: schedulesData.length,
+      completedShoots: completedShoots
     },
     trends: trends,
-    topVenues: finalTopVenues,
-    customerTypes: { new: 40, old: 35, repeat: 25 },
-    topEquipment: [
-      { rank: 1, name: 'A7M4', count: 45 },
-      { rank: 2, name: '85mm', count: 38 },
-      { rank: 3, name: '闪光灯', count: 32 },
-      { rank: 4, name: '反光板', count: 28 },
-      { rank: 5, name: '三脚架', count: 20 }
-    ],
-    customerAnalysis: {
-      satisfaction: 4.8,
-      repeatRate: 68,
-      repeatGrowth: 8,
-      types: { personal: 45, studio: 35, enterprise: 20 }
-    }
+    topVenues: topVenues
   }];
 }
 
