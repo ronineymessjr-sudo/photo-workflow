@@ -4019,9 +4019,163 @@ function buildEqSection() {
     return {ti:'📷 器材推荐',ic:'📷',c:lines};
 }
 
-function genPlan(input) {
-    const sections=baseSections.map(s=>s.ti==='📷 器材推荐'?buildEqSection():s);
-    return {title:input.theme||'未命名方案',input,sections,savedAt:new Date().toISOString(),images:[]};
+// ===== AI Plan Generation (Pollinations - 免费无需 API Key) =====
+async function genPlan(input) {
+    const theme = input.theme || '摄影';
+    const style = input.style || '自然';
+    const model = input.modelDesc || '普通模特';
+    const scene = input.scene || '室内';
+    const mood = input.mood || '自然';
+    const duration = input.duration || '2小时';
+    const people = input.people || '1';
+    const extra = input.extra || '';
+
+    // Build prompt for AI
+    const prompt = `作为专业摄影师，请为以下拍摄需求生成详细的拍摄方案：
+
+【拍摄主题】${theme}
+【风格】${style}
+【模特】${model}
+【场景】${scene}
+【情绪氛围】${mood}
+【时长】${duration}
+【人数】${people}人
+${extra ? '【额外要求】' + extra : ''}
+
+请按以下格式输出（每个部分3-5条具体建议）：
+
+📍 地点推荐：
+- 具体地点名称及原因
+
+🧍 摆姿指导：
+- 具体摆姿描述
+
+💄 妆造建议：
+- 发型、妆容、服装、配饰建议
+
+🎬 道具清单：
+- 推荐道具
+
+🌤️ 天气建议：
+- 最佳天气和时段
+
+🔭 焦段推荐：
+- 推荐焦段及原因
+
+⏰ 时间安排：
+- 详细时间表
+
+🎨 后期调色：
+- 调色方向
+
+⚠️ 注意事项：
+- 拍摄注意事项
+
+请用中文回答，内容要具体、实用、专业。`;
+
+    try {
+        // Call Pollinations text generation API
+        const encodedPrompt = encodeURIComponent(prompt);
+        const response = await fetch(`https://text.pollinations.ai/${encodedPrompt}?seed=${Date.now()}&system=你是专业摄影师，擅长根据客户需求制定拍摄方案。回答要专业、具体、实用。`);
+        
+        if (!response.ok) throw new Error('AI 生成失败');
+        
+        const aiText = await response.text();
+        
+        // Parse AI response into sections
+        const sections = parseAIResponse(aiText);
+        
+        // Add equipment section from user's gear
+        const eqSection = buildEqSection();
+        sections.splice(5, 0, eqSection); // Insert at position 5
+        
+        return {
+            title: theme,
+            input,
+            sections,
+            savedAt: new Date().toISOString(),
+            images: [],
+            aiGenerated: true
+        };
+    } catch (e) {
+        console.error('AI 生成失败，使用默认模板:', e);
+        // Fallback to default template
+        const sections = baseSections.map(s => s.ti === '📷 器材推荐' ? buildEqSection() : s);
+        return {
+            title: theme || '未命名方案',
+            input,
+            sections,
+            savedAt: new Date().toISOString(),
+            images: [],
+            aiGenerated: false
+        };
+    }
+}
+
+// Parse AI text response into structured sections
+function parseAIResponse(text) {
+    const sectionMap = {
+        '📍 地点推荐': '📍 地点推荐',
+        '🧍 摆姿指导': '🧍 摆姿指导',
+        '💄 妆造建议': '💄 妆造建议',
+        '🎬 道具清单': '🎬 道具清单',
+        '🌤️ 天气建议': '🌤️ 天气建议',
+        '🔭 焦段推荐': '🔭 焦段推荐',
+        '⏰ 时间安排': '⏰ 时间安排',
+        '🎨 后期调色': '🎨 后期调色',
+        '⚠️ 注意事项': '⚠️ 注意事项'
+    };
+
+    const sections = [];
+    const lines = text.split('\n');
+    let currentSection = null;
+    let currentContent = [];
+
+    for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+
+        // Check if line starts with a section emoji
+        const sectionMatch = Object.keys(sectionMap).find(key => 
+            trimmed.startsWith(key) || trimmed.startsWith(key.replace(/[\u{1F300}-\u{1F9FF}]/gu, ''))
+        );
+
+        if (sectionMatch) {
+            // Save previous section
+            if (currentSection && currentContent.length > 0) {
+                sections.push({
+                    ti: sectionMap[currentSection],
+                    ic: sectionMap[currentSection].split(' ')[0],
+                    c: currentContent
+                });
+            }
+            // Start new section
+            currentSection = sectionMatch;
+            currentContent = [];
+        } else if (currentSection && (trimmed.startsWith('-') || trimmed.startsWith('•') || /^\d+[.、]/.test(trimmed))) {
+            // Content line
+            currentContent.push(trimmed.replace(/^[-•\d.、\s]+/, '').trim());
+        } else if (currentSection && trimmed.length > 5) {
+            // Plain text content
+            currentContent.push(trimmed);
+        }
+    }
+
+    // Save last section
+    if (currentSection && currentContent.length > 0) {
+        sections.push({
+            ti: sectionMap[currentSection],
+            ic: sectionMap[currentSection].split(' ')[0],
+            c: currentContent
+        });
+    }
+
+    // If parsing failed, return default sections
+    if (sections.length < 5) {
+        return baseSections.filter(s => s.ti !== '📷 器材推荐');
+    }
+
+    return sections;
 }
 
 // ===== Image Generation (Pollinations - 免费无需API Key) =====
@@ -4857,9 +5011,10 @@ async function handleSubmit(e){
     if(!input.theme&&!input.modelDesc){toast('请填写主题或模特特征','er');btn.classList.remove('btn-loading');btn.innerHTML=btnOrigHTML;return;}
     $('outEmpty').classList.remove('active'); $('outCnt').classList.remove('active'); $('outLoad').classList.add('active');
     btn.disabled=true;
-    await new Promise(r=>setTimeout(r,900));
+    await new Promise(r=>setTimeout(r,300));
     try{
-        const plan=genPlan(input);
+        toast('AI 正在生成个性化方案...', 'i');
+        const plan=await genPlan(input);
         savePlan(plan);
         currentPlanData=plan;
         $('tplSavePanel').style.display='block';
