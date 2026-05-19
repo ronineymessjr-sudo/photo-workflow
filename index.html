@@ -4172,16 +4172,102 @@ ${locationPrompt}
     }
 }
 
+// ===== OpenStreetMap 地点搜索（免费无需API Key）=====
+async function searchLocations(query, limit = 5) {
+    try {
+        // Nominatim API - 免费，每秒1次限制
+        const encodedQuery = encodeURIComponent(query);
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodedQuery}&format=json&limit=${limit}&accept-language=zh-CN`);
+        
+        if (!response.ok) throw new Error('地点搜索失败');
+        
+        const data = await response.json();
+        return data.map(item => ({
+            name: item.display_name.split(',')[0],
+            address: item.display_name,
+            lat: item.lat,
+            lon: item.lon,
+            type: item.type
+        }));
+    } catch (e) {
+        console.error('地点搜索失败:', e);
+        return [];
+    }
+}
+
+// 获取地点推荐（根据主题/场景）
+async function getLocationRecommendations(theme, scene, style) {
+    const searchQueries = [];
+    
+    // 根据场景构建搜索词
+    if (scene) {
+        if (scene.includes('海边') || theme.includes('海')) {
+            searchQueries.push('海滩', '海边公园', '滨海步道');
+        }
+        if (scene.includes('森林') || theme.includes('森')) {
+            searchQueries.push('森林公园', '植物园', '自然保护区');
+        }
+        if (scene.includes('城市') || style.includes('港风')) {
+            searchQueries.push('城市广场', '步行街', '天桥');
+        }
+        if (scene.includes('古风') || style.includes('古风')) {
+            searchQueries.push('古建筑', '园林', '古镇');
+        }
+    }
+    
+    // 根据风格补充
+    if (style.includes('复古')) {
+        searchQueries.push('老建筑', '历史街区', '复古咖啡馆');
+    }
+    if (style.includes('日系')) {
+        searchQueries.push('日式街道', '樱花公园', '日系咖啡馆');
+    }
+    
+    // 如果没有匹配到，使用通用搜索
+    if (searchQueries.length === 0) {
+        searchQueries.push('公园', '咖啡馆', '艺术区');
+    }
+    
+    // 搜索前2个关键词
+    const results = [];
+    for (const query of searchQueries.slice(0, 2)) {
+        const locations = await searchLocations(query, 2);
+        results.push(...locations);
+        // 简单节流，避免请求过快
+        await new Promise(r => setTimeout(r, 100));
+    }
+    
+    return results.slice(0, 5);
+}
+
 // 模板生成（AI失败时的降级方案）
-function generateTemplatePlan(input, matchedStyle, matchedScene) {
+async function generateTemplatePlan(input, matchedStyle, matchedScene) {
     const theme = input.theme || '摄影';
     const style = input.style || '自然';
+    const scene = input.scene || '';
+    
+    // 尝试获取真实地点推荐
+    let locationRecommendations = [];
+    try {
+        locationRecommendations = await getLocationRecommendations(theme, scene, style);
+    } catch (e) {
+        console.log('地点搜索失败，使用默认推荐');
+    }
+    
+    // 构建地点推荐内容
+    let locationContent;
+    if (locationRecommendations.length > 0) {
+        locationContent = locationRecommendations.map(loc => 
+            `${loc.name} — ${loc.address.substring(0, 30)}...`
+        );
+    } else {
+        locationContent = matchedScene 
+            ? [`${matchedScene.location} — 符合拍摄主题`, '选择有自然光线的场地', '背景简洁不杂乱', '交通便利便于器材搬运']
+            : ['根据主题选择合适的室内外场地', '考虑光线条件和背景', '确保场地允许拍摄', '提前踩点确认'];
+    }
     
     const sections = [
-        { ti: '📍 地点推荐', ic: '📍', c: matchedScene 
-            ? [`${matchedScene.location} — 符合拍摄主题`, '选择有自然光线的场地', '背景简洁不杂乱', '交通便利便于器材搬运'] 
-            : ['根据主题选择合适的室内外场地', '考虑光线条件和背景', '确保场地允许拍摄', '提前踩点确认'] 
-        },
+        { ti: '📍 地点推荐', ic: '📍', c: locationContent },
         { ti: '🧍 摆姿指导', ic: '🧍', c: matchedStyle 
             ? [`${matchedStyle.pose} — 符合${style}风格`, '与场景自然互动', '注意身体线条流畅', '表情自然放松', '多尝试不同角度'] 
             : ['根据主题设计摆姿', '与场景道具自然互动', '注意身体线条和表情', '尝试不同角度和构图'] 
