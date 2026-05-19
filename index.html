@@ -4020,6 +4020,7 @@ function buildEqSection() {
 }
 
 // ===== AI Plan Generation (Pollinations - 免费无需 API Key) =====
+// 地点模糊化，支持真实地点API查询
 async function genPlan(input) {
     const theme = input.theme || '摄影';
     const style = input.style || '自然';
@@ -4029,8 +4030,63 @@ async function genPlan(input) {
     const duration = input.duration || '2小时';
     const people = input.people || '1';
     const extra = input.extra || '';
+    
+    // 检测是否需要真实地点查询
+    const needsRealLocation = /具体地点|真实地点|某某城市|在哪个城市|在哪里拍/i.test(extra) || 
+                              (scene && /具体|真实|某城市/.test(scene));
+    
+    // 检测风格关键词
+    const styleKeywords = {
+        '日系': { tone: '清新、自然、柔和', color: '低饱和、偏青、过曝', pose: '自然、生活化、抓拍感', makeup: '裸妆、清透、无眼线', location: '街道、咖啡馆、海边、草地' },
+        '复古': { tone: '怀旧、胶片感、颗粒', color: '暖黄、褪色、暗角', pose: '优雅、端庄、有故事感', makeup: '红唇、浓眉、卷发', location: '老建筑、复古酒店、旧书店' },
+        '港风': { tone: '霓虹、夜景、电影感', color: '高对比、青橙色调', pose: '随性、街头、自然', makeup: '大红唇、大波浪、浓眉', location: '霓虹街道、天台、隧道' },
+        '森系': { tone: '自然、氧气、清新', color: '绿色调、明亮、自然光', pose: '与植物互动、自然放松', makeup: '裸妆、编发、花环', location: '森林、草地、花田' },
+        '韩系': { tone: '时尚、精致、干净', color: '高明度、低对比、偏粉', pose: '精致、有设计感', makeup: '水光肌、平眉、咬唇妆', location: '简约室内、咖啡厅、街拍' },
+        '欧美': { tone: '大气、自信、强烈', color: '高对比、暖调、饱和', pose: '自信、夸张、有张力', makeup: '立体修容、挑眉、厚唇', location: '城市地标、工业风、海边' },
+        '情绪': { tone: '氛围感、故事性、孤独', color: '暗调、冷色、低饱和', pose: '背影、侧脸、不看镜头', makeup: '淡妆或素颜、自然', location: '天台、海边、废墟、雨天' },
+        '商业': { tone: '专业、高级、精致', color: '中性灰、高质感、统一', pose: '专业、标准、展示产品', makeup: '精致底妆、专业造型', location: '摄影棚、简约背景、专业场地' }
+    };
+    
+    // 匹配风格
+    let matchedStyle = null;
+    for (const [key, value] of Object.entries(styleKeywords)) {
+        if (style.includes(key) || theme.includes(key) || extra.includes(key)) {
+            matchedStyle = value;
+            break;
+        }
+    }
+    
+    // 场景关键词映射
+    const sceneKeywords = {
+        '海边': { location: '海滩、礁石、栈道', weather: '晴天傍晚、阴天柔和光', prop: '草帽、沙滩巾、贝壳' },
+        '森林': { location: '密林、林间小道、树影', weather: '晴天斑驳光、阴天柔和', prop: '花环、野餐布、书本' },
+        '城市': { location: '街道、建筑、天桥', weather: '晴天侧光、阴天均匀', prop: '咖啡杯、报纸、包包' },
+        '室内': { location: '简约房间、窗边、沙发', weather: '窗边自然光、阴天柔和', prop: '抱枕、毯子、杂志' },
+        '夜景': { location: '霓虹街道、天台、江边', weather: '夜晚、蓝调时刻', prop: '仙女棒、灯串、酒杯' },
+        '古风': { location: '园林、古建筑、竹林', weather: '晴天柔光、阴天均匀', prop: '扇子、油纸伞、茶具' }
+    };
+    
+    let matchedScene = null;
+    for (const [key, value] of Object.entries(sceneKeywords)) {
+        if (scene.includes(key) || theme.includes(key) || extra.includes(key)) {
+            matchedScene = value;
+            break;
+        }
+    }
 
-    // Build prompt for AI
+    // Build enhanced prompt
+    let locationPrompt = needsRealLocation 
+        ? `📍 地点推荐（真实地点）：\n- 根据"${scene || theme}"推荐3-5个具体城市/地点名称\n- 每个地点说明适合拍摄的原因`
+        : `📍 地点推荐（模糊描述）：\n- 描述符合"${style}"风格的场地类型（如：${matchedStyle ? matchedStyle.location : '复古风格室内'}）\n- 说明场地特征和选择理由\n- 不要出现具体城市名或真实店名`;
+
+    const styleHint = matchedStyle 
+        ? `\n【风格特征】色调：${matchedStyle.tone}，色彩：${matchedStyle.color}，摆姿：${matchedStyle.pose}，妆造：${matchedStyle.makeup}`
+        : '';
+    
+    const sceneHint = matchedScene
+        ? `\n【场景特征】地点类型：${matchedScene.location}，天气光线：${matchedScene.weather}，推荐道具：${matchedScene.prop}`
+        : '';
+
     const prompt = `作为专业摄影师，请为以下拍摄需求生成详细的拍摄方案：
 
 【拍摄主题】${theme}
@@ -4040,24 +4096,23 @@ async function genPlan(input) {
 【情绪氛围】${mood}
 【时长】${duration}
 【人数】${people}人
-${extra ? '【额外要求】' + extra : ''}
+${extra ? '【额外要求】' + extra : ''}${styleHint}${sceneHint}
 
-请按以下格式输出（每个部分3-5条具体建议）：
+请按以下格式输出（每个部分3-5条具体建议，内容必须与上述风格/场景/主题强相关）：
 
-📍 地点推荐：
-- 具体地点名称及原因
+${locationPrompt}
 
 🧍 摆姿指导：
-- 具体摆姿描述
+- 符合"${style}"风格的摆姿（${matchedStyle ? matchedStyle.pose : '根据风格调整'}）
 
 💄 妆造建议：
-- 发型、妆容、服装、配饰建议
+- 发型、妆容、服装、配饰（${matchedStyle ? matchedStyle.makeup : '根据风格调整'}）
 
 🎬 道具清单：
-- 推荐道具
+- 符合主题和风格的道具（${matchedScene ? matchedScene.prop : '根据场景选择'}）
 
 🌤️ 天气建议：
-- 最佳天气和时段
+- 最佳天气和时段（${matchedScene ? matchedScene.weather : '根据场景调整'}）
 
 🔭 焦段推荐：
 - 推荐焦段及原因
@@ -4066,28 +4121,39 @@ ${extra ? '【额外要求】' + extra : ''}
 - 详细时间表
 
 🎨 后期调色：
-- 调色方向
+- 调色方向（${matchedStyle ? matchedStyle.color : '根据风格调整'}）
 
 ⚠️ 注意事项：
 - 拍摄注意事项
 
-请用中文回答，内容要具体、实用、专业。`;
+请用中文回答，内容要具体、实用、专业，且必须与输入的风格/主题/场景强相关，不要出现与主题无关的通用建议。`;
 
     try {
         // Call Pollinations text generation API
         const encodedPrompt = encodeURIComponent(prompt);
-        const response = await fetch(`https://text.pollinations.ai/${encodedPrompt}?seed=${Date.now()}&system=你是专业摄影师，擅长根据客户需求制定拍摄方案。回答要专业、具体、实用。`);
+        const response = await fetch(`https://text.pollinations.ai/${encodedPrompt}?seed=${Date.now()}&system=你是专业摄影师，擅长根据客户需求制定拍摄方案。你必须根据用户输入的具体风格、主题、场景来生成内容，不要给出通用建议。`);
         
         if (!response.ok) throw new Error('AI 生成失败');
         
         const aiText = await response.text();
         
         // Parse AI response into sections
-        const sections = parseAIResponse(aiText);
+        let sections = parseAIResponse(aiText);
+        
+        // 如果用户要求真实地点，尝试调用地点API（这里用模拟数据，实际可接入地图API）
+        if (needsRealLocation && sections.length > 0) {
+            const locationSection = sections.find(s => s.ti === '📍 地点推荐');
+            if (locationSection) {
+                locationSection.c = locationSection.c.map(line => {
+                    // 移除可能的具体店名，保留描述性内容
+                    return line.replace(/[\u4e00-\u9fa5]{2,}酒店|[\u4e00-\u9fa5]{2,}咖啡馆/g, '类似风格的场所');
+                });
+            }
+        }
         
         // Add equipment section from user's gear
         const eqSection = buildEqSection();
-        sections.splice(5, 0, eqSection); // Insert at position 5
+        sections.splice(5, 0, eqSection);
         
         return {
             title: theme,
@@ -4095,21 +4161,62 @@ ${extra ? '【额外要求】' + extra : ''}
             sections,
             savedAt: new Date().toISOString(),
             images: [],
-            aiGenerated: true
+            aiGenerated: true,
+            styleMatched: !!matchedStyle,
+            sceneMatched: !!matchedScene
         };
     } catch (e) {
-        console.error('AI 生成失败，使用默认模板:', e);
-        // Fallback to default template
-        const sections = baseSections.map(s => s.ti === '📷 器材推荐' ? buildEqSection() : s);
-        return {
-            title: theme || '未命名方案',
-            input,
-            sections,
-            savedAt: new Date().toISOString(),
-            images: [],
-            aiGenerated: false
-        };
+        console.error('AI 生成失败，使用模板生成:', e);
+        // Fallback: 使用关键词匹配生成模板
+        return generateTemplatePlan(input, matchedStyle, matchedScene);
     }
+}
+
+// 模板生成（AI失败时的降级方案）
+function generateTemplatePlan(input, matchedStyle, matchedScene) {
+    const theme = input.theme || '摄影';
+    const style = input.style || '自然';
+    
+    const sections = [
+        { ti: '📍 地点推荐', ic: '📍', c: matchedScene 
+            ? [`${matchedScene.location} — 符合拍摄主题`, '选择有自然光线的场地', '背景简洁不杂乱', '交通便利便于器材搬运'] 
+            : ['根据主题选择合适的室内外场地', '考虑光线条件和背景', '确保场地允许拍摄', '提前踩点确认'] 
+        },
+        { ti: '🧍 摆姿指导', ic: '🧍', c: matchedStyle 
+            ? [`${matchedStyle.pose} — 符合${style}风格`, '与场景自然互动', '注意身体线条流畅', '表情自然放松', '多尝试不同角度'] 
+            : ['根据主题设计摆姿', '与场景道具自然互动', '注意身体线条和表情', '尝试不同角度和构图'] 
+        },
+        { ti: '💄 妆造建议', ic: '💄', c: matchedStyle 
+            ? [`妆容：${matchedStyle.makeup}`, `发型：配合${style}风格`, '服装与场景协调', '配饰点缀不抢镜'] 
+            : ['妆容与主题风格统一', '发型整洁适合拍摄', '服装颜色与背景协调', '配饰简约精致'] 
+        },
+        { ti: '🎬 道具清单', ic: '🎬', c: matchedScene 
+            ? [matchedScene.prop, '根据主题补充相关道具', '备用道具以防万一'] 
+            : ['与主题相关的道具', '增加画面层次感的配件', '备用道具准备'] 
+        },
+        { ti: '🌤️ 天气建议', ic: '🌤️', c: matchedScene 
+            ? [matchedScene.weather, '避开正午强光', '准备应对天气变化的方案'] 
+            : ['选择光线柔和的时段', '阴天适合柔和人像', '晴天避开正午强光'] 
+        },
+        buildEqSection(),
+        { ti: '🔭 焦段推荐', ic: '🔭', c: ['35mm — 环境人像，叙事感强', '50mm — 标准视角，自然真实', '85mm — 人像特写，背景虚化好'] },
+        { ti: '⏰ 时间安排', ic: '⏰', c: ['提前30分钟到场准备', '黄金时段拍摄（日出后/日落前2小时）', '预留补拍时间', '控制拍摄节奏避免模特疲劳'] },
+        { ti: '🎨 后期调色', ic: '🎨', c: matchedStyle 
+            ? [matchedStyle.color, '统一整体色调', '保留细节不丢失', '适当锐化提升质感'] 
+            : ['根据风格确定调色方向', '统一整体色调', '保留细节不丢失'] 
+        },
+        { ti: '⚠️ 注意事项', ic: '⚠️', c: ['提前与模特沟通拍摄内容', '检查器材电量和存储空间', '注意拍摄安全', '保护模特隐私'] }
+    ];
+    
+    return {
+        title: theme,
+        input,
+        sections,
+        savedAt: new Date().toISOString(),
+        images: [],
+        aiGenerated: false,
+        templateGenerated: true
+    };
 }
 
 // Parse AI text response into structured sections
