@@ -2857,6 +2857,11 @@
                         <button class="btn btn-s btn-sm" onclick="addSchedule()" data-i18n="calendar.add">+ 添加日程</button>
                     </div>
                     <div class="p-body">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;">
+                            <button class="btn btn-s btn-sm" onclick="changeMonth(-1)" style="padding:.3rem .6rem;">◀</button>
+                            <span id="calendarTitle" style="font-size:.95rem;font-weight:600;color:var(--t1);"></span>
+                            <button class="btn btn-s btn-sm" onclick="changeMonth(1)" style="padding:.3rem .6rem;">▶</button>
+                        </div>
                         <div id="calendarGrid" class="calendar-grid"></div>
                     </div>
                 </div>
@@ -5377,13 +5382,35 @@ function performRedo() {
     }
 }
 
+// ===== Calendar Month Navigation =====
+var _calYear, _calMonth;
+(function() {
+    var now = new Date();
+    _calYear = now.getFullYear();
+    _calMonth = now.getMonth();
+})();
+
+function changeMonth(delta) {
+    _calMonth += delta;
+    if (_calMonth > 11) { _calMonth = 0; _calYear++; }
+    if (_calMonth < 0) { _calMonth = 11; _calYear--; }
+    renderCalendar();
+}
+
 function renderCalendar() {
     const grid = $('calendarGrid');
     if (!grid) return;
     
+    const year = _calYear;
+    const month = _calMonth;
     const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth();
+    
+    // Update title
+    const titleEl = $('calendarTitle');
+    if (titleEl) {
+        const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+        titleEl.textContent = year + '年 ' + monthNames[month];
+    }
     
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
@@ -5406,7 +5433,7 @@ function renderCalendar() {
     for (let day = 1; day <= daysInMonth; day++) {
         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const hasEvent = schedules.some(s => s.date === dateStr);
-        const isToday = day === now.getDate();
+        const isToday = day === now.getDate() && month === now.getMonth() && year === now.getFullYear();
         
         html += `<div class="calendar-day${isToday ? ' today' : ''}" onclick="showDaySchedules('${dateStr}')">
             <span class="calendar-day-num">${day}</span>
@@ -5415,7 +5442,8 @@ function renderCalendar() {
     }
     
     // Next month days
-    const remaining = 42 - (startDay + daysInMonth);
+    const totalCells = startDay + daysInMonth;
+    const remaining = totalCells <= 35 ? (35 - totalCells) : (42 - totalCells);
     for (let day = 1; day <= remaining; day++) {
         html += `<div class="calendar-day other-month"><span class="calendar-day-num">${day}</span></div>`;
     }
