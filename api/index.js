@@ -207,6 +207,61 @@ async function handlePublicMessage(body) {
   return [201, { success: true, message: data[0] }];
 }
 
+// ===== Image Generation (MiniMax API) =====
+async function handleImageGeneration(body, env) {
+  const MINIMAX_KEY = env.MINIMAX_API_KEY;
+  
+  if (!MINIMAX_KEY) {
+    return [500, { error: 'Server not configured with MiniMax API Key' }];
+  }
+
+  const prompt = body.prompt || body.prompt_text || '';
+  if (!prompt) {
+    return [400, { error: 'Missing prompt' }];
+  }
+
+  try {
+    const upstream = await fetch('https://api.minimaxi.com/v1/image_generation', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${MINIMAX_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'image-01',
+        prompt: prompt
+      })
+    });
+
+    const data = await upstream.json();
+
+    let imageUrl = null;
+    const candidates = [
+      data.image_urls?.[0],
+      data.data?.[0]?.url || data.data?.[0]?.base64,
+      data.images?.[0]?.url || data.images?.[0],
+      data.output?.url,
+      data.result?.url,
+      data.url
+    ];
+    for (const c of candidates) {
+      if (c && typeof c === 'string' && (c.startsWith('http') || c.startsWith('data:'))) {
+        imageUrl = c;
+        break;
+      }
+    }
+
+    return [200, {
+      success: !!imageUrl,
+      imageUrl: imageUrl,
+      raw: data
+    }];
+
+  } catch (e) {
+    return [500, { error: e.message }];
+  }
+}
+
 // ===== Dashboard Stats (Real-time calculation) =====
 async function handleDashboardStats(uid) {
   const now = new Date();
@@ -364,6 +419,12 @@ export default {
       // Public message submit (no auth - for portfolio)
       else if (path === '/api/messages/public' && method === 'POST') {
         result = await handlePublicMessage(body);
+      }
+      // Image Generation (MiniMax)
+      else if (path === '/api/imageGeneration' && method === 'POST') {
+        const uid = verifyToken(authHeader);
+        if (!uid) result = [401, { error: '未登录' }];
+        else result = await handleImageGeneration(body, env);
       }
       // Health
       else if (path === '/api/health') {

@@ -4824,7 +4824,7 @@ function parseAIResponse(text) {
     return sections;
 }
 
-// ===== Image Generation (Pollinations - 免费无需API Key) =====
+// ===== Image Generation (Pollinations免费版 / MiniMax高质量版) =====
 // 9种不同的拍摄角度/姿势/场景变体
 const POSE_VARIANTS = [
     { angle: '正面半身', pose: '自然站立', desc: '面对镜头，肩膀微侧' },
@@ -4838,34 +4838,75 @@ const POSE_VARIANTS = [
     { angle: '动态抓拍', pose: '自然走动', desc: '行走中抓拍，自然感' }
 ];
 
+// 检查是否使用MiniMax（已登录且是特定用户）
+function shouldUseMiniMax() {
+    const userStr = localStorage.getItem(USER_KEY);
+    if (!userStr) return false;
+    try {
+        const user = JSON.parse(userStr);
+        // 只有特定邮箱使用MiniMax，其他用户使用免费Pollinations
+        return user.email === 'your-email@example.com'; // 替换为你的邮箱
+    } catch { return false; }
+}
+
+// 使用MiniMax API生成图片（通过Cloudflare Worker）
+async function generateImageWithMiniMax(prompt) {
+    const token = localStorage.getItem(TOKEN_KEY);
+    const res = await fetch(`${API_BASE}/imageGeneration`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ prompt })
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || '生成失败');
+    return data.imageUrl;
+}
+
+// 使用Pollinations免费API生成图片
+async function generateImageWithPollinations(prompt, seed) {
+    const encodedPrompt = encodeURIComponent(prompt);
+    const imgUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&seed=${seed}&nologo=true`;
+    
+    // 预加载验证
+    await new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = imgUrl;
+        setTimeout(() => reject(new Error('超时')), 30000);
+    });
+    
+    return imgUrl;
+}
+
 async function generateImagesBatch(planId) {
     const plans = sg(SK.P) || [];
     const plan = plans.find(p => p.id === planId);
     if (!plan) { toast(i18n[currentLang]['toast.noPlan'], 'er'); return []; }
 
-    const inp = plan.input;
+    const useMiniMax = shouldUseMiniMax();
     const basePrompt = buildImagePrompt(plan);
     const results = [];
 
-    toast('开始批量生成9张参考图...', 'i');
+    toast(useMiniMax ? '使用MiniMax高质量生成...' : '开始批量生成9张参考图...', 'i');
 
     for (let i = 0; i < 9; i++) {
         const variant = POSE_VARIANTS[i];
         const prompt = `${basePrompt}，${variant.angle}，${variant.pose}，${variant.desc}`;
         
         try {
-            const encodedPrompt = encodeURIComponent(prompt);
-            const seed = Math.floor(Math.random() * 1000000) + i * 1000;
-            const imgUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&seed=${seed}&nologo=true`;
-
-            // 预加载
-            await new Promise((resolve, reject) => {
-                const img = new Image();
-                img.onload = resolve;
-                img.onerror = reject;
-                img.src = imgUrl;
-                setTimeout(() => reject(new Error('超时')), 30000);
-            });
+            let imgUrl;
+            if (useMiniMax) {
+                // MiniMax高质量版
+                imgUrl = await generateImageWithMiniMax(prompt);
+            } else {
+                // Pollinations免费版
+                const seed = Math.floor(Math.random() * 1000000) + i * 1000;
+                imgUrl = await generateImageWithPollinations(prompt, seed);
+            }
 
             results.push({ 
                 url: imgUrl, 
@@ -4876,7 +4917,7 @@ async function generateImagesBatch(planId) {
             
             toast(`已生成 ${i + 1}/9 张`, 'i');
         } catch (e) {
-            console.error(`第${i+1}张生成失败:`, e);
+            // console.error(`第${i+1}张生成失败:`, e);
         }
     }
 
