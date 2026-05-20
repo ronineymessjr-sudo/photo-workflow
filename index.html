@@ -3861,23 +3861,23 @@ function closeMsgDetail() {
 async function updateMsg(id, status) {
     try {
         await api.updateMessageStatus(id, status);
-        toast('状态已更新', 'ok');
+        toast(i18n[currentLang]['toast.statusUpdated'], 'ok');
         closeMsgDetail();
         renderMessages();
     } catch (e) {
-        toast('更新失败: ' + (e.message || e), 'er');
+        toast(i18n[currentLang]['common.error'] + ': ' + (e.message || e), 'er');
     }
 }
 
 async function deleteMsg(id) {
-    if (!confirm('确定删除此消息？')) return;
+    if (!confirm(i18n[currentLang]['confirm.deleteMsg'])) return;
     try {
         await api.deleteMessage(id);
-        toast('消息已删除', 'ok');
+        toast(i18n[currentLang]['toast.msgDeleted'], 'ok');
         closeMsgDetail();
         renderMessages();
     } catch (e) {
-        toast('删除失败: ' + (e.message || e), 'er');
+        toast(i18n[currentLang]['common.error'] + ': ' + (e.message || e), 'er');
     }
 }
 
@@ -3943,7 +3943,7 @@ window.previewRefImage = function() {
     if (url) {
         img.src = url;
         preview.style.display = 'block';
-        img.onerror = function() { preview.style.display = 'none'; toast('图片加载失败，请检查URL', 'er'); };
+        img.onerror = function() { preview.style.display = 'none'; toast(i18n[currentLang]['toast.imgLoadFail']||'Image load failed', 'er'); };
     } else {
         preview.style.display = 'none';
     }
@@ -3962,7 +3962,7 @@ window.analyzeReference = async function() {
     const style = document.getElementById('f-style').value || '通用';
     const resultEl = document.getElementById('caseRefResult');
     
-    if (!url) { toast('请先输入参考图URL', 'er'); return; }
+    if (!url) { toast(i18n[currentLang]['toast.inputRefUrl']||'Please input reference URL', 'er'); return; }
     
     resultEl.style.display = 'block';
     resultEl.innerHTML = '<div class="spinner"></div><p style="text-align:center;margin-top:.5rem">AI 正在分析图片...</p>';
@@ -4121,7 +4121,7 @@ window.applyAnalysisToForm = function(style) {
         const el = document.getElementById(id);
         if (el) el.value = val;
     });
-    toast('已应用风格到表单', 'ok');
+    toast(i18n[currentLang]['toast.applied']||'Applied', 'ok');
 };
 
 // ===== Sample Data =====
@@ -4212,13 +4212,13 @@ function renderEq() {
     $('eq-list').innerHTML=html||'<div class="eq-empty">' + (searchTerm ? '未找到匹配的设备' : '设备库为空，添加你的第一件设备') + '</div>';
     if(typeof AOS !== 'undefined') AOS.refresh();
 }
-function delEq(id){ let l=sg(SK.EQ)||[]; l=l.filter(e=>e.id!==id); ss(SK.EQ,l); renderEq(); toast('已删除'); }
+function delEq(id){ let l=sg(SK.EQ)||[]; l=l.filter(e=>e.id!==id); ss(SK.EQ,l); renderEq(); toast(i18n[currentLang]['toast.deleted']); }
 $('eqForm').addEventListener('submit',e=>{
     e.preventDefault();
     const n=$('eq-name').value.trim(),c=$('eq-cat').value,note=$('eq-note').value.trim();
-    if(!n){toast('请输入设备名称','er');return;}
+    if(!n){toast(i18n[currentLang]['toast.inputName'],'er');return;}
     const list=sg(SK.EQ)||[]; list.push({id:Date.now().toString(),n,c,note,at:new Date().toISOString()}); ss(SK.EQ,list);
-    $('eq-name').value=''; $('eq-note').value=''; renderEq(); toast('设备已添加','ok');
+    $('eq-name').value=''; $('eq-note').value=''; renderEq(); toast(i18n[currentLang]['toast.added'],'ok');
 });
 
 // ===== Venue =====
@@ -4243,15 +4243,15 @@ function renderVenue() {
         </div>`).join('');
     if(typeof AOS !== 'undefined') AOS.refresh();
 }
-function delVenue(id){ let l=sg(SK.V)||[]; l=l.filter(v=>v.id!==id); ss(SK.V,l); renderVenue(); toast('已删除'); }
-function useVenue(id){ const v=(sg(SK.V)||[]).find(x=>x.id===id); if(v){ $('f-scene').value=$('f-scene').value?$('f-scene').value+', '+v.name:v.name; toast('已引用到场景'); } }
+function delVenue(id){ let l=sg(SK.V)||[]; l=l.filter(v=>v.id!==id); ss(SK.V,l); renderVenue(); toast(i18n[currentLang]['toast.deleted']); }
+function useVenue(id){ const v=(sg(SK.V)||[]).find(x=>x.id===id); if(v){ $('f-scene').value=$('f-scene').value?$('f-scene').value+', '+v.name:v.name; toast(i18n[currentLang]['toast.quoted']||'Quoted'); } }
 $('venueForm').addEventListener('submit',e=>{
     e.preventDefault();
     const v={id:Date.now().toString(),name:$('v-name').value.trim(),addr:$('v-addr').value.trim(),styles:$('v-styles').value.trim(),contact:$('v-contact').value.trim(),note:$('v-note').value.trim()};
-    if(!v.name){toast('请输入场地名称','er');return;}
+    if(!v.name){toast(i18n[currentLang]['toast.inputName'],'er');return;}
     const list=sg(SK.V)||[]; list.push(v); ss(SK.V,list);
     ['v-name','v-addr','v-styles','v-contact','v-note'].forEach(k=>$(k).value='');
-    renderVenue(); toast('场地已添加','ok');
+    renderVenue(); toast(i18n[currentLang]['toast.added'],'ok');
 });
 
 // ===== Model =====
@@ -4270,16 +4270,16 @@ function renderModel() {
             <div class="model-actions"><button class="btn btn-s btn-sm" onclick="useModel('${m.id}')">📋 引用到方案</button></div>
         </div>`).join('');
 }
-function delModel(id){ let l=sg(SK.M)||[]; l=l.filter(m=>m.id!==id); ss(SK.M,l); renderModel(); toast('已删除'); }
-function useModel(id){ const m=(sg(SK.M)||[]).find(x=>x.id===id); if(m){ $('f-model').value=$('f-model').value?$('f-model').value+', '+m.name:m.name; toast('已引用到方案'); } }
+function delModel(id){ let l=sg(SK.M)||[]; l=l.filter(m=>m.id!==id); ss(SK.M,l); renderModel(); toast(i18n[currentLang]['toast.deleted']); }
+function useModel(id){ const m=(sg(SK.M)||[]).find(x=>x.id===id); if(m){ $('f-model').value=$('f-model').value?$('f-model').value+', '+m.name:m.name; toast(i18n[currentLang]['toast.quoted']||'Quoted'); } }
 $('modelForm').addEventListener('submit',e=>{
     e.preventDefault();
     const m={id:Date.now().toString(),name:$('m-name').value.trim(),styles:$('m-styles').value.trim(),contact:$('m-contact').value.trim(),avail:$('m-avail').value,auth:$('m-auth').value,note:$('m-note').value.trim()};
-    if(!m.name){toast('请输入模特名称','er');return;}
+    if(!m.name){toast(i18n[currentLang]['toast.inputName'],'er');return;}
     const list=sg(SK.M)||[]; list.push(m); ss(SK.M,list);
     ['m-name','m-styles','m-contact','m-note'].forEach(k=>$(k).value='');
     $('m-avail').value='available'; $('m-auth').value='pending';
-    renderModel(); toast('模特已添加','ok');
+    renderModel(); toast(i18n[currentLang]['toast.added'],'ok');
 });
 
 // ===== Templates =====
@@ -4302,12 +4302,12 @@ function renderTpl() {
             </div>
         </div>`).join('');
 }
-function delTpl(id){ let l=sg(SK.T)||[]; l=l.filter(t=>t.id!==id); ss(SK.T,l); renderTpl(); toast('已删除'); }
+function delTpl(id){ let l=sg(SK.T)||[]; l=l.filter(t=>t.id!==id); ss(SK.T,l); renderTpl(); toast(i18n[currentLang]['toast.deleted']); }
 function useTpl(id){ document.getElementById('tpl-form-'+id).classList.toggle('active'); }
 function genFromTpl(id) {
     const tpl=(sg(SK.T)||[]).find(t=>t.id===id);
     const theme=document.getElementById('tpl-theme-'+id).value.trim();
-    if(!theme){toast('请输入新主题','er');return;}
+    if(!theme){toast(i18n[currentLang]['toast.inputTheme'],'er');return;}
     const inp=tpl.input||{};
     $('f-theme').value=theme; $('f-style').value=inp.style||''; $('f-model').value=inp.modelDesc||'';
     $('f-scene').value=inp.scene||''; $('f-mood').value=inp.mood||''; $('f-dur').value=inp.duration||'2小时';
@@ -4321,13 +4321,13 @@ function genFromTpl(id) {
     $('briefForm').dispatchEvent(new Event('submit'));
 }
 function saveAsTemplate() {
-    if(!currentPlanData){toast('先生成一个方案','er');return;}
+    if(!currentPlanData){toast(i18n[currentLang]['toast.genFirst'],'er');return;}
     const name=$('tpl-name').value.trim(),desc=$('tpl-desc').value.trim();
-    if(!name){toast('请输入模板名称','er');return;}
+    if(!name){toast(i18n[currentLang]['toast.inputTplName'],'er');return;}
     const tpl={id:Date.now().toString(),name,desc,input:currentPlanData.input,sections:currentPlanData.sections,count:0,at:new Date().toISOString()};
     const list=sg(SK.T)||[]; list.push(tpl); ss(SK.T,list);
     $('tpl-name').value=''; $('tpl-desc').value='';
-    renderTpl(); toast('模板已保存','ok');
+    renderTpl(); toast(i18n[currentLang]['toast.saved'],'ok');
 }
 
 // ===== Plan Generation =====
@@ -4727,7 +4727,7 @@ const POSE_VARIANTS = [
 async function generateImagesBatch(planId) {
     const plans = sg(SK.P) || [];
     const plan = plans.find(p => p.id === planId);
-    if (!plan) { toast('方案不存在', 'er'); return []; }
+    if (!plan) { toast(i18n[currentLang]['toast.noPlan'], 'er'); return []; }
 
     const inp = plan.input;
     const basePrompt = buildImagePrompt(plan);
@@ -4777,7 +4777,7 @@ async function generateImagesBatch(planId) {
         }
         toast(`成功生成 ${results.length}/9 张参考图!`, 'ok');
     } else {
-        toast('生成失败，请重试', 'er');
+        toast(i18n[currentLang]['toast.genFailed'],'er');
     }
 
     return results;
@@ -4826,7 +4826,7 @@ function renderImageGallery(plan) {
 async function genImgForPlan(planId) {
     const plans = sg(SK.P) || [];
     const plan = plans.find(p => p.id === planId);
-    if (!plan) { toast('方案不存在','er'); return; }
+    if (!plan) { toast(i18n[currentLang]['toast.noPlan'],'er'); return; }
 
     const prompt = $(`img-prompt-${planId}`);
     const promptText = prompt ? prompt.value.trim() : '';
@@ -4858,7 +4858,7 @@ async function genImgForPlan(planId) {
             const g = $(galleryId);
             if (g) g.replaceWith(renderImageGalleryDiv(newPlan));
         }
-        toast('图片已生成','ok');
+        toast(i18n[currentLang]['toast.imgGenerated']||'Image generated','ok');
     }
 }
 
@@ -5515,7 +5515,7 @@ function delPlan(id){let ps=getPlans();ps=ps.filter(p=>p.id!==id);savePlans(ps)}
 
 function loadPlan(id){
     const plan=getPlans().find(p=>p.id===id);
-    if(!plan){toast('方案不存在','er');return;}
+    if(!plan){toast(i18n[currentLang]['toast.noPlan'],'er');return;}
     const inp=plan.input||{};
     $('f-theme').value=inp.theme||''; $('f-style').value=inp.style||''; $('f-model').value=inp.modelDesc||'';
     $('f-scene').value=inp.scene||''; $('f-mood').value=inp.mood||''; $('f-dur').value=inp.duration||'2小时';
@@ -5543,12 +5543,12 @@ async function handleSubmit(e){
     btn.classList.add('btn-loading');
     btn.innerHTML='<span class="btn-loading-icon">⟳</span> 生成中...';
     const input={theme:$('f-theme').value.trim(),style:$('f-style').value,modelDesc:$('f-model').value.trim(),scene:$('f-scene').value.trim(),mood:$('f-mood').value.trim(),duration:$('f-dur').value,people:$('f-people').value,extra:$('f-extra').value.trim()};
-    if(!input.theme&&!input.modelDesc){toast('请填写主题或模特特征','er');btn.classList.remove('btn-loading');btn.innerHTML=btnOrigHTML;return;}
+    if(!input.theme&&!input.modelDesc){toast(i18n[currentLang]['toast.fillTheme'],'er');btn.classList.remove('btn-loading');btn.innerHTML=btnOrigHTML;return;}
     $('outEmpty').classList.remove('active'); $('outCnt').classList.remove('active'); $('outLoad').classList.add('active');
     btn.disabled=true;
     await new Promise(r=>setTimeout(r,300));
     try{
-        toast('AI 正在生成个性化方案...', 'i');
+        toast(i18n[currentLang]['toast.aiGenerating'], 'i');
         const plan=await genPlan(input);
         savePlan(plan);
         currentPlanData=plan;
@@ -5560,8 +5560,8 @@ async function handleSubmit(e){
         $('btn-export-word').style.display='inline-block';
         renderHistMini(); updateBadge();
         $('outLoad').classList.remove('active'); $('outCnt').classList.add('active');
-        toast('方案已生成并保存','ok');
-    }catch(e){toast('生成失败','er');$('outLoad').classList.remove('active');$('outEmpty').classList.add('active');}
+        toast(i18n[currentLang]['toast.planSaved'],'ok');
+    }catch(e){toast(i18n[currentLang]['toast.genFailed'],'er');$('outLoad').classList.remove('active');$('outEmpty').classList.add('active');}
     finally{btn.disabled=false;btn.classList.remove('btn-loading');btn.innerHTML=btnOrigHTML;}
 }
 $('briefForm').addEventListener('submit',handleSubmit);
@@ -5675,7 +5675,7 @@ function savePlanWithImages(plan) {
                 toast('找到 ' + schedMatches.length + ' 个相关日程', 'ok');
                 showTab('calendar');
             } else {
-                toast('未找到相关内容', 'er');
+                toast(i18n[currentLang]['toast.notFound']||'Not found', 'er');
             }
         }, 300);
     });
@@ -5740,7 +5740,7 @@ function renderHistFull(){
         return`<div class="hist-item"><div class="hist-title">${p.title} ${imgCount?`<span style="font-size:.65rem;color:var(--ac);">🖼️${imgCount}</span>`:''}</div><div class="hist-meta"><span>${p.input && p.input.style||'待定'}</span><span>${d.toLocaleString()}</span></div><div class="hist-actions"><button class="btn btn-s btn-sm" onclick="loadPlan('${p.id}')">查看</button><button class="btn btn-d btn-sm" onclick="delPlan('${p.id}');renderHistFull();renderHistMini();updateBadge();">删除</button><button class="btn btn-i btn-sm" onclick="exportPlanPdf('${p.id}')">📄 PDF</button></div></div>`;
     }).join(''):'<div class="hist-empty">暂无历史记录</div>';
 }
-function clearAllHistory(){if(!confirm('确定清空全部历史？'))return;savePlans([]);renderHistFull();renderHistMini();updateBadge();toast('已清空','ok');}
+function clearAllHistory(){if(!confirm(i18n[currentLang]['confirm.clearHistory']))return;savePlans([]);renderHistFull();renderHistMini();updateBadge();toast(i18n[currentLang]['toast.deleted'],'ok');}
 function updateBadge(){$('t-eq').textContent=(sg(SK.EQ)||[]).length;$('t-venue').textContent=(sg(SK.V)||[]).length;$('t-model').textContent=(sg(SK.M)||[]).length;$('t-tpl').textContent=(sg(SK.T)||[]).length;$('t-hist').textContent=getPlans().length;}
 
 // ===== Quick Venue =====
@@ -5756,7 +5756,7 @@ function renderQuickVenue(){
 // ===== PDF Export =====
 async function exportPlanPdf(id) {
     const plan=getPlans().find(p=>p.id===id);
-    if(!plan){toast('方案不存在','er');return;}
+    if(!plan){toast(i18n[currentLang]['toast.noPlan'],'er');return;}
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     const pageW = doc.internal.pageSize.getWidth();
@@ -5777,7 +5777,7 @@ async function exportPlanPdf(id) {
         y+=3;
     });
     doc.save(`拍摄方案_${plan.title}_${new Date().toLocaleDateString().replace(/\//g,'-')}.pdf`);
-    toast('PDF 已下载','ok');
+    toast(i18n[currentLang]['toast.pdfDownloaded'],'ok');
 }
 
 // 导出当前方案的PDF
@@ -5872,13 +5872,13 @@ li{margin:8px 0;line-height:1.6;}
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    toast('Word 文档已下载','ok');
+    toast(i18n[currentLang]['toast.wordDownloaded'],'ok');
 }
 
 // 导出模特专用PDF（仅包含模特需要的信息）
 async function exportModelPdf(id) {
     const plan=getPlans().find(p=>p.id===id);
-    if(!plan){toast('方案不存在','er');return;}
+    if(!plan){toast(i18n[currentLang]['toast.noPlan'],'er');return;}
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     const pageW = doc.internal.pageSize.getWidth();
@@ -5969,14 +5969,14 @@ async function exportModelPdf(id) {
     }
     
     doc.save(`模特参考_${plan.title}_${new Date().toLocaleDateString().replace(/\//g,'-')}.pdf`);
-    toast('模特专用PDF已下载','ok');
+    toast(i18n[currentLang]['toast.modelPdfDownloaded'],'ok');
 }
 
 // ===== Copy =====
 function copyCurrentPlan(){
     if(!currentPlanData) return;
     const text=currentPlanData.sections.map(s=>`${s.ti}\n${s.c.join('\n')}`).join('\n\n');
-    navigator.clipboard.writeText(text).then(()=>toast('已复制','ok')).catch(()=>toast('复制失败','er'));
+    navigator.clipboard.writeText(text).then(()=>toast(i18n[currentLang]['toast.copiedOk'],'ok')).catch(()=>toast(i18n[currentLang]['toast.copyFail'],'er'));
 }
 
 // ===== Actions Bar =====
@@ -6007,13 +6007,13 @@ async function exportPlanDocxCurrent() {
 
 function delCurrentPlan(){
     if(!currentPlanData) return;
-    if(!confirm('确定删除当前方案？'))return;
+    if(!confirm(i18n[currentLang]['confirm.deletePlan']))return;
     delPlan(currentPlanData.id);
     currentPlanData=null;
     $('outCnt').classList.remove('active');$('outEmpty').classList.add('active');
     $('tplSavePanel').style.display='none';$('tplSaveHint').style.display='block';
     renderHistMini();renderHistFull();updateBadge();
-    toast('已删除','ok');
+    toast(i18n[currentLang]['toast.deleted'],'ok');
 }
 
 // ===== Backup =====
@@ -6027,16 +6027,16 @@ function exportData(){
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a');a.href=url;a.download=`photo_workflow_backup_${new Date().toISOString().slice(0,10)}.json`;a.click();
     URL.revokeObjectURL(url);
-    toast('备份文件已下载','ok');
+    toast(i18n[currentLang]['toast.backupDownloaded'],'ok');
 }
 function importData(){
     const file=$('importFile').files[0];
-    if(!file){toast('请先选择文件','er');return;}
+    if(!file){toast(i18n[currentLang]['toast.selectFile'],'er');return;}
     const reader=new FileReader();
     reader.onload=e=>{
         try{
             const data=JSON.parse(e.target.result);
-            if(!data.version){toast('无效的备份文件','er');return;}
+            if(!data.version){toast(i18n[currentLang]['toast.invalidBackup'],'er');return;}
             let added=0;
             if(data.plans){const ps=getPlans();data.plans.forEach(p=>{if(!ps.some(x=>x.id===p.id)){ps.push(p);added++;}});savePlans(ps);}
             if(data.equipment){const eq=sg(SK.EQ)||[];data.equipment.forEach(e=>{if(!eq.some(x=>x.id===e.id)){eq.push(e);added++;}});ss(SK.EQ,eq);}
@@ -6044,8 +6044,8 @@ function importData(){
             if(data.models){const mod=sg(SK.M)||[];data.models.forEach(m=>{if(!mod.some(x=>x.id===m.id)){mod.push(m);added++;}});ss(SK.M,mod);}
             if(data.templates){const tpl=sg(SK.T)||[];data.templates.forEach(t=>{if(!tpl.some(x=>x.id===t.id)){tpl.push(t);added++;}});ss(SK.T,tpl);}
             updateBadge();renderHistMini();renderHistFull();
-            toast(`导入成功，添加了 ${added} 条记录`,'ok');
-        }catch(err){toast('导入失败：'+err.message,'er');}
+            toast(i18n[currentLang]['toast.importSuccess'] + ` ${added}`,'ok');
+        }catch(err){toast(i18n[currentLang]['toast.importFailed'] + ': ' + err.message,'er');}
     };
     reader.readAsText(file);
 }
@@ -6156,9 +6156,9 @@ function performUndo() {
         if (state.data.plans) ss(SK_PLAN, state.data.plans);
         renderSchedules();
         renderHistMini();
-        toast('已撤销', 'ok');
+        toast(i18n[currentLang]['toast.undo']||'Undone', 'ok');
     } else {
-        toast('没有可撤销的操作', 'er');
+        toast(i18n[currentLang]['toast.noUndo']||'Nothing to undo', 'er');
     }
 }
 
@@ -6169,9 +6169,9 @@ function performRedo() {
         if (state.data.plans) ss(SK_PLAN, state.data.plans);
         renderSchedules();
         renderHistMini();
-        toast('已重做', 'ok');
+        toast(i18n[currentLang]['toast.redo']||'Redone', 'ok');
     } else {
-        toast('没有可重做的操作', 'er');
+        toast(i18n[currentLang]['toast.noRedo']||'Nothing to redo', 'er');
     }
 }
 
@@ -6307,7 +6307,7 @@ function contextMenuAction(action) {
     
     switch(action) {
         case 'edit':
-            toast('编辑功能开发中', 'ok');
+            toast(i18n[currentLang]['toast.dev']||'In development', 'ok');
             break;
         case 'duplicate':
             if (contextMenuType === 'schedule') {
@@ -6317,7 +6317,7 @@ function contextMenuAction(action) {
             }
             break;
         case 'export':
-            toast('导出功能开发中', 'ok');
+            toast(i18n[currentLang]['toast.dev']||'In development', 'ok');
             break;
         case 'delete':
             if (contextMenuType === 'schedule') {
@@ -6338,7 +6338,7 @@ function duplicateSchedule(id) {
         schedules.push(newSchedule);
         ss(SK_SCHED, schedules);
         renderSchedules();
-        toast('日程已复制', 'ok');
+        toast(i18n[currentLang]['toast.copied'], 'ok');
     }
 }
 
@@ -6350,7 +6350,7 @@ function duplicatePlan(id) {
         plans.push(newPlan);
         ss(SK_PLAN, plans);
         renderHistMini();
-        toast('方案已复制', 'ok');
+        toast(i18n[currentLang]['toast.copied'], 'ok');
     }
 }
 
@@ -6421,7 +6421,7 @@ function initDragAndDrop() {
                     
                     // 重新渲染
                     renderSchedules();
-                    toast('日程顺序已更新', 'ok');
+                    toast(i18n[currentLang]['toast.saved'], 'ok');
                 }
             }
         });
@@ -6453,11 +6453,11 @@ window.addSchedule = async function() {
     
     renderCalendar();
     renderSchedules();
-    toast('日程已添加', 'ok');
+    toast(i18n[currentLang]['toast.added'], 'ok');
 };
 
 window.deleteSchedule = async function(id) {
-    if (!confirm('确定删除此日程？')) return;
+    if (!confirm(i18n[currentLang]['confirm.deleteSchedule'])) return;
     const schedules = sg(SK_SCHED) || [];
     ss(SK_SCHED, schedules.filter(s => s.id !== id));
     
@@ -6468,7 +6468,7 @@ window.deleteSchedule = async function(id) {
     
     renderCalendar();
     renderSchedules();
-    toast('日程已删除', 'ok');
+    toast(i18n[currentLang]['toast.deleted'], 'ok');
 };
 
 window.showDaySchedules = function(dateStr) {
@@ -6488,7 +6488,7 @@ window.showDaySchedules = function(dateStr) {
                 ss(SK_SCHED, schedules);
                 renderCalendar();
                 renderSchedules();
-                toast('日程已添加', 'ok');
+                toast(i18n[currentLang]['toast.added'], 'ok');
             }
         }
     } else {
@@ -6500,11 +6500,11 @@ window.showDaySchedules = function(dateStr) {
 window.exportToFeishu = async function() {
     const schedules = sg(SK_SCHED) || [];
     if (schedules.length === 0) {
-        toast('暂无日程可导出', 'er');
+        toast(i18n[currentLang]['toast.noSchedule']||'No schedule to export', 'er');
         return;
     }
     
-    toast('正在同步到飞书日历...', 'i');
+    toast(i18n[currentLang]['toast.syncing']||'Syncing...', 'i');
     
     try {
         const result = await window.api.syncToFeishuCalendar(schedules);
@@ -6512,10 +6512,10 @@ window.exportToFeishu = async function() {
             toast(`成功同步 ${result.synced}/${result.total} 条日程到飞书`, 'ok');
             // console.log('Sync results:', result.results);
         } else {
-            toast('同步失败: ' + (result.error || '未知错误'), 'er');
+            toast(i18n[currentLang]['feishu.failed'] + ': ' + (result.error || '未知错误'), 'er');
         }
     } catch (e) {
-        toast('同步失败: ' + e.message, 'er');
+        toast(i18n[currentLang]['feishu.failed'] + ': ' + e.message, 'er');
         console.error('Feishu sync error:', e);
     }
     
@@ -6547,11 +6547,11 @@ window.syncToFeishuBitable = async function() {
     const plans = sg(SK_PLAN) || [];
     
     if (schedules.length === 0 && venues.length === 0 && models.length === 0 && plans.length === 0) {
-        toast('没有数据可同步', 'er');
+        toast(i18n[currentLang]['toast.noData']||'No data to sync', 'er');
         return;
     }
     
-    toast('正在同步到飞书多维表格...', 'i');
+    toast(i18n[currentLang]['toast.syncingBitable']||'Syncing to Bitable...', 'i');
     
     try {
         const results = {};
@@ -6618,7 +6618,7 @@ window.syncToFeishuBitable = async function() {
         // console.log('Bitable sync results:', results);
         
     } catch (e) {
-        toast('同步失败: ' + e.message, 'er');
+        toast(i18n[currentLang]['feishu.failed'] + ': ' + e.message, 'er');
         console.error('Bitable sync error:', e);
     }
 };
