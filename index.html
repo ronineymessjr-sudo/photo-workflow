@@ -1796,7 +1796,6 @@
             .hero-bg { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(4, 1fr); }
             .step-label { display: none; }
             .step-item:not(:last-child)::after { margin: 0 0.3rem; }
-        }
             .tab-cnt { padding: 1rem; }
             .grid { grid-template-columns: 1fr; }
             .col-side { display: none; }
@@ -2200,7 +2199,7 @@
         </div>
         <div id="loginLoading" style="display:none;margin-top:1.5rem;">
             <div style="width:24px;height:24px;border:2px solid var(--bd);border-top-color:var(--ac);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto;"></div>
-            <p style="font-size:.85rem;color:var(--t3);margin-top:.75rem;">正在登录...</p>
+            <p style="font-size:.85rem;color:var(--t3);margin-top:.75rem;" data-i18n="common.loading">正在登录...</p>
         </div>
         <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
     </div>
@@ -2211,25 +2210,25 @@
     <div style="text-align:center;max-width:600px;padding:2rem;">
         <div style="margin-bottom:2rem;">
             <span class="brand-dot" style="display:inline-block;width:16px;height:16px;margin-bottom:1rem;"></span>
-            <h1 style="font-family:var(--font-serif);font-size:2.5rem;font-weight:600;letter-spacing:-0.03em;margin-bottom:.5rem;">欢迎回来</h1>
+            <h1 style="font-family:var(--font-serif);font-size:2.5rem;font-weight:600;letter-spacing:-0.03em;margin-bottom:.5rem;" data-i18n="role.title">欢迎回来</h1>
             <p style="color:var(--t2);font-size:.95rem;" id="welcomeEmail"></p>
         </div>
-        <p style="color:var(--t3);font-size:.85rem;margin-bottom:2rem;">选择你的身份，开始创作</p>
+        <p style="color:var(--t3);font-size:.85rem;margin-bottom:2rem;" data-i18n="role.subtitle">选择你的身份，开始创作</p>
         <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
             <button onclick="enterApp('photographer')" style="display:flex;flex-direction:column;align-items:center;gap:.75rem;padding:1.5rem 2rem;background:var(--bg3);border:1px solid var(--bd);border-radius:var(--radius);color:var(--t1);cursor:pointer;transition:all .3s;min-width:140px;font-family:inherit;" onmouseover="this.style.borderColor='var(--ac)';this.style.transform='translateY(-4px)'" onmouseout="this.style.borderColor='var(--bd)';this.style.transform='none'">
                 <i data-lucide="camera" style="width:2.5rem;height:2.5rem;stroke-width:1.5;"></i>
-                <span style="font-size:.9rem;font-weight:500;">摄影师</span>
+                <span style="font-size:.9rem;font-weight:500;" data-i18n="role.photographer">摄影师</span>
             </button>
             <button onclick="enterApp('model')" style="display:flex;flex-direction:column;align-items:center;gap:.75rem;padding:1.5rem 2rem;background:var(--bg3);border:1px solid var(--bd);border-radius:var(--radius);color:var(--t1);cursor:pointer;transition:all .3s;min-width:140px;font-family:inherit;" onmouseover="this.style.borderColor='rgba(78,205,196,0.4)';this.style.transform='translateY(-4px)'" onmouseout="this.style.borderColor='var(--bd)';this.style.transform='none'">
                 <i data-lucide="sparkles" style="width:2.5rem;height:2.5rem;stroke-width:1.5;"></i>
-                <span style="font-size:.9rem;font-weight:500;">模特</span>
+                <span style="font-size:.9rem;font-weight:500;" data-i18n="role.model">模特</span>
             </button>
             <button onclick="enterApp('assistant')" style="display:flex;flex-direction:column;align-items:center;gap:.75rem;padding:1.5rem 2rem;background:var(--bg3);border:1px solid var(--bd);border-radius:var(--radius);color:var(--t1);cursor:pointer;transition:all .3s;min-width:140px;font-family:inherit;" onmouseover="this.style.borderColor='rgba(255,255,255,0.2)';this.style.transform='translateY(-4px)'" onmouseout="this.style.borderColor='var(--bd)';this.style.transform='none'">
                 <i data-lucide="wrench" style="width:2.5rem;height:2.5rem;stroke-width:1.5;"></i>
-                <span style="font-size:.9rem;font-weight:500;">助理</span>
+                <span style="font-size:.9rem;font-weight:500;" data-i18n="role.assistant">助理</span>
             </button>
         </div>
-        <button onclick="logout()" style="margin-top:2rem;background:none;border:none;color:var(--t3);font-size:.8rem;cursor:pointer;">退出登录</button>
+        <button onclick="logout()" style="margin-top:2rem;background:none;border:none;color:var(--t3);font-size:.8rem;cursor:pointer;" data-i18n="role.logout">退出登录</button>
     </div>
 </div>
 
@@ -2286,21 +2285,21 @@
 
         <!-- Quick Actions Bar -->
         <div class="quick-actions" style="display:flex;gap:.5rem;margin:1.5rem 1.5rem 0 1.5rem;padding:.75rem 1rem;background:var(--bg3);border-radius:12px;border:1px solid var(--bd);">
-            <button class="btn btn-s btn-sm" onclick="showTab('gen')" style="display:flex;align-items:center;gap:.4rem;">
+            <button class="btn btn-s btn-sm" onclick="showTab('gen')" style="display:flex;align-items:center;gap:.4rem;" data-i18n="quick.newPlan">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg>
                 新建方案
             </button>
-            <button class="btn btn-s btn-sm" onclick="showTab('calendar')" style="display:flex;align-items:center;gap:.4rem;">
+            <button class="btn btn-s btn-sm" onclick="showTab('calendar')" style="display:flex;align-items:center;gap:.4rem;" data-i18n="quick.addSchedule">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
                 添加日程
             </button>
-            <button class="btn btn-s btn-sm" onclick="syncToFeishuBitable()" style="display:flex;align-items:center;gap:.4rem;">
+            <button class="btn btn-s btn-sm" onclick="syncToFeishuBitable()" style="display:flex;align-items:center;gap:.4rem;" data-i18n="quick.syncFeishu">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                 同步飞书
             </button>
             <div style="flex:1"></div>
             <div class="search-box" style="position:relative;">
-                <input type="text" id="globalSearch" placeholder="搜索方案、日程..." style="padding:.4rem .75rem .4rem 2rem;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;color:var(--t1);font-size:.8rem;width:180px;">
+                <input type="text" id="globalSearch" data-i18n-placeholder="quick.search" placeholder="搜索方案、日程..." style="padding:.4rem .75rem .4rem 2rem;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;color:var(--t1);font-size:.8rem;width:180px;">
                 <svg style="position:absolute;left:.5rem;top:50%;transform:translateY(-50%);color:var(--t3);" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             </div>
         </div>
@@ -3000,7 +2999,6 @@ const i18n = {
         'dashboard.messages': '消息咨询',
         'dashboard.trend': '拍摄趋势',
         'dashboard.venues': '热门场地',
-        'dashboard.equipment': '设备使用',
         'dashboard.analysis': '客户分析',
         'dashboard.noData': '暂无数据',
         'message.title': '消息看板',
@@ -3061,7 +3059,60 @@ const i18n = {
         'export.success': '导出成功',
         'export.failed': '导出失败',
         'toast.newMessage': '📬 收到新消息',
-        'toast.copied': '已复制到剪贴板'
+        'toast.copied': '已复制到剪贴板',
+        'theme.auto': '自动', 'theme.dark': '暗色', 'theme.light': '亮色', 'theme.sunrise': '日出', 'theme.sunset': '日落',
+        'action.copy': '📋 复制', 'action.delete': '🗑️ 删除', 'action.batchGen': '🎨 批量生成9张',
+        'toast.genFirst': '先生成方案', 'toast.noPlan': '方案不存在', 'toast.deleted': '已删除',
+        'toast.added': '已添加', 'toast.saved': '已保存', 'toast.copiedOk': '已复制', 'toast.copyFail': '复制失败',
+        'toast.inputName': '请输入名称', 'toast.inputTheme': '请输入新主题', 'toast.inputTplName': '请输入模板名称',
+        'toast.fillTheme': '请填写主题或模特特征', 'toast.aiGenerating': 'AI 正在生成个性化方案...',
+        'toast.planSaved': '方案已生成并保存', 'toast.genFailed': '生成失败',
+        'toast.pdfDownloaded': 'PDF 已下载', 'toast.wordDownloaded': 'Word 文档已下载', 'toast.modelPdfDownloaded': '模特专用PDF已下载',
+        'toast.backupDownloaded': '备份文件已下载', 'toast.importSuccess': '导入成功', 'toast.importFailed': '导入失败',
+        'toast.selectFile': '请先选择文件', 'toast.invalidBackup': '无效的备份文件',
+        'toast.statusUpdated': '状态已更新', 'toast.msgDeleted': '消息已删除',
+        'confirm.deleteMsg': '确定删除此消息？', 'confirm.deletePlan': '确定删除当前方案？', 'confirm.clearHistory': '确定清空全部历史？',
+        'confirm.deleteSchedule': '确定删除此日程？', 'confirm.noSchedule': '暂无日程，是否添加？',
+        'prompt.scheduleDate': '拍摄日期 (YYYY-MM-DD):', 'prompt.scheduleTheme': '拍摄主题:', 'prompt.scheduleTime': '拍摄时间 (HH:MM):', 'prompt.scheduleLocation': '拍摄地点:',
+        'calendar.noSchedule': '暂无拍摄日程',
+        'plan.style': '风格', 'plan.duration': '时长', 'plan.people': '人数', 'plan.unit': '人', 'plan.tbd': '待定',
+        'plan.prefix': '拍摄方案_', 'plan.items': '条', 'plan.planItems': '条方案', 'plan.noHistory': '暂无历史',
+        'plan.noHistory2': '暂无历史记录',
+        'msg.statusNew': '新消息', 'msg.statusPending': '处理中', 'msg.statusCompleted': '已完成',
+        'msg.newMsgs': '收到新消息', 'msg.newConsult': '条新的客户咨询',
+        'msg.email': '邮箱', 'msg.phone': '电话', 'msg.service': '服务类型', 'msg.time': '时间', 'msg.message': '留言', 'msg.none': '无',
+        'msg.markPending': '标记处理中', 'msg.markCompleted': '标记完成', 'msg.consultOf': '的咨询',
+        'login.inputBoth': '请输入邮箱和密码', 'login.success': '登录成功', 'login.failed': '登录失败', 'login.networkError': '网络错误: ',
+        'role.title': '欢迎回来', 'role.subtitle': '选择你的身份，开始创作', 'role.photographer': '摄影师', 'role.model': '模特', 'role.assistant': '助理', 'role.logout': '退出登录',
+        'quick.newPlan': '新建方案', 'quick.addSchedule': '添加日程', 'quick.syncFeishu': '同步飞书', 'quick.search': '搜索方案、日程...',
+        'gen.stepLabel1': '基本信息', 'gen.stepLabel2': '详细描述', 'gen.stepLabel3': '附加要求',
+        'gen.refImages': '参考图片', 'gen.uploadHint': '点击或拖拽上传图片', 'gen.uploadFormat': '支持 JPG、PNG、WebP',
+        'gen.caseRef': '案例参考', 'gen.caseRefPlaceholder': '粘贴参考图 URL...',
+        'gen.aiAnalysis': 'AI 分析', 'gen.clear': '清除',
+        'gen.quickVenue': '快速场地', 'gen.proTools': '专业工具',
+        'gen.shotList': '拍摄清单',
+        'gen.planTitle': '拍摄方案', 'gen.fillToGen': '填写需求，点击生成方案', 'gen.generating': '正在生成...',
+        'gen.recentPlans': '最近方案',
+        'gen.modelComm': '模特沟通话术', 'gen.opening': '开场破冰', 'gen.guideTips': '万能引导话术', 'gen.emotionGuide': '情绪调动', 'gen.taboo': '禁忌用语（绝对避免）',
+        'gen.colorPlan': '调色方案', 'gen.recommendLUT': '推荐 LUT', 'gen.lrPreset': 'Lightroom 预设', 'gen.colorIdea': '仿色思路',
+        'gen.mainTone': '主色调', 'gen.contrast': '对比度', 'gen.saturation': '饱和度', 'gen.highlight': '高光', 'gen.shadow': '阴影', 'gen.colorTemp': '色温', 'gen.tint': '色调',
+        'equip.title': '添加设备', 'equip.name': '设备名称', 'equip.category': '分类', 'equip.note': '备注', 'equip.addBtn': '+ 添加设备',
+        'equip.quickAdd': '快速添加', 'equip.addAll': '+ 一键添加全部示例', 'equip.addOnly': '+ 仅设备',
+        'equip.myEquip': '我的设备', 'equip.search': '搜索设备...',
+        'venue.addTitle': '添加场地', 'venue.nameField': '场地名称', 'venue.address': '地址', 'venue.style': '适合风格', 'venue.contact': '联系方式', 'venue.noteField': '备注', 'venue.addBtn': '+ 添加场地',
+        'venue.list': '场地列表', 'venue.search': '搜索场地...', 'venue.empty': '场地库为空',
+        'model.addTitle': '添加模特', 'model.nameField': '模特名称/代号', 'model.styleTag': '风格标签', 'model.contactField': '联系方式', 'model.schedule': '档期状态', 'model.portraitAuth': '肖像授权', 'model.noteField': '备注', 'model.addBtn': '+ 添加模特',
+        'model.list': '模特列表',
+        'tpl.saveTitle': '保存当前方案为模板', 'tpl.nameField': '模板名称', 'tpl.descField': '模板描述', 'tpl.saveBtn': '保存为模板', 'tpl.genFirst': '先生成一个方案，即可保存为模板',
+        'tpl.title': '方案模板', 'tpl.allHistory': '全部历史方案', 'tpl.clearAll': '清空全部',
+        'setting.exportTitle': '导出数据', 'setting.exportDesc': '将所有数据导出为 JSON...', 'setting.includes': '包含：', 'setting.exportBtn': '导出 JSON 备份',
+        'setting.importTitle': '导入数据', 'setting.importDesc': '从 JSON 备份文件恢复数据...', 'setting.importBtn': '导入数据',
+        'setting.backupInfo': '个方案，', 'setting.equipInfo': '件设备，', 'setting.venueInfo': '个场地，', 'setting.modelInfo': '位模特，', 'setting.tplInfo': '个模板',
+        'calendar.todo': '待办事项', 'calendar.syncBitable': '同步到多维表格',
+        'dashboard.msgCount': '消息咨询', 'dashboard.trendChart': '拍摄趋势', 'dashboard.venueChart': '热门场地',
+        'dashboard.analysisTitle': '客户分析', 'dashboard.totalShoots': '总拍摄次数', 'dashboard.completed': '已完成', 'dashboard.venueCount': '拍摄场地数',
+        'shortcut.title': '键盘快捷键',
+        'ctx.edit': '编辑', 'ctx.copy': '复制', 'ctx.export': '导出', 'ctx.delete': '删除'
     },
     en: {
         'nav.gen': 'Plan Gen',
@@ -3187,7 +3238,60 @@ const i18n = {
         'export.success': 'Export successful',
         'export.failed': 'Export failed',
         'toast.newMessage': '📬 New message received',
-        'toast.copied': 'Copied to clipboard'
+        'toast.copied': 'Copied to clipboard',
+        'theme.auto': 'Auto', 'theme.dark': 'Dark', 'theme.light': 'Light', 'theme.sunrise': 'Sunrise', 'theme.sunset': 'Sunset',
+        'action.copy': '📋 Copy', 'action.delete': '🗑️ Delete', 'action.batchGen': '🎨 Batch Generate 9',
+        'toast.genFirst': 'Generate a plan first', 'toast.noPlan': 'Plan not found', 'toast.deleted': 'Deleted',
+        'toast.added': 'Added', 'toast.saved': 'Saved', 'toast.copiedOk': 'Copied', 'toast.copyFail': 'Copy failed',
+        'toast.inputName': 'Please enter a name', 'toast.inputTheme': 'Please enter a new theme', 'toast.inputTplName': 'Please enter a template name',
+        'toast.fillTheme': 'Please fill in theme or model features', 'toast.aiGenerating': 'AI is generating personalized plan...',
+        'toast.planSaved': 'Plan generated and saved', 'toast.genFailed': 'Generation failed',
+        'toast.pdfDownloaded': 'PDF downloaded', 'toast.wordDownloaded': 'Word document downloaded', 'toast.modelPdfDownloaded': 'Model PDF downloaded',
+        'toast.backupDownloaded': 'Backup downloaded', 'toast.importSuccess': 'Import successful', 'toast.importFailed': 'Import failed',
+        'toast.selectFile': 'Please select a file first', 'toast.invalidBackup': 'Invalid backup file',
+        'toast.statusUpdated': 'Status updated', 'toast.msgDeleted': 'Message deleted',
+        'confirm.deleteMsg': 'Delete this message?', 'confirm.deletePlan': 'Delete current plan?', 'confirm.clearHistory': 'Clear all history?',
+        'confirm.deleteSchedule': 'Delete this schedule?', 'confirm.noSchedule': 'No schedules. Add one?',
+        'prompt.scheduleDate': 'Shoot Date (YYYY-MM-DD):', 'prompt.scheduleTheme': 'Shoot Theme:', 'prompt.scheduleTime': 'Shoot Time (HH:MM):', 'prompt.scheduleLocation': 'Shoot Location:',
+        'calendar.noSchedule': 'No schedules',
+        'plan.style': 'Style', 'plan.duration': 'Duration', 'plan.people': 'People', 'plan.unit': '', 'plan.tbd': 'TBD',
+        'plan.prefix': 'Plan_', 'plan.items': '', 'plan.planItems': ' plans', 'plan.noHistory': 'No history',
+        'plan.noHistory2': 'No history',
+        'msg.statusNew': 'New', 'msg.statusPending': 'Pending', 'msg.statusCompleted': 'Completed',
+        'msg.newMsgs': 'New messages', 'msg.newConsult': ' new inquiries',
+        'msg.email': 'Email', 'msg.phone': 'Phone', 'msg.service': 'Service', 'msg.time': 'Time', 'msg.message': 'Message', 'msg.none': 'None',
+        'msg.markPending': 'Mark Pending', 'msg.markCompleted': 'Mark Completed', 'msg.consultOf': ' inquiry',
+        'login.inputBoth': 'Please enter email and password', 'login.success': 'Login successful', 'login.failed': 'Login failed', 'login.networkError': 'Network error: ',
+        'role.title': 'Welcome Back', 'role.subtitle': 'Choose your role to start creating', 'role.photographer': 'Photographer', 'role.model': 'Model', 'role.assistant': 'Assistant', 'role.logout': 'Sign Out',
+        'quick.newPlan': 'New Plan', 'quick.addSchedule': 'Add Schedule', 'quick.syncFeishu': 'Sync Feishu', 'quick.search': 'Search plans, schedules...',
+        'gen.stepLabel1': 'Basic Info', 'gen.stepLabel2': 'Details', 'gen.stepLabel3': 'Extras',
+        'gen.refImages': 'Reference Images', 'gen.uploadHint': 'Click or drag to upload', 'gen.uploadFormat': 'Supports JPG, PNG, WebP',
+        'gen.caseRef': 'Case Reference', 'gen.caseRefPlaceholder': 'Paste reference image URL...',
+        'gen.aiAnalysis': 'AI Analysis', 'gen.clear': 'Clear',
+        'gen.quickVenue': 'Quick Venue', 'gen.proTools': 'Pro Tools',
+        'gen.shotList': 'Shot List',
+        'gen.planTitle': 'Shoot Plan', 'gen.fillToGen': 'Fill in requirements, click generate', 'gen.generating': 'Generating...',
+        'gen.recentPlans': 'Recent Plans',
+        'gen.modelComm': 'Model Communication', 'gen.opening': 'Ice Breaker', 'gen.guideTips': 'Universal Guide', 'gen.emotionGuide': 'Emotion Guide', 'gen.taboo': 'Taboo Words (Avoid)',
+        'gen.colorPlan': 'Color Grading', 'gen.recommendLUT': 'Recommended LUT', 'gen.lrPreset': 'Lightroom Preset', 'gen.colorIdea': 'Color Idea',
+        'gen.mainTone': 'Main Tone', 'gen.contrast': 'Contrast', 'gen.saturation': 'Saturation', 'gen.highlight': 'Highlight', 'gen.shadow': 'Shadow', 'gen.colorTemp': 'Temperature', 'gen.tint': 'Tint',
+        'equip.title': 'Add Equipment', 'equip.name': 'Equipment Name', 'equip.category': 'Category', 'equip.note': 'Note', 'equip.addBtn': '+ Add Equipment',
+        'equip.quickAdd': 'Quick Add', 'equip.addAll': '+ Add All Examples', 'equip.addOnly': '+ Equipment Only',
+        'equip.myEquip': 'My Equipment', 'equip.search': 'Search equipment...',
+        'venue.addTitle': 'Add Venue', 'venue.nameField': 'Venue Name', 'venue.address': 'Address', 'venue.style': 'Suitable Style', 'venue.contact': 'Contact', 'venue.noteField': 'Note', 'venue.addBtn': '+ Add Venue',
+        'venue.list': 'Venue List', 'venue.search': 'Search venues...', 'venue.empty': 'No venues',
+        'model.addTitle': 'Add Model', 'model.nameField': 'Model Name/Alias', 'model.styleTag': 'Style Tags', 'model.contactField': 'Contact', 'model.schedule': 'Availability', 'model.portraitAuth': 'Portrait Release', 'model.noteField': 'Note', 'model.addBtn': '+ Add Model',
+        'model.list': 'Model List',
+        'tpl.saveTitle': 'Save Current Plan as Template', 'tpl.nameField': 'Template Name', 'tpl.descField': 'Description', 'tpl.saveBtn': 'Save as Template', 'tpl.genFirst': 'Generate a plan first to save as template',
+        'tpl.title': 'Plan Templates', 'tpl.allHistory': 'All Plans', 'tpl.clearAll': 'Clear All',
+        'setting.exportTitle': 'Export Data', 'setting.exportDesc': 'Export all data as JSON...', 'setting.includes': 'Includes: ', 'setting.exportBtn': 'Export JSON Backup',
+        'setting.importTitle': 'Import Data', 'setting.importDesc': 'Restore from JSON backup...', 'setting.importBtn': 'Import Data',
+        'setting.backupInfo': ' plans, ', 'setting.equipInfo': ' equipment, ', 'setting.venueInfo': ' venues, ', 'setting.modelInfo': ' models, ', 'setting.tplInfo': ' templates',
+        'calendar.todo': 'To-Do', 'calendar.syncBitable': 'Sync to Bitable',
+        'dashboard.msgCount': 'Messages', 'dashboard.trendChart': 'Shoot Trends', 'dashboard.venueChart': 'Top Venues',
+        'dashboard.analysisTitle': 'Client Analysis', 'dashboard.totalShoots': 'Total Shoots', 'dashboard.completed': 'Completed', 'dashboard.venueCount': 'Venues',
+        'shortcut.title': 'Keyboard Shortcuts',
+        'ctx.edit': 'Edit', 'ctx.copy': 'Copy', 'ctx.export': 'Export', 'ctx.delete': 'Delete'
     }
 };
 
@@ -3265,7 +3369,7 @@ if (document.getElementById('loginOverlay')) {
 // ===== Theme System =====
 (function() {
     const THEMES = ['auto', 'dark', 'light', 'sunrise', 'sunset'];
-    const THEME_LABELS = { auto: '自动', dark: '暗色', light: '亮色', sunrise: '日出', sunset: '日落' };
+    const THEME_LABELS = { auto: 'theme.auto', dark: 'theme.dark', light: 'theme.light', sunrise: 'theme.sunrise', sunset: 'theme.sunset' };
     const THEME_ICONS = {
         auto: '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>',
         dark: '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',
@@ -3290,7 +3394,7 @@ if (document.getElementById('loginOverlay')) {
         // Update button
         const label = document.getElementById('themeLabel');
         const icon = document.getElementById('themeIcon');
-        if (label) label.textContent = THEME_LABELS[theme];
+        if (label) label.textContent = i18n[currentLang][THEME_LABELS[theme]] || THEME_LABELS[theme];
         if (icon) icon.innerHTML = THEME_ICONS[theme];
     }
     
@@ -3349,7 +3453,7 @@ if (document.getElementById('loginOverlay')) {
     window.handleLogin = async function() {
         const email = document.getElementById('loginEmail').value.trim();
         const password = document.getElementById('loginPassword').value;
-        if (!email || !password) { toast('请输入邮箱和密码', 'er'); return; }
+        if (!email || !password) { toast(i18n[currentLang]['login.inputBoth'], 'er'); return; }
 
         document.getElementById('loginForm').style.display = 'none';
         document.getElementById('loginLoading').style.display = 'block';
@@ -3361,14 +3465,14 @@ if (document.getElementById('loginOverlay')) {
                 localStorage.setItem(USER_KEY, JSON.stringify(res.user));
                 document.getElementById('welcomeEmail').textContent = res.user.email;
                 showRoleSelector();
-                toast('登录成功', 'ok');
+                toast(i18n[currentLang]['login.success'], 'ok');
             } else {
-                toast(res.error || '登录失败', 'er');
+                toast(res.error || i18n[currentLang]['login.failed'], 'er');
                 document.getElementById('loginForm').style.display = 'block';
                 document.getElementById('loginLoading').style.display = 'none';
             }
         } catch (e) {
-            toast('网络错误: ' + e.message, 'er');
+            toast(i18n[currentLang]['login.networkError'] + e.message, 'er');
             document.getElementById('loginForm').style.display = 'block';
             document.getElementById('loginLoading').style.display = 'none';
         }
@@ -3490,7 +3594,7 @@ document.addEventListener('keydown', function(e) {
                 renderCalendar();
                 renderSchedules();
             }
-        } catch (e) { console.log('Sync error:', e); }
+        } catch (e) { // console.log('Sync error:', e); }
     }
 
     // Check auth state on load (with error handling for mobile browsers)
@@ -3500,7 +3604,7 @@ document.addEventListener('keydown', function(e) {
         user = localStorage.getItem(USER_KEY);
         role = localStorage.getItem(ROLE_KEY);
     } catch (e) {
-        console.log('localStorage not available, using session mode');
+        // console.log('localStorage not available, using session mode');
     }
 
     if (token && user) {
@@ -3615,7 +3719,7 @@ function renderMessages() {
         updateMsgStats();
         filterMessages(_msgFilter);
     }).catch(function(e) {
-        console.log('Messages load error:', e);
+        // console.log('Messages load error:', e);
         _msgCache = [];
         updateMsgStats();
         filterMessages(_msgFilter);
@@ -4486,7 +4590,7 @@ async function generateTemplatePlan(input, matchedStyle, matchedScene) {
     try {
         locationRecommendations = await getLocationRecommendations(theme, scene, style);
     } catch (e) {
-        console.log('地点搜索失败，使用默认推荐');
+        // console.log('地点搜索失败，使用默认推荐');
     }
     
     // 构建地点推荐内容
@@ -5858,7 +5962,7 @@ async function exportModelPdf(id) {
                     doc.text(img.variant.pose, x + imgSize/2, imgY + imgSize + 4, {align:'center'});
                 }
             } catch(e) {
-                console.log('图片添加失败', e);
+                // console.log('图片添加失败', e);
             }
             col++;
         }
@@ -5893,8 +5997,12 @@ async function exportModelPdfCurrent() {
 }
 
 async function exportPlanPdfCurrent() {
-    if(!currentPlanData){toast('先生成方案','er');return;}
+    if(!currentPlanData){toast(i18n[currentLang]['gen.noai']||'先生成方案','er');return;}
     await exportPlanPdf(currentPlanData.id);
+}
+async function exportPlanDocxCurrent() {
+    if(!currentPlanData){toast(i18n[currentLang]['gen.noai']||'先生成方案','er');return;}
+    await exportPlanWord();
 }
 
 function delCurrentPlan(){
@@ -6341,7 +6449,7 @@ window.addSchedule = async function() {
     // Sync to server
     try {
         await window.api.createSchedule(newSchedule);
-    } catch (e) { console.log('Server sync failed:', e); }
+    } catch (e) { // console.log('Server sync failed:', e); }
     
     renderCalendar();
     renderSchedules();
@@ -6356,7 +6464,7 @@ window.deleteSchedule = async function(id) {
     // Delete from server
     try {
         await window.api.deleteSchedule(id);
-    } catch (e) { console.log('Server delete failed:', e); }
+    } catch (e) { // console.log('Server delete failed:', e); }
     
     renderCalendar();
     renderSchedules();
@@ -6402,7 +6510,7 @@ window.exportToFeishu = async function() {
         const result = await window.api.syncToFeishuCalendar(schedules);
         if (result.success) {
             toast(`成功同步 ${result.synced}/${result.total} 条日程到飞书`, 'ok');
-            console.log('Sync results:', result.results);
+            // console.log('Sync results:', result.results);
         } else {
             toast('同步失败: ' + (result.error || '未知错误'), 'er');
         }
@@ -6507,7 +6615,7 @@ window.syncToFeishuBitable = async function() {
         }
         
         toast(`同步完成: ${totalSynced} 成功, ${totalFailed} 失败`, totalFailed > 0 ? 'er' : 'ok');
-        console.log('Bitable sync results:', results);
+        // console.log('Bitable sync results:', results);
         
     } catch (e) {
         toast('同步失败: ' + e.message, 'er');
