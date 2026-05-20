@@ -812,6 +812,25 @@
             filter: brightness(1.08);
         }
         .btn-p:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+        /* Loading state for generate button */
+        .btn-p.btn-loading {
+            background: linear-gradient(90deg, var(--ac) 0%, var(--ach) 50%, var(--ac) 100%);
+            background-size: 200% 100%;
+            animation: btn-gradient-shift 1.5s ease infinite, btn-pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes btn-gradient-shift {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+        @keyframes btn-pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 4px 16px var(--ac-glow); }
+            50% { transform: scale(1.02); box-shadow: 0 8px 32px var(--ac-glow); }
+        }
+        .btn-p.btn-loading .btn-loading-icon {
+            display: inline-block;
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
+        }
         .btn-s { 
             background: var(--bg3); 
             color: var(--t2); 
@@ -831,6 +850,14 @@
         .btn-xs { padding: .28rem .6rem; font-size: .7rem; }
         .btn-i2 { padding: .35rem; background: transparent; border: none; color: var(--t3); cursor: pointer; border-radius: 8px; transition: all 200ms ease; }
         .btn-i2:hover { background: var(--ac-glow); color: var(--ac); }
+        /* Form validation styles */
+        .input-error { border-color: #ff4757 !important; box-shadow: 0 0 0 3px rgba(255, 71, 87, 0.15); animation: shake 0.5s ease-in-out; }
+        .input-error:focus { border-color: #ff4757; box-shadow: 0 0 0 3px rgba(255, 71, 87, 0.25); }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+            20%, 40%, 60%, 80% { transform: translateX(4px); }
+        }
         .btn-i2::before { display: none; }
         .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; }
 
@@ -842,9 +869,14 @@
         .output-cnt.active { display: block; }
         .output-load { display: none; flex-direction: column; align-items: center; justify-content: center; min-height: 320px; }
         .output-load.active { display: flex; }
-        .spinner { width: 28px; height: 28px; border: 3px solid var(--bd); border-top-color: var(--ac); border-radius: 50%; animation: s 1s linear infinite; margin-bottom: .8rem; }
+        .spinner { width: 36px; height: 36px; border: 3px solid var(--bd); border-top-color: var(--ac); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 1rem; position: relative; }
+        .spinner::after { content: ''; position: absolute; inset: 4px; border: 2px solid transparent; border-bottom-color: var(--ac2); border-radius: 50%; animation: spin-reverse 0.8s linear infinite; }
         @keyframes s { to { transform: rotate(360deg); } }
-        .output-load p { color: var(--t2); font-size: .85rem; }
+        .output-load p { color: var(--t2); font-size: .9rem; font-weight: 500; }
+        /* Loading progress bar */
+        .output-load::after { content: ''; position: absolute; bottom: 30%; left: 10%; right: 10%; height: 3px; background: var(--bd); border-radius: 2px; overflow: hidden; }
+        .output-load.active::after { animation: load-progress 3s ease-in-out infinite; }
+        @keyframes load-progress { 0% { transform: scaleX(0); transform-origin: left; } 50% { transform: scaleX(0.7); } 100% { transform: scaleX(1); transform-origin: left; opacity: 0; } }
 
         /* ===== Case Reference ===== */
         .case-ref { margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--bd); }
@@ -5625,12 +5657,24 @@ async function handleSubmit(e){
     btn.classList.add('btn-loading');
     btn.innerHTML='<span class="btn-loading-icon">⟳</span> 生成中...';
     const input={theme:$('f-theme').value.trim(),style:$('f-style').value,modelDesc:$('f-model').value.trim(),scene:$('f-scene').value.trim(),mood:$('f-mood').value.trim(),duration:$('f-dur').value,people:$('f-people').value,extra:$('f-extra').value.trim()};
-    if(!input.theme&&!input.modelDesc){toast(i18n[currentLang]['toast.fillTheme'],'er');btn.classList.remove('btn-loading');btn.innerHTML=btnOrigHTML;return;}
+    // Clear previous error states
+    ['f-theme','f-model'].forEach(id=>$(id).classList.remove('input-error'));
+    if(!input.theme&&!input.modelDesc){
+        // Add shake animation to empty fields
+        if(!input.theme)$('f-theme').classList.add('input-error');
+        if(!input.modelDesc)$('f-model').classList.add('input-error');
+        toast(i18n[currentLang]['toast.fillTheme'],'er');
+        btn.classList.remove('btn-loading');
+        btn.innerHTML=btnOrigHTML;
+        return;
+    }
     $('outEmpty').classList.remove('active'); $('outCnt').classList.remove('active'); $('outLoad').classList.add('active');
     btn.disabled=true;
+    // Animate loading text
+    const loadTexts=['正在思考...','正在构图...','正在生成...','快完成了...'];
+    let loadIdx=0; const loadTimer=setInterval(()=>{loadIdx=(loadIdx+1)%loadTexts.length;btn.innerHTML='<span class="btn-loading-icon">⟳</span>'+loadTexts[loadIdx];},800);
     await new Promise(r=>setTimeout(r,300));
     try{
-        toast(i18n[currentLang]['toast.aiGenerating'], 'i');
         const plan=await genPlan(input);
         savePlan(plan);
         currentPlanData=plan;
@@ -5644,7 +5688,7 @@ async function handleSubmit(e){
         $('outLoad').classList.remove('active'); $('outCnt').classList.add('active');
         toast(i18n[currentLang]['toast.planSaved'],'ok');
     }catch(e){toast(i18n[currentLang]['toast.genFailed'],'er');$('outLoad').classList.remove('active');$('outEmpty').classList.add('active');}
-    finally{btn.disabled=false;btn.classList.remove('btn-loading');btn.innerHTML=btnOrigHTML;}
+    finally{clearInterval(loadTimer);btn.disabled=false;btn.classList.remove('btn-loading');btn.innerHTML=btnOrigHTML;}
 }
 $('briefForm').addEventListener('submit',handleSubmit);
 
