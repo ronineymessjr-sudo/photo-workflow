@@ -2382,15 +2382,15 @@
 
                             <!-- 案例参考 -->
                             <div class="case-ref">
-                                <div class="p-head" style="margin-top:1rem"><h2>📸 案例参考</h2><button class="btn btn-s btn-sm" id="analyzeImgBtn" onclick="analyzeReference()">🔍 分析此图</button></div>
+                                <div class="p-head" style="margin-top:1rem"><h2>📸 案例参考</h2><button class="btn btn-s btn-sm" id="analyzeImgBtn" onclick="analyzeReference()" data-i18n="gen.analyzeImg">🔍 分析此图</button></div>
                                 <div class="case-ref-input">
                                     <input id="caseRefUrl" placeholder="粘贴参考图 URL（picsum/unsplash/本地均可）" oninput="previewRefImage()">
                                 </div>
                                 <div class="case-ref-preview" id="caseRefPreview" style="display:none">
                                     <img id="caseRefImg" src="" alt="参考图">
                                     <div class="case-ref-actions">
-                                        <button class="btn btn-s btn-sm" onclick="analyzeReference()">🔍 AI 分析</button>
-                                        <button class="btn btn-s btn-sm" onclick="clearRefImage()">✕ 清除</button>
+                                        <button class="btn btn-s btn-sm" onclick="analyzeReference()" data-i18n="gen.aiAnalysis">🔍 AI 分析</button>
+                                        <button class="btn btn-s btn-sm" onclick="clearRefImage()" data-i18n="gen.clear">✕ 清除</button>
                                     </div>
                                 </div>
                                 <div class="case-ref-result" id="caseRefResult" style="display:none"></div>
@@ -2465,7 +2465,7 @@
                             </div>
                         </div>
                         <div class="p-body">
-                            <div class="output-empty" id="outEmpty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg><p>填写需求，点击生成方案</p></div>
+                            <div class="output-empty" id="outEmpty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg><p data-i18n="gen.fillToGen">填写需求，点击生成方案</p></div>
                             <div class="output-load" id="outLoad"><div class="spinner"></div><p>正在生成...</p></div>
                             <div class="output-cnt" id="outCnt"></div>
                         </div>
@@ -2495,12 +2495,12 @@
                                     <select id="eq-cat"><option value="camera">📷 相机机身</option><option value="lens">🔭 镜头</option><option value="light">💡 灯光设备</option><option value="audio">🎙️ 音频</option><option value="tripod">🗼 三脚架/稳定器</option><option value="filter">🔘 滤镜/附件</option><option value="other">📦 其他</option></select>
                                 </div>
                                 <div class="fg"><label>备注</label><input id="eq-note" placeholder="如：2024年购入，9成新"></div>
-                                <button type="submit" class="btn btn-p">+ 添加设备</button>
+                                <button type="submit" class="btn btn-p" data-i18n="equip.addBtn">+ 添加设备</button>
                             </form>
                             <div class="backup-section">
                                 <h3>快速添加</h3>
                                 <div class="backup-btns">
-                                    <button class="btn btn-s btn-sm" onclick="addSampleData()">+ 一键添加全部示例</button>
+                                    <button class="btn btn-s btn-sm" onclick="addSampleData()" data-i18n="equip.addAll">+ 一键添加全部示例</button>
                                     <button class="btn btn-s btn-sm" onclick="addSampleEq()">+ 仅设备</button>
                                 </div>
                             </div>
@@ -2512,7 +2512,7 @@
                         <div class="p-head">
                             <h2>我的设备</h2>
                             <div style="display:flex;gap:.5rem;align-items:center">
-                                <input type="text" id="eq-search" placeholder="🔍 搜索设备..." style="padding:.4rem .8rem;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius-sm);color:var(--t1);font-size:.8rem;width:150px" oninput="renderEq()">
+                                <input type="text" id="eq-search" placeholder="🔍 搜索设备..." style="padding:.4rem .8rem;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius-sm);color:var(--t1);font-size:.8rem;width:150px" oninput="renderEq()" data-i18n-placeholder="equip.search">
                                 <span id="eq-total" style="font-size:.72rem;color:var(--t3)"></span>
                             </div>
                         </div>
@@ -2536,7 +2536,7 @@
                                 <div class="fg"><label>适合风格（逗号分隔）</label><input id="v-styles" placeholder="如：复古、文艺、时尚"></div>
                                 <div class="fg"><label>联系方式</label><input id="v-contact" placeholder="电话或微信"></div>
                                 <div class="fg"><label>备注</label><textarea id="v-note" placeholder="开放时间、收费、注意事项等"></textarea></div>
-                                <button type="submit" class="btn btn-p">+ 添加场地</button>
+                                <button type="submit" class="btn btn-p" data-i18n="venue.addBtn">+ 添加场地</button>
                             </form>
                         </div>
                     </div>
@@ -2546,7 +2546,7 @@
                         <div class="p-head">
                             <h2>场地列表</h2>
                             <div style="display:flex;gap:.5rem;align-items:center">
-                                <input type="text" id="venue-search" placeholder="🔍 搜索场地..." style="padding:.4rem .8rem;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius-sm);color:var(--t1);font-size:.8rem;width:150px" oninput="renderVenue()">
+                                <input type="text" id="venue-search" placeholder="🔍 搜索场地..." style="padding:.4rem .8rem;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius-sm);color:var(--t1);font-size:.8rem;width:150px" oninput="renderVenue()" data-i18n-placeholder="venue.search">
                                 <span id="venue-total" style="font-size:.72rem;color:var(--t3)"></span>
                             </div>
                         </div>
@@ -2603,7 +2603,7 @@
                         <div class="panel">
                             <div class="p-head"><h2>热门场地</h2></div>
                             <div class="p-body" id="venue-chart">
-                                <div style="text-align:center;padding:2rem 0;color:var(--t3);font-size:.85rem;">暂无数据</div>
+                                <div style="text-align:center;padding:2rem 0;color:var(--t3);font-size:.85rem;" data-i18n="dashboard.noData">暂无数据</div>
                             </div>
                         </div>
                     </div>
@@ -2783,7 +2783,7 @@
                     <!-- 空状态 -->
                     <div id="msg-empty" style="display:none;text-align:center;padding:3rem 1rem;color:var(--t3);">
                         <div style="font-size:3rem;margin-bottom:.5rem;">📭</div>
-                        <div style="font-size:.9rem;">暂无消息</div>
+                        <div style="font-size:.9rem;" data-i18n="message.empty">暂无消息</div>
                         <div style="font-size:.75rem;margin-top:.25rem;">来自作品集网站的客户咨询将显示在这里</div>
                     </div>
                 </section>
@@ -2820,7 +2820,7 @@
                                     <select id="m-auth"><option value="authorized">✅ 已授权</option><option value="pending">⏳ 待确认</option><option value="none">❌ 未授权</option></select>
                                 </div>
                                 <div class="fg"><label>备注</label><textarea id="m-note" placeholder="身高体重、外貌特征、偏好等"></textarea></div>
-                                <button type="submit" class="btn btn-p">+ 添加模特</button>
+                                <button type="submit" class="btn btn-p" data-i18n="model.addBtn">+ 添加模特</button>
                             </form>
                         </div>
                     </div>
@@ -2844,9 +2844,9 @@
                         <div class="p-body" id="tplSavePanel" style="display:none;">
                             <div class="fg"><label>模板名称</label><input id="tpl-name" placeholder="如：复古私房通用方案"></div>
                             <div class="fg"><label>模板描述</label><input id="tpl-desc" placeholder="简短描述适用场景"></div>
-                            <button class="btn btn-p" onclick="saveAsTemplate()">💾 保存为模板</button>
+                            <button class="btn btn-p" onclick="saveAsTemplate()" data-i18n="tpl.saveBtn">💾 保存为模板</button>
                         </div>
-                        <div style="padding:1rem;text-align:center;color:var(--t3);font-size:.82rem;" id="tplSaveHint">先生成一个方案，即可保存为模板</div>
+                        <div style="padding:1rem;text-align:center;color:var(--t3);font-size:.82rem;" id="tplSaveHint" data-i18n="tpl.genFirst">先生成一个方案，即可保存为模板</div>
                     </div>
                 </aside>
                 <section>
@@ -2866,7 +2866,7 @@
                     <div class="p-head"><h2>全部历史方案</h2><span class="badge" id="histFullCount">0 条</span></div>
                     <div class="hist-count" id="histHeaderCount">0 条方案</div>
                     <div class="hist-list" id="histFull"></div>
-                    <div style="padding:.75rem 1rem;"><button class="btn btn-d btn-sm" id="clearAllBtn" style="display:none;" onclick="clearAllHistory()">🗑️ 清空全部</button></div>
+                    <div style="padding:.75rem 1rem;"><button class="btn btn-d btn-sm" id="clearAllBtn" style="display:none;" onclick="clearAllHistory()" data-i18n="tpl.clearAll">🗑️ 清空全部</button></div>
                 </div>
             </div>
         </div>
@@ -2879,7 +2879,7 @@
                     <div class="p-body">
                         <p style="color:var(--t2);font-size:.85rem;margin-bottom:1rem;">将所有数据导出为 JSON 文件，可用于备份或迁移。</p>
                         <div style="color:var(--t3);font-size:.78rem;margin-bottom:1rem;">包含：<span id="backupStats"></span></div>
-                        <button class="btn btn-p" onclick="exportData()">📥 导出 JSON 备份</button>
+                        <button class="btn btn-p" onclick="exportData()" data-i18n="setting.exportBtn">📥 导出 JSON 备份</button>
                     </div>
                 </div>
                 <div class="panel">
@@ -2887,7 +2887,7 @@
                     <div class="p-body">
                         <p style="color:var(--t2);font-size:.85rem;margin-bottom:1rem;">从 JSON 备份文件恢复数据。导入将合并现有数据，不会覆盖。</p>
                         <input type="file" id="importFile" accept=".json" style="margin-bottom:.75rem;">
-                        <button class="btn btn-s" onclick="importData()">📤 导入数据</button>
+                        <button class="btn btn-s" onclick="importData()" data-i18n="setting.importBtn">📤 导入数据</button>
                     </div>
                 </div>
             </div>
@@ -2915,7 +2915,7 @@
                         <h2>📋 待办事项</h2>
                         <div style="display:flex;gap:.5rem;">
                             <button class="btn btn-s btn-sm" onclick="exportToFeishu()" data-i18n="calendar.sync">📤 同步到飞书日历</button>
-                            <button class="btn btn-s btn-sm" onclick="syncToFeishuBitable()">📊 同步到多维表格</button>
+                            <button class="btn btn-s btn-sm" onclick="syncToFeishuBitable()" data-i18n="calendar.syncBitable">📊 同步到多维表格</button>
                         </div>
                     </div>
                     <div class="p-body" id="todoList"></div>
@@ -5726,7 +5726,7 @@ function renderHistMini(){
     $('histMini').innerHTML=ps.length?ps.map(p=>{
         const d=new Date(p.savedAt);
         return`<div class="hist-item" onclick="loadPlan('${p.id}')"><div class="hist-title">${p.title}</div><div class="hist-meta"><span>${p.input && p.input.style||'待定'}</span><span>${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}</span></div></div>`;
-    }).join(''):'<div class="hist-empty">暂无历史</div>';
+    }).join(''):'<div class="hist-empty" data-i18n="plan.noHistory">暂无历史</div>';
 }
 function renderHistFull(){
     const ps=getPlans();
@@ -5738,7 +5738,7 @@ function renderHistFull(){
         const d=new Date(p.savedAt);
         const imgCount = (p.images||[]).length;
         return`<div class="hist-item"><div class="hist-title">${p.title} ${imgCount?`<span style="font-size:.65rem;color:var(--ac);">🖼️${imgCount}</span>`:''}</div><div class="hist-meta"><span>${p.input && p.input.style||'待定'}</span><span>${d.toLocaleString()}</span></div><div class="hist-actions"><button class="btn btn-s btn-sm" onclick="loadPlan('${p.id}')">查看</button><button class="btn btn-d btn-sm" onclick="delPlan('${p.id}');renderHistFull();renderHistMini();updateBadge();">删除</button><button class="btn btn-i btn-sm" onclick="exportPlanPdf('${p.id}')">📄 PDF</button></div></div>`;
-    }).join(''):'<div class="hist-empty">暂无历史记录</div>';
+    }).join(''):'<div class="hist-empty" data-i18n="plan.noHistory2">暂无历史记录</div>';
 }
 function clearAllHistory(){if(!confirm(i18n[currentLang]['confirm.clearHistory']))return;savePlans([]);renderHistFull();renderHistMini();updateBadge();toast(i18n[currentLang]['toast.deleted'],'ok');}
 function updateBadge(){$('t-eq').textContent=(sg(SK.EQ)||[]).length;$('t-venue').textContent=(sg(SK.V)||[]).length;$('t-model').textContent=(sg(SK.M)||[]).length;$('t-tpl').textContent=(sg(SK.T)||[]).length;$('t-hist').textContent=getPlans().length;}
