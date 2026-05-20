@@ -9,9 +9,14 @@
     <meta property="og:title" content="PhotoAtelier - 摄影方案智能工作流">
     <meta property="og:description" content="AI驱动的摄影方案生成工具，从创意到执行一站式管理。">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://ronineymessjr-sudo.github.io/photo-workflow/">
+    <meta property="og:url" content="https://photo-workflow.pages.dev/">
+    <meta property="og:image" content="https://photo-workflow.pages.dev/og-image.png">
     <meta name="twitter:card" content="summary_large_image">
-    <link rel="canonical" href="https://ronineymessjr-sudo.github.io/photo-workflow/">
+    <meta name="twitter:title" content="PhotoAtelier - 摄影方案智能工作流">
+    <meta name="twitter:description" content="AI驱动的摄影方案生成工具，从创意到执行一站式管理。">
+    <link rel="canonical" href="https://photo-workflow.pages.dev/">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='none' stroke='%23ff6b6b' stroke-width='4'/><circle cx='50' cy='50' r='15' fill='%23ff6b6b' opacity='0.3'/><circle cx='50' cy='50' r='6' fill='%23ff6b6b'/></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23ff6b6b'/><circle cx='50' cy='50' r='30' fill='white'/><circle cx='50' cy='50' r='12' fill='%23ff6b6b'/></svg>">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
@@ -4705,7 +4710,7 @@ function renderImageGallery(plan) {
     if (images.length > 0) {
         html += images.map(img => `
             <div class="img-card">
-                <img src="${img.url}" alt="generated" onclick="previewImg('${img.url}')">
+                <img src="${img.url}" alt="generated" loading="lazy" decoding="async" onclick="previewImg('${img.url}')">
                 <div class="img-card-info">${new Date(img.at).toLocaleString()}</div>
             </div>`).join('');
     }
@@ -4778,7 +4783,7 @@ function renderImageGalleryDiv(plan) {
                 <div class="img-grid-9">
                     ${batch.map((img, idx) => `
                         <div class="img-card-9">
-                            <img src="${img.url}" alt="${img.variant ? img.variant.pose : '参考图'}" onclick="previewImg('${img.url}')">
+                            <img src="${img.url}" alt="${img.variant ? img.variant.pose : '参考图'}" loading="lazy" decoding="async" onclick="previewImg('${img.url}')">
                             <div class="img-card-info-9">
                                 <span class="img-pose">${img.variant ? img.variant.pose : '参考图'}</span>
                                 <span class="img-angle">${img.variant ? img.variant.angle : ''}</span>
@@ -5488,7 +5493,7 @@ function renderImagePreviews() {
 
     grid.innerHTML = uploadedImages.map(img => `
         <div style="position:relative;">
-            <img src="${img.data}" class="image-preview" alt="${img.name}">
+            <img src="${img.data}" class="image-preview" alt="${img.name}" loading="lazy" decoding="async">
             <button onclick="removeImage('${img.id}')" style="position:absolute;top:-8px;right:-8px;width:20px;height:20px;border-radius:50%;background:var(--ac);color:white;border:none;cursor:pointer;font-size:12px;">×</button>
         </div>
     `).join('');

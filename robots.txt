@@ -1,3 +1,4 @@
 User-agent: *
 Allow: /
-Sitemap: https://ronineymessjr-sudo.github.io/photo-workflow/sitemap.xml
+Disallow: /api/
+Sitemap: https://photo-workflow.pages.dev/sitemap.xml

@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://ronineymessjr-sudo.github.io/photo-workflow/landing.html</loc>
-    <lastmod>2025-05-17</lastmod>
+    <loc>https://photo-workflow.pages.dev/</loc>
+    <lastmod>2025-05-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://ronineymessjr-sudo.github.io/photo-workflow/index.html</loc>
-    <lastmod>2025-05-17</lastmod>
-    <changefreq>weekly</changefreq>
+    <loc>https://photo-workflow.pages.dev/landing.html</loc>
+    <lastmod>2025-05-20</lastmod>
+    <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 </urlset>
