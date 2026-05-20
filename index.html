@@ -203,34 +203,40 @@
         .bg-orb {
             position: fixed;
             border-radius: 50%;
-            filter: blur(100px);
+            filter: blur(80px);
             pointer-events: none;
             z-index: 0;
+            transition: transform 0.3s ease-out;
+            will-change: transform;
         }
         .bg-orb-1 {
-            width: 500px;
-            height: 500px;
-            background: radial-gradient(circle, rgba(255, 107, 107, 0.12) 0%, rgba(255, 107, 107, 0.03) 50%, transparent 70%);
-            top: -150px;
-            right: -100px;
-            animation: float1 25s ease-in-out infinite;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(255, 107, 107, 0.18) 0%, rgba(255, 107, 107, 0.05) 40%, transparent 70%);
+            top: -100px;
+            right: -50px;
+            animation: float1 20s ease-in-out infinite;
         }
         .bg-orb-2 {
-            width: 400px;
-            height: 400px;
-            background: radial-gradient(circle, rgba(78, 205, 196, 0.1) 0%, rgba(78, 205, 196, 0.02) 50%, transparent 70%);
-            bottom: 5%;
-            left: -100px;
-            animation: float2 30s ease-in-out infinite;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(78, 205, 196, 0.15) 0%, rgba(78, 205, 196, 0.04) 40%, transparent 70%);
+            bottom: 0%;
+            left: -50px;
+            animation: float2 25s ease-in-out infinite;
         }
         .bg-orb-3 {
-            width: 350px;
-            height: 350px;
-            background: radial-gradient(circle, rgba(255, 107, 107, 0.08) 0%, transparent 60%);
-            top: 40%;
-            right: 20%;
-            animation: float3 35s ease-in-out infinite;
+            width: 450px;
+            height: 450px;
+            background: radial-gradient(circle, rgba(255, 200, 100, 0.12) 0%, rgba(255, 200, 100, 0.03) 40%, transparent 70%);
+            top: 35%;
+            right: 15%;
+            animation: float3 30s ease-in-out infinite;
         }
+        /* Mouse parallax effect - enhanced movement */
+        .bg-orb-1 { transform: translate(calc(var(--mouse-x, 50%) * 0.08 - 4%), calc(var(--mouse-y, 50%) * 0.08 - 4%)); }
+        .bg-orb-2 { transform: translate(calc(var(--mouse-x, 50%) * -0.06 + 3%), calc(var(--mouse-y, 50%) * -0.06 + 3%)); }
+        .bg-orb-3 { transform: translate(calc(var(--mouse-x, 50%) * 0.04 - 2%), calc(var(--mouse-y, 50%) * 0.04 - 2%)); }
 
         /* Language Switcher */
         .lang-switcher {
@@ -1652,6 +1658,13 @@
             border-radius: 50%;
             opacity: 0.3;
             animation: float-particle 15s infinite;
+            transition: transform 0.5s ease-out;
+            will-change: transform;
+        }
+        /* Mouse-attracted particles */
+        .particle:hover, .particle.near-mouse {
+            transform: scale(2);
+            opacity: 0.8;
         }
         @keyframes float-particle {
             0%, 100% {
@@ -1668,6 +1681,22 @@
                 transform: translateY(-100vh) rotate(720deg);
                 opacity: 0;
             }
+        }
+        /* Cursor glow effect */
+        .cursor-glow {
+            position: fixed;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 107, 107, 0.15) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 1;
+            transform: translate(-50%, -50%);
+            transition: opacity 0.3s ease;
+            opacity: 0;
+        }
+        .cursor-glow.active {
+            opacity: 1;
         }
 
         /* ===== Step Indicator ===== */
@@ -2148,6 +2177,9 @@
 <div class="bg-orb bg-orb-1"></div>
 <div class="bg-orb bg-orb-2"></div>
 <div class="bg-orb bg-orb-3"></div>
+
+<!-- Cursor Glow Effect -->
+<div class="cursor-glow" id="cursorGlow"></div>
 
 <!-- Language Switcher -->
 <div class="lang-switcher">
@@ -3486,13 +3518,63 @@ if (document.getElementById('loginOverlay')) {
         location.reload();
     };
 
-    // Mouse spotlight effect
-document.addEventListener('mousemove', function(e) {
-    var x = (e.clientX / window.innerWidth) * 100;
-    var y = (e.clientY / window.innerHeight) * 100;
-    document.documentElement.style.setProperty('--mouse-x', x + '%');
-    document.documentElement.style.setProperty('--mouse-y', y + '%');
-});
+    // Mouse spotlight effect with cursor glow
+(function() {
+    const cursorGlow = document.getElementById('cursorGlow');
+    let mouseX = 0, mouseY = 0;
+    let glowX = 0, glowY = 0;
+    let rafId = null;
+    let isActive = false;
+    let inactivityTimeout = null;
+
+    function updateGlow() {
+        // Smooth follow with easing
+        glowX += (mouseX - glowX) * 0.1;
+        glowY += (mouseY - glowY) * 0.1;
+        
+        if (cursorGlow) {
+            cursorGlow.style.left = glowX + 'px';
+            cursorGlow.style.top = glowY + 'px';
+        }
+        
+        // Update CSS variables for parallax
+        const xPercent = (glowX / window.innerWidth) * 100;
+        const yPercent = (glowY / window.innerHeight) * 100;
+        document.documentElement.style.setProperty('--mouse-x', xPercent + '%');
+        document.documentElement.style.setProperty('--mouse-y', yPercent + '%');
+        
+        if (isActive) {
+            rafId = requestAnimationFrame(updateGlow);
+        }
+    }
+
+    document.addEventListener('mousemove', function(e) {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+        
+        // Activate glow
+        if (cursorGlow && !isActive) {
+            cursorGlow.classList.add('active');
+            isActive = true;
+            updateGlow();
+        }
+        
+        // Reset inactivity timer
+        clearTimeout(inactivityTimeout);
+        inactivityTimeout = setTimeout(() => {
+            if (cursorGlow) cursorGlow.classList.remove('active');
+            isActive = false;
+            if (rafId) cancelAnimationFrame(rafId);
+        }, 100);
+    });
+
+    // Hide glow when leaving window
+    document.addEventListener('mouseleave', function() {
+        if (cursorGlow) cursorGlow.classList.remove('active');
+        isActive = false;
+        if (rafId) cancelAnimationFrame(rafId);
+    });
+})();
 
 // Keyboard shortcuts panel
 function showShortcutsModal() {
