@@ -2418,7 +2418,14 @@
 
                 <section>
                     <div class="panel">
-                        <div class="p-head"><h2>拍摄方案</h2><span style="font-size:.7rem;color:var(--t3)" id="planSavedAt"></span></div>
+                        <div class="p-head">
+                            <h2>拍摄方案</h2>
+                            <div style="display:flex;align-items:center;gap:.5rem;">
+                                <span style="font-size:.7rem;color:var(--t3)" id="planSavedAt"></span>
+                                <button class="btn btn-s btn-sm" onclick="exportPlanPDF()" id="btn-export-pdf" style="display:none;">📄 PDF</button>
+                                <button class="btn btn-s btn-sm" onclick="exportPlanWord()" id="btn-export-word" style="display:none;">📝 Word</button>
+                            </div>
+                        </div>
                         <div class="p-body">
                             <div class="output-empty" id="outEmpty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg><p>填写需求，点击生成方案</p></div>
                             <div class="output-load" id="outLoad"><div class="spinner"></div><p>正在生成...</p></div>
@@ -5187,6 +5194,9 @@ function loadPlan(id){
     $('tplSaveHint').style.display='none';
     $('outCnt').innerHTML=renderPlanContent(plan);
     $('outEmpty').classList.remove('active'); $('outLoad').classList.remove('active'); $('outCnt').classList.add('active');
+    // 显示导出按钮
+    $('btn-export-pdf').style.display='inline-block';
+    $('btn-export-word').style.display='inline-block';
     document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
     document.querySelectorAll('.tab-cnt').forEach(c=>c.classList.remove('active'));
     document.querySelector('[data-tab="gen"]').classList.add('active');
@@ -5213,6 +5223,9 @@ async function handleSubmit(e){
         $('tplSavePanel').style.display='block';
         $('tplSaveHint').style.display='none';
         $('outCnt').innerHTML=renderPlanContent(plan);
+        // 显示导出按钮
+        $('btn-export-pdf').style.display='inline-block';
+        $('btn-export-word').style.display='inline-block';
         renderHistMini(); updateBadge();
         $('outLoad').classList.remove('active'); $('outCnt').classList.add('active');
         toast('方案已生成并保存','ok');
@@ -5435,6 +5448,101 @@ async function exportPlanPdf(id) {
     toast('PDF 已下载','ok');
 }
 
+// 导出当前方案的PDF
+async function exportPlanPDF() {
+    if(!currentPlanData){toast('先生成或加载一个方案','er');return;}
+    const plan=currentPlanData;
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const pageW = doc.internal.pageSize.getWidth();
+    let y=15;
+    
+    // 标题
+    doc.setFontSize(18); doc.setTextColor(232,93,4); doc.text(plan.title, pageW/2, y, {align:'center'}); y+=10;
+    
+    // 元信息
+    doc.setFontSize(9); doc.setTextColor(100);
+    const meta = `风格:${plan.input && plan.input.style||'待定'} | 时长:${plan.input && plan.input.duration||'待定'} | 人数:${plan.input && plan.input.people||1}人`;
+    doc.text(meta, pageW/2, y, {align:'center'}); y+=5;
+    doc.text(`生成时间:${new Date(plan.savedAt).toLocaleString()}`, pageW/2, y, {align:'center'}); y+=8;
+    
+    // 分隔线
+    doc.setDrawColor(200); doc.line(15,y,pageW-15,y); y+=8;
+    
+    // 各个部分
+    plan.sections.forEach((s,idx)=>{
+        if(y>260){doc.addPage();y=15;}
+        // 章节标题
+        doc.setFontSize(13); doc.setTextColor(50); doc.setFont('','bold');
+        doc.text(s.ti,15,y); y+=6;
+        // 内容
+        doc.setFontSize(9); doc.setTextColor(80); doc.setFont('','normal');
+        s.c.forEach(c=>{
+            const lines=doc.splitTextToSize('• '+c, pageW-35);
+            lines.forEach(line=>{
+                if(y>275){doc.addPage();y=15;}
+                doc.text(line,15,y); y+=5;
+            });
+        });
+        y+=5;
+    });
+    
+    // 底部
+    if(y>250){doc.addPage();y=15;}
+    doc.setFontSize(8); doc.setTextColor(150);
+    doc.text('由 PhotoAtelier 摄影方案智能工作流生成', pageW/2, 285, {align:'center'});
+    
+    const filename=`拍摄方案_${plan.title}_${new Date().toLocaleDateString().replace(/\//g,'-')}.pdf`;
+    doc.save(filename);
+    toast('PDF 已下载: '+filename,'ok');
+}
+
+// 导出当前方案的Word（HTML格式，可被Word打开）
+async function exportPlanWord() {
+    if(!currentPlanData){toast('先生成或加载一个方案','er');return;}
+    const plan=currentPlanData;
+    
+    // 生成HTML内容
+    let html=`<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head>
+<meta charset="utf-8">
+<title>${plan.title}</title>
+<style>
+body{font-family:微软雅黑,Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;color:#333;}
+h1{color:#E85D04;font-size:24px;text-align:center;border-bottom:2px solid #E85D04;padding-bottom:10px;}
+.meta{text-align:center;color:#666;font-size:12px;margin-bottom:20px;}
+h2{color:#333;font-size:16px;border-left:4px solid #E85D04;padding-left:10px;margin-top:25px;}
+ul{margin:10px 0;padding-left:25px;}
+li{margin:8px 0;line-height:1.6;}
+.footer{text-align:center;color:#999;font-size:10px;margin-top:40px;border-top:1px solid #ddd;padding-top:15px;}
+</style>
+</head>
+<body>
+<h1>${plan.title}</h1>
+<p class="meta">风格:${plan.input && plan.input.style||'待定'} | 时长:${plan.input && plan.input.duration||'待定'} | 人数:${plan.input && plan.input.people||1}人 | ${new Date(plan.savedAt).toLocaleString()}</p>
+`;
+    
+    plan.sections.forEach(s=>{
+        html+=`<h2>${s.ti}</h2><ul>`;
+        s.c.forEach(c=>{ html+=`<li>${c}</li>`; });
+        html+=`</ul>`;
+    });
+    
+    html+=`<p class="footer">由 PhotoAtelier 摄影方案智能工作流生成</p></body></html>`;
+    
+    // 创建Blob并下载
+    const blob=new Blob([html],{type:'application/msword'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=`拍摄方案_${plan.title}_${new Date().toLocaleDateString().replace(/\//g,'-')}.doc`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast('Word 文档已下载','ok');
+}
+
 // 导出模特专用PDF（仅包含模特需要的信息）
 async function exportModelPdf(id) {
     const plan=getPlans().find(p=>p.id===id);
@@ -5544,6 +5652,7 @@ function getActionsHtml() {
     return `<div class="actions">
         <button class="btn btn-s btn-sm" onclick="copyCurrentPlan()">📋 复制</button>
         <button class="btn btn-s btn-sm" onclick="exportPlanPdfCurrent()">📄 PDF</button>
+        <button class="btn btn-s btn-sm" onclick="exportPlanDocxCurrent()">📝 Word</button>
         <button class="btn btn-i btn-sm" onclick="exportModelPdfCurrent()">👤 模特版PDF</button>
         ${currentPlanId ? `<button class="btn btn-i btn-sm" onclick="genImgForPlan('${currentPlanId}')" id="action-gen-img-btn">🎨 批量生成9张</button>` : ''}
         <button class="btn btn-d btn-sm" onclick="delCurrentPlan()">🗑️ 删除</button>
