@@ -1260,9 +1260,43 @@
             }
             .grid { grid-template-columns: 1fr; }
             .col-side { display: none; }
-            .scroll-progress {
-                left: 0 !important;
-            }
+            .scroll-progress { left: 0 !important; }
+            /* ===== Calendar Mobile Optimization ===== */
+            .calendar-day { min-height: 45px; padding: .2rem; font-size: .7rem; }
+            .calendar-day-num { font-size: .75rem; }
+            .calendar-header { padding: .3rem; font-size: .65rem; }
+            /* ===== Dashboard Stats Mobile ===== */
+            .panel .grid { grid-template-columns: repeat(2, 1fr) !important; }
+            #stat-shoots, #stat-completion, #stat-clients, #stat-messages { font-size: 1.5rem !important; }
+            /* ===== Form Inputs Mobile ===== */
+            .fg { margin-bottom: 1rem; }
+            .fg label { font-size: .75rem; }
+            input[type="text"], input[type="email"], input[type="password"], 
+            textarea, select { padding: .6rem !important; font-size: 16px !important; min-height: 44px; }
+            /* ===== Buttons Mobile ===== */
+            .btn { padding: .5rem 1rem !important; font-size: .85rem !important; min-height: 44px; }
+            /* ===== Modal Mobile ===== */
+            #msg-detail-modal > div { width: 95% !important; padding: 1rem !important; }
+            /* ===== Tab Content Mobile ===== */
+            .tab-cnt { padding: 1rem .5rem !important; }
+            /* ===== Plan Sections Mobile ===== */
+            .plan-section { margin-bottom: 1rem; padding: .75rem; }
+            /* ===== Toast Mobile ===== */
+            .toast { width: 90% !important; left: 5% !important; bottom: 20px !important; }
+        }
+
+        /* ===== Extra Small Screens (480px and below) ===== */
+        @media (max-width: 480px) {
+            .panel .grid { grid-template-columns: 1fr !important; }
+            #stat-shoots, #stat-completion, #stat-clients, #stat-messages { font-size: 1.2rem !important; }
+            .calendar-day { min-height: 38px; }
+            .step-label { display: none; }
+            .sidebar { width: 85%; }
+            .nav-label { font-size: .85rem; }
+            .panel { border-radius: 12px; }
+            .p-head h2 { font-size: .95rem; }
+        }
+
         /* ===== Hero Role Selector ===== */
         .hero-overlay {
             position: fixed;
