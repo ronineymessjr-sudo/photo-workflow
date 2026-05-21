@@ -3667,40 +3667,40 @@ window.api = {
 
 // Login handler - defined globally for HTML onclick access
 async function handleLogin() {
-        const email = document.getElementById('loginEmail').value.trim();
-        const password = document.getElementById('loginPassword').value;
-        if (!email || !password) { toast(i18n[currentLang]['login.inputBoth'], 'er'); return; }
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    if (!email || !password) { toast(i18n[currentLang]['login.inputBoth'], 'er'); return; }
 
-        document.getElementById('loginForm').style.display = 'none';
-        document.getElementById('loginLoading').style.display = 'block';
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('loginLoading').style.display = 'block';
 
-        try {
-            const res = await window.api.login(email, password);
-            if (res.success) {
-                localStorage.setItem(TOKEN_KEY, res.token);
-                localStorage.setItem(USER_KEY, JSON.stringify(res.user));
-                document.getElementById('welcomeEmail').textContent = res.user.email;
-                showRoleSelector();
-                toast(i18n[currentLang]['login.success'], 'ok');
-            } else {
-                toast(res.error || i18n[currentLang]['login.failed'], 'er');
-                document.getElementById('loginForm').style.display = 'block';
-                document.getElementById('loginLoading').style.display = 'none';
-            }
-        } catch (e) {
-            toast(i18n[currentLang]['login.networkError'] + e.message, 'er');
+    try {
+        const res = await window.api.login(email, password);
+        if (res.success) {
+            localStorage.setItem(TOKEN_KEY, res.token);
+            localStorage.setItem(USER_KEY, JSON.stringify(res.user));
+            document.getElementById('welcomeEmail').textContent = res.user.email;
+            showRoleSelector();
+            toast(i18n[currentLang]['login.success'], 'ok');
+        } else {
+            toast(res.error || i18n[currentLang]['login.failed'], 'er');
             document.getElementById('loginForm').style.display = 'block';
             document.getElementById('loginLoading').style.display = 'none';
         }
-    };
-
-    // Logout - defined globally for HTML onclick access
-    function logout() {
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(USER_KEY);
-        localStorage.removeItem(ROLE_KEY);
-        location.reload();
+    } catch (e) {
+        toast(i18n[currentLang]['login.networkError'] + e.message, 'er');
+        document.getElementById('loginForm').style.display = 'block';
+        document.getElementById('loginLoading').style.display = 'none';
     }
+}
+
+// Logout - defined globally for HTML onclick access
+function logout() {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    localStorage.removeItem(ROLE_KEY);
+    location.reload();
+}
 
     // Mouse spotlight effect with cursor glow
 (function() {
