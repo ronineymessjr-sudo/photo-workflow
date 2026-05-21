@@ -850,6 +850,13 @@
         .btn-xs { padding: .28rem .6rem; font-size: .7rem; }
         .btn-i2 { padding: .35rem; background: transparent; border: none; color: var(--t3); cursor: pointer; border-radius: 8px; transition: all 200ms ease; }
         .btn-i2:hover { background: var(--ac-glow); color: var(--ac); }
+        /* Role selection buttons */
+        .btn-role { display: flex; flex-direction: column; align-items: center; gap: .75rem; padding: 1.5rem 2rem; background: var(--bg3); border: 1px solid var(--bd); border-radius: var(--radius); color: var(--t1); cursor: pointer; transition: all .3s; min-width: 140px; font-family: inherit; }
+        .btn-role span { font-size: .9rem; font-weight: 500; }
+        .btn-role:hover { transform: translateY(-4px); }
+        .btn-role-photo:hover { border-color: var(--ac); }
+        .btn-role-model:hover { border-color: rgba(78,205,196,.4); }
+        .btn-role-assist:hover { border-color: rgba(255,255,255,.2); }
         /* Form validation styles */
         .input-error { border-color: #ff4757 !important; box-shadow: 0 0 0 3px rgba(255, 71, 87, 0.15); animation: shake 0.5s ease-in-out; }
         .input-error:focus { border-color: #ff4757; box-shadow: 0 0 0 3px rgba(255, 71, 87, 0.25); }
@@ -1325,7 +1332,14 @@
             /* ===== Plan Sections Mobile ===== */
             .plan-section { margin-bottom: 1rem; padding: .75rem; }
             /* ===== Toast Mobile ===== */
-            .toast { width: 90% !important; left: 5% !important; bottom: 20px !important; }
+            .toast { 
+                width: 90% !important; 
+                left: 5% !important; 
+                bottom: max(20px, env(safe-area-inset-bottom)) !important;
+                white-space: normal !important;
+                max-width: none !important;
+                text-align: center;
+            }
         }
 
         /* ===== Extra Small Screens (480px and below) ===== */
@@ -2256,7 +2270,7 @@
             </div>
             <div style="margin-bottom:1.5rem;">
                 <label style="display:block;font-size:.85rem;color:var(--t2);margin-bottom:.5rem;font-weight:500;" data-i18n="login.password">密码</label>
-                <input type="password" id="loginPassword" placeholder="输入密码" data-i18n-placeholder="login.password" style="width:100%;padding:12px 16px;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;color:var(--t1);font-family:inherit;font-size:.95rem;transition:all .2s;">
+                <input type="password" id="loginPassword" placeholder="输入密码" data-i18n-placeholder="login.password" onkeydown="if(event.key==='Enter')handleLogin()" style="width:100%;padding:12px 16px;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;color:var(--t1);font-family:inherit;font-size:.95rem;transition:all .2s;">
             </div>
             <button onclick="handleLogin()" class="btn btn-p" style="width:100%;padding:12px;border-radius:8px;font-size:.95rem;font-weight:500;margin-top:.5rem;" data-i18n="login.button">登录</button>
             <p style="margin-top:1.5rem;font-size:.8rem;color:var(--t3);text-align:center;" data-i18n="login.hint">首次登录将自动创建账号</p>
@@ -2279,17 +2293,17 @@
         </div>
         <p style="color:var(--t3);font-size:.85rem;margin-bottom:2rem;" data-i18n="role.subtitle">选择你的身份，开始创作</p>
         <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
-            <button onclick="enterApp('photographer')" style="display:flex;flex-direction:column;align-items:center;gap:.75rem;padding:1.5rem 2rem;background:var(--bg3);border:1px solid var(--bd);border-radius:var(--radius);color:var(--t1);cursor:pointer;transition:all .3s;min-width:140px;font-family:inherit;" onmouseover="this.style.borderColor='var(--ac)';this.style.transform='translateY(-4px)'" onmouseout="this.style.borderColor='var(--bd)';this.style.transform='none'">
+            <button onclick="enterApp('photographer')" class="btn btn-role btn-role-photo">
                 <i data-lucide="camera" style="width:2.5rem;height:2.5rem;stroke-width:1.5;"></i>
-                <span style="font-size:.9rem;font-weight:500;" data-i18n="role.photographer">摄影师</span>
+                <span data-i18n="role.photographer">摄影师</span>
             </button>
-            <button onclick="enterApp('model')" style="display:flex;flex-direction:column;align-items:center;gap:.75rem;padding:1.5rem 2rem;background:var(--bg3);border:1px solid var(--bd);border-radius:var(--radius);color:var(--t1);cursor:pointer;transition:all .3s;min-width:140px;font-family:inherit;" onmouseover="this.style.borderColor='rgba(78,205,196,0.4)';this.style.transform='translateY(-4px)'" onmouseout="this.style.borderColor='var(--bd)';this.style.transform='none'">
+            <button onclick="enterApp('model')" class="btn btn-role btn-role-model">
                 <i data-lucide="sparkles" style="width:2.5rem;height:2.5rem;stroke-width:1.5;"></i>
-                <span style="font-size:.9rem;font-weight:500;" data-i18n="role.model">模特</span>
+                <span data-i18n="role.model">模特</span>
             </button>
-            <button onclick="enterApp('assistant')" style="display:flex;flex-direction:column;align-items:center;gap:.75rem;padding:1.5rem 2rem;background:var(--bg3);border:1px solid var(--bd);border-radius:var(--radius);color:var(--t1);cursor:pointer;transition:all .3s;min-width:140px;font-family:inherit;" onmouseover="this.style.borderColor='rgba(255,255,255,0.2)';this.style.transform='translateY(-4px)'" onmouseout="this.style.borderColor='var(--bd)';this.style.transform='none'">
+            <button onclick="enterApp('assistant')" class="btn btn-role btn-role-assist">
                 <i data-lucide="wrench" style="width:2.5rem;height:2.5rem;stroke-width:1.5;"></i>
-                <span style="font-size:.9rem;font-weight:500;" data-i18n="role.assistant">助理</span>
+                <span data-i18n="role.assistant">助理</span>
             </button>
         </div>
         <button onclick="logout()" style="margin-top:2rem;background:none;border:none;color:var(--t3);font-size:.8rem;cursor:pointer;" data-i18n="role.logout">退出登录</button>
@@ -5732,6 +5746,18 @@ async function handleSubmit(e){
     finally{clearInterval(loadTimer);btn.disabled=false;btn.classList.remove('btn-loading');btn.innerHTML=btnOrigHTML;}
 }
 $('briefForm').addEventListener('submit',handleSubmit);
+
+// Real-time error state clearing for form inputs
+['f-theme','f-model'].forEach(id=>{
+    const el=$(id);
+    if(el){
+        el.addEventListener('input',function(){
+            if(this.classList.contains('input-error')){
+                this.classList.remove('input-error');
+            }
+        });
+    }
+});
 
 // ===== Image Upload Handling =====
 let uploadedImages = [];
