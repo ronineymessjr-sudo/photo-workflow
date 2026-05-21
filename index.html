@@ -3860,7 +3860,8 @@ document.addEventListener('keydown', function(e) {
                 renderCalendar();
                 renderSchedules();
             }
-        } catch (e) { // console.log('Sync error:', e); }
+        } catch (e) { // console.log('Sync error:', e);
+        }
     }
 
     // Check auth state on load (with error handling for mobile browsers)
@@ -7492,7 +7493,8 @@ window.addSchedule = async function() {
     // Sync to server
     try {
         await window.api.createSchedule(newSchedule);
-    } catch (e) { // console.log('Server sync failed:', e); }
+    } catch (e) { // console.log('Server sync failed:', e);
+    }
     
     renderCalendar();
     renderSchedules();
@@ -7507,7 +7509,8 @@ window.deleteSchedule = async function(id) {
     // Delete from server
     try {
         await window.api.deleteSchedule(id);
-    } catch (e) { // console.log('Server delete failed:', e); }
+    } catch (e) { // console.log('Server delete failed:', e);
+    }
     
     renderCalendar();
     renderSchedules();
