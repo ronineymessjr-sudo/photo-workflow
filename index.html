@@ -885,6 +885,22 @@
         .output-load.active::after { animation: load-progress 3s ease-in-out infinite; }
         @keyframes load-progress { 0% { transform: scaleX(0); transform-origin: left; } 50% { transform: scaleX(0.7); } 100% { transform: scaleX(1); transform-origin: left; opacity: 0; } }
 
+        /* ===== Real-time Preview ===== */
+        .plan-preview { background: var(--bg3); border: 1px solid var(--bd); border-radius: var(--radius); padding: 1rem; margin-bottom: 1rem; }
+        .preview-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.8rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--bd); }
+        .preview-badge { background: var(--ac-glow); color: var(--ac); padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.7rem; font-weight: 500; }
+        .preview-status { font-size: 0.75rem; color: var(--t3); }
+        .preview-section { margin-bottom: 0.8rem; }
+        .preview-section:last-child { margin-bottom: 0; }
+        .preview-section h4 { font-size: 0.8rem; color: var(--t2); margin: 0 0 0.4rem 0; font-weight: 500; }
+        .preview-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+        .preview-tag { background: var(--bg2); border: 1px solid var(--bd); padding: 0.25rem 0.5rem; border-radius: 6px; font-size: 0.75rem; color: var(--t1); }
+        .preview-tag.highlight { background: rgba(212,132,10,0.15); border-color: var(--ac); color: var(--ac); }
+        .preview-match { font-size: 0.75rem; color: var(--t2); line-height: 1.5; }
+        .preview-match strong { color: var(--ac); }
+        .preview-tips { margin: 0; padding-left: 1rem; font-size: 0.75rem; color: var(--t2); }
+        .preview-tips li { margin: 0.2rem 0; }
+
         /* ===== Case Reference ===== */
         .case-ref { margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--bd); }
         .case-ref-input input {
@@ -2543,7 +2559,28 @@
                             </div>
                         </div>
                         <div class="p-body">
-                            <div class="output-empty" id="outEmpty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg><p data-i18n="gen.fillToGen">填写需求，点击生成方案</p></div>
+                            <!-- Real-time Preview -->
+                            <div class="plan-preview" id="planPreview">
+                                <div class="preview-header">
+                                    <span class="preview-badge">实时预览</span>
+                                    <span class="preview-status" id="previewStatus">等待生成...</span>
+                                </div>
+                                <div class="preview-content" id="previewContent">
+                                    <div class="preview-section">
+                                        <h4>📋 方案概要</h4>
+                                        <div class="preview-tags" id="previewTags"></div>
+                                    </div>
+                                    <div class="preview-section">
+                                        <h4>🎯 风格匹配</h4>
+                                        <div class="preview-match" id="previewMatch"></div>
+                                    </div>
+                                    <div class="preview-section">
+                                        <h4>⚡ 快速提示</h4>
+                                        <ul class="preview-tips" id="previewTips"></ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="output-empty" id="outEmpty" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg><p data-i18n="gen.fillToGen">填写需求，点击生成方案</p></div>
                             <div class="output-load" id="outLoad"><div class="spinner"></div><p>正在生成...</p></div>
                             <div class="output-cnt" id="outCnt"></div>
                         </div>
@@ -2551,6 +2588,16 @@
                 </section>
 
                 <aside class="col-side">
+                    <!-- Smart Recommendations -->
+                    <div class="panel" style="margin-bottom:1rem;">
+                        <div class="p-head"><h2>💡 智能推荐</h2></div>
+                        <div class="p-body">
+                            <div id="smartRec" style="font-size:.8rem;color:var(--t2);">
+                                <p style="margin:0 0 .5rem 0;">基于您的历史方案</p>
+                                <div id="recList" style="display:flex;flex-direction:column;gap:.4rem;"></div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="panel">
                         <div class="p-head"><h2>最近方案</h2></div>
                         <div class="hist-count" id="histMiniCount">0 条</div>
@@ -2930,7 +2977,18 @@
                 <section>
                     <div class="panel">
                         <div class="p-head"><h2>方案模板</h2><span id="tpl-total" style="font-size:.72rem;color:var(--t3)"></span></div>
-                        <div class="p-body" id="tpl-list"></div>
+                        <div class="p-body">
+                            <!-- Preset Templates -->
+                            <div style="margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid var(--bd);">
+                                <h3 style="font-size:.8rem;color:var(--t2);margin:0 0 .5rem 0;">📚 预设模板</h3>
+                                <div id="preset-tpls" style="display:flex;flex-direction:column;gap:.4rem;"></div>
+                            </div>
+                            <!-- User Templates -->
+                            <div>
+                                <h3 style="font-size:.8rem;color:var(--t2);margin:0 0 .5rem 0;">💾 我的模板</h3>
+                                <div id="tpl-list"></div>
+                            </div>
+                        </div>
                     </div>
                 </section>
                 <aside></aside>
@@ -4413,7 +4471,55 @@ $('modelForm').addEventListener('submit',e=>{
 // ===== Templates =====
 let currentPlanData = null;
 
+// Preset templates
+const PRESET_TEMPLATES = [
+    {
+        id: 'preset-1',
+        name: '🌸 日系清新人像',
+        desc: '适合：户外自然光、校园、街道',
+        input: { style: '日系', modelDesc: '年轻女性，自然妆容，休闲服装', scene: '校园/街道/公园', mood: '清新自然', duration: '2小时', people: '1', extra: '低饱和色调，胶片质感' }
+    },
+    {
+        id: 'preset-2',
+        name: '🌃 都市夜景时尚',
+        desc: '适合：霓虹灯、城市街道、天台',
+        input: { style: '港风', modelDesc: '时尚造型，精致妆容', scene: '霓虹街道/天台/商圈', mood: '酷飒自信', duration: '3小时', people: '1', extra: '高对比，霓虹反光' }
+    },
+    {
+        id: 'preset-3',
+        name: '🍂 复古胶片私房',
+        desc: '适合：室内、民宿、复古场景',
+        input: { style: '复古', modelDesc: '优雅气质，复古造型', scene: '复古民宿/老洋房', mood: '慵懒优雅', duration: '2小时', people: '1', extra: '暖色调，颗粒感，柔光' }
+    },
+    {
+        id: 'preset-4',
+        name: '🌲 森系氧气写真',
+        desc: '适合：森林、草地、自然光',
+        input: { style: '森系', modelDesc: '清新自然，淡妆', scene: '森林/草地/花丛', mood: '氧气感', duration: '2小时', people: '1', extra: '逆光，绿色调，朦胧感' }
+    },
+    {
+        id: 'preset-5',
+        name: '💼 商务形象照',
+        desc: '适合：职场、简历、LinkedIn',
+        input: { style: '商业', modelDesc: '职业装，干练造型', scene: '办公室/纯色背景', mood: '专业自信', duration: '1小时', people: '1', extra: '中性灰，精修，标准构图' }
+    }
+];
+
 function renderTpl() {
+    // Render preset templates
+    const presetContainer = $('preset-tpls');
+    if (presetContainer) {
+        presetContainer.innerHTML = PRESET_TEMPLATES.map(t => `
+            <div class="tpl-card" style="border-left:3px solid var(--ac);">
+                <div class="tpl-name">${t.name}</div>
+                <div class="tpl-desc">${t.desc}</div>
+                <div style="font-size:.7rem;color:var(--t3);margin-bottom:.5rem;">风格: ${t.input.style} · 时长: ${t.input.duration}</div>
+                <div class="tpl-actions"><button class="btn btn-s btn-sm" onclick="usePresetTpl('${t.id}')">⚡ 使用</button></div>
+            </div>
+        `).join('');
+    }
+    
+    // Render user templates
     const list=sg(SK.T)||[];
     $('t-tpl').textContent=list.length;
     $('tpl-total').textContent=`共 ${list.length} 个模板`;
@@ -4429,6 +4535,32 @@ function renderTpl() {
                 <div style="display:flex;gap:.4rem;"><button class="btn btn-p btn-sm" onclick="genFromTpl('${t.id}')">⚡ 生成</button><button class="btn btn-s btn-sm" onclick="document.getElementById('tpl-form-${t.id}').classList.remove('active')">收起</button></div>
             </div>
         </div>`).join('');
+}
+
+function usePresetTpl(id) {
+    const tpl = PRESET_TEMPLATES.find(t => t.id === id);
+    if (!tpl) return;
+    
+    // Fill form with preset data
+    $('f-theme').value = '';
+    $('f-style').value = tpl.input.style || '';
+    $('f-model').value = tpl.input.modelDesc || '';
+    $('f-scene').value = tpl.input.scene || '';
+    $('f-mood').value = tpl.input.mood || '';
+    $('f-dur').value = tpl.input.duration || '2小时';
+    $('f-people').value = tpl.input.people || '1';
+    $('f-extra').value = tpl.input.extra || '';
+    
+    // Switch to gen tab
+    document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-cnt').forEach(c=>c.classList.remove('active'));
+    document.querySelector('[data-tab="gen"]').classList.add('active');
+    $('tab-gen').classList.add('active');
+    
+    // Update preview
+    updatePlanPreview();
+    
+    toast(`已加载「${tpl.name}」模板，填写主题后即可生成`, 'ok');
 }
 function delTpl(id){ let l=sg(SK.T)||[]; l=l.filter(t=>t.id!==id); ss(SK.T,l); renderTpl(); toast(i18n[currentLang]['toast.deleted']); }
 function useTpl(id){ document.getElementById('tpl-form-'+id).classList.toggle('active'); }
@@ -4554,46 +4686,65 @@ async function genPlan(input) {
         ? `\n【场景特征】地点类型：${matchedScene.location}，天气光线：${matchedScene.weather}，推荐道具：${matchedScene.prop}`
         : '';
 
-    const prompt = `作为专业摄影师，请为以下拍摄需求生成详细的拍摄方案：
+    // Structured Prompt with Role-Context-Task-Output format
+    const prompt = `<role>
+你是一位拥有15年经验的专业商业摄影师，擅长人像、时尚、商业广告摄影。你的任务是根据客户需求制定详细的拍摄执行方案。
+</role>
 
+<context>
 【拍摄主题】${theme}
-【风格】${style}
-【模特】${model}
-【场景】${scene}
+【风格定位】${style}${styleHint}
+【场景设定】${scene}${sceneHint}
+【模特信息】${model}
 【情绪氛围】${mood}
-【时长】${duration}
-【人数】${people}人
-${extra ? '【额外要求】' + extra : ''}${styleHint}${sceneHint}
+【拍摄时长】${duration}
+【参与人数】${people}人
+${extra ? '【特殊要求】' + extra : ''}
+</context>
 
-请按以下格式输出（每个部分3-5条具体建议，内容必须与上述风格/场景/主题强相关）：
+<task>
+基于以上信息，生成一份可直接执行的专业拍摄方案。每个部分必须紧扣"${style}"风格和"${theme}"主题，禁止出现通用建议。
+</task>
+
+<output_format>
+请严格按照以下9个章节输出，每个章节3-5条具体可执行的建议：
 
 ${locationPrompt}
 
-🧍 摆姿指导：
-- 符合"${style}"风格的摆姿（${matchedStyle ? matchedStyle.pose : '根据风格调整'}）
+🧍 摆姿指导（${matchedStyle ? matchedStyle.pose : '根据风格定制'}）：
+- 3-5个符合风格的摆姿，包含身体角度、视线方向、手脚位置
 
-💄 妆造建议：
-- 发型、妆容、服装、配饰（${matchedStyle ? matchedStyle.makeup : '根据风格调整'}）
+💄 妆造建议（${matchedStyle ? matchedStyle.makeup : '根据风格定制'}）：
+- 发型细节、妆容重点、服装搭配、配饰选择
 
-🎬 道具清单：
-- 符合主题和风格的道具（${matchedScene ? matchedScene.prop : '根据场景选择'}）
+🎬 道具清单（${matchedScene ? matchedScene.prop : '根据场景定制'}）：
+- 主道具、辅助道具、应急备选
 
-🌤️ 天气建议：
-- 最佳天气和时段（${matchedScene ? matchedScene.weather : '根据场景调整'}）
+🌤️ 天气与光线（${matchedScene ? matchedScene.weather : '根据场景定制'}）：
+- 最佳天气条件、黄金时段、补光方案
 
-🔭 焦段推荐：
-- 推荐焦段及原因
+🔭 器材配置：
+- 机身、镜头焦段、附件、备用方案
 
-⏰ 时间安排：
-- 详细时间表
+⏰ 时间流程：
+- 准备→化妆→拍摄→收尾的详细时间表
 
-🎨 后期调色：
-- 调色方向（${matchedStyle ? matchedStyle.color : '根据风格调整'}）
+🎨 后期方向（${matchedStyle ? matchedStyle.color : '根据风格定制'}）：
+- 调色风格、修图程度、交付格式
 
-⚠️ 注意事项：
-- 拍摄注意事项
+⚠️ 风险预案：
+- 天气突变、设备故障、模特状态等应对措施
 
-请用中文回答，内容要具体、实用、专业，且必须与输入的风格/主题/场景强相关，不要出现与主题无关的通用建议。`;
+💡 加分技巧：
+- 能让作品更出彩的专业技巧
+</output_format>
+
+<constraints>
+- 所有建议必须与"${style}"风格和"${theme}"主题强相关
+- 禁止使用"根据情况调整"等模糊表述
+- 每个建议都要具体可执行
+- 使用专业摄影术语
+</constraints>`;
 
     try {
         // Call Pollinations text generation API
@@ -5759,6 +5910,73 @@ $('briefForm').addEventListener('submit',handleSubmit);
     }
 });
 
+// ===== Real-time Preview =====
+function updatePlanPreview() {
+    const theme = $('f-theme').value.trim() || '未填写主题';
+    const style = $('f-style').value || '未选择风格';
+    const mood = $('f-mood').value.trim() || '未填写情绪';
+    const scene = $('f-scene').value.trim() || '未填写场景';
+    const model = $('f-model').value.trim() || '未填写模特信息';
+    const duration = $('f-dur').value;
+    const people = $('f-people').value;
+    const extra = $('f-extra').value.trim();
+
+    // Update status
+    const hasContent = theme !== '未填写主题' || style !== '未选择风格';
+    $('previewStatus').textContent = hasContent ? '已填写基本信息' : '等待填写...';
+    $('previewStatus').style.color = hasContent ? 'var(--ac)' : 'var(--t3)';
+
+    // Update tags
+    const tagsHtml = [
+        { label: '主题', value: theme, highlight: theme !== '未填写主题' },
+        { label: '风格', value: style, highlight: style !== '未选择风格' },
+        { label: '情绪', value: mood, highlight: mood !== '未填写情绪' },
+        { label: '场景', value: scene, highlight: scene !== '未填写场景' },
+        { label: '时长', value: duration, highlight: true },
+        { label: '人数', value: people + '人', highlight: true }
+    ].map(tag => `<span class="preview-tag ${tag.highlight ? 'highlight' : ''}">${tag.label}: ${tag.value}</span>`).join('');
+    $('previewTags').innerHTML = tagsHtml;
+
+    // Update style match info
+    const styleKeywords = {
+        '日系': '清新自然、低饱和色调、生活化摆姿',
+        '复古': '胶片质感、暖色调、优雅摆姿',
+        '港风': '霓虹夜景、高对比、街头感',
+        '森系': '氧气感、绿色调、自然互动',
+        '韩系': '时尚精致、高明度、设计感',
+        '欧美': '大气自信、高对比、张力感',
+        '情绪': '氛围感、暗调、故事性',
+        '商业': '专业高级、中性灰、精致'
+    };
+    const matchedStyle = styleKeywords[style];
+    $('previewMatch').innerHTML = matchedStyle 
+        ? `<strong>✓ 已匹配「${style}」风格</strong><br>${matchedStyle}`
+        : '选择风格后将显示风格特征提示';
+
+    // Update tips
+    const tips = [];
+    if (theme === '未填写主题') tips.push('建议填写拍摄主题，如：都市时尚夜景');
+    if (style === '未选择风格') tips.push('选择风格可获得更精准的方案建议');
+    if (model === '未填写模特信息') tips.push('填写模特特征有助于生成个性化摆姿建议');
+    if (scene === '未填写场景') tips.push('描述场景可获得更精准的地点和光线建议');
+    if (extra) tips.push(`已添加特殊要求：${extra.substring(0, 20)}${extra.length > 20 ? '...' : ''}`);
+    if (tips.length === 0) tips.push('信息完整，点击生成按钮开始生成方案');
+    
+    $('previewTips').innerHTML = tips.map(tip => `<li>${tip}</li>`).join('');
+}
+
+// Attach preview update listeners
+['f-theme','f-style','f-mood','f-scene','f-model','f-dur','f-people','f-extra'].forEach(id=>{
+    const el=$(id);
+    if(el){
+        el.addEventListener('input',updatePlanPreview);
+        el.addEventListener('change',updatePlanPreview);
+    }
+});
+
+// Initial preview update
+updatePlanPreview();
+
 // ===== Image Upload Handling =====
 let uploadedImages = [];
 
@@ -5920,6 +6138,80 @@ function renderHistMini(){
         const d=new Date(p.savedAt);
         return`<div class="hist-item" onclick="loadPlan('${p.id}')"><div class="hist-title">${p.title}</div><div class="hist-meta"><span>${p.input && p.input.style||'待定'}</span><span>${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}</span></div></div>`;
     }).join(''):'<div class="hist-empty" data-i18n="plan.noHistory">暂无历史</div>';
+    // Update smart recommendations
+    renderSmartRecommendations();
+}
+
+// ===== Smart Recommendations =====
+function renderSmartRecommendations(){
+    const plans = getPlans();
+    const recList = $('recList');
+    if (!recList) return;
+    
+    if (plans.length === 0) {
+        recList.innerHTML = '<div style="padding:.5rem;background:var(--bg2);border-radius:6px;font-size:.75rem;color:var(--t3);">生成第一个方案后，将为您推荐相似风格</div>';
+        return;
+    }
+    
+    // Analyze style frequency
+    const styleCount = {};
+    plans.forEach(p => {
+        const style = p.input?.style || '其他';
+        styleCount[style] = (styleCount[style] || 0) + 1;
+    });
+    
+    // Get top 3 styles
+    const topStyles = Object.entries(styleCount)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3);
+    
+    // Get recent themes for inspiration
+    const recentThemes = plans.slice(0, 3).map(p => p.input?.theme).filter(Boolean);
+    
+    // Generate recommendations
+    const recommendations = [];
+    
+    if (topStyles.length > 0) {
+        const [topStyle, count] = topStyles[0];
+        recommendations.push({
+            icon: '🎯',
+            text: `您常用「${topStyle}」风格（${count}次）`,
+            action: () => { $('f-style').value = topStyle; updatePlanPreview(); }
+        });
+    }
+    
+    if (recentThemes.length > 0) {
+        const themeKeywords = recentThemes[0].split(/[,，\s]+/).slice(0, 2).join(' ');
+        recommendations.push({
+            icon: '💡',
+            text: `尝试「${themeKeywords}」的变体`,
+            action: () => { $('f-theme').value = themeKeywords + ' 夜景'; updatePlanPreview(); }
+        });
+    }
+    
+    // Time-based recommendation
+    const hour = new Date().getHours();
+    if (hour >= 18 || hour <= 6) {
+        recommendations.push({
+            icon: '🌙',
+            text: '夜间拍摄建议：霓虹/夜景风格',
+            action: () => { $('f-style').value = '港风'; $('f-theme').value = '都市霓虹夜景'; updatePlanPreview(); }
+        });
+    } else {
+        recommendations.push({
+            icon: '☀️',
+            text: '日间拍摄建议：自然光/森系风格',
+            action: () => { $('f-style').value = '森系'; $('f-theme').value = '阳光森林人像'; updatePlanPreview(); }
+        });
+    }
+    
+    // Render
+    recList.innerHTML = recommendations.map(rec => `
+        <div onclick="(${rec.action.toString()})()" style="padding:.5rem;background:var(--bg2);border-radius:6px;cursor:pointer;transition:all .2s;" onmouseover="this.style.background='var(--ac-glow)'" onmouseout="this.style.background='var(--bg2)'">
+            <span style="margin-right:.3rem;">${rec.icon}</span>
+            <span style="font-size:.75rem;color:var(--t1);">${rec.text}</span>
+        </div>
+    `).join('');
 }
 function renderHistFull(){
     const ps=getPlans();
