@@ -1,391 +1,328 @@
 # PhotoAtelier - 摄影方案智能工作流
 
-> 一个为摄影师打造的智能拍摄方案生成与管理工作流平台。基于 AI 生成个性化拍摄方案，支持模特特征分析、场景推荐、光线指导、后期调色建议，以及一键生成参考图。
-
-[![Deploy to Cloudflare Pages](https://img.shields.io/badge/Deploy-Cloudflare%20Pages-F38020?logo=cloudflare)](https://photo-workflow.pages.dev)
-[![Worker API](https://img.shields.io/badge/API-Cloudflare%20Workers-F38020?logo=cloudflare)](https://photo-workflow-img.photomagic.workers.dev)
+> ⚠️ **智能体阅读指南**：本文档面向 AI 编程助手。修改代码前必须阅读此文档。
 
 ---
 
-## 功能特性
+## 1. 项目概览（30秒了解）
 
-### 核心功能
-- **AI 方案生成** - 根据风格、场景、模特特征生成完整拍摄方案
-- **模特特征预设** - 6 维度特征选择器（身高、体型、脸型、发型、肤色、五官）
-- **12 种摄影风格模板** - 日系、港风、复古、森系、商业、韩系、情绪、杂志、度假、法式、古风、婚纱
-- **智能提示词反推** - 从方案自动生成英文 AI 绘画提示词（支持 Midjourney/Stable Diffusion/MiniMax）
-- **批量图片生成** - 一键生成 9 张不同角度的参考图
-- **日程管理** - 拍摄日程日历视图、拖拽排序、右键菜单
-- **飞书同步** - 日程同步到飞书日历、多维表格
+**这是什么**：为摄影师打造的 AI 拍摄方案生成平台
+- 用户选择风格 + 模特特征 → AI 生成完整拍摄方案
+- 支持一键生成 9 张参考图（MiniMax API）
+- 日程管理 + 飞书同步
 
-### 技术栈
-- **前端**: 纯 HTML/CSS/JS (无框架依赖)
-- **后端**: Cloudflare Workers (Node.js)
-- **数据库**: Supabase (PostgreSQL)
-- **图片生成**: MiniMax image-01 API
-- **部署**: Cloudflare Pages + Workers
+**技术栈**：
+```
+前端：纯 HTML/CSS/JS（单文件 index.html）
+后端：Cloudflare Workers（api/index.js）
+数据库：Supabase
+部署：Cloudflare Pages + Workers
+```
+
+**线上地址**：
+- 前端：https://photo-workflow.pages.dev
+- API：https://photo-workflow-img.photomagic.workers.dev
 
 ---
 
-## 项目结构
+## 2. 智能体快速导航
+
+### 2.1 文件地图（修改前必看）
 
 ```
 photo-workflow/
-├── 📁 api/                      # Cloudflare Worker API
-│   ├── index.js                 # 主入口：路由、认证、API 端点
-│   ├── imageGeneration.js       # MiniMax 图片生成
-│   ├── worker.js                # Worker 工具函数
-│   └── vercel.json              # Vercel 配置（已弃用）
 │
-├── 📁 .github/workflows/        # GitHub Actions
-│   ├── deploy.yml               # 部署到 GitHub Pages
-│   └── deploy-pages.yml         # Cloudflare Pages 部署
+├── 📄 index.html          ← 【前端主文件】所有 UI 和前端逻辑
+│   └── 关键区域标记（搜索这些注释定位）：
+│       - "<!-- 登录区域 -->"
+│       - "<!-- 方案生成区域 -->"
+│       - "<!-- 模特选择器 -->"
+│       - "<!-- 日程管理 -->"
+│       - "<!-- 图片生成 -->"
+│       - "// ===== Auth System"        （JS 开始）
+│       - "// ===== API Configuration"  （API_BASE 配置）
+│       - "// ===== Image Generation"   （图片生成逻辑）
 │
-├── 📁 skills/                   # AI Skill 文档
-│   └── photo-shot-analyzer.md   # 拍摄分析 Skill
+├── 📁 api/
+│   └── index.js           ← 【后端主文件】所有 API 端点
+│       └── 路由结构：
+│           - /auth/login      登录
+│           - /plans           方案 CRUD
+│           - /schedules       日程管理
+│           - /imageGeneration MiniMax 图片生成
+│           - /feishu/*        飞书同步
 │
-├── 📝 index.html                # 主应用（单页应用）
-├── 📝 landing.html              # 落地页
-├── 📝 dashboard.html            # 仪表盘
-├── 📝 portfolio.html            # 作品集展示
-├── 📝 preview.html              # 预览页面
-│
-├── ⚙️ wrangler.toml             # Wrangler 配置（Worker）
-├── ⚙️ vercel.json               # Vercel 配置
-├── 📄 _headers                  # Cloudflare Pages 响应头
-├── 📄 _redirects                # Cloudflare Pages 重定向
-├── 📄 robots.txt                # SEO 爬虫配置
-├── 📄 sitemap.xml               # SEO 站点地图
-│
-├── 📖 README.md                 # 本文件
-├── 📖 BUILD.md                  # Tauri 桌面版构建指南
-└── 📖 portfolio-design.md       # 作品集设计文档
+├── ⚙️ wrangler.toml       ← Worker 部署配置
+├── ⚙️ _headers            ← Pages 响应头配置
+└── 📄 _redirects          ← Pages 路由重定向
 ```
 
-### 关键文件说明
+### 2.2 关键配置（修改前检查）
 
-| 文件 | 说明 |
-|------|------|
-| `api/index.js` | Worker 主入口，包含所有 API 路由和逻辑 |
-| `index.html` | 主应用，包含完整的摄影方案工作流 UI |
-| `wrangler.toml` | Worker 部署配置 |
-| `_headers` | Pages 自定义响应头（CORS 等） |
+| 配置项 | 位置 | 说明 |
+|--------|------|------|
+| `API_BASE` | index.html:3636 | 前端调用 API 的地址 |
+| `MINIMAX_API_KEY` | Worker 环境变量 | 图片生成 API 密钥 |
+| `SUPABASE_URL/KEY` | api/index.js:4-5 | 数据库（硬编码，勿改） |
+| `FEISHU_APP_ID` | api/index.js:6 | 飞书应用（硬编码，勿改） |
 
 ---
 
-## 多平台部署指南
+## 3. 最近变更记录（智能体必读）
 
-### 1. Cloudflare Pages + Workers（推荐）
-
-#### 前置要求
-- Cloudflare 账号
-- Wrangler CLI: `npm install -g wrangler`
-- 登录: `wrangler login`
-
-#### 部署步骤
-
-```bash
-# 1. 克隆项目
-git clone https://github.com/ronineymessjr-sudo/photo-workflow.git
-cd photo-workflow
-
-# 2. 部署 Worker（后端 API）
-npx wrangler deploy
-# 输出: https://photo-workflow-img.photomagic.workers.dev
-
-# 3. 部署 Pages（前端）
-npx wrangler pages deploy . --project-name=photo-workflow
-# 输出: https://photo-workflow.pages.dev
-
-# 4. 更新前端 API 地址
-# 编辑 index.html 第 3636 行:
-# const API_BASE = 'https://你的-worker-地址/api';
-```
-
-#### 环境变量配置
-
-在 Cloudflare Dashboard → Workers → 你的 Worker → Settings → Variables 中添加：
-
-```
-MINIMAX_API_KEY = your_minimax_api_key
-```
-
----
-
-### 2. OpenFlow 部署
-
-OpenFlow 支持标准的静态网站托管和 Serverless 函数。
-
-```bash
-# 1. 安装 OpenFlow CLI
-npm install -g @openflow/cli
-
-# 2. 登录
-openflow login
-
-# 3. 配置 oflow.json
-cat > oflow.json << 'EOF'
-{
-  "name": "photo-workflow",
-  "type": "static",
-  "build": {
-    "output": "."
-  },
-  "functions": {
-    "api/*": {
-      "runtime": "nodejs18",
-      "entry": "api/index.js"
-    }
-  }
-}
-EOF
-
-# 4. 部署
-openflow deploy
-```
-
----
-
-### 3. Cloud Code 部署
-
-Cloud Code 是 Google Cloud 的开发工具，支持 Cloud Run 和 App Engine。
-
-```bash
-# 1. 安装 Cloud Code CLI
-gcloud components install cloud-code
-
-# 2. 创建 app.yaml（App Engine）
-cat > app.yaml << 'EOF'
-runtime: nodejs18
-handlers:
-  - url: /api/.*
-    script: auto
-  - url: /(.*)
-    static_files: \1
-    upload: (.*)
-EOF
-
-# 3. 部署到 App Engine
-gcloud app deploy
-
-# 或者部署到 Cloud Run
-gcloud run deploy photo-workflow --source . --port 8080
-```
-
----
-
-### 4. CodeDesk 部署
-
-CodeDesk 是代码即平台的部署方案。
-
-```bash
-# 1. 安装 CodeDesk CLI
-npm install -g @codedesk/cli
-
-# 2. 初始化项目
-codedesk init
-
-# 3. 配置 codedesk.yml
-cat > codedesk.yml << 'EOF'
-name: photo-workflow
-version: 1.0.0
-build:
-  type: static
-  output: .
-functions:
-  - path: /api/*
-    handler: api/index.js
-    runtime: node
-EOF
-
-# 4. 部署
-codedesk deploy
-```
-
----
-
-### 5. Vercel 部署（备用）
-
-```bash
-# 1. 安装 Vercel CLI
-npm install -g vercel
-
-# 2. 登录
-vercel login
-
-# 3. 部署
-vercel --prod
-
-# 注意：Vercel Serverless 配置在 api/ 目录下
-# 但项目已迁移到 Cloudflare Workers，建议使用 Workers
-```
-
----
-
-### 6. GitHub Pages 部署
-
-```bash
-# 1. 启用 GitHub Pages
-# Settings → Pages → Source: GitHub Actions
-
-# 2. 推送代码到 master 分支
-# .github/workflows/deploy.yml 会自动触发部署
-
-# 3. 注意：GitHub Pages 只托管静态文件
-# API 需要另外部署到 Workers/Vercel/Netlify Functions
-```
-
----
-
-### 7. 本地开发
-
-```bash
-# 1. 启动本地 HTTP 服务器
-python -m http.server 8080
-# 或
-npx serve .
-
-# 2. 启动 Worker 本地开发
-npx wrangler dev
-
-# 3. 访问
-# 前端: http://localhost:8080
-# API: http://localhost:8787
-```
-
----
-
-## 开发规范
-
-### 代码风格
-- **缩进**: 4 空格
-- **引号**: 单引号优先
-- **分号**: 语句末尾必须加分号
-- **注释**: `//` 单行，`/* */` 多行
-
-### 命名规范
+### 2025-01-20 - 语法错误修复
+**问题**：登录按钮点击无反应  
+**根因**：3 处 `catch` 块的 `}` 被同行 `//` 注释隐藏
 ```javascript
-// 常量: 全大写 + 下划线
+// ❌ 错误写法（第 3863、7496、7512 行）
+} catch (e) { // console.log('error'); }
+
+// ✅ 正确写法
+} catch (e) { // console.log('error');
+}
+```
+**状态**：✅ 已修复  
+**影响范围**：`index.html` 中 `loadServerData`、`addSchedule`、`deleteSchedule` 函数
+
+### 2025-01-20 - 登录函数全局化
+**变更**：`handleLogin` 和 `logout` 从 IIFE 移到全局作用域  
+**原因**：HTML 的 `onclick` 需要全局函数  
+**状态**：✅ 已完成
+
+### 2025-01-20 - MiniMax 图片生成集成
+**新增**：Worker 端点 `/api/imageGeneration`  
+**功能**：调用 MiniMax image-01 模型生成图片  
+**状态**：✅ 已部署
+
+---
+
+## 4. 智能体开发规范（强制遵守）
+
+### 4.1 修改前检查清单
+
+```markdown
+□ 阅读 "最近变更记录" 了解上下文
+□ 搜索目标代码位置（使用提供的注释标记）
+□ 检查是否有硬编码配置需要同步修改
+□ 修改后验证括号平衡（{ }、[ ]、( )）
+□ 修改后验证分号完整
+□ 本地测试通过后再提交
+```
+
+### 4.2 代码风格（必须遵守）
+
+```javascript
+// 缩进：4 空格（禁止 Tab）
+// 引号：单引号优先
+// 分号：语句末尾必须加分号
+
+// 常量命名
 const API_BASE = 'https://...';
 const SK_SCHED = 'pw_schedule';
 
-// 函数: 驼峰式
+// 函数命名
 function handleLogin() {}
-function renderSchedules() {}
+async function generateImages() {}
 
-// 变量: 驼峰式
+// 变量命名
 let currentLang = 'zh';
-let draggedItem = null;
+let isGenerating = false;
 
-// 全局挂载: window.xxx
-window.api = {...};
-window.addSchedule = function() {};
+// 全局挂载（供 HTML onclick 使用）
+window.api = { ... };
+window.addSchedule = async function() {};
 ```
 
-### 文件组织
-```
-新增功能时:
-1. UI 组件 → index.html (搜索 "<!-- 功能区域 -->" 定位)
-2. API 端点 → api/index.js (添加到 router)
-3. 工具函数 → api/index.js 底部或新建文件
-4. 样式 → index.html 的 <style> 标签内
-```
+### 4.3 常见陷阱（避免踩坑）
 
-### Git 提交规范
-```
-feat: 新功能
-fix: 修复 bug
-docs: 文档更新
-style: 代码格式（不影响功能）
-refactor: 重构
-test: 测试相关
-chore: 构建/工具相关
-
-示例:
-feat: 添加模特特征预设选择器
-fix: 修复 catch 块语法错误
-docs: 更新 README 部署指南
-```
-
----
-
-## API 端点列表
-
-| 端点 | 方法 | 说明 |
+| 陷阱 | 示例 | 后果 |
 |------|------|------|
-| `/api/auth/login` | POST | 用户登录/注册 |
-| `/api/plans` | GET/POST | 获取/创建方案 |
-| `/api/schedules` | GET/POST/DELETE | 日程管理 |
-| `/api/imageGeneration` | POST | MiniMax 图片生成 |
-| `/api/feishu/sync-calendar` | POST | 同步到飞书日历 |
-| `/api/feishu/bitable` | POST | 同步到飞书多维表格 |
+| catch 块注释 | `} catch (e) { // log }` | `}` 被注释，语法错误 |
+| 模板字符串换行 | `` `text ${var} text` `` | 注意 ${} 内的括号平衡 |
+| IIFE 内定义函数 | `(function(){ function x(){} })()` | HTML onclick 找不到函数 |
+| 缺少分号 | `const a = 1\nconst b = 2` | ASI 自动插入可能导致错误 |
+| 引号嵌套 | `'It\'s a "test"'` | 注意转义 |
 
----
+### 4.4 括号平衡验证
 
-## 配置说明
-
-### 必需环境变量
-
-| 变量名 | 说明 | 获取方式 |
-|--------|------|----------|
-| `MINIMAX_API_KEY` | MiniMax API 密钥 | [MiniMax 开发者平台](https://www.minimaxi.com/) |
-
-### 内置配置（无需修改）
-
-- **Supabase**: 数据库配置已硬编码在 `api/index.js`
-- **飞书**: App ID/Secret 已硬编码（生产环境建议改为环境变量）
-
----
-
-## 故障排除
-
-### 常见问题
-
-**Q: 登录按钮点击无反应**
-```
-原因: catch 块的 } 被 // 注释隐藏
-解决: 确保 catch 块的 } 单独一行
-```
-
-**Q: 图片生成失败**
-```
-原因: MINIMAX_API_KEY 未设置
-解决: 在 Cloudflare Dashboard 添加环境变量
-```
-
-**Q: API 请求超时**
-```
-原因: Worker 未部署或网络问题
-检查: curl https://你的-worker地址/api/auth/login
+修改后必须验证：
+```bash
+# 提取 JS 并检查语法
+cd photo-workflow
+python -c "
+import re
+with open('index.html','r') as f:
+    s = re.findall(r'<script[^>]*>(.*?)</script>', f.read(), re.DOTALL)[3]
+with open('check.js','w') as f:
+    f.write(s)
+"
+node --check check.js
+# 输出为空 = 语法正确
 ```
 
 ---
 
-## 更新日志
+## 5. 功能模块详解（按需阅读）
 
-### v1.0.0 (2025-01-20)
-- ✨ AI 方案生成（基于模特特征个性化）
-- ✨ 12 种摄影风格模板
-- ✨ MiniMax 图片生成集成
-- ✨ 飞书日历/多维表格同步
-- ✨ 日程管理（拖拽排序、右键菜单）
+### 5.1 认证系统
+
+**文件**：`index.html`  
+**标记**：搜索 `// ===== Auth System`
+
+```javascript
+// 关键变量
+const TOKEN_KEY = 'pw_token';
+const USER_KEY = 'pw_user';
+
+// 全局函数（HTML 直接调用）
+async function handleLogin() { ... }
+function logout() { ... }
+
+// API 封装
+window.api = {
+    login(email, password) { ... },
+    request(path, method, body) { ... }
+};
+```
+
+### 5.2 方案生成
+
+**文件**：`index.html`  
+**标记**：搜索 `// ===== Plan Generation`
+
+```javascript
+// 流程：
+// 1. 用户选择风格 + 模特特征
+// 2. 调用 AI 生成中文方案
+// 3. 反推英文提示词（buildImagePromptVariant）
+// 4. 批量生成 9 张图片
+
+// 关键函数
+function generatePlan() { ... }
+function buildImagePromptVariant(plan) { ... }
+async function generateImagesBatch() { ... }
+```
+
+### 5.3 图片生成
+
+**文件**：`api/index.js`  
+**端点**：`/api/imageGeneration`
+
+```javascript
+// 请求格式
+{
+    "prompt": "英文提示词",
+    "prompt_text": "备用字段"
+}
+
+// 响应格式
+{
+    "success": true,
+    "imageUrl": "https://..." 或 "data:image/jpeg;base64,..."
+}
+```
+
+### 5.4 日程管理
+
+**文件**：`index.html`  
+**标记**：搜索 `// ===== Calendar & Schedule`
+
+```javascript
+// 本地存储键
+const SK_SCHED = 'pw_schedule';
+
+// 关键函数
+window.addSchedule = async function() { ... };
+window.deleteSchedule = async function(id) { ... };
+function renderCalendar() { ... };
+function renderSchedules() { ... };
+```
 
 ---
 
-## 许可证
+## 6. 部署指南（各平台）
 
-MIT License
+### 6.1 Cloudflare（主部署）
+
+```bash
+# Worker（后端）
+npx wrangler deploy
+
+# Pages（前端）
+npx wrangler pages deploy . --project-name=photo-workflow
+```
+
+### 6.2 其他平台
+
+| 平台 | 命令 | 注意事项 |
+|------|------|----------|
+| Vercel | `vercel --prod` | 需要配置 vercel.json |
+| Netlify | `netlify deploy --prod` | 需要配置 netlify.toml |
+| GitHub Pages | 推送自动部署 | 仅静态，API 需另部署 |
 
 ---
 
-## 贡献者
+## 7. 故障排查速查表
 
-- 开发者: ronineymessjr-sudo
+| 现象 | 可能原因 | 检查点 |
+|------|----------|--------|
+| 登录按钮无反应 | `handleLogin` 未定义 | 搜索 `handleLogin is not defined` |
+| 页面白屏 | JS 语法错误 | `node --check` 验证 |
+| API 请求失败 | `API_BASE` 错误 | 检查 index.html:3636 |
+| 图片生成失败 | `MINIMAX_API_KEY` 缺失 | Worker 环境变量 |
+| 飞书同步失败 | Token 过期 | 检查 `getFeishuToken()` |
 
 ---
 
-## 相关链接
+## 8. 智能体任务模板
 
-- **线上地址**: https://photo-workflow.pages.dev
-- **API 文档**: https://photo-workflow-img.photomagic.workers.dev
-- **GitHub**: https://github.com/ronineymessjr-sudo/photo-workflow
+### 任务：添加新功能
+
+```markdown
+## 任务描述
+添加 [功能名称]
+
+## 影响文件
+- index.html（UI + 前端逻辑）
+- api/index.js（如需要新 API）
+
+## 修改位置
+- index.html: 搜索 "<!-- [区域] -->"
+- api/index.js: 在 router 中添加新路由
+
+## 验证步骤
+1. 本地启动：python -m http.server 8080
+2. 访问 http://localhost:8080 测试
+3. 检查浏览器控制台无错误
+4. node --check 验证语法
+
+## 提交信息
+feat: 添加 [功能名称]
+
+- [修改点1]
+- [修改点2]
+```
+
+---
+
+## 9. 附录
+
+### 9.1 技术栈版本
+- Node.js: 18+
+- Wrangler: 3.x
+- MiniMax API: v1
+
+### 9.2 外部依赖
+- Supabase（数据库）
+- MiniMax（图片生成）
+- 飞书开放平台（日历/多维表格）
+
+### 9.3 相关文档
+- 项目设计文档：见 `skills/photo-shot-analyzer.md`
+- 构建指南：见 `BUILD.md`
+
+---
+
+> 📌 **最后更新**：2025-01-20  
+> 👤 **维护者**：AI 编程助手团队  
+> 📝 **修改前必读**：第 2、3、4 节
