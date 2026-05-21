@@ -3633,41 +3633,40 @@ if (document.getElementById('loginOverlay')) {
 })();
 
 // ===== Auth System & App Entry =====
-(function() {
-    const API_BASE = 'https://photo-workflow-img.photomagic.workers.dev/api';
-    const TOKEN_KEY = 'pw_token';
-    const USER_KEY = 'pw_user';
-    const ROLE_KEY = 'pw_role';
+const API_BASE = 'https://photo-workflow-img.photomagic.workers.dev/api';
+const TOKEN_KEY = 'pw_token';
+const USER_KEY = 'pw_user';
+const ROLE_KEY = 'pw_role';
 
-    window.api = {
-        base: API_BASE,
-        request: async function(path, method, body) {
-            method = method || 'GET';
-            body = body || null;
-            const opts = { method: method, headers: { 'Content-Type': 'application/json' } };
-            const token = localStorage.getItem(TOKEN_KEY);
-            if (token) opts.headers.Authorization = 'Bearer ' + token;
-            if (body) opts.body = JSON.stringify(body);
-            const r = await fetch(API_BASE + path, opts);
-            return r.json();
-        },
-        login(email, password) { return this.request('/auth/login', 'POST', { email, password }); },
-        getSchedules() { return this.request('/schedules'); },
-        createSchedule(data) { return this.request('/schedules', 'POST', data); },
-        deleteSchedule(id) { return this.request(`/schedules/${id}`, 'DELETE'); },
-        getPlans() { return this.request('/plans'); },
-        createPlan(data) { return this.request('/plans', 'POST', data); },
-        syncToFeishuCalendar(schedules) { return this.request('/feishu/sync-calendar', 'POST', { schedules }); },
-        writeToFeishuBitable(app_token, table_id, records) { return this.request('/feishu/bitable', 'POST', { app_token, table_id, records }); },
-        // Messages
-        getMessages() { return this.request('/messages'); },
-        createMessage(data) { return this.request('/messages', 'POST', data); },
-        updateMessageStatus(id, status) { return this.request(`/messages/${id}`, 'PATCH', { status }); },
-        deleteMessage(id) { return this.request(`/messages/${id}`, 'DELETE'); }
-    };
+window.api = {
+    base: API_BASE,
+    request: async function(path, method, body) {
+        method = method || 'GET';
+        body = body || null;
+        const opts = { method: method, headers: { 'Content-Type': 'application/json' } };
+        const token = localStorage.getItem(TOKEN_KEY);
+        if (token) opts.headers.Authorization = 'Bearer ' + token;
+        if (body) opts.body = JSON.stringify(body);
+        const r = await fetch(API_BASE + path, opts);
+        return r.json();
+    },
+    login(email, password) { return this.request('/auth/login', 'POST', { email, password }); },
+    getSchedules() { return this.request('/schedules'); },
+    createSchedule(data) { return this.request('/schedules', 'POST', data); },
+    deleteSchedule(id) { return this.request(`/schedules/${id}`, 'DELETE'); },
+    getPlans() { return this.request('/plans'); },
+    createPlan(data) { return this.request('/plans', 'POST', data); },
+    syncToFeishuCalendar(schedules) { return this.request('/feishu/sync-calendar', 'POST', { schedules }); },
+    writeToFeishuBitable(app_token, table_id, records) { return this.request('/feishu/bitable', 'POST', { app_token, table_id, records }); },
+    // Messages
+    getMessages() { return this.request('/messages'); },
+    createMessage(data) { return this.request('/messages', 'POST', data); },
+    updateMessageStatus(id, status) { return this.request(`/messages/${id}`, 'PATCH', { status }); },
+    deleteMessage(id) { return this.request(`/messages/${id}`, 'DELETE'); }
+};
 
-    // Login handler
-    window.handleLogin = async function() {
+// Login handler - defined globally for HTML onclick access
+async function handleLogin() {
         const email = document.getElementById('loginEmail').value.trim();
         const password = document.getElementById('loginPassword').value;
         if (!email || !password) { toast(i18n[currentLang]['login.inputBoth'], 'er'); return; }
@@ -3695,13 +3694,13 @@ if (document.getElementById('loginOverlay')) {
         }
     };
 
-    // Logout
-    window.logout = function() {
+    // Logout - defined globally for HTML onclick access
+    function logout() {
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem(USER_KEY);
         localStorage.removeItem(ROLE_KEY);
         location.reload();
-    };
+    }
 
     // Mouse spotlight effect with cursor glow
 (function() {
