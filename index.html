@@ -1154,6 +1154,7 @@
         .tpl-card { padding: .8rem; background: var(--bg); border: 1px solid var(--bd); border-radius: var(--radius); margin-bottom: .65rem; cursor: pointer; transition: all .15s; }
         .tpl-card:hover { border-color: var(--ac); box-shadow: 0 2px 10px rgba(212,132,10,.12); }
         .tpl-card:last-child { margin-bottom: 0; }
+        .tpl-guide-panel { animation: fadeInUp .3s ease; }
         .tpl-name { font-weight: 600; font-size: .86rem; margin-bottom: .3rem; display: flex; align-items: center; justify-content: space-between; }
         .tpl-desc { font-size: .75rem; color: var(--t3); margin-bottom: .4rem; }
         .tpl-actions { display: flex; gap: .4rem; }
@@ -4477,73 +4478,181 @@ const PRESET_TEMPLATES = [
         id: 'preset-1',
         name: '🌸 日系清新人像',
         desc: '适合：户外自然光、校园、街道、咖啡厅',
-        input: { style: '日系', modelDesc: '年轻女性，自然妆容，休闲服装（白衬衫/连衣裙）', scene: '校园/街道/公园/咖啡厅', mood: '清新自然', duration: '2小时', people: '1', extra: '低饱和色调，胶片质感，阳光过曝' }
+        input: { style: '日系', modelDesc: '年轻女性，自然妆容，休闲服装（白衬衫/连衣裙）', scene: '校园/街道/公园/咖啡厅', mood: '清新自然', duration: '2小时', people: '1', extra: '低饱和色调，胶片质感，阳光过曝' },
+        guide: {
+            poses: ['低头微笑看镜头，双手自然垂放', '侧身行走抓拍，裙摆微扬', '坐在长椅上，单手托腮望远方', '逆光回眸，头发被风吹起', '蹲下与花草互动，自然笑容'],
+            background: ['干净的天空（过曝白）', '绿树成荫的小路', '木质围栏/铁丝网', '日式自动贩卖机旁', '校园操场/图书馆前'],
+            lighting: ['黄金时段（日出后1小时/日落前2小时）', '树荫斑驳光影（丁达尔效应）', '逆光+反光板补面光', '阴天漫射光（最柔和）', '避免正午直射光'],
+            weather: ['最佳：晴转多云（云层做柔光箱）', '微风（头发自然飘动）', '避免：大雨、强风（破坏发型）', '阴天反而更适合日系柔调'],
+            props: ['透明雨伞', '自行车', '耳机', '书本/杂志', '冰淇淋/饮料', '帆布袋'],
+            timing: ['15:00-17:00（秋冬）', '16:00-18:00（春夏）', '避开12:00-14:00正午'],
+            postProcess: ['降饱和度15-20%', '加绿色/青色偏移', '轻微颗粒感（ISO400模拟）', '高光微过曝（+0.5EV）', '柔焦效果']
+        }
     },
     {
         id: 'preset-2',
         name: '🌃 港风复古夜景',
         desc: '适合：霓虹灯牌、城市街道、天台、老城区',
-        input: { style: '港风', modelDesc: '时尚造型，精致妆容，大红唇', scene: '霓虹街道/天台/老城区', mood: '酷飒自信', duration: '3小时', people: '1', extra: '高对比，霓虹反光，暗调胶片感' }
+        input: { style: '港风', modelDesc: '时尚造型，精致妆容，大红唇', scene: '霓虹街道/天台/老城区', mood: '酷飒自信', duration: '3小时', people: '1', extra: '高对比，霓虹反光，暗调胶片感' },
+        guide: {
+            poses: ['靠墙侧站，单手插兜，眼神冷峻', '回眸一笑，头发甩动', '坐在路边台阶，双腿交叉', '手持道具（墨镜/手机）看远方', '仰拍全身，大步走动'],
+            background: ['霓虹灯牌密集的街道', '老式茶餐厅门口', '天台城市天际线', '斑马线/红绿灯路口', '老旧电梯/楼梯间'],
+            lighting: ['霓虹灯做主光源（红/蓝/绿）', '路灯侧光勾勒轮廓', '车灯流光做背景', '机顶闪光灯+色片', '避免纯白光（破坏氛围）'],
+            weather: ['最佳：雨后（地面反光加倍）', '无风或微风', '湿度高更有氛围感', '避免大雨（设备安全）'],
+            props: ['复古墨镜', '红色口红', '翻盖手机', '香烟/打火机（道具）', '报纸', '皮包'],
+            timing: ['19:00-22:00（霓虹灯全亮）', '蓝调时刻（日落后30分钟）', '周末夜晚人少'],
+            postProcess: ['高对比度', '暗部压深（黑色纯黑）', '偏青/洋红色调', '颗粒感（ISO800模拟）', '暗角加重']
+        }
     },
     {
         id: 'preset-3',
         name: '🍂 复古胶片私房',
         desc: '适合：室内、民宿、老洋房、复古咖啡厅',
-        input: { style: '复古', modelDesc: '优雅气质，复古造型（卷发/丝巾/珍珠）', scene: '复古民宿/老洋房/法式咖啡厅', mood: '慵懒优雅', duration: '2小时', people: '1', extra: '暖色调，颗粒感，柔光，漏光效果' }
+        input: { style: '复古', modelDesc: '优雅气质，复古造型（卷发/丝巾/珍珠）', scene: '复古民宿/老洋房/法式咖啡厅', mood: '慵懒优雅', duration: '2小时', people: '1', extra: '暖色调，颗粒感，柔光，漏光效果' },
+        guide: {
+            poses: ['靠窗自然光下阅读', '慵懒躺在沙发上', '手扶门框回望', '对镜自拍的姿态', '坐在窗台边，腿自然垂下'],
+            background: ['老式木质家具', '蕾丝窗帘', '复古花纹壁纸', '留声机/老电话', '鲜花/干花布置'],
+            lighting: ['窗户自然光（最大光源）', '白色床单做反光板', '台灯暖光补光', '蜡烛光（氛围感）', '避免闪光灯直射'],
+            weather: ['室内不受天气影响', '阴天更好（柔和漫射光）', '晴天可利用强烈窗光做光影'],
+            props: ['丝绸睡袍', '珍珠项链', '复古花瓶', '旧书/信件', '蕾丝扇', '茶杯'],
+            timing: ['全天可拍（室内）', '14:00-16:00 侧面窗光最佳', '准备+化妆1小时'],
+            postProcess: ['暖黄色调偏移', '褐色/棕色调', '明显颗粒感', '漏光效果（随机光斑）', '轻微褪色感']
+        }
     },
     {
         id: 'preset-4',
         name: '🌲 森系氧气写真',
         desc: '适合：森林、草地、花海、湿地公园',
-        input: { style: '森系', modelDesc: '清新自然，淡妆，白色/浅绿裙子', scene: '森林/草地/花丛/湿地公园', mood: '氧气感', duration: '2小时', people: '1', extra: '逆光，绿色调，朦胧感，阳光光斑' }
+        input: { style: '森系', modelDesc: '清新自然，淡妆，白色/浅绿裙子', scene: '森林/草地/花丛/湿地公园', mood: '氧气感', duration: '2小时', people: '1', extra: '逆光，绿色调，朦胧感，阳光光斑' },
+        guide: {
+            poses: ['闭眼感受阳光，双手张开', '坐在草地上，裙摆铺开', '侧身站在树旁，手触树干', '低头闻花香', '奔跑抓拍，回头笑'],
+            background: ['阳光穿透的树林', '绿色草地+野花', '小溪/湖边', '芦苇荡', '木栈道'],
+            lighting: ['逆光/侧逆光（最有氛围）', '清晨雾气+阳光', '树荫下斑驳光', '反光板正面补光', '黄金时段最佳'],
+            weather: ['最佳：清晨有薄雾', '微风（树叶沙沙响）', '雨后更通透', '避免大风（发型+安全）'],
+            props: ['花环/花篮', '草帽', '透明气泡', '野餐布+水果', '书本', '气球'],
+            timing: ['06:00-08:00（最佳晨光+雾气）', '16:00-18:00（黄金时段）', '春夏季节最佳'],
+            postProcess: ['绿色/青色调', '降饱和度', '逆光光晕效果', '柔焦/朦胧感', '提亮暗部']
+        }
     },
     {
         id: 'preset-5',
         name: '💼 商务形象照',
         desc: '适合：职场、简历、LinkedIn、企业宣传',
-        input: { style: '商业', modelDesc: '职业正装，干练造型，干净妆容', scene: '办公室/纯色背景/企业前台', mood: '专业自信', duration: '1小时', people: '1', extra: '中性灰，精修，标准构图，光线均匀' }
+        input: { style: '商业', modelDesc: '职业正装，干练造型，干净妆容', scene: '办公室/纯色背景/企业前台', mood: '专业自信', duration: '1小时', people: '1', extra: '中性灰，精修，标准构图，光线均匀' },
+        guide: {
+            poses: ['标准坐姿，双手交叉桌上', '站姿，单手插兜，微微侧身', '双手抱胸，自信微笑', ' leaning on desk，自然放松', '看镜头+看远方各一张'],
+            background: ['纯白/纯灰背景纸', '简洁办公室环境', '企业logo墙', '书架前', '落地窗前（虚化城市）'],
+            lighting: ['双灯柔光箱（左右45度）', '发灯勾勒轮廓', '均匀无阴影', '色温5500K（日光白）', '避免有色光'],
+            weather: ['室内不受限', '如拍外景选择阴天（均匀）', '避免强阳光（阴影硬）'],
+            props: ['笔记本电脑', '文件夹', '咖啡杯', '钢笔', '眼镜（商务感）'],
+            timing: ['全天可拍（室内）', '外景：10:00-11:00 / 15:00-16:00', '提前15分钟到场地'],
+            postProcess: ['中性灰校色', '精修皮肤（保留纹理）', '提亮眼神光', '裁剪为标准比例', '输出横版+竖版']
+        }
     },
     {
         id: 'preset-6',
         name: '🇰🇷 韩系奶油肌',
         desc: '适合：室内棚拍、精致妆容、韩系穿搭',
-        input: { style: '韩系', modelDesc: '精致妆容，韩系穿搭，时尚配饰', scene: '室内棚/韩系咖啡厅/精致民宿', mood: '温柔精致', duration: '2小时', people: '1', extra: '高明度，奶油肌质感，柔焦，低饱和' }
+        input: { style: '韩系', modelDesc: '精致妆容，韩系穿搭，时尚配饰', scene: '室内棚/韩系咖啡厅/精致民宿', mood: '温柔精致', duration: '2小时', people: '1', extra: '高明度，奶油肌质感，柔焦，低饱和' },
+        guide: {
+            poses: ['手托下巴，温柔注视镜头', '侧脸特写，头发别耳后', '坐在沙发上，双腿并拢微侧', '手持咖啡杯，自然微笑', '躺姿，手撑头部'],
+            background: ['奶油色/米色墙面', '韩系咖啡厅（Ins风）', '白色床品+纱帘', '粉色/浅蓝纯色背景', '绿植点缀'],
+            lighting: ['大柔光箱正面光（奶油肌关键）', '柔光伞侧补光', '整体偏亮（+1EV）', '色温偏暖（4000K）', '避免硬光和阴影'],
+            weather: ['室内不受限', '外景选阴天（自然柔光）', '避免强光（破坏奶油感）'],
+            props: ['鲜花束', '毛绒玩具', '泡泡机', '丝带', '小蛋糕', '杂志'],
+            timing: ['全天可拍（室内）', '外景：15:00-17:00', '化妆准备1.5小时（底妆最重要）'],
+            postProcess: ['提亮整体（高调）', '降饱和度10%', '柔焦磨皮（保留质感）', '偏暖粉色调', '奶油色高光']
+        }
     },
     {
         id: 'preset-7',
         name: '🎬 情绪电影感',
         desc: '适合：表达情感、故事性叙事、艺术感',
-        input: { style: '情绪', modelDesc: '有故事感的形象，自然表情，情绪表达', scene: '废弃建筑/海边/天台/老街道', mood: '故事感', duration: '3小时', people: '1', extra: '电影感构图，16:9画幅，戏剧性光线' }
+        input: { style: '情绪', modelDesc: '有故事感的形象，自然表情，情绪表达', scene: '废弃建筑/海边/天台/老街道', mood: '故事感', duration: '3小时', people: '1', extra: '电影感构图，16:9画幅，戏剧性光线' },
+        guide: {
+            poses: ['低头沉思，手遮面部', '望向远方，背影/侧影', '坐在窗边，光线打在脸上', '行走中的抓拍（不看镜头）', '双手抱膝，蜷缩姿态'],
+            background: ['废弃工厂/建筑', '空旷公路', '海边礁石', '雨后街道倒影', '老旧车站/码头'],
+            lighting: ['单侧硬光（戏剧性明暗）', '逆光剪影', '霓虹灯/路灯点光源', '烟雾机+光束', '强烈明暗对比'],
+            weather: ['最佳：阴天/雾天（戏剧氛围）', '雨后（地面倒影）', '大风（头发飘动增加动感）', '避免晴天蓝天（太欢快）'],
+            props: ['旧行李箱', '雨伞（透明/黑色）', '烟雾机', '手电筒', '旧相机', '围巾'],
+            timing: ['16:00-18:00（长阴影）', '蓝调时刻（日落后）', '雨天拍摄更有氛围'],
+            postProcess: ['电影级调色（Teal&Orange）', '压暗暗部', '2.35:1宽幅裁切', '胶片颗粒', '暗角']
+        }
     },
     {
         id: 'preset-8',
         name: '👗 时尚杂志风',
         desc: '适合：高端品牌、服装画册、时尚大片',
-        input: { style: '杂志', modelDesc: '时尚造型，专业妆容，高级感', scene: '天台/艺术区/高级酒店/美术馆', mood: '高级时尚', duration: '3小时', people: '1', extra: '高对比，戏剧性布光，专业后期' }
+        input: { style: '杂志', modelDesc: '时尚造型，专业妆容，高级感', scene: '天台/艺术区/高级酒店/美术馆', mood: '高级时尚', duration: '3小时', people: '1', extra: '高对比，戏剧性布光，专业后期' },
+        guide: {
+            poses: ['双手叉腰，强势站姿', '单腿前伸，动态摆姿', '手触头发，下巴微抬', '坐姿交叉腿，手搭膝盖', '大步走动，衣摆飘起'],
+            background: ['纯色无缝背景（白/黑/灰）', '混凝土墙面（工业风）', '艺术装置/雕塑旁', '高级酒店大堂', '涂鸦墙前'],
+            lighting: ['3灯布光（主/辅/轮廓）', '蜂巢罩控制光域', '反光板补暗部', '色片营造氛围', '影棚闪光灯'],
+            weather: ['室内棚拍不受限', '外景选阴天（柔光）', '避免大风（发型）'],
+            props: ['时尚杂志（道具）', '墨镜', '手包', '珠宝配饰', '折扇', '丝巾'],
+            timing: ['全天可拍（室内）', '外景：10:00-11:00', '换装+化妆2小时'],
+            postProcess: ['高对比度', '肤色精致修图', '锐化细节', '品牌色调整', '输出RAW+精修JPG']
+        }
     },
     {
         id: 'preset-9',
         name: '🏖️ 海边度假风',
         desc: '适合：海边、沙滩、度假村、泳装',
-        input: { style: '度假', modelDesc: '度假装扮，泳装/沙滩裙，清爽妆容', scene: '海边/沙滩/度假村/礁石', mood: '自由惬意', duration: '3小时', people: '1', extra: '蓝天白云，海风飘逸，剪影，夕阳' }
+        input: { style: '度假', modelDesc: '度假装扮，泳装/沙滩裙，清爽妆容', scene: '海边/沙滩/度假村/礁石', mood: '自由惬意', duration: '3小时', people: '1', extra: '蓝天白云，海风飘逸，剪影，夕阳' },
+        guide: {
+            poses: ['赤脚踩浪花，回眸笑', '坐在沙滩上，手撑身后', '奔跑抓拍，头发飘起', '背对大海，侧脸特写', '夕阳剪影，伸展双臂'],
+            background: ['海天一线', '沙滩+椰树', '礁石浪花', '栈桥/码头', '度假村泳池'],
+            lighting: ['夕阳逆光（最经典）', '侧光勾勒身体轮廓', '蓝天做自然反光板', '闪光灯补面光（逆光时）', '避免正午顶光'],
+            weather: ['最佳：晴天（蓝天白云）', '有云的日落更美', '微风（头发飘动）', '避免大风大浪（安全）'],
+            props: ['草帽', '墨镜', '冲浪板', '椰子/冰饮', '沙滩巾', '鲜花'],
+            timing: ['16:00-18:30（日落前2.5小时）', '日落前30分钟拍剪影', '避开11:00-14:00（顶光+暴晒）'],
+            postProcess: ['蓝色/青色偏移', '提亮高光（水花闪亮）', '暖色夕阳色调', '降对比度（柔和感）', '可选：HDR处理']
+        }
     },
     {
         id: 'preset-10',
         name: '🏛️ 法式优雅',
         desc: '适合：法式建筑、花园、复古庄园',
-        input: { style: '法式', modelDesc: '法式穿搭，帽子/茶歇裙，精致妆容', scene: '法式花园/老建筑/美术馆/欧式街道', mood: '优雅浪漫', duration: '2小时', people: '1', extra: '莫兰迪色调，慵懒感，逆光，焦外虚化' }
+        input: { style: '法式', modelDesc: '法式穿搭，帽子/茶歇裙，精致妆容', scene: '法式花园/老建筑/美术馆/欧式街道', mood: '优雅浪漫', duration: '2小时', people: '1', extra: '莫兰迪色调，慵懒感，逆光，焦外虚化' },
+        guide: {
+            poses: ['单手扶帽檐，微微侧头', '坐在铁艺椅上，双腿交叠', '手拿鲜花/咖啡，自然走动', '靠在门框/窗边，回眸', '旋转裙摆抓拍'],
+            background: ['法式花园喷泉', '雕花铁门/窗', '欧式建筑立面', '葡萄架下', '石板路'],
+            lighting: ['柔和侧光（雕塑感）', '逆光（帽子轮廓光）', '树荫斑驳光', '阴天最佳（法式柔调）', '金色黄昏光'],
+            weather: ['最佳：春秋季节', '阴天（柔光）', '微风（花瓣飘落）', '避免雨天（地面湿滑）'],
+            props: ['法式草帽', '丝绒蝴蝶结', '复古手提包', '鲜花束', '蕾丝手套', '小提琴'],
+            timing: ['09:00-11:00（晨光柔和）', '15:00-17:00（黄金时段）', '避开正午'],
+            postProcess: ['莫兰迪色调（灰粉/灰蓝）', '降低对比度', '焦外虚化（大光圈感）', '轻微褪色', '暖色偏移']
+        }
     },
     {
         id: 'preset-11',
         name: '🎎 古风汉服',
         desc: '适合：中国古风、传统建筑、园林',
-        input: { style: '古风', modelDesc: '汉服造型，精致古风妆容', scene: '古镇/园林/古建筑/寺庙', mood: '清冷古典', duration: '3小时', people: '1', extra: '水墨色调，留白构图，古典韵味' }
+        input: { style: '古风', modelDesc: '汉服造型，精致古风妆容', scene: '古镇/园林/古建筑/寺庙', mood: '清冷古典', duration: '3小时', people: '1', extra: '水墨色调，留白构图，古典韵味' },
+        guide: {
+            poses: ['执扇掩面，含蓄微笑', '侧身回眸，衣袖飘动', '坐于石凳，手抚古琴', '凭栏远望，衣袂飘飘', '提裙过桥，低头含笑'],
+            background: ['古亭/长廊', '竹林小径', '荷花池畔', '古城门/城墙', '红墙黄瓦'],
+            lighting: ['柔和自然光（古典感）', '晨雾/暮光（仙气）', '灯笼暖光（夜景）', '避免现代灯光', '侧光突出面部轮廓'],
+            weather: ['最佳：春秋（温度适宜穿汉服）', '微雨/雾天（水墨意境）', '微风（衣袂飘动）', '避免大风大雨'],
+            props: ['团扇/折扇', '油纸伞', '古琴/笛子', '灯笼', '书卷/毛笔', '香炉'],
+            timing: ['06:00-08:00（晨雾+无人）', '16:00-18:00（斜阳古韵）', '古镇建议早到避开人群'],
+            postProcess: ['水墨色调', '降低饱和度', '留白构图', '暗角效果', '纸张纹理叠加']
+        }
     },
     {
         id: 'preset-12',
         name: '💍 轻婚纱写真',
         desc: '适合：婚纱照、求婚纪念、情侣写真',
-        input: { style: '婚纱', modelDesc: '轻婚纱/白裙，精致妆容，浪漫造型', scene: '海边/草地/教堂/精致室内', mood: '浪漫甜蜜', duration: '3小时', people: '2', extra: '梦幻柔光，浪漫色调，情侣互动' }
+        input: { style: '婚纱', modelDesc: '轻婚纱/白裙，精致妆容，浪漫造型', scene: '海边/草地/教堂/精致室内', mood: '浪漫甜蜜', duration: '3小时', people: '2', extra: '梦幻柔光，浪漫色调，情侣互动' },
+        guide: {
+            poses: ['相视而笑，额头相抵', '男从背后环抱，女回头', '牵手奔跑，裙摆飘起', '男单膝跪地，女捂嘴惊喜', '并肩坐，头靠肩'],
+            background: ['海边日落', '花海草地', '教堂内部', '城市天际线', '森林小径'],
+            lighting: ['黄金时段逆光（梦幻光晕）', '双灯布光（室内）', '自然光+反光板', '轮廓光分离人物与背景', '柔光箱（室内柔美）'],
+            weather: ['最佳：晴天（蓝天+白云）', '日落前1小时最浪漫', '微风（头纱飘动）', '避免雨天（外景）'],
+            props: ['头纱', '捧花', '气球', '仙女棒', '字母牌（MARRY ME）', '香槟'],
+            timing: ['15:00-18:30（含日落）', '日出前1小时（晨光婚纱）', '换装+化妆2小时'],
+            postProcess: ['浪漫暖色调', '柔焦光晕', '提亮肤色', '梦幻模糊背景', '输出横版+竖版+方版']
+        }
     }
 ];
 
@@ -4552,11 +4661,49 @@ function renderTpl() {
     const presetContainer = $('preset-tpls');
     if (presetContainer) {
         presetContainer.innerHTML = PRESET_TEMPLATES.map(t => `
-            <div class="tpl-card" style="border-left:3px solid var(--ac);">
-                <div class="tpl-name">${t.name}</div>
+            <div class="tpl-card tpl-preset-card" style="border-left:3px solid var(--ac);">
+                <div class="tpl-name" onclick="togglePresetGuide('${t.id}')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
+                    <span>${t.name}</span>
+                    <span class="tpl-toggle-icon" id="tpl-icon-${t.id}" style="font-size:.7rem;color:var(--t3);transition:transform .3s;">▼</span>
+                </div>
                 <div class="tpl-desc">${t.desc}</div>
                 <div style="font-size:.7rem;color:var(--t3);margin-bottom:.5rem;">风格: ${t.input.style} · 时长: ${t.input.duration}</div>
-                <div class="tpl-actions"><button class="btn btn-s btn-sm" onclick="usePresetTpl('${t.id}')">⚡ 使用</button></div>
+                <div class="tpl-actions" style="margin-bottom:.5rem;">
+                    <button class="btn btn-p btn-sm" onclick="usePresetTpl('${t.id}')">⚡ 一键使用</button>
+                    <button class="btn btn-s btn-sm" onclick="togglePresetGuide('${t.id}')">📖 查看指南</button>
+                </div>
+                <div class="tpl-guide-panel" id="tpl-guide-${t.id}" style="display:none;">
+                    <div style="border-top:1px solid var(--bd);padding-top:.8rem;margin-top:.5rem;">
+                        <h4 style="font-size:.8rem;color:var(--ac);margin:0 0 .5rem 0;">🧍 摆姿引导</h4>
+                        <ul style="margin:0 0 .8rem 0;padding-left:1rem;font-size:.75rem;color:var(--t2);line-height:1.6;">
+                            ${t.guide.poses.map(p => '<li>' + p + '</li>').join('')}
+                        </ul>
+                        <h4 style="font-size:.8rem;color:var(--ac);margin:0 0 .5rem 0;">🖼️ 背景选择</h4>
+                        <ul style="margin:0 0 .8rem 0;padding-left:1rem;font-size:.75rem;color:var(--t2);line-height:1.6;">
+                            ${t.guide.background.map(b => '<li>' + b + '</li>').join('')}
+                        </ul>
+                        <h4 style="font-size:.8rem;color:var(--ac);margin:0 0 .5rem 0;">💡 光线方案</h4>
+                        <ul style="margin:0 0 .8rem 0;padding-left:1rem;font-size:.75rem;color:var(--t2);line-height:1.6;">
+                            ${t.guide.lighting.map(l => '<li>' + l + '</li>').join('')}
+                        </ul>
+                        <h4 style="font-size:.8rem;color:var(--ac);margin:0 0 .5rem 0;">🌤️ 天气/风效</h4>
+                        <ul style="margin:0 0 .8rem 0;padding-left:1rem;font-size:.75rem;color:var(--t2);line-height:1.6;">
+                            ${t.guide.weather.map(w => '<li>' + w + '</li>').join('')}
+                        </ul>
+                        <h4 style="font-size:.8rem;color:var(--ac);margin:0 0 .5rem 0;">🎬 道具清单</h4>
+                        <div style="display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.8rem;">
+                            ${t.guide.props.map(p => '<span style="background:var(--bg2);border:1px solid var(--bd);padding:.15rem .5rem;border-radius:10px;font-size:.7rem;color:var(--t1);">' + p + '</span>').join('')}
+                        </div>
+                        <h4 style="font-size:.8rem;color:var(--ac);margin:0 0 .5rem 0;">⏰ 时间建议</h4>
+                        <ul style="margin:0 0 .8rem 0;padding-left:1rem;font-size:.75rem;color:var(--t2);line-height:1.6;">
+                            ${t.guide.timing.map(ti => '<li>' + ti + '</li>').join('')}
+                        </ul>
+                        <h4 style="font-size:.8rem;color:var(--ac);margin:0 0 .5rem 0;">🎨 后期方向</h4>
+                        <ul style="margin:0;padding-left:1rem;font-size:.75rem;color:var(--t2);line-height:1.6;">
+                            ${t.guide.postProcess.map(pp => '<li>' + pp + '</li>').join('')}
+                        </ul>
+                    </div>
+                </div>
             </div>
         `).join('');
     }
@@ -4577,6 +4724,15 @@ function renderTpl() {
                 <div style="display:flex;gap:.4rem;"><button class="btn btn-p btn-sm" onclick="genFromTpl('${t.id}')">⚡ 生成</button><button class="btn btn-s btn-sm" onclick="document.getElementById('tpl-form-${t.id}').classList.remove('active')">收起</button></div>
             </div>
         </div>`).join('');
+}
+
+function togglePresetGuide(id) {
+    const panel = document.getElementById('tpl-guide-' + id);
+    const icon = document.getElementById('tpl-icon-' + id);
+    if (!panel) return;
+    const isOpen = panel.style.display !== 'none';
+    panel.style.display = isOpen ? 'none' : 'block';
+    if (icon) icon.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
 }
 
 function usePresetTpl(id) {
