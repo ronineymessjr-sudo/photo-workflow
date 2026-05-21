@@ -215,46 +215,68 @@ async function handleImageGeneration(body, env) {
     return [500, { error: 'Server not configured with MiniMax API Key' }];
   }
 
+  // Support both 'prompt' and 'prompt_text' from frontend
   const prompt = body.prompt || body.prompt_text || '';
   if (!prompt) {
     return [400, { error: 'Missing prompt' }];
   }
 
   try {
+    // MiniMax image-01 API
     const upstream = await fetch('https://api.minimaxi.com/v1/image_generation', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${MINIMAX_KEY}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
       },
       body: JSON.stringify({
         model: 'image-01',
-        prompt: prompt
+        prompt: prompt,
+        prompt_preview: false
       })
     });
 
     const data = await upstream.json();
 
+    // Extract image URL from various possible response formats
     let imageUrl = null;
     const candidates = [
-      data.image_urls?.[0],
+      // MiniMax image-01 response format
+      data.image_urls?.[0]?.url || data.image_urls?.[0],
+      data.images?.[0]?.url || data.images?.[0]?.base64 || data.images?.[0],
+      // Alternative formats
       data.data?.[0]?.url || data.data?.[0]?.base64,
-      data.images?.[0]?.url || data.images?.[0],
-      data.output?.url,
-      data.result?.url,
-      data.url
+      data.output?.url || data.output?.base64,
+      data.result?.url || data.result?.base64,
+      data.url,
+      data.base64
     ];
+    
     for (const c of candidates) {
-      if (c && typeof c === 'string' && (c.startsWith('http') || c.startsWith('data:'))) {
-        imageUrl = c;
+      if (c && typeof c === 'string' && (c.startsWith('http') || c.startsWith('data:image') || c.startsWith('/9j/') || c.startsWith('iVBOR'))) {
+        // If it's base64, convert to data URL
+        if (c.startsWith('/9j/') || c.startsWith('iVBOR')) {
+          imageUrl = 'data:image/jpeg;base64,' + c;
+        } else {
+          imageUrl = c;
+        }
         break;
       }
     }
 
+    if (!imageUrl) {
+      // Return raw response for debugging
+      return [200, { 
+        success: false, 
+        error: 'No image in response',
+        raw: JSON.stringify(data).substring(0, 500)
+      }];
+    }
+
     return [200, {
-      success: !!imageUrl,
-      imageUrl: imageUrl,
-      raw: data
+      success: true,
+      imageUrl: imageUrl
     }];
 
   } catch (e) {
