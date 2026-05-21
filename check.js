@@ -2013,6 +2013,7 @@ async function genPlan(input) {
     const duration = input.duration || '2小时';
     const people = input.people || '1';
     const extra = input.extra || '';
+    const venue = input.venue || '';
     
     // 检测是否需要真实地点查询
     const needsRealLocation = /具体地点|真实地点|某某城市|在哪个城市|在哪里拍/i.test(extra) || 
@@ -2101,6 +2102,7 @@ async function genPlan(input) {
 【拍摄时长】${duration}
 【参与人数】${people}人
 ${extra ? '【特殊要求】' + extra : ''}
+${venue ? '【场地要求】' + venue : ''}
 </context>
 
 <task>
@@ -2170,13 +2172,21 @@ ${locationPrompt}
 </constraints>`;
 
     try {
-        // Call Pollinations text generation API
+        // Call Pollinations text generation API (with timeout)
         const encodedPrompt = encodeURIComponent(prompt);
-        const response = await fetch(`https://text.pollinations.ai/${encodedPrompt}?seed=${Date.now()}&system=你是专业摄影师，擅长根据客户需求制定拍摄方案。你必须根据用户输入的具体风格、主题、场景来生成内容，不要给出通用建议。`);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒超时
         
-        if (!response.ok) throw new Error('AI 生成失败');
+        const response = await fetch(`https://text.pollinations.ai/${encodedPrompt}?seed=${Date.now()}&system=你是专业摄影师，擅长根据客户需求制定拍摄方案。你必须根据用户输入的具体风格、主题、场景来生成内容，不要给出通用建议。`, {
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) throw new Error('AI 生成失败 (HTTP ' + response.status + ')');
         
         const aiText = await response.text();
+        
+        if (!aiText || aiText.length < 50) throw new Error('AI 返回内容为空');
         
         // Parse AI response into sections
         let sections = parseAIResponse(aiText);
@@ -3478,7 +3488,7 @@ async function handleSubmit(e){
     const btnOrigHTML=btn.innerHTML;
     btn.classList.add('btn-loading');
     btn.innerHTML='<span class="btn-loading-icon">⟳</span> 生成中...';
-    const input={theme:$('f-theme').value.trim(),style:$('f-style').value,modelDesc:$('f-model').value.trim(),scene:$('f-scene').value.trim(),mood:$('f-mood').value.trim(),duration:$('f-dur').value,people:$('f-people').value,extra:$('f-extra').value.trim()};
+    const input={theme:$('f-theme').value.trim(),style:$('f-style').value,modelDesc:$('f-model').value.trim(),scene:$('f-scene').value.trim(),mood:$('f-mood').value.trim(),duration:$('f-dur').value,people:$('f-people').value,extra:$('f-extra').value.trim(),venue:$('f-venue')?$('f-venue').value.trim():''};
     // Clear previous error states
     ['f-theme','f-model'].forEach(id=>$(id).classList.remove('input-error'));
     if(!input.theme&&!input.modelDesc){
@@ -3509,7 +3519,22 @@ async function handleSubmit(e){
         renderHistMini(); updateBadge();
         $('outLoad').classList.remove('active'); $('outCnt').classList.add('active');
         toast(i18n[currentLang]['toast.planSaved'],'ok');
-    }catch(e){toast(i18n[currentLang]['toast.genFailed'],'er');$('outLoad').classList.remove('active');$('outEmpty').classList.add('active');}
+    }catch(e){
+        console.error('方案生成失败:', e);
+        toast('生成失败: ' + e.message + '，已使用模板生成','er');
+        // 即使失败也尝试显示模板方案
+        try {
+            const fallbackPlan = generateTemplatePlan(input, null, null);
+            savePlan(fallbackPlan);
+            currentPlanData = fallbackPlan;
+            $('outCnt').innerHTML = renderPlanContent(fallbackPlan);
+            $('outLoad').classList.remove('active'); $('outCnt').classList.add('active');
+            renderHistMini(); updateBadge();
+        } catch(e2) {
+            toast(i18n[currentLang]['toast.genFailed'],'er');
+            $('outLoad').classList.remove('active');$('outEmpty').classList.add('active');
+        }
+    }
     finally{clearInterval(loadTimer);btn.disabled=false;btn.classList.remove('btn-loading');btn.innerHTML=btnOrigHTML;}
 }
 $('briefForm').addEventListener('submit',handleSubmit);
@@ -3544,6 +3569,27 @@ function composeModelDesc() {
     if (vibe) parts.push('气质' + vibe);
     
     $('f-model').value = parts.join('，');
+    updatePlanPreview();
+}
+
+// ===== Venue Requirement Composer =====
+function composeVenueReq() {
+    const type = $('mp-venue-type').value;
+    const budget = $('mp-venue-budget').value;
+    const size = $('mp-venue-size').value;
+    const light = $('mp-venue-light').value;
+    const amenity = $('mp-venue-amenity').value;
+    const decor = $('mp-venue-decor').value;
+    
+    const parts = [];
+    if (type && type !== '不限') parts.push(type);
+    if (budget && budget !== '不限') parts.push(budget);
+    if (size && size !== '不限') parts.push(size);
+    if (light && light !== '不限') parts.push(light);
+    if (amenity && amenity !== '不限') parts.push('需要' + amenity);
+    if (decor && decor !== '不限') parts.push(decor + '装修');
+    
+    $('f-venue').value = parts.join('，');
     updatePlanPreview();
 }
 
