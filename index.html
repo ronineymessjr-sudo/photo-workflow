@@ -2441,7 +2441,87 @@
                                 <!-- Step 2: 详细描述 -->
                                 <div class="step-section" data-step-section="2">
                                     <div class="step-section-title">详细描述</div>
-                                    <div class="fg"><label data-i18n="gen.model">模特特征</label><textarea id="f-model" placeholder="外貌、身材、气质">身高168，黑色长发，偏瘦，气质慵懒神秘，肤质白皙</textarea></div>
+                                    <div class="fg">
+                                        <label data-i18n="gen.model">模特特征</label>
+                                        <div class="model-preset-row" style="display:flex;gap:.5rem;margin-bottom:.5rem;flex-wrap:wrap;">
+                                            <select id="mp-height" onchange="composeModelDesc()" style="flex:1;min-width:80px;padding:6px 8px;background:var(--bg2);border:1px solid var(--bd);border-radius:6px;color:var(--t1);font-size:.78rem;">
+                                                <option value="">身高</option>
+                                                <option value="155">155cm</option>
+                                                <option value="158">158cm</option>
+                                                <option value="160">160cm</option>
+                                                <option value="162">162cm</option>
+                                                <option value="165">165cm</option>
+                                                <option value="168" selected>168cm</option>
+                                                <option value="170">170cm</option>
+                                                <option value="172">172cm</option>
+                                                <option value="175">175cm</option>
+                                                <option value="178">178cm</option>
+                                                <option value="180">180cm</option>
+                                                <option value="183">183cm</option>
+                                                <option value="185">185cm</option>
+                                            </select>
+                                            <select id="mp-body" onchange="composeModelDesc()" style="flex:1;min-width:80px;padding:6px 8px;background:var(--bg2);border:1px solid var(--bd);border-radius:6px;color:var(--t1);font-size:.78rem;">
+                                                <option value="">体型</option>
+                                                <option value="偏瘦">偏瘦</option>
+                                                <option value="标准">标准</option>
+                                                <option value="微胖" selected>微胖</option>
+                                                <option value="健美">健美</option>
+                                                <option value="丰满">丰满</option>
+                                                <option value="高挑纤细">高挑纤细</option>
+                                                <option value="小巧玲珑">小巧玲珑</option>
+                                            </select>
+                                            <select id="mp-face" onchange="composeModelDesc()" style="flex:1;min-width:80px;padding:6px 8px;background:var(--bg2);border:1px solid var(--bd);border-radius:6px;color:var(--t1);font-size:.78rem;">
+                                                <option value="">脸型</option>
+                                                <option value="鹅蛋脸" selected>鹅蛋脸</option>
+                                                <option value="圆脸">圆脸</option>
+                                                <option value="方脸">方脸</option>
+                                                <option value="瓜子脸">瓜子脸</option>
+                                                <option value="心形脸">心形脸</option>
+                                                <option value="长脸">长脸</option>
+                                                <option value="菱形脸">菱形脸</option>
+                                            </select>
+                                        </div>
+                                        <div class="model-preset-row" style="display:flex;gap:.5rem;margin-bottom:.5rem;flex-wrap:wrap;">
+                                            <select id="mp-hair" onchange="composeModelDesc()" style="flex:1;min-width:80px;padding:6px 8px;background:var(--bg2);border:1px solid var(--bd);border-radius:6px;color:var(--t1);font-size:.78rem;">
+                                                <option value="">发型</option>
+                                                <option value="黑色长直发" selected>黑色长直发</option>
+                                                <option value="黑色卷发">黑色卷发</option>
+                                                <option value="棕色长发">棕色长发</option>
+                                                <option value="短发">短发</option>
+                                                <option value="波波头">波波头</option>
+                                                <option value="马尾">马尾</option>
+                                                <option value="丸子头">丸子头</option>
+                                                <option value="编发">编发</option>
+                                                <option value="寸头">寸头</option>
+                                                <option value="背头">背头</option>
+                                            </select>
+                                            <select id="mp-skin" onchange="composeModelDesc()" style="flex:1;min-width:80px;padding:6px 8px;background:var(--bg2);border:1px solid var(--bd);border-radius:6px;color:var(--t1);font-size:.78rem;">
+                                                <option value="">肤色</option>
+                                                <option value="白皙" selected>白皙</option>
+                                                <option value="自然肤色">自然肤色</option>
+                                                <option value="小麦色">小麦色</option>
+                                                <option value="古铜色">古铜色</option>
+                                                <option value="冷白皮">冷白皮</option>
+                                                <option value="暖黄皮">暖黄皮</option>
+                                            </select>
+                                            <select id="mp-vibe" onchange="composeModelDesc()" style="flex:1;min-width:80px;padding:6px 8px;background:var(--bg2);border:1px solid var(--bd);border-radius:6px;color:var(--t1);font-size:.78rem;">
+                                                <option value="">气质</option>
+                                                <option value="慵懒神秘">慵懒神秘</option>
+                                                <option value="清新甜美">清新甜美</option>
+                                                <option value="高冷御姐">高冷御姐</option>
+                                                <option value="阳光活泼">阳光活泼</option>
+                                                <option value="文艺知性">文艺知性</option>
+                                                <option value="性感妩媚">性感妩媚</option>
+                                                <option value="帅气干练">帅气干练</option>
+                                                <option value="温柔贤惠">温柔贤惠</option>
+                                            </select>
+                                        </div>
+                                        <div style="display:flex;gap:.4rem;margin-bottom:.5rem;">
+                                            <button class="btn btn-s btn-sm" onclick="randomModelPreset()" style="font-size:.72rem;">🎲 随机组合</button>
+                                            <button class="btn btn-s btn-sm" onclick="clearModelPreset()" style="font-size:.72rem;">✕ 清空选择</button>
+                                        </div>
+                                        <textarea id="f-model" placeholder="以上选择会自动填入，也可手动编辑补充" style="min-height:50px;"></textarea>
+                                    </div>
                                     <div class="fg"><label data-i18n="gen.scene">场景偏好</label><textarea id="f-scene" placeholder="拍摄场景">老式酒店房间，复古家具，落地窗，老式浴缸</textarea></div>
                                     <div class="g2">
                                         <div class="fg"><label data-i18n="gen.duration">拍摄时长</label>
@@ -6107,6 +6187,56 @@ $('briefForm').addEventListener('submit',handleSubmit);
         });
     }
 });
+
+// ===== Model Preset Composer =====
+function composeModelDesc() {
+    const height = $('mp-height').value;
+    const body = $('mp-body').value;
+    const face = $('mp-face').value;
+    const hair = $('mp-hair').value;
+    const skin = $('mp-skin').value;
+    const vibe = $('mp-vibe').value;
+    
+    const parts = [];
+    if (height) parts.push('身高' + height);
+    if (body) parts.push(body);
+    if (face) parts.push(face);
+    if (hair) parts.push(hair);
+    if (skin) parts.push('肤质' + skin);
+    if (vibe) parts.push('气质' + vibe);
+    
+    $('f-model').value = parts.join('，');
+    updatePlanPreview();
+}
+
+function randomModelPreset() {
+    const heights = ['155','158','160','162','165','168','170','172','175','178','180','183','185'];
+    const bodies = ['偏瘦','标准','微胖','健美','丰满','高挑纤细','小巧玲珑'];
+    const faces = ['鹅蛋脸','圆脸','方脸','瓜子脸','心形脸','长脸','菱形脸'];
+    const hairs = ['黑色长直发','黑色卷发','棕色长发','短发','波波头','马尾','丸子头','编发','寸头','背头'];
+    const skins = ['白皙','自然肤色','小麦色','古铜色','冷白皮','暖黄皮'];
+    const vibes = ['慵懒神秘','清新甜美','高冷御姐','阳光活泼','文艺知性','性感妩媚','帅气干练','温柔贤惠'];
+    
+    const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+    
+    $('mp-height').value = pick(heights);
+    $('mp-body').value = pick(bodies);
+    $('mp-face').value = pick(faces);
+    $('mp-hair').value = pick(hairs);
+    $('mp-skin').value = pick(skins);
+    $('mp-vibe').value = pick(vibes);
+    
+    composeModelDesc();
+    toast('随机模特组合已生成', 'ok');
+}
+
+function clearModelPreset() {
+    ['mp-height','mp-body','mp-face','mp-hair','mp-skin','mp-vibe'].forEach(id => {
+        $(id).value = '';
+    });
+    $('f-model').value = '';
+    updatePlanPreview();
+}
 
 // ===== Real-time Preview =====
 function updatePlanPreview() {
