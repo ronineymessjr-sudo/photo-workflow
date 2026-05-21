@@ -5370,14 +5370,13 @@ async function generateImagesBatch(planId) {
     if (!plan) { toast(i18n[currentLang]['toast.noPlan'], 'er'); return []; }
 
     const useMiniMax = shouldUseMiniMax();
-    const basePrompt = buildImagePrompt(plan);
     const results = [];
 
     toast(useMiniMax ? '使用MiniMax高质量生成...' : '开始批量生成9张参考图...', 'i');
 
     for (let i = 0; i < 9; i++) {
         const variant = POSE_VARIANTS[i];
-        const prompt = `${basePrompt}，${variant.angle}，${variant.pose}，${variant.desc}`;
+        const prompt = buildImagePromptVariant(plan, variant);
         
         try {
             let imgUrl;
@@ -5428,24 +5427,140 @@ async function generateImage(prompt, planId) {
 function buildImagePrompt(plan) {
     const inp = plan.input;
     const theme = inp.theme || '';
-    const style = inp.style || '摄影';
+    const style = inp.style || 'photography';
     const model = inp.modelDesc || '';
     const scene = inp.scene || '';
     const mood = inp.mood || '';
 
-    return `专业摄影，${theme}，${style}风格，${model ? '模特：'+model+'，' : ''}${scene ? '场景：'+scene+'，' : ''}情绪：${mood}，电影感构图，暖色调，复古胶片质感，高细节，8K`;
+    // If plan has AI-generated sections, extract detailed info for better prompts
+    if (plan.sections && plan.sections.length > 0) {
+        return buildAdvancedImagePrompt(plan);
+    }
+
+    // Fallback: simple prompt from input fields
+    return `professional photography, ${theme}, ${style} style, ${model ? 'model: '+model+', ' : ''}${scene ? 'scene: '+scene+', ' : ''}mood: ${mood}, cinematic composition, warm tones, vintage film grain, high detail, 8K`;
+}
+
+// ===== Advanced Image Prompt Builder (from plan sections) =====
+function buildAdvancedImagePrompt(plan) {
+    const inp = plan.input;
+    const sections = plan.sections;
+    
+    // Style translation map
+    const styleMap = {
+        '日系': 'Japanese fresh style, low saturation, film grain',
+        '港风': 'Hong Kong vintage neon style, high contrast, retro film',
+        '复古': 'vintage retro style, warm tones, film grain, nostalgic',
+        '森系': 'forest fairy style, natural green tones, ethereal',
+        '商业': 'commercial photography, clean, professional, studio lighting',
+        '韩系': 'Korean style, cream skin, soft focus, high key',
+        '情绪': 'moody cinematic style, dramatic lighting, storytelling',
+        '杂志': 'fashion magazine editorial, dramatic lighting, high fashion',
+        '度假': 'vacation lifestyle, beach, relaxed, sunny',
+        '法式': 'French elegant style, romantic, soft pastel tones',
+        '古风': 'Chinese traditional style, ink wash painting, classical',
+        '婚纱': 'wedding photography, romantic, dreamy soft light'
+    };
+    
+    // Extract model features
+    const modelDesc = inp.modelDesc || '';
+    const heightMatch = modelDesc.match(/身高(\d+)/);
+    const bodyMatch = modelDesc.match(/(偏瘦|标准|微胖|健美|丰满|高挑纤细|小巧玲珑)/);
+    const faceMatch = modelDesc.match(/(鹅蛋脸|圆脸|方脸|瓜子脸|心形脸|长脸|菱形脸)/);
+    const hairMatch = modelDesc.match(/(黑色长直发|黑色卷发|棕色长发|短发|波波头|马尾|丸子头|编发|寸头|背头)/);
+    const skinMatch = modelDesc.match(/(白皙|自然肤色|小麦色|古铜色|冷白皮|暖黄皮)/);
+    const vibeMatch = modelDesc.match(/(慵懒神秘|清新甜美|高冷御姐|阳光活泼|文艺知性|性感妩媚|帅气干练|温柔贤惠)/);
+    
+    // Build model prompt in English
+    const modelParts = [];
+    if (faceMatch) {
+        const faceMap = {'鹅蛋脸':'oval face','圆脸':'round face','方脸':'square jaw','瓜子脸':'V-shaped face','心形脸':'heart-shaped face','长脸':'elongated face','菱形脸':'diamond face'};
+        modelParts.push(faceMap[faceMatch[1]] || faceMatch[1]);
+    }
+    if (hairMatch) {
+        const hairMap = {'黑色长直发':'long straight black hair','黑色卷发':'long curly black hair','棕色长发':'long brown hair','短发':'short hair','波波头':'bob cut','马尾':'ponytail','丸子头':'bun hairstyle','编发':'braided hair','寸头':'buzz cut','背头':'slicked back hair'};
+        modelParts.push(hairMap[hairMatch[1]] || hairMatch[1]);
+    }
+    if (skinMatch) {
+        const skinMap = {'白皙':'fair skin','自然肤色':'natural skin tone','小麦色':'tanned skin','古铜色':'bronze skin','冷白皮':'cool-toned pale skin','暖黄皮':'warm-toned skin'};
+        modelParts.push(skinMap[skinMatch[1]] || skinMatch[1]);
+    }
+    if (bodyMatch) {
+        const bodyMap = {'偏瘦':'slim figure','标准':'average build','微胖':'curvy figure','健美':'athletic build','丰满':'voluptuous figure','高挑纤细':'tall and slender','小巧玲珑':'petite figure'};
+        modelParts.push(bodyMap[bodyMatch[1]] || bodyMatch[1]);
+    }
+    
+    // Extract scene from sections
+    let sceneDetail = '';
+    const locationSection = sections.find(s => s.ti && s.ti.includes('地点'));
+    if (locationSection && locationSection.c) {
+        sceneDetail = locationSection.c.slice(0, 2).join(', ');
+    }
+    
+    // Extract mood/lighting from sections
+    let lightDetail = '';
+    const weatherSection = sections.find(s => s.ti && (s.ti.includes('天气') || s.ti.includes('光线')));
+    if (weatherSection && weatherSection.c) {
+        lightDetail = weatherSection.c.slice(0, 2).join(', ');
+    }
+    
+    // Extract color/grading from sections
+    let colorDetail = '';
+    const postSection = sections.find(s => s.ti && (s.ti.includes('后期') || s.ti.includes('调色')));
+    if (postSection && postSection.c) {
+        colorDetail = postSection.c.slice(0, 2).join(', ');
+    }
+    
+    // Compose final prompt
+    const stylePrompt = styleMap[inp.style] || `${inp.style} style photography`;
+    const themePrompt = inp.theme || '';
+    
+    let prompt = `professional photography, ${stylePrompt}`;
+    if (themePrompt) prompt += `, ${themePrompt}`;
+    if (modelParts.length) prompt += `, ${modelParts.join(', ')}`;
+    if (sceneDetail) prompt += `, ${sceneDetail}`;
+    if (lightDetail) prompt += `, ${lightDetail}`;
+    if (colorDetail) prompt += `, ${colorDetail}`;
+    prompt += `, cinematic composition, high detail, 8K, masterpiece`;
+    
+    return prompt;
+}
+
+// Generate variant prompts for batch generation
+function buildImagePromptVariant(plan, variant) {
+    const basePrompt = buildImagePrompt(plan);
+    const variantMap = {
+        '正面半身': 'front view, half-body portrait, facing camera, natural standing',
+        '侧面全身': 'side view, full body, looking back over shoulder',
+        '45度角': '45 degree angle, elegant seated pose',
+        '仰拍': 'low angle shot, looking up, legs elongated',
+        '俯拍': 'high angle shot, looking down contemplative',
+        '背影': 'back view, mysterious atmosphere',
+        '特写': 'close-up portrait, face detail, expression focus',
+        '环境人像': 'environmental portrait, interacting with surroundings',
+        '动态抓拍': 'candid action shot, natural walking, motion blur'
+    };
+    return `${basePrompt}, ${variantMap[variant.angle] || variant.desc}, ${variant.desc}`;
 }
 
 function renderImageGallery(plan) {
     const images = plan.images || [];
     const galleryId = `img-gallery-${plan.id}`;
+    const hasAdvancedPrompt = plan.sections && plan.sections.length > 0;
 
     let html = `<div class="img-gallery" id="${galleryId}">
         <h4>🖼️ 例图生成</h4>
         <div class="img-gen-form">
             <input type="text" id="img-prompt-${plan.id}" value="${buildImagePrompt(plan)}" placeholder="输入生图提示词">
-            <button class="btn btn-i" onclick="genImgForPlan('${plan.id}')" id="gen-img-btn-${plan.id}">🎨 批量生成9张</button>
+            <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
+                <button class="btn btn-i" onclick="genImgForPlan('${plan.id}')" id="gen-img-btn-${plan.id}">🎨 批量生成9张</button>
+                ${hasAdvancedPrompt ? `<button class="btn btn-s" onclick="copyPrompt('${plan.id}')" style="font-size:.72rem;">📋 复制提示词</button>` : ''}
+            </div>
         </div>
+        ${hasAdvancedPrompt ? `<div class="prompt-breakdown" id="prompt-breakdown-${plan.id}" style="display:none;margin:.5rem 0;padding:.6rem;background:var(--bg2);border-radius:8px;border:1px solid var(--bd);">
+            <div style="font-size:.72rem;color:var(--t3);margin-bottom:.3rem;">🔍 提示词来源分析</div>
+            <div id="prompt-breakdown-content-${plan.id}" style="font-size:.72rem;color:var(--t2);line-height:1.5;"></div>
+        </div>` : ''}
         <div class="img-grid" id="img-grid-${plan.id}">`;
 
     if (images.length > 0) {
@@ -5458,6 +5573,84 @@ function renderImageGallery(plan) {
 
     html += '</div></div>';
     return html;
+}
+
+// Copy prompt to clipboard with breakdown
+function copyPrompt(planId) {
+    const plans = sg(SK.P) || [];
+    const plan = plans.find(p => p.id === planId);
+    if (!plan) return;
+    
+    const prompt = buildImagePrompt(plan);
+    const input = $(`img-prompt-${planId}`);
+    if (input) {
+        input.select();
+        navigator.clipboard.writeText(prompt).then(() => {
+            toast('提示词已复制到剪贴板', 'ok');
+        }).catch(() => {
+            // Fallback
+            document.execCommand('copy');
+            toast('提示词已复制', 'ok');
+        });
+    }
+    
+    // Toggle breakdown panel
+    const panel = $(`prompt-breakdown-${planId}`);
+    if (panel) {
+        const isVisible = panel.style.display !== 'none';
+        panel.style.display = isVisible ? 'none' : 'block';
+        if (!isVisible) {
+            // Build breakdown content
+            const inp = plan.input;
+            const sections = plan.sections;
+            let breakdown = '';
+            
+            breakdown += `<strong>风格：</strong>${inp.style || '未指定'} → English: ${getEnglishStyle(inp.style)}<br>`;
+            
+            if (inp.modelDesc) {
+                const model = inp.modelDesc;
+                const face = model.match(/(鹅蛋脸|圆脸|方脸|瓜子脸|心形脸|长脸|菱形脸)/);
+                const hair = model.match(/(黑色长直发|黑色卷发|棕色长发|短发|波波头|马尾|丸子头|编发|寸头|背头)/);
+                const skin = model.match(/(白皙|自然肤色|小麦色|古铜色|冷白皮|暖黄皮)/);
+                const body = model.match(/(偏瘦|标准|微胖|健美|丰满|高挑纤细|小巧玲珑)/);
+                if (face) breakdown += `<strong>脸型：</strong>${face[1]}<br>`;
+                if (hair) breakdown += `<strong>发型：</strong>${hair[1]}<br>`;
+                if (skin) breakdown += `<strong>肤色：</strong>${skin[1]}<br>`;
+                if (body) breakdown += `<strong>体型：</strong>${body[1]}<br>`;
+            }
+            
+            const locSection = sections.find(s => s.ti && s.ti.includes('地点'));
+            if (locSection) breakdown += `<strong>场景：</strong>从「地点推荐」章节提取<br>`;
+            
+            const lightSection = sections.find(s => s.ti && (s.ti.includes('天气') || s.ti.includes('光线')));
+            if (lightSection) breakdown += `<strong>光线：</strong>从「天气与光线」章节提取<br>`;
+            
+            const postSection = sections.find(s => s.ti && (s.ti.includes('后期') || s.ti.includes('调色')));
+            if (postSection) breakdown += `<strong>后期：</strong>从「后期方向」章节提取<br>`;
+            
+            breakdown += `<br><strong>完整提示词：</strong><br><code style="word-break:break-all;font-size:.68rem;color:var(--ac);">${prompt}</code>`;
+            
+            $(`prompt-breakdown-content-${planId}`).innerHTML = breakdown;
+        }
+    }
+}
+
+function getEnglishStyle(style) {
+    const map = {
+        '日系': 'Japanese fresh style, low saturation, film grain',
+        '港风': 'Hong Kong vintage neon style, high contrast',
+        '复古': 'vintage retro style, warm tones, film grain',
+        '森系': 'forest fairy style, natural green tones',
+        '商业': 'commercial photography, clean, professional',
+        '韩系': 'Korean style, cream skin, soft focus',
+        '情绪': 'moody cinematic style, dramatic lighting',
+        '杂志': 'fashion magazine editorial, high fashion',
+        '度假': 'vacation lifestyle, beach, relaxed',
+        '法式': 'French elegant style, romantic',
+        '古风': 'Chinese traditional style, classical',
+        '婚纱': 'wedding photography, romantic'
+    };
+    return map[style] || style;
 }
 
 async function genImgForPlan(planId) {
