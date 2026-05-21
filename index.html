@@ -4476,32 +4476,74 @@ const PRESET_TEMPLATES = [
     {
         id: 'preset-1',
         name: '🌸 日系清新人像',
-        desc: '适合：户外自然光、校园、街道',
-        input: { style: '日系', modelDesc: '年轻女性，自然妆容，休闲服装', scene: '校园/街道/公园', mood: '清新自然', duration: '2小时', people: '1', extra: '低饱和色调，胶片质感' }
+        desc: '适合：户外自然光、校园、街道、咖啡厅',
+        input: { style: '日系', modelDesc: '年轻女性，自然妆容，休闲服装（白衬衫/连衣裙）', scene: '校园/街道/公园/咖啡厅', mood: '清新自然', duration: '2小时', people: '1', extra: '低饱和色调，胶片质感，阳光过曝' }
     },
     {
         id: 'preset-2',
-        name: '🌃 都市夜景时尚',
-        desc: '适合：霓虹灯、城市街道、天台',
-        input: { style: '港风', modelDesc: '时尚造型，精致妆容', scene: '霓虹街道/天台/商圈', mood: '酷飒自信', duration: '3小时', people: '1', extra: '高对比，霓虹反光' }
+        name: '🌃 港风复古夜景',
+        desc: '适合：霓虹灯牌、城市街道、天台、老城区',
+        input: { style: '港风', modelDesc: '时尚造型，精致妆容，大红唇', scene: '霓虹街道/天台/老城区', mood: '酷飒自信', duration: '3小时', people: '1', extra: '高对比，霓虹反光，暗调胶片感' }
     },
     {
         id: 'preset-3',
         name: '🍂 复古胶片私房',
-        desc: '适合：室内、民宿、复古场景',
-        input: { style: '复古', modelDesc: '优雅气质，复古造型', scene: '复古民宿/老洋房', mood: '慵懒优雅', duration: '2小时', people: '1', extra: '暖色调，颗粒感，柔光' }
+        desc: '适合：室内、民宿、老洋房、复古咖啡厅',
+        input: { style: '复古', modelDesc: '优雅气质，复古造型（卷发/丝巾/珍珠）', scene: '复古民宿/老洋房/法式咖啡厅', mood: '慵懒优雅', duration: '2小时', people: '1', extra: '暖色调，颗粒感，柔光，漏光效果' }
     },
     {
         id: 'preset-4',
         name: '🌲 森系氧气写真',
-        desc: '适合：森林、草地、自然光',
-        input: { style: '森系', modelDesc: '清新自然，淡妆', scene: '森林/草地/花丛', mood: '氧气感', duration: '2小时', people: '1', extra: '逆光，绿色调，朦胧感' }
+        desc: '适合：森林、草地、花海、湿地公园',
+        input: { style: '森系', modelDesc: '清新自然，淡妆，白色/浅绿裙子', scene: '森林/草地/花丛/湿地公园', mood: '氧气感', duration: '2小时', people: '1', extra: '逆光，绿色调，朦胧感，阳光光斑' }
     },
     {
         id: 'preset-5',
         name: '💼 商务形象照',
-        desc: '适合：职场、简历、LinkedIn',
-        input: { style: '商业', modelDesc: '职业装，干练造型', scene: '办公室/纯色背景', mood: '专业自信', duration: '1小时', people: '1', extra: '中性灰，精修，标准构图' }
+        desc: '适合：职场、简历、LinkedIn、企业宣传',
+        input: { style: '商业', modelDesc: '职业正装，干练造型，干净妆容', scene: '办公室/纯色背景/企业前台', mood: '专业自信', duration: '1小时', people: '1', extra: '中性灰，精修，标准构图，光线均匀' }
+    },
+    {
+        id: 'preset-6',
+        name: '🇰🇷 韩系奶油肌',
+        desc: '适合：室内棚拍、精致妆容、韩系穿搭',
+        input: { style: '韩系', modelDesc: '精致妆容，韩系穿搭，时尚配饰', scene: '室内棚/韩系咖啡厅/精致民宿', mood: '温柔精致', duration: '2小时', people: '1', extra: '高明度，奶油肌质感，柔焦，低饱和' }
+    },
+    {
+        id: 'preset-7',
+        name: '🎬 情绪电影感',
+        desc: '适合：表达情感、故事性叙事、艺术感',
+        input: { style: '情绪', modelDesc: '有故事感的形象，自然表情，情绪表达', scene: '废弃建筑/海边/天台/老街道', mood: '故事感', duration: '3小时', people: '1', extra: '电影感构图，16:9画幅，戏剧性光线' }
+    },
+    {
+        id: 'preset-8',
+        name: '👗 时尚杂志风',
+        desc: '适合：高端品牌、服装画册、时尚大片',
+        input: { style: '杂志', modelDesc: '时尚造型，专业妆容，高级感', scene: '天台/艺术区/高级酒店/美术馆', mood: '高级时尚', duration: '3小时', people: '1', extra: '高对比，戏剧性布光，专业后期' }
+    },
+    {
+        id: 'preset-9',
+        name: '🏖️ 海边度假风',
+        desc: '适合：海边、沙滩、度假村、泳装',
+        input: { style: '度假', modelDesc: '度假装扮，泳装/沙滩裙，清爽妆容', scene: '海边/沙滩/度假村/礁石', mood: '自由惬意', duration: '3小时', people: '1', extra: '蓝天白云，海风飘逸，剪影，夕阳' }
+    },
+    {
+        id: 'preset-10',
+        name: '🏛️ 法式优雅',
+        desc: '适合：法式建筑、花园、复古庄园',
+        input: { style: '法式', modelDesc: '法式穿搭，帽子/茶歇裙，精致妆容', scene: '法式花园/老建筑/美术馆/欧式街道', mood: '优雅浪漫', duration: '2小时', people: '1', extra: '莫兰迪色调，慵懒感，逆光，焦外虚化' }
+    },
+    {
+        id: 'preset-11',
+        name: '🎎 古风汉服',
+        desc: '适合：中国古风、传统建筑、园林',
+        input: { style: '古风', modelDesc: '汉服造型，精致古风妆容', scene: '古镇/园林/古建筑/寺庙', mood: '清冷古典', duration: '3小时', people: '1', extra: '水墨色调，留白构图，古典韵味' }
+    },
+    {
+        id: 'preset-12',
+        name: '💍 轻婚纱写真',
+        desc: '适合：婚纱照、求婚纪念、情侣写真',
+        input: { style: '婚纱', modelDesc: '轻婚纱/白裙，精致妆容，浪漫造型', scene: '海边/草地/教堂/精致室内', mood: '浪漫甜蜜', duration: '3小时', people: '2', extra: '梦幻柔光，浪漫色调，情侣互动' }
     }
 ];
 
