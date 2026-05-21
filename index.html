@@ -4951,6 +4951,23 @@ async function genPlan(input) {
         }
     }
 
+    // Extract specific feature from model description
+    function extractFeature(desc, feature) {
+        if (!desc) return '';
+        const map = {
+            '身高': /身高(\d+)/,
+            '体型': /(偏瘦|标准|微胖|健美|丰满|高挑纤细|小巧玲珑)/,
+            '脸型': /(鹅蛋脸|圆脸|方脸|瓜子脸|心形脸|长脸|菱形脸)/,
+            '发型': /(黑色长直发|黑色卷发|棕色长发|短发|波波头|马尾|丸子头|编发|寸头|背头)/,
+            '肤色': /(白皙|自然肤色|小麦色|古铜色|冷白皮|暖黄皮)/,
+            '气质': /(慵懒神秘|清新甜美|高冷御姐|阳光活泼|文艺知性|性感妩媚|帅气干练|温柔贤惠)/
+        };
+        const regex = map[feature];
+        if (!regex) return '';
+        const match = desc.match(regex);
+        return match ? match[1] : '';
+    }
+
     // Build enhanced prompt
     let locationPrompt = needsRealLocation 
         ? `📍 地点推荐（真实地点）：\n- 根据"${scene || theme}"推荐3-5个具体城市/地点名称\n- 每个地点说明适合拍摄的原因`
@@ -4981,44 +4998,66 @@ ${extra ? '【特殊要求】' + extra : ''}
 </context>
 
 <task>
-基于以上信息，生成一份可直接执行的专业拍摄方案。每个部分必须紧扣"${style}"风格和"${theme}"主题，禁止出现通用建议。
+基于以上信息，生成一份可直接执行的专业拍摄方案。
+
+⚠️ 关键要求：你必须根据模特的具体身体特征（身高、体型、脸型、发型、肤色、气质）给出针对性的建议，而不是泛泛而谈。例如：
+- 身高155cm的模特和身高178cm的模特，摆姿角度、镜头选择、构图方式完全不同
+- 圆脸和瓜子脸的妆容重点、光线角度、拍摄角度不同
+- 偏瘦和丰满的模特，服装选择、摆姿引导、镜头焦段不同
+- 不同肤色需要不同的补光方案和后期调色
+
+每个部分必须紧扣"${style}"风格和"${theme}"主题，同时紧密结合模特的${model}特征，禁止出现通用建议。
 </task>
 
 <output_format>
-请严格按照以下9个章节输出，每个章节3-5条具体可执行的建议：
+请严格按照以下10个章节输出，每个章节3-5条具体可执行的建议：
 
 ${locationPrompt}
 
-🧍 摆姿指导（${matchedStyle ? matchedStyle.pose : '根据风格定制'}）：
-- 3-5个符合风格的摆姿，包含身体角度、视线方向、手脚位置
+🧍 摆姿指导（针对${model}定制）：
+- 根据模特身高${extractFeature(model,'身高')||''}调整拍摄角度（矮拍显高/俯拍显脸小等）
+- 根据模特体型${extractFeature(model,'体型')||''}选择摆姿（显瘦/显壮/显曲线等）
+- 根据模特脸型${extractFeature(model,'脸型')||''}调整面部角度（侧脸/3/4侧/正面等）
+- 结合"${style}"风格设计3-5个具体动作
 
-💄 妆造建议（${matchedStyle ? matchedStyle.makeup : '根据风格定制'}）：
-- 发型细节、妆容重点、服装搭配、配饰选择
+💄 妆造建议（针对${model}定制）：
+- 根据脸型${extractFeature(model,'脸型')||''}设计妆容重点（修容方式、眉型、唇色）
+- 根据肤色${extractFeature(model,'肤色')||''}选择底妆和腮红色调
+- 根据发型${extractFeature(model,'发型')||''}搭配造型
+- 服装款式要适合${extractFeature(model,'体型')||''}身材
 
 🎬 道具清单（${matchedScene ? matchedScene.prop : '根据场景定制'}）：
 - 主道具、辅助道具、应急备选
+- 道具大小要适合${extractFeature(model,'身高')||''}身高比例
 
 🌤️ 天气与光线（${matchedScene ? matchedScene.weather : '根据场景定制'}）：
-- 最佳天气条件、黄金时段、补光方案
+- 最佳天气条件、黄金时段
+- 根据肤色${extractFeature(model,'肤色')||''}调整补光方案（冷白皮/暖黄皮光线不同）
+- 根据脸型选择光线角度（方脸用柔光/圆脸用侧光塑形）
 
 🔭 器材配置：
-- 机身、镜头焦段、附件、备用方案
+- 根据身高${extractFeature(model,'身高')||''}选择镜头焦段（全身/半身/特写）
+- 根据体型选择焦段（广角显瘦/长焦压缩）
+- 机身、附件、备用方案
 
 ⏰ 时间流程：
 - 准备→化妆→拍摄→收尾的详细时间表
 
 🎨 后期方向（${matchedStyle ? matchedStyle.color : '根据风格定制'}）：
-- 调色风格、修图程度、交付格式
+- 根据肤色${extractFeature(model,'肤色')||''}调整肤色处理方式
+- 根据体型选择液化程度和方式
+- 调色风格、交付格式
 
 ⚠️ 风险预案：
 - 天气突变、设备故障、模特状态等应对措施
 
 💡 加分技巧：
-- 能让作品更出彩的专业技巧
+- 针对${model}特征的专业技巧（如特定脸型的最佳拍摄角度、特定体型的穿衣显瘦技巧等）
 </output_format>
 
 <constraints>
 - 所有建议必须与"${style}"风格和"${theme}"主题强相关
+- 所有建议必须针对模特的${model}特征量身定制
 - 禁止使用"根据情况调整"等模糊表述
 - 每个建议都要具体可执行
 - 使用专业摄影术语
