@@ -2623,7 +2623,7 @@
                                     <div class="image-preview-grid" id="imagePreviewGrid"></div>
                                 </div>
 
-                                <button type="submit" class="btn btn-p" id="genBtn" style="width:100%;margin-top:0.5rem;" data-i18n="gen.button">⚡ 生成并保存</button>
+                                <button type="submit" class="btn btn-p" id="genBtn" style="width:100%;margin-top:0.5rem;" data-i18n="gen.button"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>生成并保存</button>
                             </form>
 
                             <!-- 案例参考 -->
@@ -3121,7 +3121,7 @@
                         <div class="p-body" id="tplSavePanel" style="display:none;">
                             <div class="fg"><label>模板名称</label><input id="tpl-name" placeholder="如：复古私房通用方案"></div>
                             <div class="fg"><label>模板描述</label><input id="tpl-desc" placeholder="简短描述适用场景"></div>
-                            <button class="btn btn-p" onclick="saveAsTemplate()" data-i18n="tpl.saveBtn">💾 保存为模板</button>
+                            <button class="btn btn-p" onclick="saveAsTemplate()" data-i18n="tpl.saveBtn"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path fill="currentColor" d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7M7 3v4a1 1 0 0 0 1 1h7"/></g></svg>保存为模板</button>
                         </div>
                         <div style="padding:1rem;text-align:center;color:var(--t3);font-size:.82rem;" id="tplSaveHint" data-i18n="tpl.genFirst">先生成一个方案，即可保存为模板</div>
                     </div>
@@ -3132,12 +3132,12 @@
                         <div class="p-body">
                             <!-- Preset Templates -->
                             <div style="margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid var(--bd);">
-                                <h3 style="font-size:.8rem;color:var(--t2);margin:0 0 .5rem 0;">📚 预设模板</h3>
+                                <h3 style="font-size:.8rem;color:var(--t2);margin:0 0 .5rem 0;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 7v14m-9-3a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4a4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3a3 3 0 0 0-3-3z"/></svg>预设模板</h3>
                                 <div id="preset-tpls" style="display:flex;flex-direction:column;gap:.4rem;"></div>
                             </div>
                             <!-- User Templates -->
                             <div>
-                                <h3 style="font-size:.8rem;color:var(--t2);margin:0 0 .5rem 0;">💾 我的模板</h3>
+                                <h3 style="font-size:.8rem;color:var(--t2);margin:0 0 .5rem 0;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path fill="currentColor" d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7M7 3v4a1 1 0 0 0 1 1h7"/></g></svg>我的模板</h3>
                                 <div id="tpl-list"></div>
                             </div>
                         </div>
@@ -3154,7 +3154,7 @@
                     <div class="p-head"><h2>全部历史方案</h2><span class="badge" id="histFullCount">0 条</span></div>
                     <div class="hist-count" id="histHeaderCount">0 条方案</div>
                     <div class="hist-list" id="histFull"></div>
-                    <div style="padding:.75rem 1rem;"><button class="btn btn-d btn-sm" id="clearAllBtn" style="display:none;" onclick="clearAllHistory()" data-i18n="tpl.clearAll">🗑️ 清空全部</button></div>
+                    <div style="padding:.75rem 1rem;"><button class="btn btn-d btn-sm" id="clearAllBtn" style="display:none;" onclick="clearAllHistory()" data-i18n="tpl.clearAll"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 11v6m4-6v6m5-11v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>清空全部</button></div>
                 </div>
             </div>
         </div>
@@ -3186,7 +3186,7 @@
             <div style="max-width:900px;margin:0 auto;">
                 <div class="panel" style="margin-bottom:1rem;">
                     <div class="p-head" style="justify-content:space-between">
-                        <h2 data-i18n="calendar.title">📅 拍摄日程</h2>
+                        <h2 data-i18n="calendar.title"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" d="M8 2v4m8-4v4"/><rect fill="currentColor" width="18" height="18" x="3" y="4" rx="2"/><path fill="currentColor" d="M3 10h18"/></g></svg>拍摄日程</h2>
                         <button class="btn btn-s btn-sm" onclick="addSchedule()" data-i18n="calendar.add">+ 添加日程</button>
                     </div>
                     <div class="p-body">
@@ -3203,7 +3203,7 @@
                         <h2>📋 待办事项</h2>
                         <div style="display:flex;gap:.5rem;">
                             <button class="btn btn-s btn-sm" onclick="exportToFeishu()" data-i18n="calendar.sync">📤 同步到飞书日历</button>
-                            <button class="btn btn-s btn-sm" onclick="syncToFeishuBitable()" data-i18n="calendar.syncBitable">📊 同步到多维表格</button>
+                            <button class="btn btn-s btn-sm" onclick="syncToFeishuBitable()" data-i18n="calendar.syncBitable"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 21v-6m7 6V3m7 18V9"/></svg>同步到多维表格</button>
                         </div>
                     </div>
                     <div class="p-body" id="todoList"></div>
@@ -4185,7 +4185,7 @@ function openMsgDetail(id) {
         actEl.innerHTML += '<button class="btn btn-p btn-sm" onclick="updateMsg(\'' + id + '\',\'completed\')">✅ 标记完成</button>';
     }
     actEl.innerHTML += '<a class="btn btn-s btn-sm" href="mailto:' + escHtml(m.email) + (m.name ? '?subject=Re: ' + encodeURIComponent(m.name) + ' 的咨询' : '') + '" style="text-decoration:none;">📧 回复邮件</a>';
-    actEl.innerHTML += '<button class="btn btn-sm" style="color:#ef4444;border:1px solid rgba(239,68,68,0.3);" onclick="deleteMsg(\'' + id + '\')">🗑️ 删除</button>';
+    actEl.innerHTML += '<button class="btn btn-sm" style="color:#ef4444;border:1px solid rgba(239,68,68,0.3);" onclick="deleteMsg(\'' + id + '\')"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 11v6m4-6v6m5-11v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>删除</button>';
 
     modal.style.display = 'flex';
 }
@@ -4626,7 +4626,7 @@ let currentPlanData = null;
 const PRESET_TEMPLATES = [
     {
         id: 'preset-1',
-        name: '🌸 日系清新人像',
+        name: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" d="M12 5a3 3 0 1 1 3 3m-3-3a3 3 0 1 0-3 3m3-3v1M9 8a3 3 0 1 0 3 3C9 8 9 8 9 8h1m5 0a3 3 0 1 1-3 3m3-3h-1m-2 3v-1"/><circle fill="currentColor" cx="12" cy="8" r="2"/><path fill="currentColor" d="M12 10v12m0 0c4.2 0 7-1.667 7-5c-4.2 0-7 1.667-7 5m0 0c-4.2 0-7-1.667-7-5c4.2 0 7 1.667 7 5"/></g></svg>日系清新人像',
         desc: '适合：户外自然光、校园、街道、咖啡厅',
         input: { style: '日系', modelDesc: '年轻女性，自然妆容，休闲服装（白衬衫/连衣裙）', scene: '校园/街道/公园/咖啡厅', mood: '清新自然', duration: '2小时', people: '1', extra: '低饱和色调，胶片质感，阳光过曝' },
         guide: {
@@ -4641,7 +4641,7 @@ const PRESET_TEMPLATES = [
     },
     {
         id: 'preset-2',
-        name: '🌃 港风复古夜景',
+        name: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 5h4m-2-2v4m.985 5.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg>港风复古夜景',
         desc: '适合：霓虹灯牌、城市街道、天台、老城区',
         input: { style: '港风', modelDesc: '时尚造型，精致妆容，大红唇', scene: '霓虹街道/天台/老城区', mood: '酷飒自信', duration: '3小时', people: '1', extra: '高对比，霓虹反光，暗调胶片感' },
         guide: {
@@ -4656,7 +4656,7 @@ const PRESET_TEMPLATES = [
     },
     {
         id: 'preset-3',
-        name: '🍂 复古胶片私房',
+        name: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><rect fill="currentColor" width="18" height="18" x="3" y="3" rx="2"/><path fill="currentColor" d="M7 3v18M3 7.5h4M3 12h18M3 16.5h4M17 3v18m0-13.5h4m-4 9h4"/></g></svg>复古胶片私房',
         desc: '适合：室内、民宿、老洋房、复古咖啡厅',
         input: { style: '复古', modelDesc: '优雅气质，复古造型（卷发/丝巾/珍珠）', scene: '复古民宿/老洋房/法式咖啡厅', mood: '慵懒优雅', duration: '2小时', people: '1', extra: '暖色调，颗粒感，柔光，漏光效果' },
         guide: {
@@ -4671,7 +4671,7 @@ const PRESET_TEMPLATES = [
     },
     {
         id: 'preset-4',
-        name: '🌲 森系氧气写真',
+        name: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m17 14l3 3.3a1 1 0 0 1-.7 1.7H4.7a1 1 0 0 1-.7-1.7L7 14h-.3a1 1 0 0 1-.7-1.7L9 9h-.2A1 1 0 0 1 8 7.3L12 3l4 4.3a1 1 0 0 1-.8 1.7H15l3 3.3a1 1 0 0 1-.7 1.7zm-5 8v-3"/></svg>森系氧气写真',
         desc: '适合：森林、草地、花海、湿地公园',
         input: { style: '森系', modelDesc: '清新自然，淡妆，白色/浅绿裙子', scene: '森林/草地/花丛/湿地公园', mood: '氧气感', duration: '2小时', people: '1', extra: '逆光，绿色调，朦胧感，阳光光斑' },
         guide: {
@@ -4686,7 +4686,7 @@ const PRESET_TEMPLATES = [
     },
     {
         id: 'preset-5',
-        name: '💼 商务形象照',
+        name: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><rect fill="currentColor" width="20" height="14" x="2" y="6" rx="2"/></g></svg>商务形象照',
         desc: '适合：职场、简历、LinkedIn、企业宣传',
         input: { style: '商业', modelDesc: '职业正装，干练造型，干净妆容', scene: '办公室/纯色背景/企业前台', mood: '专业自信', duration: '1小时', people: '1', extra: '中性灰，精修，标准构图，光线均匀' },
         guide: {
@@ -4701,7 +4701,7 @@ const PRESET_TEMPLATES = [
     },
     {
         id: 'preset-6',
-        name: '🇰🇷 韩系奶油肌',
+        name: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 22V4a1 1 0 0 1 .4-.8A6 6 0 0 1 8 2c3 0 5 2 7.333 2q2 0 3.067-.8A1 1 0 0 1 20 4v10a1 1 0 0 1-.4.8A6 6 0 0 1 16 16c-3 0-5-2-8-2a6 6 0 0 0-4 1.528"/></svg>韩系奶油肌',
         desc: '适合：室内棚拍、精致妆容、韩系穿搭',
         input: { style: '韩系', modelDesc: '精致妆容，韩系穿搭，时尚配饰', scene: '室内棚/韩系咖啡厅/精致民宿', mood: '温柔精致', duration: '2小时', people: '1', extra: '高明度，奶油肌质感，柔焦，低饱和' },
         guide: {
@@ -4716,7 +4716,7 @@ const PRESET_TEMPLATES = [
     },
     {
         id: 'preset-7',
-        name: '🎬 情绪电影感',
+        name: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m12.296 3.464l3.02 3.956M20.2 6L3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3zM3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zm3.18-5.724l3.1 3.899"/></svg>情绪电影感',
         desc: '适合：表达情感、故事性叙事、艺术感',
         input: { style: '情绪', modelDesc: '有故事感的形象，自然表情，情绪表达', scene: '废弃建筑/海边/天台/老街道', mood: '故事感', duration: '3小时', people: '1', extra: '电影感构图，16:9画幅，戏剧性光线' },
         guide: {
@@ -4731,7 +4731,7 @@ const PRESET_TEMPLATES = [
     },
     {
         id: 'preset-8',
-        name: '👗 时尚杂志风',
+        name: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23"/></svg>时尚杂志风',
         desc: '适合：高端品牌、服装画册、时尚大片',
         input: { style: '杂志', modelDesc: '时尚造型，专业妆容，高级感', scene: '天台/艺术区/高级酒店/美术馆', mood: '高级时尚', duration: '3小时', people: '1', extra: '高对比，戏剧性布光，专业后期' },
         guide: {
@@ -4746,7 +4746,7 @@ const PRESET_TEMPLATES = [
     },
     {
         id: 'preset-9',
-        name: '🏖️ 海边度假风',
+        name: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" d="M12 13v7a2 2 0 0 0 4 0M12 2v2"/><path fill="currentColor" d="M20.992 13a1 1 0 0 0 .97-1.274a10.284 10.284 0 0 0-19.923 0A1 1 0 0 0 3 13z"/></g></svg>海边度假风',
         desc: '适合：海边、沙滩、度假村、泳装',
         input: { style: '度假', modelDesc: '度假装扮，泳装/沙滩裙，清爽妆容', scene: '海边/沙滩/度假村/礁石', mood: '自由惬意', duration: '3小时', people: '1', extra: '蓝天白云，海风飘逸，剪影，夕阳' },
         guide: {
@@ -4761,7 +4761,7 @@ const PRESET_TEMPLATES = [
     },
     {
         id: 'preset-10',
-        name: '🏛️ 法式优雅',
+        name: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 18v-7m1.119-8.795a2 2 0 0 1 1.762 0l7.84 3.846A.5.5 0 0 1 20.5 7h-17a.5.5 0 0 1-.22-.949zM14 18v-7m4 7v-7M3 22h18M6 18v-7"/></svg>法式优雅',
         desc: '适合：法式建筑、花园、复古庄园',
         input: { style: '法式', modelDesc: '法式穿搭，帽子/茶歇裙，精致妆容', scene: '法式花园/老建筑/美术馆/欧式街道', mood: '优雅浪漫', duration: '2小时', people: '1', extra: '莫兰迪色调，慵懒感，逆光，焦外虚化' },
         guide: {
@@ -4776,7 +4776,7 @@ const PRESET_TEMPLATES = [
     },
     {
         id: 'preset-11',
-        name: '🎎 古风汉服',
+        name: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" d="M18 11c-1.5 0-2.5.5-3 2"/><path fill="currentColor" d="M4 6a2 2 0 0 0-2 2v4a5 5 0 0 0 5 5a8 8 0 0 1 5 2a8 8 0 0 1 5-2a5 5 0 0 0 5-5V8a2 2 0 0 0-2-2h-3a8 8 0 0 0-5 2a8 8 0 0 0-5-2z"/><path fill="currentColor" d="M6 11c1.5 0 2.5.5 3 2"/></g></svg>古风汉服',
         desc: '适合：中国古风、传统建筑、园林',
         input: { style: '古风', modelDesc: '汉服造型，精致古风妆容', scene: '古镇/园林/古建筑/寺庙', mood: '清冷古典', duration: '3小时', people: '1', extra: '水墨色调，留白构图，古典韵味' },
         guide: {
@@ -4791,7 +4791,7 @@ const PRESET_TEMPLATES = [
     },
     {
         id: 'preset-12',
-        name: '💍 轻婚纱写真',
+        name: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" d="M10.5 3L8 9l4 13l4-13l-2.5-6"/><path fill="currentColor" d="M17 3a2 2 0 0 1 1.6.8l3 4a2 2 0 0 1 .013 2.382l-7.99 10.986a2 2 0 0 1-3.247 0l-7.99-10.986A2 2 0 0 1 2.4 7.8l2.998-3.997A2 2 0 0 1 7 3zM2 9h20"/></g></svg>轻婚纱写真',
         desc: '适合：婚纱照、求婚纪念、情侣写真',
         category: ['婚纱', '情侣', '浪漫'],
         scene: '户外',
@@ -4809,7 +4809,7 @@ const PRESET_TEMPLATES = [
     },
     {
         id: 'preset-13',
-        name: '📚 文艺书店人像',
+        name: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 7v14m-9-3a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4a4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3a3 3 0 0 0-3-3z"/></svg>文艺书店人像',
         desc: '适合：书店、图书馆、文艺空间',
         category: ['文艺', '室内', '清新'],
         scene: '室内',
@@ -4827,7 +4827,7 @@ const PRESET_TEMPLATES = [
     },
     {
         id: 'preset-14',
-        name: '🏃 运动活力风',
+        name: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" d="M10 2h4m-2 12l3-3"/><circle fill="currentColor" cx="12" cy="14" r="8"/></g></svg>运动活力风',
         desc: '适合：健身房、户外跑道、球场',
         category: ['运动', '活力', '户外'],
         scene: '户外',
@@ -4845,7 +4845,7 @@ const PRESET_TEMPLATES = [
     },
     {
         id: 'preset-15',
-        name: '🍰 甜品店少女',
+        name: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" d="M16 13H3m13 4H3m4.2-9.1l-3.388 2.5A2 2 0 0 0 3 12.01V20a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1v-8.654c0-2-2.44-6.026-6.44-8.026a1 1 0 0 0-1.082.057L10.4 5.6"/><circle fill="currentColor" cx="9" cy="7" r="2"/></g></svg>甜品店少女',
         desc: '适合：甜品店、咖啡厅、烘焙坊',
         category: ['甜美', '室内', '韩系'],
         scene: '室内',
@@ -4863,7 +4863,7 @@ const PRESET_TEMPLATES = [
     },
     {
         id: 'preset-16',
-        name: '🌙 夜景霓虹情绪',
+        name: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg>夜景霓虹情绪',
         desc: '适合：城市夜景、霓虹灯、雨夜',
         category: ['夜景', '情绪', '港风'],
         scene: '夜景',
@@ -4881,7 +4881,7 @@ const PRESET_TEMPLATES = [
     },
     {
         id: 'preset-17',
-        name: '🎨 画室艺术感',
+        name: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" d="M12 22a1 1 0 0 1 0-20a10 9 0 0 1 10 9a5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z"/><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/></g></svg>画室艺术感',
         desc: '适合：画室、美术馆、艺术工作室',
         category: ['艺术', '室内', '文艺'],
         scene: '室内',
@@ -4899,7 +4899,7 @@ const PRESET_TEMPLATES = [
     },
     {
         id: 'preset-18',
-        name: '🏍️ 机车酷飒风',
+        name: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" d="m18 14l-1-3M3 9l6 2a2 2 0 0 1 2-2h2a2 2 0 0 1 1.99 1.81"/><path fill="currentColor" d="M8 17h3a1 1 0 0 0 1-1a6 6 0 0 1 6-6a1 1 0 0 0 1-1v-.75A5 5 0 0 0 17 5"/><circle fill="currentColor" cx="19" cy="17" r="3"/><circle fill="currentColor" cx="5" cy="17" r="3"/></g></svg>机车酷飒风',
         desc: '适合：机车、车库、工业风场景',
         category: ['酷飒', '工业', '个性'],
         scene: '户外',
@@ -4917,7 +4917,7 @@ const PRESET_TEMPLATES = [
     },
     {
         id: 'preset-19',
-        name: '🌸 樱花季限定',
+        name: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" d="M12 5a3 3 0 1 1 3 3m-3-3a3 3 0 1 0-3 3m3-3v1M9 8a3 3 0 1 0 3 3C9 8 9 8 9 8h1m5 0a3 3 0 1 1-3 3m3-3h-1m-2 3v-1"/><circle fill="currentColor" cx="12" cy="8" r="2"/><path fill="currentColor" d="M12 10v12m0 0c4.2 0 7-1.667 7-5c-4.2 0-7 1.667-7 5m0 0c-4.2 0-7-1.667-7-5c4.2 0 7 1.667 7 5"/></g></svg>樱花季限定',
         desc: '适合：樱花、春天、粉色花海',
         category: ['季节', '户外', '浪漫'],
         scene: '户外',
@@ -4935,7 +4935,7 @@ const PRESET_TEMPLATES = [
     },
     {
         id: 'preset-20',
-        name: '🏠 居家慵懒风',
+        name: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path fill="currentColor" d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></g></svg>居家慵懒风',
         desc: '适合：居家、卧室、阳台、厨房',
         category: ['居家', '室内', '生活'],
         scene: '室内',
@@ -5034,37 +5034,37 @@ function renderTpl() {
                 <div class="tpl-desc">${t.desc}</div>
                 <div style="font-size:.7rem;color:var(--t3);margin-bottom:.5rem;">风格: ${t.input.style} · 时长: ${t.input.duration} · 场景: ${t.scene || '未分类'}</div>
                 <div class="tpl-actions" style="margin-bottom:.5rem;">
-                    <button class="btn btn-p btn-sm" onclick="usePresetTpl('${t.id}')">⚡ 一键使用</button>
-                    <button class="btn btn-s btn-sm" onclick="togglePresetGuide('${t.id}')">📖 查看指南</button>
-                    <button class="btn btn-s btn-sm" onclick="generateTplPreview('${t.id}')">🎨 生成预览</button>
+                    <button class="btn btn-p btn-sm" onclick="usePresetTpl('${t.id}')"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>一键使用</button>
+                    <button class="btn btn-s btn-sm" onclick="togglePresetGuide('${t.id}')"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 7v14m4-9h2m-2-4h2M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4a4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3a3 3 0 0 0-3-3zm3-6h2M6 8h2"/></svg>查看指南</button>
+                    <button class="btn btn-s btn-sm" onclick="generateTplPreview('${t.id}')"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" d="M12 22a1 1 0 0 1 0-20a10 9 0 0 1 10 9a5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z"/><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/></g></svg>生成预览</button>
                 </div>
                 <div class="tpl-guide-panel" id="tpl-guide-${t.id}" style="display:none;">
                     <div style="border-top:1px solid var(--bd);padding-top:.8rem;margin-top:.5rem;">
-                        <h4 style="font-size:.8rem;color:var(--ac);margin:0 0 .5rem 0;">🧍 摆姿引导</h4>
+                        <h4 style="font-size:.8rem;color:var(--ac);margin:0 0 .5rem 0;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><circle fill="currentColor" cx="12" cy="5" r="1"/><path fill="currentColor" d="m9 20l3-6l3 6M6 8l6 2l6-2m-6 2v4"/></g></svg>摆姿引导</h4>
                         <ul style="margin:0 0 .8rem 0;padding-left:1rem;font-size:.75rem;color:var(--t2);line-height:1.6;">
                             ${t.guide.poses.map(p => '<li>' + p + '</li>').join('')}
                         </ul>
-                        <h4 style="font-size:.8rem;color:var(--ac);margin:0 0 .5rem 0;">🖼️ 背景选择</h4>
+                        <h4 style="font-size:.8rem;color:var(--ac);margin:0 0 .5rem 0;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><rect fill="currentColor" width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle fill="currentColor" cx="9" cy="9" r="2"/><path fill="currentColor" d="m21 15l-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></g></svg>背景选择</h4>
                         <ul style="margin:0 0 .8rem 0;padding-left:1rem;font-size:.75rem;color:var(--t2);line-height:1.6;">
                             ${t.guide.background.map(b => '<li>' + b + '</li>').join('')}
                         </ul>
-                        <h4 style="font-size:.8rem;color:var(--ac);margin:0 0 .5rem 0;">💡 光线方案</h4>
+                        <h4 style="font-size:.8rem;color:var(--ac);margin:0 0 .5rem 0;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 14c.2-1 .7-1.7 1.5-2.5c1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5c.7.7 1.3 1.5 1.5 2.5m0 4h6m-5 4h4"/></svg>光线方案</h4>
                         <ul style="margin:0 0 .8rem 0;padding-left:1rem;font-size:.75rem;color:var(--t2);line-height:1.6;">
                             ${t.guide.lighting.map(l => '<li>' + l + '</li>').join('')}
                         </ul>
-                        <h4 style="font-size:.8rem;color:var(--ac);margin:0 0 .5rem 0;">🌤️ 天气/风效</h4>
+                        <h4 style="font-size:.8rem;color:var(--ac);margin:0 0 .5rem 0;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2v2m-7.07.93l1.41 1.41M20 12h2m-2.93-7.07l-1.41 1.41m-1.713 6.31a4 4 0 0 0-5.925-4.128M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6"/></svg>天气/风效</h4>
                         <ul style="margin:0 0 .8rem 0;padding-left:1rem;font-size:.75rem;color:var(--t2);line-height:1.6;">
                             ${t.guide.weather.map(w => '<li>' + w + '</li>').join('')}
                         </ul>
-                        <h4 style="font-size:.8rem;color:var(--ac);margin:0 0 .5rem 0;">🎬 道具清单</h4>
+                        <h4 style="font-size:.8rem;color:var(--ac);margin:0 0 .5rem 0;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m12.296 3.464l3.02 3.956M20.2 6L3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3zM3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zm3.18-5.724l3.1 3.899"/></svg>道具清单</h4>
                         <div style="display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.8rem;">
                             ${t.guide.props.map(p => '<span style="background:var(--bg2);border:1px solid var(--bd);padding:.15rem .5rem;border-radius:10px;font-size:.7rem;color:var(--t1);">' + p + '</span>').join('')}
                         </div>
-                        <h4 style="font-size:.8rem;color:var(--ac);margin:0 0 .5rem 0;">⏰ 时间建议</h4>
+                        <h4 style="font-size:.8rem;color:var(--ac);margin:0 0 .5rem 0;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><circle fill="currentColor" cx="12" cy="12" r="10"/><path fill="currentColor" d="M12 6v6l4 2"/></g></svg>时间建议</h4>
                         <ul style="margin:0 0 .8rem 0;padding-left:1rem;font-size:.75rem;color:var(--t2);line-height:1.6;">
                             ${t.guide.timing.map(ti => '<li>' + ti + '</li>').join('')}
                         </ul>
-                        <h4 style="font-size:.8rem;color:var(--ac);margin:0 0 .5rem 0;">🎨 后期方向</h4>
+                        <h4 style="font-size:.8rem;color:var(--ac);margin:0 0 .5rem 0;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" d="M12 22a1 1 0 0 1 0-20a10 9 0 0 1 10 9a5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z"/><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/></g></svg>后期方向</h4>
                         <ul style="margin:0;padding-left:1rem;font-size:.75rem;color:var(--t2);line-height:1.6;">
                             ${t.guide.postProcess.map(pp => '<li>' + pp + '</li>').join('')}
                         </ul>
@@ -5086,10 +5086,10 @@ function renderTpl() {
             <div class="tpl-name">📑 ${t.name} <button class="btn-i2" onclick="delTpl('${t.id}')">✕</button></div>
             ${t.desc?`<div class="tpl-desc">${t.desc}</div>`:''}
             <div style="font-size:.72rem;color:var(--t3);margin-bottom:.5rem;">${t.count||0} 次使用 · ${new Date(t.at).toLocaleDateString()}</div>
-            <div class="tpl-actions"><button class="btn btn-p btn-sm" onclick="useTpl('${t.id}')">⚡ 使用此模板</button></div>
+            <div class="tpl-actions"><button class="btn btn-p btn-sm" onclick="useTpl('${t.id}')"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>使用此模板</button></div>
             <div class="tpl-use-form" id="tpl-form-${t.id}">
                 <div class="fg"><label>新拍摄主题</label><input id="tpl-theme-${t.id}" placeholder="输入新主题，快速生成"></div>
-                <div style="display:flex;gap:.4rem;"><button class="btn btn-p btn-sm" onclick="genFromTpl('${t.id}')">⚡ 生成</button><button class="btn btn-s btn-sm" onclick="document.getElementById('tpl-form-${t.id}').classList.remove('active')">收起</button></div>
+                <div style="display:flex;gap:.4rem;"><button class="btn btn-p btn-sm" onclick="genFromTpl('${t.id}')"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>生成</button><button class="btn btn-s btn-sm" onclick="document.getElementById('tpl-form-${t.id}').classList.remove('active')">收起</button></div>
             </div>
         </div>`).join('');
 }
@@ -5892,7 +5892,7 @@ function renderImageGallery(plan) {
         <div class="img-gen-form">
             <input type="text" id="img-prompt-${plan.id}" value="${buildImagePrompt(plan)}" placeholder="输入生图提示词">
             <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
-                <button class="btn btn-i" onclick="genImgForPlan('${plan.id}')" id="gen-img-btn-${plan.id}">🎨 批量生成9张</button>
+                <button class="btn btn-i" onclick="genImgForPlan('${plan.id}')" id="gen-img-btn-${plan.id}"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" d="M12 22a1 1 0 0 1 0-20a10 9 0 0 1 10 9a5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z"/><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/></g></svg>批量生成9张</button>
                 ${hasAdvancedPrompt ? `<button class="btn btn-s" onclick="copyPrompt('${plan.id}')" style="font-size:.72rem;">📋 复制提示词</button>` : ''}
             </div>
         </div>
@@ -7406,8 +7406,8 @@ function getActionsHtml() {
         <button class="btn btn-s btn-sm" onclick="exportPlanPdfCurrent()">📄 PDF</button>
         <button class="btn btn-s btn-sm" onclick="exportPlanDocxCurrent()">📝 Word</button>
         <button class="btn btn-i btn-sm" onclick="exportModelPdfCurrent()">👤 模特版PDF</button>
-        ${currentPlanId ? `<button class="btn btn-i btn-sm" onclick="genImgForPlan('${currentPlanId}')" id="action-gen-img-btn">🎨 批量生成9张</button>` : ''}
-        <button class="btn btn-d btn-sm" onclick="delCurrentPlan()">🗑️ 删除</button>
+        ${currentPlanId ? `<button class="btn btn-i btn-sm" onclick="genImgForPlan('${currentPlanId}')" id="action-gen-img-btn"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" d="M12 22a1 1 0 0 1 0-20a10 9 0 0 1 10 9a5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z"/><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/></g></svg>批量生成9张</button>` : ''}
+        <button class="btn btn-d btn-sm" onclick="delCurrentPlan()"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 11v6m4-6v6m5-11v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>删除</button>
     </div>`;
 }
 
@@ -8122,7 +8122,113 @@ function initMotionAnimations() {
             );
         }
     };
-    
+
+    // ===== 新增动画效果 =====
+
+    // 1. 页面切换动画：Tab 内容区域淡入
+    const navItems = document.querySelectorAll('.nav-item[data-tab]');
+    navItems.forEach(item => {
+        item.addEventListener('click', function() {
+            const tabId = this.getAttribute('data-tab');
+            const tabContent = document.getElementById('tab-' + tabId);
+            if (tabContent) {
+                tabContent.style.opacity = '0';
+                tabContent.style.transform = 'translateY(12px)';
+                animate(tabContent,
+                    { opacity: [0, 1], y: [12, 0] },
+                    { duration: 0.35, easing: 'ease-out' }
+                );
+            }
+        });
+    });
+
+    // 2. 方案结果入场动画：方案生成后结果区域渐入
+    const observeResult = new MutationObserver((mutations) => {
+        mutations.forEach(mutation => {
+            mutation.addedNodes.forEach(node => {
+                if (node.nodeType === 1) {
+                    const resultPanels = node.querySelectorAll ? node.querySelectorAll('.result-section, .plan-result, .gen-result') : [];
+                    if (resultPanels.length > 0) {
+                        animate(resultPanels,
+                            { opacity: [0, 1], y: [20, 0], scale: [0.98, 1] },
+                            { duration: 0.5, delay: stagger(0.08), easing: [0.25, 0.46, 0.45, 0.94] }
+                        );
+                    }
+                    // Also check if the node itself is a result
+                    if (node.classList && (node.classList.contains('result-section') || node.classList.contains('plan-result') || node.classList.contains('gen-result'))) {
+                        animate(node,
+                            { opacity: [0, 1], y: [20, 0], scale: [0.98, 1] },
+                            { duration: 0.5, easing: [0.25, 0.46, 0.45, 0.94] }
+                        );
+                    }
+                }
+            });
+        });
+    });
+    const mainContent = document.querySelector('main');
+    if (mainContent) {
+        observeResult.observe(mainContent, { childList: true, subtree: true });
+    }
+
+    // 3. 日历日期悬停动画：鼠标悬停时缩放效果
+    document.addEventListener('mouseover', function(e) {
+        const calDay = e.target.closest('.cal-day');
+        if (calDay && !calDay.classList.contains('empty')) {
+            animate(calDay,
+                { scale: [1, 1.08] },
+                { duration: 0.2, easing: 'ease-out' }
+            );
+        }
+    });
+    document.addEventListener('mouseout', function(e) {
+        const calDay = e.target.closest('.cal-day');
+        if (calDay && !calDay.classList.contains('empty')) {
+            animate(calDay,
+                { scale: [1.08, 1] },
+                { duration: 0.2, easing: 'ease-out' }
+            );
+        }
+    });
+
+    // 4. 筛选按钮动画：分类筛选按钮切换时过渡效果
+    document.addEventListener('click', function(e) {
+        const filterBtn = e.target.closest('.filter-btn, .cat-btn, [data-filter]');
+        if (filterBtn) {
+            animate(filterBtn,
+                { scale: [1, 0.92, 1.02, 1] },
+                { duration: 0.3, easing: 'ease-in-out' }
+            );
+            // Animate sibling filter buttons with a subtle effect
+            const siblings = filterBtn.parentElement ? filterBtn.parentElement.querySelectorAll('.filter-btn, .cat-btn, [data-filter]') : [];
+            siblings.forEach(sib => {
+                if (sib !== filterBtn) {
+                    animate(sib,
+                        { opacity: [1, 0.6, 1] },
+                        { duration: 0.25, easing: 'ease-out' }
+                    );
+                }
+            });
+        }
+    });
+
+    // 5. 滚动显示动画：页面滚动时元素渐入显示（类似 AOS）
+    const scrollElements = document.querySelectorAll('.panel, .tpl-card, .hist-item, .grid > aside, .grid > section');
+    const scrollObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                animate(entry.target,
+                    { opacity: [0, 1], y: [24, 0] },
+                    { duration: 0.45, easing: 'ease-out' }
+                );
+                scrollObserver.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+    scrollElements.forEach(el => {
+        el.style.opacity = '0';
+        scrollObserver.observe(el);
+    });
+
     console.log('Motion animations initialized');
 }
 
