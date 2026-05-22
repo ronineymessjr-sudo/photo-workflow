@@ -1,0 +1,23 @@
+{
+  "name": "photo-workflow",
+  "version": "1.0.0",
+  "description": "> ⚠️ **智能体阅读指南**：本文档面向 AI 编程助手。修改代码前必须阅读此文档。",
+  "main": "check.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ronineymessjr-sudo/photo-workflow.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ronineymessjr-sudo/photo-workflow/issues"
+  },
+  "homepage": "https://github.com/ronineymessjr-sudo/photo-workflow#readme",
+  "dependencies": {
+    "motion": "^12.40.0"
+  }
+}

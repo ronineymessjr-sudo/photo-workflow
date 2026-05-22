@@ -20,6 +20,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <!-- Motion Animation Library -->
+    <script src="https://cdn.jsdelivr.net/npm/motion@latest/dist/motion.min.js"></script>
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -8045,6 +8047,87 @@ window.syncToFeishuBitable = async function() {
 
 // ===== Init =====
 updateBadge();renderHistMini();renderQuickVenue();renderCalendar();renderSchedules();
+
+// ===== Motion Animations =====
+// 初始化 Motion 动画效果
+function initMotionAnimations() {
+    // 检查 Motion 是否加载
+    if (typeof Motion === 'undefined') {
+        console.log('Motion library not loaded, skipping animations');
+        return;
+    }
+    
+    const { animate, stagger } = Motion;
+    
+    // 登录页面动画
+    const loginCard = document.querySelector('.login-card');
+    if (loginCard) {
+        animate(loginCard, 
+            { opacity: [0, 1], y: [30, 0] }, 
+            { duration: 0.6, easing: 'ease-out' }
+        );
+    }
+    
+    // Tab 切换动画
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            animate(this, 
+                { scale: [1, 0.95, 1] }, 
+                { duration: 0.2 }
+            );
+        });
+    });
+    
+    // 按钮点击动画
+    const buttons = document.querySelectorAll('.btn-p');
+    buttons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            animate(this, 
+                { scale: [1, 0.97, 1] }, 
+                { duration: 0.15 }
+            );
+        });
+    });
+    
+    // 模板卡片入场动画
+    const observeTemplates = new MutationObserver((mutations) => {
+        mutations.forEach(mutation => {
+            if (mutation.target.id === 'preset-tpls') {
+                const cards = mutation.target.querySelectorAll('.tpl-card');
+                if (cards.length > 0) {
+                    animate(cards, 
+                        { opacity: [0, 1], y: [20, 0] }, 
+                        { duration: 0.4, delay: stagger(0.05), easing: 'ease-out' }
+                    );
+                }
+            }
+        });
+    });
+    
+    const presetContainer = document.getElementById('preset-tpls');
+    if (presetContainer) {
+        observeTemplates.observe(presetContainer, { childList: true, subtree: true });
+    }
+    
+    // Toast 通知动画
+    const originalToast = window.toast;
+    window.toast = function(msg, type) {
+        originalToast(msg, type);
+        const toastEl = document.querySelector('.toast');
+        if (toastEl) {
+            animate(toastEl, 
+                { opacity: [0, 1], x: [50, 0] }, 
+                { duration: 0.3, easing: 'ease-out' }
+            );
+        }
+    };
+    
+    console.log('Motion animations initialized');
+}
+
+// 延迟初始化 Motion 动画
+setTimeout(initMotionAnimations, 100);
 </script>
 <!-- AOS Animation Library -->
 <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
