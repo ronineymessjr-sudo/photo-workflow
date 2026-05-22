@@ -1,4 +1,4 @@
-name = "photo-workflow-img"
+name = "photo-workflow"
 main = "api/index.js"
 compatibility_date = "2024-01-01"
 
