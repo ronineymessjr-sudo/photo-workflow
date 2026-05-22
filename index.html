@@ -2519,7 +2519,7 @@
                                             </select>
                                         </div>
                                         <div style="display:flex;gap:.4rem;margin-bottom:.5rem;">
-                                            <button class="btn btn-s btn-sm" onclick="randomModelPreset()" style="font-size:.72rem;">🎲 随机组合</button>
+                                            <button class="btn btn-s btn-sm" onclick="randomModelPreset()" style="font-size:.72rem;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><rect x="2" y="2" width="20" height="20" rx="2"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="16" cy="16" r="1.5" fill="currentColor"/><circle cx="16" cy="8" r="1.5" fill="currentColor"/><circle cx="8" cy="16" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>随机组合</button>
                                             <button class="btn btn-s btn-sm" onclick="clearModelPreset()" style="font-size:.72rem;">✕ 清空选择</button>
                                         </div>
                                         <textarea id="f-model" placeholder="以上选择会自动填入，也可手动编辑补充" style="min-height:50px;"></textarea>
@@ -2628,14 +2628,14 @@
 
                             <!-- 案例参考 -->
                             <div class="case-ref">
-                                <div class="p-head" style="margin-top:1rem"><h2>📸 案例参考</h2><button class="btn btn-s btn-sm" id="analyzeImgBtn" onclick="analyzeReference()" data-i18n="gen.analyzeImg">🔍 分析此图</button></div>
+                                <div class="p-head" style="margin-top:1rem"><h2><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>案例参考</h2><button class="btn btn-s btn-sm" id="analyzeImgBtn" onclick="analyzeReference()" data-i18n="gen.analyzeImg"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>分析此图</button></div>
                                 <div class="case-ref-input">
                                     <input id="caseRefUrl" placeholder="粘贴参考图 URL（picsum/unsplash/本地均可）" oninput="previewRefImage()">
                                 </div>
                                 <div class="case-ref-preview" id="caseRefPreview" style="display:none">
                                     <img id="caseRefImg" src="" alt="参考图">
                                     <div class="case-ref-actions">
-                                        <button class="btn btn-s btn-sm" onclick="analyzeReference()" data-i18n="gen.aiAnalysis">🔍 AI 分析</button>
+                                        <button class="btn btn-s btn-sm" onclick="analyzeReference()" data-i18n="gen.aiAnalysis"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>AI 分析</button>
                                         <button class="btn btn-s btn-sm" onclick="clearRefImage()" data-i18n="gen.clear">✕ 清除</button>
                                     </div>
                                 </div>
@@ -2654,23 +2654,23 @@
                     <!-- 专业工具 -->
                     <div class="side-panel">
                         <div class="panel">
-                            <div class="p-head"><h2>🛠️ 专业工具</h2></div>
+                            <div class="p-head"><h2><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>专业工具</h2></div>
                             <div class="p-body">
                                 <div class="tool-section">
-                                    <h4>📍 勘景/光线</h4>
+                                    <h4><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>勘景/光线</h4>
                                     <a href="https://www.photopills.com/" target="_blank" class="tool-link">PhotoPills - 太阳轨迹预测</a>
                                     <a href="https://www.windy.com/" target="_blank" class="tool-link">Windy - 云层天气预测</a>
                                     <a href="https://www.sunearthtools.com/" target="_blank" class="tool-link">Sun Surveyor - 光线模拟</a>
                                     <a href="https://www.google.com/earth/" target="_blank" class="tool-link">Google Earth - 卫星勘景</a>
                                 </div>
                                 <div class="tool-section">
-                                    <h4>🎨 LUT/预设</h4>
+                                    <h4><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>LUT/预设</h4>
                                     <a href="https://groundcontrolcolor.com/free-luts/" target="_blank" class="tool-link">Ground Control - 免费LUT</a>
                                     <a href="https://lutify.me/" target="_blank" class="tool-link">Lutify.me - 电影LUT</a>
                                     <a href="https://www.iwltbap.com/" target="_blank" class="tool-link">IWLTBAP - 胶片模拟</a>
                                 </div>
                                 <div class="tool-section">
-                                    <h4>💡 灵感参考</h4>
+                                    <h4><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>灵感参考</h4>
                                     <a href="https://www.pinterest.com/" target="_blank" class="tool-link">Pinterest - 情绪板</a>
                                     <a href="https://www.behance.net/" target="_blank" class="tool-link">Behance - 高质量作品</a>
                                     <a href="https://500px.com/" target="_blank" class="tool-link">500px - 摄影作品</a>
@@ -2682,7 +2682,7 @@
                     <!-- 拍摄清单 -->
                     <div class="side-panel">
                         <div class="panel">
-                            <div class="p-head"><h2>📋 拍摄清单</h2></div>
+                            <div class="p-head"><h2><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>拍摄清单</h2></div>
                             <div class="p-body">
                                 <div class="checklist">
                                     <label class="check-item"><input type="checkbox" class="ck"> 勘景踩点（2次）</label>
@@ -2706,8 +2706,8 @@
                             <h2>拍摄方案</h2>
                             <div style="display:flex;align-items:center;gap:.5rem;">
                                 <span style="font-size:.7rem;color:var(--t3)" id="planSavedAt"></span>
-                                <button class="btn btn-s btn-sm" onclick="exportPlanPDF()" id="btn-export-pdf" style="display:none;">📄 PDF</button>
-                                <button class="btn btn-s btn-sm" onclick="exportPlanWord()" id="btn-export-word" style="display:none;">📝 Word</button>
+                                <button class="btn btn-s btn-sm" onclick="exportPlanPDF()" id="btn-export-pdf" style="display:none;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button>
+                                <button class="btn btn-s btn-sm" onclick="exportPlanWord()" id="btn-export-word" style="display:none;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>Word</button>
                             </div>
                         </div>
                         <div class="p-body">
@@ -2719,15 +2719,15 @@
                                 </div>
                                 <div class="preview-content" id="previewContent">
                                     <div class="preview-section">
-                                        <h4>📋 方案概要</h4>
+                                        <h4><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>方案概要</h4>
                                         <div class="preview-tags" id="previewTags"></div>
                                     </div>
                                     <div class="preview-section">
-                                        <h4>🎯 风格匹配</h4>
+                                        <h4><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>风格匹配</h4>
                                         <div class="preview-match" id="previewMatch"></div>
                                     </div>
                                     <div class="preview-section">
-                                        <h4>⚡ 快速提示</h4>
+                                        <h4><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>快速提示</h4>
                                         <ul class="preview-tips" id="previewTips"></ul>
                                     </div>
                                 </div>
@@ -2742,7 +2742,7 @@
                 <aside class="col-side">
                     <!-- Smart Recommendations -->
                     <div class="panel" style="margin-bottom:1rem;">
-                        <div class="p-head"><h2>💡 智能推荐</h2></div>
+                        <div class="p-head"><h2><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>智能推荐</h2></div>
                         <div class="p-body">
                             <div id="smartRec" style="font-size:.8rem;color:var(--t2);">
                                 <p style="margin:0 0 .5rem 0;">基于您的历史方案</p>
@@ -2769,7 +2769,7 @@
                             <form id="eqForm">
                                 <div class="fg"><label>设备名称</label><input id="eq-name" placeholder="如：Sony A7M4"></div>
                                 <div class="fg"><label>分类</label>
-                                    <select id="eq-cat"><option value="camera">📷 相机机身</option><option value="lens">🔭 镜头</option><option value="light">💡 灯光设备</option><option value="audio">🎙️ 音频</option><option value="tripod">🗼 三脚架/稳定器</option><option value="filter">🔘 滤镜/附件</option><option value="other">📦 其他</option></select>
+                                    <select id="eq-cat"><option value="camera">相机机身</option><option value="lens">镜头</option><option value="light">灯光设备</option><option value="audio">音频</option><option value="tripod">三脚架/稳定器</option><option value="filter">滤镜/附件</option><option value="other">其他</option></select>
                                 </div>
                                 <div class="fg"><label>备注</label><input id="eq-note" placeholder="如：2024年购入，9成新"></div>
                                 <button type="submit" class="btn btn-p" data-i18n="equip.addBtn">+ 添加设备</button>
@@ -2789,7 +2789,7 @@
                         <div class="p-head">
                             <h2>我的设备</h2>
                             <div style="display:flex;gap:.5rem;align-items:center">
-                                <input type="text" id="eq-search" placeholder="🔍 搜索设备..." style="padding:.4rem .8rem;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius-sm);color:var(--t1);font-size:.8rem;width:150px" oninput="renderEq()" data-i18n-placeholder="equip.search">
+                                <input type="text" id="eq-search" placeholder="搜索设备..." style="padding:.4rem .8rem;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius-sm);color:var(--t1);font-size:.8rem;width:150px" oninput="renderEq()" data-i18n-placeholder="equip.search">
                                 <span id="eq-total" style="font-size:.72rem;color:var(--t3)"></span>
                             </div>
                         </div>
@@ -2823,7 +2823,7 @@
                         <div class="p-head">
                             <h2>场地列表</h2>
                             <div style="display:flex;gap:.5rem;align-items:center">
-                                <input type="text" id="venue-search" placeholder="🔍 搜索场地..." style="padding:.4rem .8rem;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius-sm);color:var(--t1);font-size:.8rem;width:150px" oninput="renderVenue()" data-i18n-placeholder="venue.search">
+                                <input type="text" id="venue-search" placeholder="搜索场地..." style="padding:.4rem .8rem;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius-sm);color:var(--t1);font-size:.8rem;width:150px" oninput="renderVenue()" data-i18n-placeholder="venue.search">
                                 <span id="venue-total" style="font-size:.72rem;color:var(--t3)"></span>
                             </div>
                         </div>
@@ -3013,15 +3013,15 @@
                     <div class="panel" style="margin-bottom:1rem;">
                         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;">
                             <div style="display:flex;align-items:center;gap:.75rem;">
-                                <h2 style="margin:0;font-size:1.1rem;">📬 消息看板</h2>
+                                <h2 style="margin:0;font-size:1.1rem;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>消息看板</h2>
                                 <span id="msg-total" style="font-size:.75rem;color:var(--t3);padding:.2rem .6rem;background:var(--bg2);border-radius:20px;">0 条消息</span>
                             </div>
                             <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;">
                                 <div style="display:flex;gap:.25rem;">
                                     <button class="btn btn-s btn-sm msg-filter active" data-filter="all" onclick="filterMessages('all')">全部</button>
-                                    <button class="btn btn-s btn-sm msg-filter" data-filter="new" onclick="filterMessages('new')">🆕 新消息</button>
-                                    <button class="btn btn-s btn-sm msg-filter" data-filter="pending" onclick="filterMessages('pending')">⏳ 处理中</button>
-                                    <button class="btn btn-s btn-sm msg-filter" data-filter="completed" onclick="filterMessages('completed')">✅ 已完成</button>
+                                    <button class="btn btn-s btn-sm msg-filter" data-filter="new" onclick="filterMessages('new')">新消息</button>
+                                    <button class="btn btn-s btn-sm msg-filter" data-filter="pending" onclick="filterMessages('pending')">处理中</button>
+                                    <button class="btn btn-s btn-sm msg-filter" data-filter="completed" onclick="filterMessages('completed')">已完成</button>
                                 </div>
                                 <select id="msg-type-filter" onchange="filterMessages()" style="padding:.35rem .6rem;border-radius:8px;border:1px solid var(--bd);background:var(--bg2);color:var(--t1);font-size:.75rem;">
                                     <option value="all">所有类型</option>
@@ -3033,7 +3033,7 @@
                                     <option value="婚礼跟拍">婚礼跟拍</option>
                                     <option value="其他">其他</option>
                                 </select>
-                                <input type="text" id="msg-search" placeholder="🔍 搜索姓名/邮箱..." oninput="filterMessages()" style="padding:.35rem .6rem;border-radius:8px;border:1px solid var(--bd);background:var(--bg2);color:var(--t1);font-size:.75rem;width:160px;">
+                                <input type="text" id="msg-search" placeholder="搜索姓名/邮箱..." oninput="filterMessages()" style="padding:.35rem .6rem;border-radius:8px;border:1px solid var(--bd);background:var(--bg2);color:var(--t1);font-size:.75rem;width:160px;">
                             </div>
                         </div>
                     </div>
@@ -3042,15 +3042,15 @@
                     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:1rem;">
                         <div class="panel" style="text-align:center;cursor:pointer;" onclick="filterMessages('new')">
                             <div style="font-size:1.5rem;font-weight:600;color:#f59e0b;" id="msg-count-new">0</div>
-                            <div style="font-size:.75rem;color:var(--t3);">🆕 新消息</div>
+                            <div style="font-size:.75rem;color:var(--t3);">新消息</div>
                         </div>
                         <div class="panel" style="text-align:center;cursor:pointer;" onclick="filterMessages('pending')">
                             <div style="font-size:1.5rem;font-weight:600;color:#3b82f6;" id="msg-count-pending">0</div>
-                            <div style="font-size:.75rem;color:var(--t3);">⏳ 处理中</div>
+                            <div style="font-size:.75rem;color:var(--t3);">处理中</div>
                         </div>
                         <div class="panel" style="text-align:center;cursor:pointer;" onclick="filterMessages('completed')">
                             <div style="font-size:1.5rem;font-weight:600;color:#4ade80;" id="msg-count-completed">0</div>
-                            <div style="font-size:.75rem;color:var(--t3);">✅ 已完成</div>
+                            <div style="font-size:.75rem;color:var(--t3);">已完成</div>
                         </div>
                     </div>
 
@@ -3059,7 +3059,7 @@
 
                     <!-- 空状态 -->
                     <div id="msg-empty" style="display:none;text-align:center;padding:3rem 1rem;color:var(--t3);">
-                        <div style="font-size:3rem;margin-bottom:.5rem;">📭</div>
+                        <div style="font-size:3rem;margin-bottom:.5rem;"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
                         <div style="font-size:.9rem;" data-i18n="message.empty">暂无消息</div>
                         <div style="font-size:.75rem;margin-top:.25rem;">来自作品集网站的客户咨询将显示在这里</div>
                     </div>
@@ -3091,10 +3091,10 @@
                                 <div class="fg"><label>风格标签（逗号分隔）</label><input id="m-styles" placeholder="如：文艺、清冷、性感、复古"></div>
                                 <div class="fg"><label>联系方式</label><input id="m-contact" placeholder="微信或电话"></div>
                                 <div class="fg"><label>档期状态</label>
-                                    <select id="m-avail"><option value="available">✅ 可用</option><option value="booked">📅 已预约</option><option value="unavailable">❌ 暂不可用</option></select>
+                                    <select id="m-avail"><option value="available">可用</option><option value="booked">已预约</option><option value="unavailable">暂不可用</option></select>
                                 </div>
                                 <div class="fg"><label>肖像授权</label>
-                                    <select id="m-auth"><option value="authorized">✅ 已授权</option><option value="pending">⏳ 待确认</option><option value="none">❌ 未授权</option></select>
+                                    <select id="m-auth"><option value="authorized">已授权</option><option value="pending">待确认</option><option value="none">未授权</option></select>
                                 </div>
                                 <div class="fg"><label>备注</label><textarea id="m-note" placeholder="身高体重、外貌特征、偏好等"></textarea></div>
                                 <button type="submit" class="btn btn-p" data-i18n="model.addBtn">+ 添加模特</button>
@@ -3163,19 +3163,19 @@
         <div class="tab-cnt" id="tab-backup">
             <div style="max-width:600px;margin:0 auto;">
                 <div class="panel" style="margin-bottom:1rem;">
-                    <div class="p-head"><h2>📤 导出数据</h2></div>
+                    <div class="p-head"><h2><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>导出数据</h2></div>
                     <div class="p-body">
                         <p style="color:var(--t2);font-size:.85rem;margin-bottom:1rem;">将所有数据导出为 JSON 文件，可用于备份或迁移。</p>
                         <div style="color:var(--t3);font-size:.78rem;margin-bottom:1rem;">包含：<span id="backupStats"></span></div>
-                        <button class="btn btn-p" onclick="exportData()" data-i18n="setting.exportBtn">📥 导出 JSON 备份</button>
+                        <button class="btn btn-p" onclick="exportData()" data-i18n="setting.exportBtn"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>导出 JSON 备份</button>
                     </div>
                 </div>
                 <div class="panel">
-                    <div class="p-head"><h2>📥 导入数据</h2></div>
+                    <div class="p-head"><h2><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>导入数据</h2></div>
                     <div class="p-body">
                         <p style="color:var(--t2);font-size:.85rem;margin-bottom:1rem;">从 JSON 备份文件恢复数据。导入将合并现有数据，不会覆盖。</p>
                         <input type="file" id="importFile" accept=".json" style="margin-bottom:.75rem;">
-                        <button class="btn btn-s" onclick="importData()" data-i18n="setting.importBtn">📤 导入数据</button>
+                        <button class="btn btn-s" onclick="importData()" data-i18n="setting.importBtn"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>导入数据</button>
                     </div>
                 </div>
             </div>
@@ -3191,18 +3191,18 @@
                     </div>
                     <div class="p-body">
                         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;">
-                            <button class="btn btn-s btn-sm" onclick="changeMonth(-1)" style="padding:.3rem .6rem;">◀</button>
+                            <button class="btn btn-s btn-sm" onclick="changeMonth(-1)" style="padding:.3rem .6rem;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><path d="m15 18-6-6 6-6"/></svg></button>
                             <span id="calendarTitle" style="font-size:.95rem;font-weight:600;color:var(--t1);"></span>
-                            <button class="btn btn-s btn-sm" onclick="changeMonth(1)" style="padding:.3rem .6rem;">▶</button>
+                            <button class="btn btn-s btn-sm" onclick="changeMonth(1)" style="padding:.3rem .6rem;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><path d="m9 18 6-6-6-6"/></svg></button>
                         </div>
                         <div id="calendarGrid" class="calendar-grid"></div>
                     </div>
                 </div>
                 <div class="panel">
                     <div class="p-head" style="justify-content:space-between">
-                        <h2>📋 待办事项</h2>
+                        <h2><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>待办事项</h2>
                         <div style="display:flex;gap:.5rem;">
-                            <button class="btn btn-s btn-sm" onclick="exportToFeishu()" data-i18n="calendar.sync">📤 同步到飞书日历</button>
+                            <button class="btn btn-s btn-sm" onclick="exportToFeishu()" data-i18n="calendar.sync"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>同步到飞书日历</button>
                             <button class="btn btn-s btn-sm" onclick="syncToFeishuBitable()" data-i18n="calendar.syncBitable"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 21v-6m7 6V3m7 18V9"/></svg>同步到多维表格</button>
                         </div>
                     </div>
@@ -4122,7 +4122,7 @@ function filterMessages(status) {
     if (emptyEl) emptyEl.style.display = 'none';
 
     var statusColors = { new: '#f59e0b', pending: '#3b82f6', completed: '#4ade80' };
-    var statusLabels = { new: '🆕 新消息', pending: '⏳ 处理中', completed: '✅ 已完成' };
+    var statusLabels = { new: '新消息', pending: '处理中', completed: '已完成' };
     var statusBg = { new: 'rgba(245,158,11,0.1)', pending: 'rgba(59,130,246,0.1)', completed: 'rgba(74,222,128,0.1)' };
 
     listEl.innerHTML = filtered.map(function(m) {
@@ -4140,9 +4140,9 @@ function filterMessages(status) {
                         (m.service_type ? '<span style="padding:.1rem .4rem;border-radius:4px;font-size:.65rem;background:var(--bg2);color:var(--t3);">' + escHtml(m.service_type) + '</span>' : '') +
                     '</div>' +
                     '<div style="font-size:.75rem;color:var(--t3);display:flex;gap:.75rem;flex-wrap:wrap;">' +
-                        '<span>📧 ' + escHtml(m.email) + '</span>' +
-                        (m.phone ? '<span>📱 ' + escHtml(m.phone) + '</span>' : '') +
-                        (time ? '<span>🕐 ' + time + '</span>' : '') +
+                        '<span>邮箱 ' + escHtml(m.email) + '</span>' +
+                        (m.phone ? '<span>电话 ' + escHtml(m.phone) + '</span>' : '') +
+                        (time ? '<span>时间 ' + time + '</span>' : '') +
                     '</div>' +
                     (m.message ? '<div style="font-size:.8rem;color:var(--t2);margin-top:.4rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:400px;">' + escHtml(m.message) + '</div>' : '') +
                 '</div>' +
@@ -4169,22 +4169,22 @@ function openMsgDetail(id) {
     var time = m.created_at ? new Date(m.created_at).toLocaleString('zh-CN') : '未知';
     bodyEl.innerHTML =
         '<div style="display:grid;grid-template-columns:auto 1fr;gap:.5rem .75rem;font-size:.85rem;">' +
-            '<span style="color:var(--t3);">📧 邮箱</span><span>' + escHtml(m.email) + '</span>' +
-            (m.phone ? '<span style="color:var(--t3);">📱 电话</span><span>' + escHtml(m.phone) + '</span>' : '') +
-            (m.service_type ? '<span style="color:var(--t3);">📋 服务类型</span><span>' + escHtml(m.service_type) + '</span>' : '') +
-            '<span style="color:var(--t3);">🕐 时间</span><span>' + time + '</span>' +
-            '<span style="color:var(--t3);">📝 留言</span><span style="white-space:pre-wrap;">' + escHtml(m.message || '无') + '</span>' +
+            '<span style="color:var(--t3);">邮箱</span><span>' + escHtml(m.email) + '</span>' +
+            (m.phone ? '<span style="color:var(--t3);">电话</span><span>' + escHtml(m.phone) + '</span>' : '') +
+            (m.service_type ? '<span style="color:var(--t3);">服务类型</span><span>' + escHtml(m.service_type) + '</span>' : '') +
+            '<span style="color:var(--t3);">时间</span><span>' + time + '</span>' +
+            '<span style="color:var(--t3);">留言</span><span style="white-space:pre-wrap;">' + escHtml(m.message || '无') + '</span>' +
         '</div>';
 
     var st = m.status || 'new';
     actEl.innerHTML = '';
     if (st === 'new') {
-        actEl.innerHTML += '<button class="btn btn-s btn-sm" onclick="updateMsg(\'' + id + '\',\'pending\')">⏳ 标记处理中</button>';
+        actEl.innerHTML += '<button class="btn btn-s btn-sm" onclick="updateMsg(\'' + id + '\',\'pending\')">标记处理中</button>';
     }
     if (st === 'pending') {
-        actEl.innerHTML += '<button class="btn btn-p btn-sm" onclick="updateMsg(\'' + id + '\',\'completed\')">✅ 标记完成</button>';
+        actEl.innerHTML += '<button class="btn btn-p btn-sm" onclick="updateMsg(\'' + id + '\',\'completed\')">标记完成</button>';
     }
-    actEl.innerHTML += '<a class="btn btn-s btn-sm" href="mailto:' + escHtml(m.email) + (m.name ? '?subject=Re: ' + encodeURIComponent(m.name) + ' 的咨询' : '') + '" style="text-decoration:none;">📧 回复邮件</a>';
+    actEl.innerHTML += '<a class="btn btn-s btn-sm" href="mailto:' + escHtml(m.email) + (m.name ? '?subject=Re: ' + encodeURIComponent(m.name) + ' 的咨询' : '') + '" style="text-decoration:none;">回复邮件</a>';
     actEl.innerHTML += '<button class="btn btn-sm" style="color:#ef4444;border:1px solid rgba(239,68,68,0.3);" onclick="deleteMsg(\'' + id + '\')"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 11v6m4-6v6m5-11v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>删除</button>';
 
     modal.style.display = 'flex';
@@ -4236,7 +4236,7 @@ setInterval(function() {
         var newCount = msgs.filter(function(m) { return m.status === 'new'; }).length;
         if (newCount > _lastMsgCount && _lastMsgCount > 0) {
             // New message arrived!
-            toast('📬 收到 ' + (newCount - _lastMsgCount) + ' 条新消息', 'ok');
+            toast('收到 ' + (newCount - _lastMsgCount) + ' 条新消息', 'ok');
             // Browser notification
             if ('Notification' in window && Notification.permission === 'granted') {
                 new Notification('PhotoAtelier 新消息', { body: '收到 ' + (newCount - _lastMsgCount) + ' 条新的客户咨询' });
@@ -4422,22 +4422,22 @@ async function generatePhotoAnalysis(imageUrl, style) {
     const guide = styleGuides[style] || styleGuides['文艺'];
     
     return `
-<h4>📸 灯光布置</h4>
+<h4><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>灯光布置</h4>
 <p><strong>布光方式：</strong>${guide.lighting}</p>
 <p><strong>推荐设备：</strong></p>
 <ul>${guide.equipment.map(e => `<li class="eq-tag">${e}</li>`).join('')}</ul>
 
-<h4>🎨 调色方案</h4>
+<h4><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>调色方案</h4>
 <p>${guide.color}</p>
 
-<h4>📷 推荐器材</h4>
+<h4><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>推荐器材</h4>
 <p><strong>镜头：</strong>${guide.lens}</p>
 <p><strong>参数：</strong>${guide.params}</p>
 
-<h4>🌤️ 拍摄条件</h4>
+<h4><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M12 2v2m-7.07.93l1.41 1.41M20 12h2m-2.93-7.07l-1.41 1.41m-1.713 6.31a4 4 0 0 0-5.925-4.128M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6"/></svg>拍摄条件</h4>
 <p>${guide.time}</p>
 
-<h4>⚡ 执行要点</h4>
+<h4><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>执行要点</h4>
 <ul>
     <li>先布好灯光，测试曝光</li>
     <li>模特站位后再微调光比</li>
@@ -4445,7 +4445,7 @@ async function generatePhotoAnalysis(imageUrl, style) {
     <li>RAW格式拍摄，方便后期调整</li>
 </ul>
 
-<button class="btn btn-p" style="margin-top:1rem;width:100%" onclick="applyAnalysisToForm('${style}')">📋 应用到方案生成</button>
+<button class="btn btn-p" style="margin-top:1rem;width:100%" onclick="applyAnalysisToForm('${style}')"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>应用到方案生成</button>
     `;
 }
 
@@ -4571,12 +4571,12 @@ function renderVenue() {
     if(!list.length){ $('venue-list').innerHTML='<div class="eq-empty">' + (searchTerm ? '未找到匹配的场地' : '场地库为空') + '</div>'; return; }
     $('venue-list').innerHTML=list.map(v=>`
         <div class="venue-card" data-aos="fade-up">
-            <div class="venue-name">📍 ${v.name} <button class="btn-i2" onclick="delVenue('${v.id}')" title="删除" style="margin-left:auto;">✕</button></div>
+            <div class="venue-name"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:2px;"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg> ${v.name} <button class="btn-i2" onclick="delVenue('${v.id}')" title="删除" style="margin-left:auto;">✕</button></div>
             ${v.styles?`<div class="venue-tags">${v.styles.split(',').map(s=>`<span class="venue-tag style-tag">${s.trim()}</span>`).join('')}</div>`:''}
-            ${v.addr?`<div class="venue-addr">📌 ${v.addr}</div>`:''}
-            ${v.contact?`<div class="venue-addr">📞 ${v.contact}</div>`:''}
+            ${v.addr?`<div class="venue-addr"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:2px;"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg> ${v.addr}</div>`:''}
+            ${v.contact?`<div class="venue-addr"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:2px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg> ${v.contact}</div>`:''}
             ${v.note?`<div class="venue-note">${v.note}</div>`:''}
-            <div class="venue-actions"><button class="btn btn-s btn-sm" onclick="useVenue('${v.id}')">📋 引用到方案</button></div>
+            <div class="venue-actions"><button class="btn btn-s btn-sm" onclick="useVenue('${v.id}')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:2px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>引用到方案</button></div>
         </div>`).join('');
     if(typeof AOS !== 'undefined') AOS.refresh();
 }
@@ -4599,12 +4599,12 @@ function renderModel() {
     if(!list.length){ $('model-list').innerHTML='<div class="eq-empty">模特库为空</div>'; return; }
     $('model-list').innerHTML=list.map(m=>`
         <div class="model-card">
-            <div class="model-name">👤 ${m.name} <button class="btn-i2" onclick="delModel('${m.id}')" title="删除" style="margin-left:auto;">✕</button></div>
+            <div class="model-name"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:2px;"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> ${m.name} <button class="btn-i2" onclick="delModel('${m.id}')" title="删除" style="margin-left:auto;">✕</button></div>
             ${m.styles?`<div class="model-tags">${m.styles.split(',').map(s=>`<span class="model-tag">${s.trim()}</span>`).join('')}</div>`:''}
-            <div class="model-meta">📅 ${m.avail==='available'?'可用':m.avail==='booked'?'已预约':'暂不可用'} &nbsp;|&nbsp; 肖像权：${m.auth==='authorized'?'✅已授权':m.auth==='pending'?'⏳待确认':'❌未授权'}</div>
-            ${m.contact?`<div class="venue-addr">📞 ${m.contact}</div>`:''}
+            <div class="model-meta"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:2px;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" d="M8 2v4m8-4v4"/><rect fill="currentColor" width="18" height="18" x="3" y="4" rx="2"/><path fill="currentColor" d="M3 10h18"/></g></svg> ${m.avail==='available'?'可用':m.avail==='booked'?'已预约':'暂不可用'} &nbsp;|&nbsp; 肖像权：${m.auth==='authorized'?'已授权':m.auth==='pending'?'待确认':'未授权'}</div>
+            ${m.contact?`<div class="venue-addr"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:2px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg> ${m.contact}</div>`:''}
             ${m.note?`<div class="model-note">${m.note}</div>`:''}
-            <div class="model-actions"><button class="btn btn-s btn-sm" onclick="useModel('${m.id}')">📋 引用到方案</button></div>
+            <div class="model-actions"><button class="btn btn-s btn-sm" onclick="useModel('${m.id}')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:2px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>引用到方案</button></div>
         </div>`).join('');
 }
 function delModel(id){ let l=sg(SK.M)||[]; l=l.filter(m=>m.id!==id); ss(SK.M,l); renderModel(); toast(i18n[currentLang]['toast.deleted']); }
@@ -5022,14 +5022,14 @@ function renderTpl() {
         // Render template cards
         const cardsHtml = filtered.map(t => `
             <div class="tpl-card tpl-preset-card" style="border-left:3px solid var(--ac);" data-categories="${(t.category || []).join(',')}" data-scene="${t.scene || ''}" data-difficulty="${t.difficulty || ''}">
-                ${t.previewUrl ? `<div style="margin:-.75rem -.75rem .75rem -.75rem;height:120px;background:linear-gradient(135deg,var(--bg2),var(--bg3));display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:8px 8px 0 0;"><img src="${t.previewUrl}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.parentElement.innerHTML='<span style=\\'font-size:2rem\\'>📷</span>';"></div>` : `<div style="margin:-.75rem -.75rem .75rem -.75rem;height:80px;background:linear-gradient(135deg,var(--bg2),var(--bg3));display:flex;align-items:center;justify-content:center;border-radius:8px 8px 0 0;"><span style="font-size:2rem">📷</span></div>`}
+                ${t.previewUrl ? `<div style="margin:-.75rem -.75rem .75rem -.75rem;height:120px;background:linear-gradient(135deg,var(--bg2),var(--bg3));display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:8px 8px 0 0;"><img src="${t.previewUrl}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.parentElement.innerHTML='<svg xmlns=&apos;http://www.w3.org/2000/svg&apos; width=&apos;40&apos; height=&apos;40&apos; viewBox=&apos;0 0 24 24&apos; fill=&apos;none&apos; stroke=&apos;currentColor&apos; stroke-width=&apos;1.5&apos; stroke-linecap=&apos;round&apos; stroke-linejoin=&apos;round&apos;><path d=&apos;M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z&apos;/><circle cx=&apos;12&apos; cy=&apos;13&apos; r=&apos;3&apos;/></svg>';"></div>` : `<div style="margin:-.75rem -.75rem .75rem -.75rem;height:80px;background:linear-gradient(135deg,var(--bg2),var(--bg3));display:flex;align-items:center;justify-content:center;border-radius:8px 8px 0 0;"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></div>`}
                 <div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:.5rem;">
                     ${(t.category || []).map(c => `<span style="background:var(--ac);color:#fff;padding:.1rem .4rem;border-radius:4px;font-size:.65rem;">${c}</span>`).join('')}
                     ${t.difficulty ? `<span style="background:${t.difficulty === '高' ? '#ff6b6b' : t.difficulty === '中' ? '#feca57' : '#1dd1a1'};color:#fff;padding:.1rem .4rem;border-radius:4px;font-size:.65rem;">${t.difficulty}</span>` : ''}
                 </div>
                 <div class="tpl-name" onclick="togglePresetGuide('${t.id}')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
                     <span>${t.name}</span>
-                    <span class="tpl-toggle-icon" id="tpl-icon-${t.id}" style="font-size:.7rem;color:var(--t3);transition:transform .3s;">▼</span>
+                    <span class="tpl-toggle-icon" id="tpl-icon-${t.id}" style="font-size:.7rem;color:var(--t3);transition:transform .3s;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
                 </div>
                 <div class="tpl-desc">${t.desc}</div>
                 <div style="font-size:.7rem;color:var(--t3);margin-bottom:.5rem;">风格: ${t.input.style} · 时长: ${t.input.duration} · 场景: ${t.scene || '未分类'}</div>
@@ -5083,7 +5083,7 @@ function renderTpl() {
     if(!list.length){ $('tpl-list').innerHTML='<div class="eq-empty">暂无模板，生成方案后可保存为模板</div>'; return; }
     $('tpl-list').innerHTML=list.map(t=>`
         <div class="tpl-card">
-            <div class="tpl-name">📑 ${t.name} <button class="btn-i2" onclick="delTpl('${t.id}')">✕</button></div>
+            <div class="tpl-name"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:2px;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg> ${t.name} <button class="btn-i2" onclick="delTpl('${t.id}')">✕</button></div>
             ${t.desc?`<div class="tpl-desc">${t.desc}</div>`:''}
             <div style="font-size:.72rem;color:var(--t3);margin-bottom:.5rem;">${t.count||0} 次使用 · ${new Date(t.at).toLocaleDateString()}</div>
             <div class="tpl-actions"><button class="btn btn-p btn-sm" onclick="useTpl('${t.id}')"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>使用此模板</button></div>
@@ -5888,16 +5888,16 @@ function renderImageGallery(plan) {
     const hasAdvancedPrompt = plan.sections && plan.sections.length > 0;
 
     let html = `<div class="img-gallery" id="${galleryId}">
-        <h4>🖼️ 例图生成</h4>
+        <h4><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>例图生成</h4>
         <div class="img-gen-form">
             <input type="text" id="img-prompt-${plan.id}" value="${buildImagePrompt(plan)}" placeholder="输入生图提示词">
             <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
                 <button class="btn btn-i" onclick="genImgForPlan('${plan.id}')" id="gen-img-btn-${plan.id}"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" d="M12 22a1 1 0 0 1 0-20a10 9 0 0 1 10 9a5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z"/><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/></g></svg>批量生成9张</button>
-                ${hasAdvancedPrompt ? `<button class="btn btn-s" onclick="copyPrompt('${plan.id}')" style="font-size:.72rem;">📋 复制提示词</button>` : ''}
+                ${hasAdvancedPrompt ? `<button class="btn btn-s" onclick="copyPrompt('${plan.id}')" style="font-size:.72rem;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:2px;"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>复制提示词</button>` : ''}
             </div>
         </div>
         ${hasAdvancedPrompt ? `<div class="prompt-breakdown" id="prompt-breakdown-${plan.id}" style="display:none;margin:.5rem 0;padding:.6rem;background:var(--bg2);border-radius:8px;border:1px solid var(--bd);">
-            <div style="font-size:.72rem;color:var(--t3);margin-bottom:.3rem;">🔍 提示词来源分析</div>
+            <div style="font-size:.72rem;color:var(--t3);margin-bottom:.3rem;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:2px;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>提示词来源分析</div>
             <div id="prompt-breakdown-content-${plan.id}" style="font-size:.72rem;color:var(--t2);line-height:1.5;"></div>
         </div>` : ''}
         <div class="img-grid" id="img-grid-${plan.id}">`;
@@ -6004,7 +6004,7 @@ async function genImgForPlan(planId) {
     const btn = $(`gen-img-btn-${planId}`);
     const grid = $(`img-grid-${planId}`);
 
-    if (btn) { btn.disabled = true; btn.textContent = '⏳ 批量生成中...'; }
+    if (btn) { btn.disabled = true; btn.textContent = '批量生成中...'; }
 
     // Show loading
     if (grid) {
@@ -6017,7 +6017,7 @@ async function genImgForPlan(planId) {
     const loading = $(`img-loading-${planId}`);
     if (loading) loading.remove();
 
-    if (btn) { btn.disabled = false; btn.textContent = '🎨 批量生成9张'; }
+    if (btn) { btn.disabled = false; btn.textContent = '批量生成9张'; }
 
     if (imgUrl) {
         // Refresh gallery
@@ -6045,10 +6045,10 @@ function renderImageGalleryDiv(plan) {
     }
     
     div.innerHTML = `
-        <h4>🖼️ 例图生成 (${images.length}张)</h4>
+        <h4><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>例图生成 (${images.length}张)</h4>
         <div class="img-gen-form">
             <input type="text" id="img-prompt-${plan.id}" value="${buildImagePrompt(plan)}" placeholder="输入生图提示词">
-            <button class="btn btn-i" onclick="genImgForPlan('${plan.id}')" id="gen-img-btn-${plan.id}">🎨 批量生成9张</button>
+            <button class="btn btn-i" onclick="genImgForPlan('${plan.id}')" id="gen-img-btn-${plan.id}"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" d="M12 22a1 1 0 0 1 0-20a10 9 0 0 1 10 9a5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z"/><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/></g></svg>批量生成9张</button>
         </div>
         ${batches.map((batch, batchIdx) => `
             <div class="img-batch">
@@ -6117,7 +6117,7 @@ function renderPlanContent(plan) {
     const colorPlan = getColorGradingPlan(plan.input && plan.input.style);
     const colorHtml = `
         <div class="ps" style="margin-top:1.5rem;border-top:2px solid var(--ac);padding-top:1rem">
-            <div class="ps-hdr"><div class="ps-icon">🎨</div><h3 class="ps-title">调色方案</h3></div>
+            <div class="ps-hdr"><div class="ps-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg></div><h3 class="ps-title">调色方案</h3></div>
             <div class="ps-cnt">
                 <h4 style="color:var(--ac);margin:.8rem 0 .4rem;font-size:.85rem">推荐 LUT</h4>
                 <div style="display:flex;flex-wrap:wrap;gap:.4rem">${colorPlan.lut.map(l=>`<span class="eq-tag">${l}</span>`).join('')}</div>
@@ -6153,11 +6153,11 @@ function renderPlanContent(plan) {
                 <p style="font-size:.8rem;color:var(--t2)">${colorPlan.curve}</p>
                 
                 <h4 style="color:var(--ac);margin:.8rem 0 .4rem;font-size:.85rem">最佳光线</h4>
-                <p style="font-size:.8rem;color:var(--t2)">☀️ ${colorPlan.bestLight}</p>
+                <p style="font-size:.8rem;color:var(--t2)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:2px;"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg> ${colorPlan.bestLight}</p>
                 
                 <h4 style="color:var(--ac);margin:.8rem 0 .4rem;font-size:.85rem">教程链接</h4>
                 <div style="display:flex;flex-direction:column;gap:.3rem">
-                    ${colorPlan.tutorials.map(t=>`<a href="${t.url}" target="_blank" class="tool-link">📺 ${t.title}</a>`).join('')}
+                    ${colorPlan.tutorials.map(t=>`<a href="${t.url}" target="_blank" class="tool-link"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:2px;"><rect width="20" height="15" x="2" y="7" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg> ${t.title}</a>`).join('')}
                 </div>
             </div>
         </div>
@@ -6167,7 +6167,7 @@ function renderPlanContent(plan) {
     const aiRecommend = getAIRecommendations(plan.input);
     const aiHtml = `
         <div class="ps" style="margin-top:1.5rem;border-top:2px solid var(--ac2);padding-top:1rem">
-            <div class="ps-hdr"><div class="ps-icon">🤖</div><h3 class="ps-title">AI 智能推荐</h3></div>
+            <div class="ps-hdr"><div class="ps-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg></div><h3 class="ps-title">AI 智能推荐</h3></div>
             <div class="ps-cnt">
                 <h4 style="color:var(--ac2);margin:.8rem 0 .4rem;font-size:.85rem">推荐器材组合</h4>
                 <div style="display:flex;flex-wrap:wrap;gap:.4rem">${aiRecommend.equipment.map(e=>`<span class="eq-tag" style="background:rgba(78,205,196,0.1);border-color:rgba(78,205,196,0.3)">${e}</span>`).join('')}</div>
@@ -6176,10 +6176,10 @@ function renderPlanContent(plan) {
                 <ul>${aiRecommend.venues.map(v=>`<li>${v}</li>`).join('')}</ul>
                 
                 <h4 style="color:var(--ac2);margin:.8rem 0 .4rem;font-size:.85rem">拍摄时间建议</h4>
-                <p style="font-size:.8rem;color:var(--t2)">🕐 ${aiRecommend.bestTime}</p>
+                <p style="font-size:.8rem;color:var(--t2)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:2px;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><circle fill="currentColor" cx="12" cy="12" r="10"/><path fill="currentColor" d="M12 6v6l4 2"/></g></svg> ${aiRecommend.bestTime}</p>
                 
                 <h4 style="color:var(--ac2);margin:.8rem 0 .4rem;font-size:.85rem">参考摄影师/作品</h4>
-                <div style="display:flex;flex-direction:column;gap:.3rem">${aiRecommend.references.map(r=>`<a href="${r.url}" target="_blank" class="tool-link">📸 ${r.name}</a>`).join('')}</div>
+                <div style="display:flex;flex-direction:column;gap:.3rem">${aiRecommend.references.map(r=>`<a href="${r.url}" target="_blank" class="tool-link"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:2px;"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg> ${r.name}</a>`).join('')}</div>
                 
                 <h4 style="color:var(--ac2);margin:.8rem 0 .4rem;font-size:.85rem">专业提示</h4>
                 <ul>${aiRecommend.tips.map(t=>`<li>${t}</li>`).join('')}</ul>
@@ -7157,7 +7157,7 @@ function renderHistFull(){
     $('histFull').innerHTML=ps.length?ps.map(p=>{
         const d=new Date(p.savedAt);
         const imgCount = (p.images||[]).length;
-        return`<div class="hist-item"><div class="hist-title">${p.title} ${imgCount?`<span style="font-size:.65rem;color:var(--ac);">🖼️${imgCount}</span>`:''}</div><div class="hist-meta"><span>${p.input && p.input.style||'待定'}</span><span>${d.toLocaleString()}</span></div><div class="hist-actions"><button class="btn btn-s btn-sm" onclick="loadPlan('${p.id}')">查看</button><button class="btn btn-d btn-sm" onclick="delPlan('${p.id}');renderHistFull();renderHistMini();updateBadge();">删除</button><button class="btn btn-i btn-sm" onclick="exportPlanPdf('${p.id}')">📄 PDF</button></div></div>`;
+        return`<div class="hist-item"><div class="hist-title">${p.title} ${imgCount?`<span style="font-size:.65rem;color:var(--ac);"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>${imgCount}</span>`:''}</div><div class="hist-meta"><span>${p.input && p.input.style||'待定'}</span><span>${d.toLocaleString()}</span></div><div class="hist-actions"><button class="btn btn-s btn-sm" onclick="loadPlan('${p.id}')">查看</button><button class="btn btn-d btn-sm" onclick="delPlan('${p.id}');renderHistFull();renderHistMini();updateBadge();">删除</button><button class="btn btn-i btn-sm" onclick="exportPlanPdf('${p.id}')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:2px;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button></div></div>`;
     }).join(''):'<div class="hist-empty" data-i18n="plan.noHistory2">暂无历史记录</div>';
 }
 function clearAllHistory(){if(!confirm(i18n[currentLang]['confirm.clearHistory']))return;savePlans([]);renderHistFull();renderHistMini();updateBadge();toast(i18n[currentLang]['toast.deleted'],'ok');}
@@ -7168,7 +7168,7 @@ function renderQuickVenue(){
     const venues=(sg(SK.V)||[]).slice(0,3);
     $('quickVenue').innerHTML=venues.length?venues.map(v=>`
         <div style="padding:.4rem 0;border-bottom:1px solid var(--bd);font-size:.78rem;">
-            <div style="font-weight:600;margin-bottom:.2rem;">📍 ${v.name}</div>
+            <div style="font-weight:600;margin-bottom:.2rem;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:2px;"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg> ${v.name}</div>
             ${v.styles?`<div style="color:var(--t3);font-size:.7rem;">${v.styles}</div>`:''}
         </div>`).join(''):'<div style="font-size:.78rem;color:var(--t3);">场地库为空</div>';
 }
@@ -7402,10 +7402,10 @@ function copyCurrentPlan(){
 // ===== Actions Bar =====
 function getActionsHtml() {
     return `<div class="actions">
-        <button class="btn btn-s btn-sm" onclick="copyCurrentPlan()">📋 复制</button>
-        <button class="btn btn-s btn-sm" onclick="exportPlanPdfCurrent()">📄 PDF</button>
-        <button class="btn btn-s btn-sm" onclick="exportPlanDocxCurrent()">📝 Word</button>
-        <button class="btn btn-i btn-sm" onclick="exportModelPdfCurrent()">👤 模特版PDF</button>
+        <button class="btn btn-s btn-sm" onclick="copyCurrentPlan()"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>复制</button>
+        <button class="btn btn-s btn-sm" onclick="exportPlanPdfCurrent()"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button>
+        <button class="btn btn-s btn-sm" onclick="exportPlanDocxCurrent()"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>Word</button>
+        <button class="btn btn-i btn-sm" onclick="exportModelPdfCurrent()"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>模特版PDF</button>
         ${currentPlanId ? `<button class="btn btn-i btn-sm" onclick="genImgForPlan('${currentPlanId}')" id="action-gen-img-btn"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" d="M12 22a1 1 0 0 1 0-20a10 9 0 0 1 10 9a5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z"/><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/></g></svg>批量生成9张</button>` : ''}
         <button class="btn btn-d btn-sm" onclick="delCurrentPlan()"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 11v6m4-6v6m5-11v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>删除</button>
     </div>`;
@@ -7943,7 +7943,7 @@ window.exportToFeishu = async function() {
     
     // 显示导入指引
     setTimeout(() => {
-        alert('📤 导入飞书日历步骤：\n\n1. 打开飞书 → 日历\n2. 点击右上角「···」→「导入日历」\n3. 选择刚下载的 .ics 文件\n4. 完成导入\n\n💡 提示：也可导入到苹果日历、Google 日历等');
+        alert('导入飞书日历步骤：\n\n1. 打开飞书 → 日历\n2. 点击右上角「···」→「导入日历」\n3. 选择刚下载的 .ics 文件\n4. 完成导入\n\n提示：也可导入到苹果日历、Google 日历等');
     }, 500);
 };
 
