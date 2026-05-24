@@ -2649,7 +2649,7 @@
             <script>
             // 加载看板数据
             (function loadDashboard() {
-                var API_BASE = window.api ? window.api.base : 'https://photo-workflow.vercel.app/api';
+                var API_BASE = window.api ? window.api.base : 'https://photoatelier-api.photomagic.workers.dev';
                 var token = localStorage.getItem('pw_token');
                 if (!token) return;
                 
@@ -3106,7 +3106,7 @@ if (document.getElementById('loginOverlay')) {
 
 // ===== Auth System & App Entry =====
 (function() {
-    const API_BASE = 'https://photo-workflow.vercel.app/api';
+    const API_BASE = 'https://photoatelier-api.photomagic.workers.dev';
     const TOKEN_KEY = 'pw_token';
     const USER_KEY = 'pw_user';
     const ROLE_KEY = 'pw_role';
