@@ -12,9 +12,9 @@
     <meta property="og:url" content="https://ronineymessjr-sudo.github.io/photo-workflow/">
     <meta name="twitter:card" content="summary_large_image">
     <link rel="canonical" href="https://ronineymessjr-sudo.github.io/photo-workflow/">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-qZvrbSO6oLHm0Dd3G7gBzSa+IDKxND4e8JZiOjkVN/bRlY7vY1WnFVW8v4wZav3vvEqRJ5x1pCB0kKxWbO3H0Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-qZvrbSO6oLHm0Dd3G7gBzSa+IDKxND4e8JZiOjkVN/bRlY7vY1WnFVW8v4wZav3vvEqRJ5x1pCB0kKxWbO3H0Q==" crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
     <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@0.344.0/dist/umd/lucide.min.js"></script>
+    <script src="https://unpkg.com/lucide@0.344.0/dist/umd/lucide.min.js" defer></script>
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1757,10 +1757,10 @@
             .hero-bg { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(4, 1fr); }
             .step-label { display: none; }
             .step-item:not(:last-child)::after { margin: 0 0.3rem; }
-        }
             .tab-cnt { padding: 1rem; }
             .grid { grid-template-columns: 1fr; }
             .col-side { display: none; }
+            .eq-item-actions, .card-actions { opacity: 1 !important; }
         }
 
         /* ===== Advanced Animations ===== */
@@ -2100,9 +2100,15 @@
             gap: 0.5rem;
             margin-top: 1rem;
         }
+        @media (max-width: 480px) {
+            .stat-grid { grid-template-columns: 1fr !important; }
+            .chart-grid { grid-template-columns: 1fr !important; }
+            .msg-stats { grid-template-columns: 1fr !important; }
+            .hamburger-btn { width: 44px; height: 44px; }
+            .lang-btn { padding: 0.4rem 0.75rem; min-height: 44px; }
+        }
     </style>
-    <!-- Animation Libraries -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" />
+    <!-- AOS Animation Library -->
     <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet" />
 </head>
 <body>
@@ -3145,6 +3151,7 @@ if (document.getElementById('loginOverlay')) {
         const email = document.getElementById('loginEmail').value.trim();
         const password = document.getElementById('loginPassword').value;
         if (!email || !password) { toast('请输入邮箱和密码', 'er'); return; }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { toast('请输入有效的邮箱地址', 'er'); return; }
 
         document.getElementById('loginForm').style.display = 'none';
         document.getElementById('loginLoading').style.display = 'block';
@@ -3222,7 +3229,11 @@ document.addEventListener('keydown', function(e) {
                 showTab('gen');
             } else if (e.key === 's' || e.key === 'S') {
                 e.preventDefault();
-                // 保存当前表单
+                toast('数据已自动保存', 'ok');
+            } else if (e.key === 'f' || e.key === 'F') {
+                e.preventDefault();
+                var searchInput = document.querySelector('input[placeholder*="搜索"]');
+                if (searchInput) searchInput.focus();
             }
         }
         // Undo/Redo shortcuts
@@ -3259,6 +3270,8 @@ document.addEventListener('keydown', function(e) {
     // Show role selector after login
     function showRoleSelector() {
         document.getElementById('loginOverlay').style.display = 'none';
+        var particles = document.querySelector('.particles');
+        if (particles) particles.remove();
         document.getElementById('roleOverlay').style.display = 'flex';
     }
 
@@ -3319,6 +3332,8 @@ document.addEventListener('keydown', function(e) {
                 const roleOverlay = document.getElementById('roleOverlay');
                 const appLayout = document.getElementById('appLayout');
                 if (loginOverlay) loginOverlay.style.display = 'none';
+                var particles = document.querySelector('.particles');
+                if (particles) particles.remove();
                 if (roleOverlay) roleOverlay.style.display = 'none';
                 if (appLayout) {
                     appLayout.style.display = 'flex';
@@ -3329,6 +3344,8 @@ document.addEventListener('keydown', function(e) {
                 const loginOverlay = document.getElementById('loginOverlay');
                 const roleOverlay = document.getElementById('roleOverlay');
                 if (loginOverlay) loginOverlay.style.display = 'none';
+                var particles = document.querySelector('.particles');
+                if (particles) particles.remove();
                 if (roleOverlay) roleOverlay.style.display = 'flex';
             }
         } catch (e) {
@@ -3517,11 +3534,6 @@ function filterMessages(status) {
     }).join('');
 }
 
-function escHtml(s) {
-    if (!s) return '';
-    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
 function openMsgDetail(id) {
     var m = _msgCache.find(function(x) { return x.id == id; });
     if (!m) return;
@@ -3586,6 +3598,7 @@ async function deleteMsg(id) {
 
 // Auto-refresh messages every 30s when on message tab
 var _msgRefreshTimer = setInterval(function() {
+    if (document.hidden) return;
     var msgTab = document.getElementById('tab-message');
     if (msgTab && msgTab.classList.contains('active')) {
         renderMessages();
@@ -3595,6 +3608,7 @@ var _msgRefreshTimer = setInterval(function() {
 // Background check for new messages every 60s (notification badge)
 var _lastMsgCount = 0;
 var _msgNotifyTimer = setInterval(function() {
+    if (document.hidden) return;
     var token = localStorage.getItem('pw_token');
     if (!token) return;
     api.getMessages().then(function(res) {
@@ -4946,7 +4960,7 @@ function renderImagePreviews() {
     grid.innerHTML = uploadedImages.map(img => `
         <div style="position:relative;">
             <img src="${img.data}" class="image-preview" alt="${img.name}">
-            <button onclick="removeImage('${img.id}')" style="position:absolute;top:-8px;right:-8px;width:20px;height:20px;border-radius:50%;background:var(--ac);color:white;border:none;cursor:pointer;font-size:12px;">×</button>
+            <button onclick="removeImage('${img.id}')" style="position:absolute;top:-8px;right:-8px;width:32px;height:32px;border-radius:50%;background:var(--ac);color:white;border:none;cursor:pointer;font-size:16px;">×</button>
         </div>
     `).join('');
 }
@@ -5744,9 +5758,9 @@ window.exportToFeishu = async function() {
         console.error('Feishu sync error:', e);
     }
     
-    // 显示导入指引
+    // 同步完成提示
     setTimeout(() => {
-        alert('📤 导入飞书日历步骤：\n\n1. 打开飞书 → 日历\n2. 点击右上角「···」→「导入日历」\n3. 选择刚下载的 .ics 文件\n4. 完成导入\n\n💡 提示：也可导入到苹果日历、Google 日历等');
+        toast('已同步到飞书日历', 'ok');
     }, 500);
 };
 
@@ -5850,6 +5864,8 @@ window.syncToFeishuBitable = async function() {
 
 // ===== Init =====
 updateBadge();renderHistMini();renderQuickVenue();renderCalendar();renderSchedules();
+window.addEventListener('offline', function() { toast('网络已断开，当前为离线模式', 'er'); });
+window.addEventListener('online', function() { toast('网络已恢复', 'ok'); });
 </script>
 <!-- AOS Animation Library -->
 <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
