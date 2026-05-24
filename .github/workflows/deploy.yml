@@ -1,0 +1,48 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'api/**'
+      - 'wrangler.toml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy to Cloudflare Workers
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Wrangler
+        run: npm install -g wrangler
+
+      - name: Deploy Worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          MINIMAX_API_KEY: ${{ secrets.MINIMAX_API_KEY }}
+        run: |
+          # 设置密钥
+          echo "$JWT_SECRET" | wrangler secret put JWT_SECRET --name photoatelier-api
+          echo "$SUPABASE_URL" | wrangler secret put SUPABASE_URL --name photoatelier-api
+          echo "$SUPABASE_ANON_KEY" | wrangler secret put SUPABASE_ANON_KEY --name photoatelier-api
+          if [ -n "$MINIMAX_API_KEY" ]; then
+            echo "$MINIMAX_API_KEY" | wrangler secret put MINIMAX_API_KEY --name photoatelier-api
+          fi
+          
+          # 部署
+          wrangler deploy --name photoatelier-api
+
+      - name: Verify Deployment
+        run: |
+          sleep 5
+          curl -f https://photoatelier-api.your-account.workers.dev/health || echo "请检查 Worker 地址"
