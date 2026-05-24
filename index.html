@@ -1171,8 +1171,8 @@
                 left: 0;
                 right: 0;
                 height: 48px;
-                background: rgba(12, 12, 14, 0.9);
-                backdrop-filter: blur(20px);
+                background: var(--bg-primary);
+                backdrop-filter: blur(10px);
                 -webkit-backdrop-filter: blur(20px);
                 border-bottom: 1px solid rgba(255,255,255,0.06);
                 z-index: 300;
@@ -1211,7 +1211,7 @@
                 transform: translateX(-100%);
                 transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
                 z-index: 400;
-                background: rgba(16, 16, 18, 0.98);
+                background: var(--bg-secondary);
                 backdrop-filter: blur(20px);
                 -webkit-backdrop-filter: blur(20px);
                 padding-top: 60px;
@@ -1475,7 +1475,7 @@
         }
         .role-modal.show { display: flex; }
         .role-modal-content {
-            background: #111113;
+            background: var(--bg-secondary);
             border: 1px solid rgba(255,255,255,0.1);
             border-radius: 20px;
             padding: 2rem;
@@ -3026,7 +3026,7 @@ function initParticles() {
     const container = document.getElementById('particlesContainer');
     if (!container) return;
     
-    const particleCount = 30;
+    const particleCount = 15;
     
     for (let i = 0; i < particleCount; i++) {
         createParticle(container, i);
@@ -3887,7 +3887,11 @@ function addSampleData() {
     sampleEq.forEach(s => { if(!eq.some(e=>e.n===s.n)) { eq.push({...s,id:Date.now().toString()+Math.random(),at:new Date().toISOString()}); added.eq++; } });
     sampleVenues.forEach(s => { if(!v.some(x=>x.name===s.name)) { v.push({...s,id:Date.now().toString()+Math.random(),at:new Date().toISOString()}); added.v++; } });
     if(added.eq>0||added.v>0||added.m>0) {
-        ss(SK.EQ,eq); ss(SK.V,v); ss(SK.M,m);
+        // 批量写入 localStorage，减少存储操作次数
+        var data = { eq: eq, venues: v, models: m };
+        ss(SK.EQ, data.eq);
+        ss(SK.V, data.venues);
+        ss(SK.M, data.models);
         renderEq(); renderVenue(); renderModel();
         toast(`已添加 ${added.eq} 件设备、${added.v} 个场地、${added.m} 位模特`,'ok');
     }
@@ -5667,13 +5671,16 @@ function initDragAndDrop() {
     });
 }
 
-window.addSchedule = async function() {
-    const date = prompt('拍摄日期 (YYYY-MM-DD):', new Date().toISOString().split('T')[0]);
-    if (!date) return;
-    const title = prompt('拍摄主题:');
-    if (!title) return;
-    const time = prompt('拍摄时间 (可选):') || '';
-    const location = prompt('拍摄地点 (可选):') || '';
+window.addSchedule = function() {
+    document.getElementById('scheduleModal').style.display = 'flex';
+};
+
+window.submitSchedule = async function() {
+    var date = document.getElementById('schedDate').value;
+    var title = document.getElementById('schedTitle').value;
+    var time = document.getElementById('schedTime').value || '';
+    var location = document.getElementById('schedLocation').value || '';
+    if (!date || !title) { toast('日期和主题为必填项', 'er'); return; }
     
     // Save to local
     const schedules = sg(SK_SCHED) || [];
@@ -5690,9 +5697,18 @@ window.addSchedule = async function() {
         await window.api.createSchedule(newSchedule);
     } catch (e) { console.log('Server sync failed:', e); }
     
+    closeScheduleModal();
     renderCalendar();
     renderSchedules();
     toast('日程已添加', 'ok');
+};
+
+window.closeScheduleModal = function() {
+    document.getElementById('scheduleModal').style.display = 'none';
+    document.getElementById('schedDate').value = '';
+    document.getElementById('schedTitle').value = '';
+    document.getElementById('schedTime').value = '';
+    document.getElementById('schedLocation').value = '';
 };
 
 window.deleteSchedule = async function(id) {
@@ -5954,6 +5970,21 @@ window.addEventListener('online', function() { toast('网络已恢复', 'ok'); }
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
         删除
     </div>
+</div>
+
+<!-- 日程添加模态框 -->
+<div id="scheduleModal" class="modal" style="display:none;">
+  <div class="modal-content" style="max-width: 400px;">
+    <h3 style="margin-bottom: 1rem; font-family: var(--font-serif);">添加日程</h3>
+    <input type="date" id="schedDate" style="width: 100%; margin-bottom: 0.75rem; padding: 0.5rem; background: var(--bg-tertiary); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--t1);">
+    <input type="text" id="schedTitle" placeholder="拍摄主题" style="width: 100%; margin-bottom: 0.75rem; padding: 0.5rem; background: var(--bg-tertiary); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--t1);">
+    <input type="time" id="schedTime" style="width: 100%; margin-bottom: 0.75rem; padding: 0.5rem; background: var(--bg-tertiary); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--t1);">
+    <input type="text" id="schedLocation" placeholder="拍摄地点（可选）" style="width: 100%; margin-bottom: 1rem; padding: 0.5rem; background: var(--bg-tertiary); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--t1);">
+    <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+      <button onclick="closeScheduleModal()" style="padding: 0.5rem 1rem; background: transparent; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: var(--t2); cursor: pointer;">取消</button>
+      <button onclick="submitSchedule()" style="padding: 0.5rem 1rem; background: var(--ac); border: none; border-radius: 8px; color: #000; cursor: pointer; font-weight: 600;">保存</button>
+    </div>
+  </div>
 </div>
 </body>
 </html>
