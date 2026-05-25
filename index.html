@@ -2305,7 +2305,7 @@
                                             <option value="">选择风格</option><option value="时尚">时尚杂志风</option><option value="复古" selected>复古胶片风</option>
                                             <option value="文艺">文艺清新</option><option value="性感">私房性感</option><option value="街拍">街头街拍</option>
                                             <option value="运动">运动活力</option><option value="古风">古风汉服</option><option value="婚纱">婚纱婚礼</option>
-                                            <option value="商业">商业广告</option><option value="情绪">情绪人像</option>
+                                            <option value="商业">商业广告</option><option value="情绪">情绪人像</option><option value="鱼眼">鱼眼创意</option>
                                         </select>
                                     </div>
                                     <div class="fg"><label data-i18n="gen.mood">预期情绪</label><input id="f-mood" value="慵懒、神秘、暧昧"></div>
@@ -4368,6 +4368,12 @@ const STYLE_TEMPLATES = {
         outfits: ['简约服装', '素色'],
         lighting: '低调光，强调情绪',
         mood: '忧郁、深沉、故事感'
+    },
+    '鱼眼': {
+        poses: ['躺在地面四肢伸展', '站在镜头正上方低头', '手持鱼眼对镜自拍', '站在走廊中央', '低角度仰拍显腿长'],
+        outfits: ['紧身衣/运动装（强调身体线条）', '宽松服装（与鱼眼畸变形成对比）', '色彩鲜艳的服装（鱼眼色彩边缘拉伸）'],
+        lighting: '均匀光线最佳，避免硬光（鱼眼会把阴影畸变放大）',
+        mood: '超现实、趣味、创意、时尚'
     }
 };
 
@@ -5087,6 +5093,23 @@ function generateShotList(plan) {
             { scene: '团队', description: '团队合影', shotSize: '全身', method: '正面', focalLength: '35mm f/2', composition: '团队排列', lighting: '自然光', props: '无', angle: '正面', mood: '团结', duration: 10, notes: '35mm容纳团队' },
             { scene: '演讲台', description: '演讲', shotSize: '半身', method: '正面', focalLength: '85mm f/1.4', composition: '演讲台背景', lighting: '舞台灯光', props: '话筒', angle: '正面', mood: '权威', duration: 10, notes: '85mm压缩背景' },
             { scene: '握手', description: '商务握手', shotSize: '特写', method: '正面', focalLength: '50mm f/1.8', composition: '手部特写', lighting: '自然光', props: '无', angle: '正面', mood: '合作', duration: 5, notes: '50mm特写' }
+        ],
+        '鱼眼': [
+            { scene: '头顶正上方', description: '人物躺在地面，相机从正上方俯拍', shotSize: '全身', method: '正俯拍', focalLength: '9mm f/2.8 鱼眼', composition: '人物居中，四肢向四周延伸', lighting: '环形灯/均匀顶光', props: '无', angle: '正俯拍90度', mood: '超现实', duration: 10, notes: '9mm鱼眼最大畸变，人物面部居中畸变小，四肢夸张拉伸' },
+            { scene: '低角度仰拍', description: '人物站在镜头正上方，低头看镜头', shotSize: '全身', method: '超低角度仰拍', focalLength: '9mm f/2.8 鱼眼', composition: '人物居中，天空/天花板包围', lighting: '自然光+补光', props: '无', angle: '仰拍90度', mood: '压迫感', duration: 8, notes: '9mm鱼眼仰拍，腿部长度夸张，人物显得高大' },
+            { scene: '走廊/隧道', description: '站在走廊中央，鱼眼夸张透视', shotSize: '全身', method: '正面拍摄', focalLength: '9mm f/2.8 鱼眼', composition: '一点透视，走廊向四周弯曲', lighting: '走廊灯光', props: '无', angle: '平视', mood: '科幻', duration: 8, notes: '9mm鱼眼让直线弯曲，走廊变成隧道感' },
+            { scene: '镜子前', description: '手持鱼眼镜头对镜自拍', shotSize: '全身', method: '自拍', focalLength: '9mm f/2.8 鱼眼', composition: '人物+镜中反射+房间全景', lighting: '自然光', props: '镜子', angle: '正面', mood: '趣味', duration: 8, notes: '9mm鱼眼自拍，面部居中，周围环境弯曲包裹' },
+            { scene: '建筑前', description: '站在建筑正前方，建筑弧形包围', shotSize: '全身', method: '正面拍摄', focalLength: '9mm f/2.8 鱼眼', composition: '建筑弧形包围人物', lighting: '自然光', props: '无', angle: '平视', mood: '宏大', duration: 8, notes: '9mm鱼眼让建筑变成圆顶穹庐感' },
+            { scene: '车内', description: '坐在车内，鱼眼拍整个车厢', shotSize: '全身', method: '正面', focalLength: '9mm f/2.8 鱼眼', composition: '车内全景，仪表盘弯曲', lighting: '车内灯光', props: '方向盘', angle: '平视', mood: '私密', duration: 8, notes: '9mm鱼眼在狭小空间优势明显' },
+            { scene: '电梯内', description: '电梯内自拍，空间弯曲', shotSize: '全身', method: '自拍', focalLength: '9mm f/2.8 鱼眼', composition: '电梯内壁弧形', lighting: '电梯灯光', props: '无', angle: '正面', mood: '幽闭', duration: 5, notes: '9mm鱼眼在电梯内拍出弯曲空间感' },
+            { scene: '舞台/演唱会', description: '站在舞台中央，观众席弧形包围', shotSize: '全身', method: '自拍/后方拍摄', focalLength: '9mm f/2.8 鱼眼', composition: '360度弧形观众', lighting: '舞台灯光', props: '无', angle: '正面/背面', mood: '震撼', duration: 10, notes: '9mm鱼眼拍出被观众环绕的震撼感' },
+            { scene: '楼梯螺旋', description: '站在螺旋楼梯中央', shotSize: '全身', method: '仰拍/俯拍', focalLength: '9mm f/2.8 鱼眼', composition: '楼梯变成漩涡', lighting: '顶光/自然光', props: '无', angle: '仰拍', mood: '眩晕', duration: 8, notes: '9mm鱼眼让螺旋楼梯变成漩涡效果' },
+            { scene: '水面反射', description: '站在水边，水面弯曲倒影', shotSize: '全身', method: '低角度', focalLength: '9mm f/2.8 鱼眼', composition: '天地弧形分割', lighting: '自然光', props: '无', angle: '低角度', mood: '梦幻', duration: 10, notes: '9mm鱼眼让地平线弯曲，天地变成星球感' },
+            { scene: '森林/树冠', description: '站在树林中央仰拍', shotSize: '全身', method: '仰拍', focalLength: '9mm f/2.8 鱼眼', composition: '树冠球形包围', lighting: '斑驳阳光', props: '无', angle: '仰拍', mood: '童话', duration: 10, notes: '9mm鱼眼仰拍树冠变成球形穹顶' },
+            { scene: '人物特写', description: '鱼眼近距离特写面部', shotSize: '特写', method: '超近距离', focalLength: '9mm f/2.8 鱼眼', composition: '面部居中，鼻子夸张突出', lighting: '环形灯', props: '无', angle: '正面', mood: '搞怪/趣味', duration: 8, notes: '9mm鱼眼近距离拍脸，鼻子变大，耳朵消失，搞笑效果' },
+            { scene: '15mm半鱼眼人像', description: '15mm半鱼眼，轻微畸变的人像', shotSize: '半身', method: '正面', focalLength: '15mm f/2.8 半鱼眼', composition: '人物居中，边缘轻微弯曲', lighting: '自然光+补光', props: '无', angle: '平视', mood: '时尚', duration: 8, notes: '15mm半鱼眼畸变比9mm小很多，适合时尚人像' },
+            { scene: '15mm环境人像', description: '15mm拍人物+环境，轻微拉伸', shotSize: '全身', method: '侧面', focalLength: '15mm f/2.8 半鱼眼', composition: '人物+环境，轻微拉伸腿部', lighting: '自然光', props: '无', angle: '侧面', mood: '修长', duration: 8, notes: '15mm半鱼眼拍人显腿长，比24mm更夸张但不失控' },
+            { scene: '8mm全圆鱼眼', description: '8mm全圆鱼眼，画面成圆形', shotSize: '全身', method: '正面', focalLength: '8mm f/3.5 全圆鱼眼', composition: '圆形画面，黑边包围', lighting: '均匀光线', props: '无', angle: '平视', mood: '创意', duration: 10, notes: '8mm全圆鱼眼画面是圆形的，像透过水管看世界' }
         ]
     };
     
