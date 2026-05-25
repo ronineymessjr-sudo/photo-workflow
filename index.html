@@ -7179,22 +7179,35 @@ window.syncToFeishuBitable = async function() {
     }
 };
 
-// ===== Reference Image API Integration =====
+// ===== Reference Image System (No API Key Required) =====
 
-// Pexels API Configuration
-const PEXELS_API_KEY = 'd7t2uGKKf6Vq5v9dXc3hJmNpQr4sTjWz'; // Demo key - users should replace with their own
+// Pexels API - optional, user can set their own key
 const PEXELS_API_URL = 'https://api.pexels.com/v1';
 
+// Get user's saved Pexels API key (optional)
+function getPexelsApiKey() {
+    return localStorage.getItem('pa_pexels_key') || '';
+}
+
+// Save Pexels API key
+function savePexelsApiKey(key) {
+    if (key && key.trim()) {
+        localStorage.setItem('pa_pexels_key', key.trim());
+        toast('Pexels API Key saved', 'ok');
+    } else {
+        localStorage.removeItem('pa_pexels_key');
+        toast('API Key removed, using direct links', 'i');
+    }
+}
+
 // Reference Image Category Mapping System
-// Maps style + scene + props + focalLength to search queries
 const referenceCategoryMap = {
-    // 风格映射
     styleKeywords: {
         '时尚': ['fashion portrait', 'editorial fashion', 'high fashion', 'fashion magazine', 'couture'],
         '复古': ['vintage portrait', 'retro photography', 'film noir', 'analog film', 'vintage aesthetic'],
         '文艺': ['artistic portrait', 'fine art photography', 'poetic portrait', 'dreamy portrait', 'soft light portrait'],
         '性感': ['sensual portrait', 'boudoir photography', 'intimate portrait', 'moody portrait', 'dramatic lighting'],
-        '古风': ['hanfu photography', 'traditional chinese', 'oriental portrait', 'classical beauty', 'ancient style'],
+        '古风': ['hanfu photography', 'traditional chinese portrait', 'oriental portrait', 'classical beauty', 'ancient style'],
         '婚纱': ['wedding portrait', 'bridal photography', 'wedding dress', 'romantic wedding', 'elegant bride'],
         '街拍': ['street style', 'urban portrait', 'city fashion', 'street photography', 'casual chic'],
         '运动': ['fitness portrait', 'athletic photography', 'sports portrait', 'action shot', 'dynamic pose'],
@@ -7202,8 +7215,6 @@ const referenceCategoryMap = {
         '商业': ['corporate portrait', 'business headshot', 'professional photo', 'commercial photography', 'executive portrait'],
         '鱼眼': ['fisheye portrait', 'creative fisheye', 'distorted perspective', 'ultra wide angle', 'artistic distortion']
     },
-    
-    // 场景映射
     sceneKeywords: {
         '入口/门厅': ['doorway portrait', 'entrance hall', 'lobby photo'],
         '主场景': ['studio portrait', 'indoor portrait', 'main scene'],
@@ -7233,10 +7244,42 @@ const referenceCategoryMap = {
         '健身房': ['gym portrait', 'fitness center', 'workout photo'],
         '办公室': ['office portrait', 'workplace photo', 'corporate setting'],
         '会议室': ['conference room', 'meeting room', 'boardroom'],
-        '教堂': ['church portrait', 'cathedral photo', 'sacred space']
+        '教堂': ['church portrait', 'cathedral photo', 'sacred space'],
+        '花园': ['garden portrait', 'flower garden', 'garden photo'],
+        '车内': ['car interior portrait', 'backseat photo', 'driving portrait'],
+        '电梯内': ['elevator portrait', 'elevator selfie', 'small space'],
+        '喷泉广场': ['fountain portrait', 'plaza photo', 'water fountain'],
+        '远处小景': ['distant figure', 'small person landscape', 'environmental portrait'],
+        '镜子前': ['mirror portrait', 'mirror selfie', 'reflection photo'],
+        '落地窗前': ['floor to ceiling window', 'window silhouette', 'cityscape window'],
+        '白色床单': ['white sheets portrait', 'minimal bed', 'white bedding'],
+        '门框': ['door frame portrait', 'doorway pose', 'framed by door'],
+        '壁炉旁': ['fireplace portrait', 'mantel photo', 'cozy fireplace'],
+        '老式电话旁': ['vintage phone portrait', 'retro telephone', 'antique phone'],
+        '窗帘旁': ['curtain portrait', 'sheer curtain', 'window drape'],
+        '远处背影': ['distant back view', 'figure from behind', 'back silhouette'],
+        '窗外远景': ['through window view', 'window landscape', 'window scene'],
+        '全身环境': ['full body environmental', 'room portrait', 'interior wide'],
+        '手部细节': ['hand detail', 'hand closeup', 'macro hand'],
+        '锁骨特写': ['collarbone portrait', 'shoulder closeup', 'neck detail'],
+        '眼部特写': ['eye closeup', 'eye macro', 'eye detail portrait'],
+        '手部特写': ['hand detail portrait', 'fingers closeup', 'hand macro'],
+        '产品微距': ['product macro', 'product detail', 'commercial macro'],
+        '建筑外观': ['building exterior', 'architecture photo', 'facade'],
+        '办公环境': ['office environment', 'workspace wide', 'open office'],
+        '回廊': ['corridor portrait', 'arcade photo', 'covered walkway'],
+        '石阶': ['stone steps', 'staircase portrait', 'ancient stairs'],
+        '花丛': ['flower field portrait', 'floral background', 'among flowers'],
+        '桥上': ['bridge portrait', 'over bridge', 'bridge view'],
+        '亭子': ['pavilion portrait', 'gazebo photo', 'traditional pavilion'],
+        '回廊': ['corridor portrait', 'covered walkway', 'arcade'],
+        '远山': ['mountain portrait', 'distant mountain', 'peak background'],
+        '荷塘': ['lotus pond portrait', 'lotus background', 'pond photo'],
+        '月下': ['moonlight portrait', 'night portrait', 'moonlit'],
+        '古巷': ['ancient alley', 'old street portrait', 'narrow lane'],
+        '草地/户外': ['meadow portrait', 'outdoor nature', 'field photo'],
+        '书店': ['bookstore portrait', 'library photo', 'bookshelf']
     },
-    
-    // 道具映射
     propsKeywords: {
         '无': ['minimal portrait', 'clean background', 'simple composition'],
         '天鹅绒沙发': ['velvet couch', 'luxury sofa', 'plush furniture'],
@@ -7291,16 +7334,16 @@ const referenceCategoryMap = {
         '浴缸': ['bathtub', 'bath time', 'soaking tub'],
         '玫瑰花瓣': ['rose petals', 'romantic bath', 'flower petals'],
         '高脚凳': ['bar stool', 'high chair', 'counter seat'],
-        '镜子': ['mirror', 'reflection', 'vanity mirror'],
         '楼梯': ['stairs', 'staircase', 'steps'],
         '霓虹灯': ['neon lights', 'neon sign', 'neon glow'],
         '烟花棒': ['sparklers', 'sparkler light', 'night sparkles'],
         '雨伞': ['umbrella', 'rainy day', 'parasol'],
         '酒杯': ['wine glass', 'drinking glass', 'glassware'],
-        '婚戒': ['wedding ring', 'engagement ring', 'ring closeup']
+        '婚戒': ['wedding ring', 'engagement ring', 'ring closeup'],
+        '配饰': ['accessories portrait', 'jewelry closeup', 'fashion detail'],
+        '婚纱': ['wedding dress', 'bridal gown', 'white dress'],
+        '无': 'minimal portrait'
     },
-    
-    // 焦距映射
     focalLengthKeywords: {
         '8mm f/3.5 全圆鱼眼': ['circular fisheye', 'extreme wide angle', 'spherical distortion'],
         '9mm f/2.8 鱼眼': ['fisheye lens', 'ultra wide fisheye', '9mm fisheye'],
@@ -7329,304 +7372,198 @@ const referenceCategoryMap = {
     }
 };
 
-// Generate search queries for a shot based on its attributes
+// Build direct search URLs for free image platforms (no API key needed)
+function buildSearchUrls(query) {
+    return {
+        pexels: `https://www.pexels.com/search/${encodeURIComponent(query)}/`,
+        unsplash: `https://unsplash.com/s/photos/${encodeURIComponent(query)}`,
+        pixabay: `https://pixabay.com/images/search/${encodeURIComponent(query)}/`,
+        xiaohongshu: `https://www.xiaohongshu.com/search_result?keyword=${encodeURIComponent(query)}&source=web_search_result_notes`
+    };
+}
+
+// Generate categorized search queries for a shot
 function generateShotSearchQueries(shot, style) {
     const queries = [];
     const map = referenceCategoryMap;
-    
-    // Get keywords for each dimension
-    const styleKeywords = map.styleKeywords[style] || map.styleKeywords['复古'];
-    const sceneKeywords = map.sceneKeywords[shot.scene] || ['portrait'];
-    const propsKeywords = map.propsKeywords[shot.props] || ['portrait'];
-    const focalKeywords = map.focalLengthKeywords[shot.focalLength] || ['portrait photography'];
-    
-    // Generate combination queries (prioritize specific combinations)
-    // Query 1: Style + Scene (most important)
+    const styleKw = map.styleKeywords[style] || map.styleKeywords['复古'];
+    const sceneKw = map.sceneKeywords[shot.scene] || ['portrait'];
+    const propsKw = map.propsKeywords[shot.props] || ['portrait'];
+    const focalKw = map.focalLengthKeywords[shot.focalLength] || ['portrait photography'];
+
+    // 1. Style + Scene
     queries.push({
-        query: `${styleKeywords[0]} ${sceneKeywords[0]}`,
+        query: `${styleKw[0]} ${sceneKw[0]}`,
         category: '风格+场景',
-        description: `${style}风格在${shot.scene}的典型拍摄`
+        description: `${style}风格 · ${shot.scene}`,
+        color: '#ff6b6b'
     });
-    
-    // Query 2: Style + Props
+    // 2. Style + Props (if any)
     if (shot.props && shot.props !== '无') {
         queries.push({
-            query: `${styleKeywords[1]} ${propsKeywords[0]}`,
+            query: `${styleKw[1] || styleKw[0]} ${propsKw[0]}`,
             category: '风格+道具',
-            description: `${style}风格使用${shot.props}的参考`
+            description: `${style}风格 · ${shot.props}`,
+            color: '#8b5cf6'
         });
     }
-    
-    // Query 3: Scene + Focal Length
+    // 3. Scene + Focal Length
     queries.push({
-        query: `${sceneKeywords[0]} portrait ${shot.focalLength.split(' ')[0]}`,
+        query: `${sceneKw[0]} portrait ${shot.focalLength.split(' ')[0]}`,
         category: '场景+焦距',
-        description: `${shot.scene}使用${shot.focalLength}的拍摄效果`
+        description: `${shot.scene} · ${shot.focalLength}`,
+        color: '#4ecdc4'
     });
-    
-    // Query 4: Style + Mood
+    // 4. Style + Mood
     if (shot.mood) {
         queries.push({
-            query: `${styleKeywords[2]} ${shot.mood} portrait`,
+            query: `${styleKw[2] || styleKw[0]} ${shot.mood} portrait`,
             category: '风格+情绪',
-            description: `${style}风格${shot.mood}情绪的表达`
+            description: `${style}风格 · ${shot.mood}情绪`,
+            color: '#ec4899'
         });
     }
-    
-    // Query 5: Composition type
+    // 5. Composition
     if (shot.composition) {
-        const compKeywords = shot.composition.includes('剪影') ? 'silhouette portrait' :
-                            shot.composition.includes('逆光') ? 'backlight portrait' :
-                            shot.composition.includes('框架') ? 'frame within frame' :
-                            shot.composition.includes('对称') ? 'symmetrical portrait' :
-                            shot.composition.includes('三分') ? 'rule of thirds portrait' :
-                            'portrait composition';
+        const compKw = shot.composition.includes('剪影') ? 'silhouette portrait' :
+                      shot.composition.includes('逆光') ? 'backlight portrait' :
+                      shot.composition.includes('框架') ? 'frame within frame' :
+                      shot.composition.includes('对称') ? 'symmetrical portrait' :
+                      shot.composition.includes('三分') ? 'rule of thirds portrait' :
+                      'portrait composition';
         queries.push({
-            query: `${styleKeywords[0]} ${compKeywords}`,
+            query: `${styleKw[0]} ${compKw}`,
             category: '风格+构图',
-            description: `${style}风格的${shot.composition}构图参考`
+            description: `${shot.composition}`,
+            color: '#f59e0b'
         });
     }
-    
-    // Query 6: Lighting style
+    // 6. Lighting
     if (shot.lighting) {
-        const lightKeywords = shot.lighting.includes('自然光') ? 'natural light portrait' :
-                             shot.lighting.includes('逆光') ? 'backlit portrait' :
-                             shot.lighting.includes('侧光') ? 'side light portrait' :
-                             shot.lighting.includes('柔光') ? 'soft light portrait' :
-                             shot.lighting.includes('硬光') ? 'hard light portrait' :
-                             'portrait lighting';
+        const lightKw = shot.lighting.includes('自然光') ? 'natural light portrait' :
+                       shot.lighting.includes('逆光') ? 'backlit portrait' :
+                       shot.lighting.includes('侧光') ? 'side light portrait' :
+                       shot.lighting.includes('柔光') ? 'soft light portrait' :
+                       shot.lighting.includes('硬光') ? 'hard light portrait' :
+                       'portrait lighting';
         queries.push({
-            query: `${lightKeywords} ${styleKeywords[0]}`,
+            query: `${lightKw} ${styleKw[0]}`,
             category: '光线+风格',
-            description: `${shot.lighting}在${style}风格中的应用`
+            description: `${shot.lighting}`,
+            color: '#22c55e'
         });
     }
-    
     return queries;
 }
 
-// Search Pexels API for reference images
-async function searchPexelsImages(query, perPage = 4) {
-    try {
-        const response = await fetch(`${PEXELS_API_URL}/search?query=${encodeURIComponent(query)}&per_page=${perPage}&orientation=all`, {
-            headers: {
-                'Authorization': PEXELS_API_KEY
-            }
-        });
-        
-        if (!response.ok) {
-            throw new Error(`API error: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        return data.photos.map(photo => ({
-            id: photo.id,
-            url: photo.src.medium,
-            largeUrl: photo.src.large,
-            originalUrl: photo.src.original,
-            photographer: photo.photographer,
-            photographerUrl: photo.photographer_url,
-            width: photo.width,
-            height: photo.height,
-            avgColor: photo.avg_color,
-            source: 'pexels'
-        }));
-    } catch (error) {
-        console.error('Pexels search error:', error);
-        return [];
-    }
-}
-
-// Cache for reference images
-const referenceImageCache = {};
-
-// Get reference images for a shot with caching
-async function getShotReferenceImages(shot, style) {
-    const cacheKey = `${style}_${shot.scene}_${shot.props}_${shot.focalLength}`;
-    
-    if (referenceImageCache[cacheKey]) {
-        return referenceImageCache[cacheKey];
-    }
-    
-    const queries = generateShotSearchQueries(shot, style);
-    const results = [];
-    
-    // Search for each query (limit to first 3 to avoid rate limits)
-    for (const queryObj of queries.slice(0, 3)) {
-        const images = await searchPexelsImages(queryObj.query, 3);
-        if (images.length > 0) {
-            results.push({
-                category: queryObj.category,
-                description: queryObj.description,
-                query: queryObj.query,
-                images: images
-            });
-        }
-    }
-    
-    referenceImageCache[cacheKey] = results;
-    return results;
-}
-
-// Render reference images gallery for a shot
+// Render reference gallery for a shot (direct links mode - no API key needed)
 function renderShotReferenceGallery(shot, style, shotIndex) {
     const queries = generateShotSearchQueries(shot, style);
-    
+    const hasApiKey = !!getPexelsApiKey();
+
     return `
         <div class="shot-reference-gallery" id="ref-gallery-${shotIndex}" style="margin-top:1rem;padding:1rem;background:var(--bg2);border-radius:var(--radius-sm);">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;">
                 <h5 style="color:var(--ac);font-size:.85rem;margin:0;">📸 参考图库</h5>
-                <button class="btn btn-s btn-sm" onclick="loadShotReferences(${shotIndex}, '${style}', '${encodeURIComponent(JSON.stringify(shot).replace(/'/g, "&#39;"))}')">
-                    🔍 搜索参考图
-                </button>
+                ${hasApiKey ? `<button class="btn btn-s btn-sm" onclick="loadShotReferencesApi(${shotIndex}, '${style}', '${encodeURIComponent(JSON.stringify(shot).replace(/'/g, "&#39;"))}')">🔍 API搜索</button>` : ''}
             </div>
-            <div class="ref-categories" style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.75rem;">
-                ${queries.map((q, i) => `
-                    <span class="ref-category-tag" style="padding:.25rem .5rem;background:var(--bg3);border-radius:4px;font-size:.75rem;color:var(--t2);cursor:pointer;"
-                          onclick="highlightRefCategory(${shotIndex}, ${i})" data-cat="${i}">
-                        ${q.category}
-                    </span>
-                `).join('')}
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:.75rem;">
+                ${queries.map((q, i) => {
+                    const urls = buildSearchUrls(q.query);
+                    return `
+                    <div style="background:var(--bg);border-radius:8px;padding:.75rem;border-left:3px solid ${q.color};">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">
+                            <span style="font-size:.78rem;font-weight:600;color:${q.color};">${q.category}</span>
+                            <span style="font-size:.7rem;color:var(--t3);">${q.description}</span>
+                        </div>
+                        <div style="font-size:.68rem;color:var(--t3);margin-bottom:.5rem;word-break:break-all;">
+                            🔑 ${q.query}
+                        </div>
+                        <div style="display:flex;flex-wrap:wrap;gap:.35rem;">
+                            <a href="${urls.pexels}" target="_blank" rel="noopener" style="padding:.2rem .5rem;background:rgba(0,0,0,.15);border-radius:4px;font-size:.7rem;color:#05a081;text-decoration:none;transition:background .2s;" onmouseover="this.style.background='rgba(0,0,0,.25)'" onmouseout="this.style.background='rgba(0,0,0,.15)'">Pexels</a>
+                            <a href="${urls.unsplash}" target="_blank" rel="noopener" style="padding:.2rem .5rem;background:rgba(0,0,0,.15);border-radius:4px;font-size:.7rem;color:#111;text-decoration:none;transition:background .2s;" onmouseover="this.style.background='rgba(0,0,0,.25)'" onmouseout="this.style.background='rgba(0,0,0,.15)'">Unsplash</a>
+                            <a href="${urls.pixabay}" target="_blank" rel="noopener" style="padding:.2rem .5rem;background:rgba(0,0,0,.15);border-radius:4px;font-size:.7rem;color:#00ab6c;text-decoration:none;transition:background .2s;" onmouseover="this.style.background='rgba(0,0,0,.25)'" onmouseout="this.style.background='rgba(0,0,0,.15)'">Pixabay</a>
+                            <a href="${urls.xiaohongshu}" target="_blank" rel="noopener" style="padding:.2rem .5rem;background:rgba(0,0,0,.15);border-radius:4px;font-size:.7rem;color:#ff2442;text-decoration:none;transition:background .2s;" onmouseover="this.style.background='rgba(0,0,0,.25)'" onmouseout="this.style.background='rgba(0,0,0,.15)'">小红书</a>
+                        </div>
+                    </div>`;
+                }).join('')}
             </div>
-            <div class="ref-images-container" id="ref-images-${shotIndex}" style="min-height:100px;display:flex;align-items:center;justify-content:center;color:var(--t3);font-size:.8rem;">
-                点击"搜索参考图"加载相关参考图片
-            </div>
-            <div class="ref-search-terms" style="margin-top:.5rem;font-size:.7rem;color:var(--t3);">
-                <strong>搜索词：</strong>${queries.map(q => q.query).join(' | ')}
+            <div style="margin-top:.75rem;padding:.5rem;background:var(--bg);border-radius:6px;font-size:.72rem;color:var(--t3);display:flex;align-items:center;gap:.5rem;">
+                <span>💡</span>
+                <span>点击平台按钮直接跳转搜索页，所有图库均免费可商用。如需API自动加载图片，请在设置中填入 Pexels API Key（<a href="https://www.pexels.com/api/" target="_blank" style="color:var(--ac);">免费申请</a>）</span>
             </div>
         </div>
     `;
 }
 
-// Load reference images for a specific shot
-async function loadShotReferences(shotIndex, style, shotDataEncoded) {
+// Optional: Load images via Pexels API (only works if user has set API key)
+async function loadShotReferencesApi(shotIndex, style, shotDataEncoded) {
+    const apiKey = getPexelsApiKey();
+    if (!apiKey) { toast('Please set Pexels API Key in settings first', 'er'); return; }
+
     const container = document.getElementById(`ref-images-${shotIndex}`);
-    const gallery = document.getElementById(`ref-gallery-${shotIndex}`);
-    
-    container.innerHTML = '<div class="spinner" style="width:30px;height:30px;"></div><p style="margin-left:.5rem;">搜索中...</p>';
-    container.style.display = 'flex';
-    
+    container.innerHTML = '<div class="spinner" style="width:24px;height:24px;"></div>';
+
     try {
         const shot = JSON.parse(decodeURIComponent(shotDataEncoded));
-        const results = await getShotReferenceImages(shot, style);
-        
-        if (results.length === 0) {
-            container.innerHTML = '<p>未找到相关参考图，请稍后重试</p>';
+        const queries = generateShotSearchQueries(shot, style);
+        const allImages = [];
+
+        for (const q of queries.slice(0, 3)) {
+            const resp = await fetch(`${PEXELS_API_URL}/search?query=${encodeURIComponent(q.query)}&per_page=3`, {
+                headers: { 'Authorization': apiKey }
+            });
+            if (resp.ok) {
+                const data = await resp.json();
+                if (data.photos && data.photos.length) {
+                    allImages.push({ category: q.category, description: q.description, photos: data.photos });
+                }
+            }
+            await new Promise(r => setTimeout(r, 300));
+        }
+
+        if (allImages.length === 0) {
+            container.innerHTML = '<p style="font-size:.8rem;color:var(--t3);">No results. Check your API key.</p>';
             return;
         }
-        
-        container.innerHTML = results.map((result, catIndex) => `
-            <div class="ref-category-section" data-cat-index="${catIndex}" style="width:100%;margin-bottom:1rem;">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">
-                    <span style="font-size:.75rem;color:var(--ac);font-weight:500;">${result.category}</span>
-                    <span style="font-size:.7rem;color:var(--t3);">${result.description}</span>
-                </div>
-                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:.5rem;">
-                    ${result.images.map(img => `
-                        <div class="ref-image-item" style="position:relative;aspect-ratio:3/4;border-radius:8px;overflow:hidden;cursor:pointer;"
-                             onclick="openRefImageModal('${img.largeUrl}', '${img.photographer}', '${img.photographerUrl}')">
-                            <img src="${img.url}" alt="${result.category}" style="width:100%;height:100%;object-fit:cover;transition:transform .3s;"
-                                 onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                            <div style="position:absolute;bottom:0;left:0;right:0;padding:.25rem;background:linear-gradient(transparent,rgba(0,0,0,.7));font-size:.6rem;color:#fff;">
-                                ${img.photographer}
-                            </div>
+
+        container.innerHTML = allImages.map(r => `
+            <div style="width:100%;margin-bottom:.75rem;">
+                <span style="font-size:.72rem;color:var(--ac);font-weight:500;">${r.category} - ${r.description}</span>
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.4rem;margin-top:.3rem;">
+                    ${r.photos.map(p => `
+                        <div style="aspect-ratio:3/4;border-radius:6px;overflow:hidden;cursor:pointer;" onclick="window.open('${p.src.large}','_blank')">
+                            <img src="${p.src.medium}" style="width:100%;height:100%;object-fit:cover;">
                         </div>
                     `).join('')}
                 </div>
             </div>
         `).join('');
-        
-        // Mark gallery as loaded
-        gallery.dataset.loaded = 'true';
-        
-    } catch (error) {
-        console.error('Load references error:', error);
-        container.innerHTML = '<p>加载失败，请检查网络连接</p>';
+        toast('Images loaded', 'ok');
+    } catch (e) {
+        console.error('API error:', e);
+        container.innerHTML = '<p style="font-size:.8rem;color:var(--er);">API error: ' + e.message + '</p>';
     }
 }
 
-// Highlight a specific reference category
-function highlightRefCategory(shotIndex, catIndex) {
-    const gallery = document.getElementById(`ref-gallery-${shotIndex}`);
-    const sections = gallery.querySelectorAll('.ref-category-section');
-    const tags = gallery.querySelectorAll('.ref-category-tag');
-    
-    tags.forEach((tag, i) => {
-        if (i === catIndex) {
-            tag.style.background = 'var(--ac)';
-            tag.style.color = '#fff';
-        } else {
-            tag.style.background = 'var(--bg3)';
-            tag.style.color = 'var(--t2)';
-        }
-    });
-    
-    sections.forEach((section, i) => {
-        if (i === catIndex) {
-            section.style.display = 'block';
-            section.style.opacity = '1';
-        } else {
-            section.style.opacity = '0.3';
-        }
-    });
-}
-
-// Open reference image modal
-function openRefImageModal(imageUrl, photographer, photographerUrl) {
-    const modal = document.createElement('div');
-    modal.id = 'refImageModal';
-    modal.style.cssText = `
-        position:fixed;inset:0;z-index:9999;
-        background:rgba(0,0,0,.9);
-        display:flex;align-items:center;justify-content:center;
-        padding:2rem;backdrop-filter:blur(10px);
-    `;
-    modal.innerHTML = `
-        <div style="position:relative;max-width:90vw;max-height:90vh;">
-            <button onclick="closeRefImageModal()" style="position:absolute;top:-40px;right:0;background:none;border:none;color:#fff;font-size:1.5rem;cursor:pointer;">✕</button>
-            <img src="${imageUrl}" style="max-width:100%;max-height:85vh;object-fit:contain;border-radius:8px;">
-            <div style="margin-top:1rem;text-align:center;color:#fff;">
-                <p style="margin:0;font-size:.9rem;">摄影师: <a href="${photographerUrl}" target="_blank" style="color:var(--ac);text-decoration:none;">${photographer}</a></p>
-                <p style="margin:.5rem 0 0;font-size:.75rem;opacity:.7;">图片来自 Pexels - 免费商用</p>
-            </div>
-        </div>
-    `;
-    modal.onclick = (e) => { if (e.target === modal) closeRefImageModal(); };
-    document.body.appendChild(modal);
-    document.body.style.overflow = 'hidden';
-}
-
-// Close reference image modal
-function closeRefImageModal() {
-    const modal = document.getElementById('refImageModal');
-    if (modal) {
-        modal.remove();
-        document.body.style.overflow = '';
-    }
-}
-
-// Batch load all references for a plan
+// Batch load (API mode)
 async function loadAllPlanReferences(planId) {
+    const apiKey = getPexelsApiKey();
+    if (!apiKey) { toast('Please set Pexels API Key in settings first', 'er'); return; }
     const plans = sg(SK.P) || [];
     const plan = plans.find(p => p.id === planId);
     if (!plan) return;
-    
     const shotList = generateShotList(plan);
     const style = plan.input && plan.input.style || '复古';
-    
-    toast('正在批量加载参考图，请稍候...', 'i');
-    
+    toast('Loading references...', 'i');
     for (let i = 0; i < Math.min(shotList.length, 5); i++) {
-        const shot = shotList[i];
         const container = document.getElementById(`ref-images-${i}`);
-        if (container && !container.dataset.loaded) {
-            await loadShotReferences(i, style, encodeURIComponent(JSON.stringify(shot)));
-            await new Promise(r => setTimeout(r, 500)); // Rate limiting
+        if (container) {
+            await loadShotReferencesApi(i, style, encodeURIComponent(JSON.stringify(shotList[i])));
+            await new Promise(r => setTimeout(r, 500));
         }
     }
-    
-    toast('参考图加载完成', 'ok');
+    toast('Done', 'ok');
 }
 
 // ===== Init =====
