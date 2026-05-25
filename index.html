@@ -4911,11 +4911,16 @@ function renderPlanContent(plan) {
                     </table>
                 </div>
                 
-                <!-- 详细执行步骤 -->
+                <!-- 详细执行步骤 + 参考图库 -->
                 <div style="margin-top:1.5rem;padding:1rem;background:var(--bg2);border-radius:var(--radius-sm);">
-                    <h4 style="color:var(--ac);margin-bottom:.75rem;font-size:.9rem;">📋 详细执行步骤</h4>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;">
+                        <h4 style="color:var(--ac);margin:0;font-size:.9rem;">📋 详细执行步骤 & 参考图库</h4>
+                        <button class="btn btn-s btn-sm" onclick="loadAllPlanReferences('${plan.id}')">
+                            🔍 批量加载所有参考图
+                        </button>
+                    </div>
                     ${shotList.map((shot, i) => `
-                        <div style="margin-bottom:1rem;padding:.75rem;background:var(--bg);border-radius:var(--radius-sm);border-left:3px solid var(--ac);">
+                        <div style="margin-bottom:1.5rem;padding:.75rem;background:var(--bg);border-radius:var(--radius-sm);border-left:3px solid var(--ac);">
                             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">
                                 <span style="font-weight:600;color:var(--ac);">镜头 #${String(i + 1).padStart(2, '0')} - ${escHtml(shot.scene)}</span>
                                 <span style="font-size:.75rem;color:var(--t3);">${shot.focalLength} · ${shot.duration}min</span>
@@ -4925,6 +4930,15 @@ function renderPlanContent(plan) {
                                 <p><strong style="color:var(--t1);">执行要点：</strong>${escHtml(shot.notes)}</p>
                                 <p><strong style="color:var(--t1);">引导话术：</strong>"${getShotDirection(shot)}"</p>
                             </div>
+                            <!-- 分类标签 -->
+                            <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.5rem;">
+                                <span style="padding:.15rem .4rem;background:rgba(255,107,107,0.15);color:var(--ac);border-radius:4px;font-size:.7rem;">${plan.input && plan.input.style || '复古'}</span>
+                                <span style="padding:.15rem .4rem;background:rgba(78,205,196,0.15);color:#4ecdc4;border-radius:4px;font-size:.7rem;">${shot.focalLength.split(' ')[0]}</span>
+                                <span style="padding:.15rem .4rem;background:rgba(139,92,246,0.15);color:#8b5cf6;border-radius:4px;font-size:.7rem;">${shot.props !== '无' ? shot.props : '无道具'}</span>
+                                <span style="padding:.15rem .4rem;background:rgba(245,158,11,0.15);color:#f59e0b;border-radius:4px;font-size:.7rem;">${shot.mood}</span>
+                            </div>
+                            <!-- 参考图库 -->
+                            ${renderShotReferenceGallery(shot, plan.input && plan.input.style || '复古', i)}
                         </div>
                     `).join('')}
                 </div>
@@ -7164,6 +7178,456 @@ window.syncToFeishuBitable = async function() {
         console.error('Bitable sync error:', e);
     }
 };
+
+// ===== Reference Image API Integration =====
+
+// Pexels API Configuration
+const PEXELS_API_KEY = 'd7t2uGKKf6Vq5v9dXc3hJmNpQr4sTjWz'; // Demo key - users should replace with their own
+const PEXELS_API_URL = 'https://api.pexels.com/v1';
+
+// Reference Image Category Mapping System
+// Maps style + scene + props + focalLength to search queries
+const referenceCategoryMap = {
+    // 风格映射
+    styleKeywords: {
+        '时尚': ['fashion portrait', 'editorial fashion', 'high fashion', 'fashion magazine', 'couture'],
+        '复古': ['vintage portrait', 'retro photography', 'film noir', 'analog film', 'vintage aesthetic'],
+        '文艺': ['artistic portrait', 'fine art photography', 'poetic portrait', 'dreamy portrait', 'soft light portrait'],
+        '性感': ['sensual portrait', 'boudoir photography', 'intimate portrait', 'moody portrait', 'dramatic lighting'],
+        '古风': ['hanfu photography', 'traditional chinese', 'oriental portrait', 'classical beauty', 'ancient style'],
+        '婚纱': ['wedding portrait', 'bridal photography', 'wedding dress', 'romantic wedding', 'elegant bride'],
+        '街拍': ['street style', 'urban portrait', 'city fashion', 'street photography', 'casual chic'],
+        '运动': ['fitness portrait', 'athletic photography', 'sports portrait', 'action shot', 'dynamic pose'],
+        '情绪': ['emotional portrait', 'moody photography', 'expressive portrait', 'dramatic portrait', 'cinematic'],
+        '商业': ['corporate portrait', 'business headshot', 'professional photo', 'commercial photography', 'executive portrait'],
+        '鱼眼': ['fisheye portrait', 'creative fisheye', 'distorted perspective', 'ultra wide angle', 'artistic distortion']
+    },
+    
+    // 场景映射
+    sceneKeywords: {
+        '入口/门厅': ['doorway portrait', 'entrance hall', 'lobby photo'],
+        '主场景': ['studio portrait', 'indoor portrait', 'main scene'],
+        '沙发区': ['couch portrait', 'sofa pose', 'living room'],
+        '窗边': ['window light portrait', 'window seat', 'natural light window'],
+        '浴缸区': ['bathtub portrait', 'bathroom aesthetic', 'tub photo'],
+        '梳妆台': ['vanity portrait', 'dressing table', 'makeup mirror'],
+        '床铺区': ['bed portrait', 'bedroom photo', 'bed aesthetic'],
+        '书房': ['study portrait', 'library photo', 'bookshelf portrait'],
+        '天台': ['rooftop portrait', 'skyline portrait', 'rooftop view'],
+        '走廊': ['corridor portrait', 'hallway photo', 'passageway'],
+        '楼梯': ['staircase portrait', 'stairs pose', 'spiral stairs'],
+        '草地/户外': ['grass field portrait', 'outdoor nature', 'meadow photo'],
+        '树下': ['under tree portrait', 'tree shade', 'nature portrait'],
+        '小径': ['path portrait', 'trail photo', 'walking path'],
+        '湖边': ['lake portrait', 'waterside photo', 'lake reflection'],
+        '咖啡馆': ['cafe portrait', 'coffee shop', 'window cafe'],
+        '老建筑': ['old building portrait', 'architecture photo', 'historic building'],
+        '书店': ['bookstore portrait', 'library portrait', 'book lover'],
+        '竹林': ['bamboo forest', 'bamboo grove', 'asian garden'],
+        '庭院': ['courtyard portrait', 'garden portrait', 'traditional garden'],
+        '海边': ['beach portrait', 'seaside photo', 'ocean view'],
+        '废墟': ['abandoned place', 'ruins portrait', 'urban decay'],
+        '街角': ['street corner', 'urban street', 'city corner'],
+        '地铁口': ['subway entrance', 'metro station', 'urban transit'],
+        '市场': ['market portrait', 'bazaar photo', 'street market'],
+        '健身房': ['gym portrait', 'fitness center', 'workout photo'],
+        '办公室': ['office portrait', 'workplace photo', 'corporate setting'],
+        '会议室': ['conference room', 'meeting room', 'boardroom'],
+        '教堂': ['church portrait', 'cathedral photo', 'sacred space']
+    },
+    
+    // 道具映射
+    propsKeywords: {
+        '无': ['minimal portrait', 'clean background', 'simple composition'],
+        '天鹅绒沙发': ['velvet couch', 'luxury sofa', 'plush furniture'],
+        '精装书': ['book portrait', 'reading pose', 'book lover'],
+        '咖啡杯': ['coffee portrait', 'cafe aesthetic', 'coffee lover'],
+        '复古浴缸': ['vintage bathtub', 'clawfoot tub', 'classic bathroom'],
+        '香薰蜡烛': ['candlelight portrait', 'candle aesthetic', 'warm light'],
+        '象牙梳': ['vintage comb', 'antique brush', 'vanity items'],
+        '铜镜': ['antique mirror', 'vintage mirror', 'brass mirror'],
+        '亚麻床单': ['linen bedding', 'natural fabric', 'bed linen'],
+        '羽毛枕': ['feather pillow', 'soft bedding', 'cozy bed'],
+        '双反相机': ['vintage camera', 'twin lens reflex', 'retro camera'],
+        '皮箱': ['vintage suitcase', 'leather luggage', 'travel case'],
+        '铜烛台': ['brass candlestick', 'antique candelabra', 'vintage candle'],
+        '干花': ['dried flowers', 'preserved flowers', 'floral arrangement'],
+        '羽毛笔': ['quill pen', 'vintage writing', 'calligraphy'],
+        '信纸': ['letter writing', 'vintage stationery', 'love letter'],
+        '火漆': ['wax seal', 'sealing wax', 'vintage envelope'],
+        '留声机': ['gramophone', 'vintage record player', 'phonograph'],
+        '黑胶唱片': ['vinyl record', 'lp record', 'vintage music'],
+        '蕾丝窗帘': ['lace curtain', 'sheer curtain', 'window veil'],
+        '旋转拨号电话': ['rotary phone', 'vintage telephone', 'retro phone'],
+        '野餐篮': ['picnic basket', 'outdoor dining', 'picnic setup'],
+        '草帽': ['straw hat', 'summer hat', 'wide brim hat'],
+        '花束': ['flower bouquet', 'floral portrait', 'holding flowers'],
+        '眼镜': ['glasses portrait', 'eyewear photo', 'reading glasses'],
+        '油纸伞': ['oil paper umbrella', 'asian umbrella', 'parasol'],
+        '发簪': ['hairpin', 'hair ornament', 'traditional accessory'],
+        '团扇': ['round fan', 'chinese fan', 'silk fan'],
+        '古琴': ['guqin', 'chinese zither', 'traditional instrument'],
+        '竹笛': ['bamboo flute', 'chinese flute', 'dizi'],
+        '捧花': ['wedding bouquet', 'bridal flowers', 'flower arrangement'],
+        '头纱': ['wedding veil', 'bridal veil', 'tulle veil'],
+        '红酒杯': ['wine glass', 'red wine', 'elegant drinking'],
+        '咖啡': ['coffee cup', 'latte art', 'cafe culture'],
+        '水果': ['fruit portrait', 'fresh fruit', 'market produce'],
+        '毛巾': ['towel', 'fitness towel', 'gym accessory'],
+        '水壶': ['water bottle', 'sports bottle', 'hydration'],
+        '哑铃': ['dumbbell', 'weights', 'fitness equipment'],
+        '瑜伽垫': ['yoga mat', 'meditation', 'wellness'],
+        '泳镜': ['swim goggles', 'pool accessory', 'swimming'],
+        '篮球': ['basketball', 'sports ball', 'athletic'],
+        '网球拍': ['tennis racket', 'sports equipment', 'racquet'],
+        '笔记本': ['laptop', 'computer work', 'digital nomad'],
+        '文件': ['documents', 'business papers', 'work materials'],
+        '安全帽': ['hard hat', 'construction helmet', 'safety gear'],
+        '话筒': ['microphone', 'public speaking', 'presentation'],
+        '方向盘': ['steering wheel', 'car interior', 'driving'],
+        '镜子': ['mirror reflection', 'mirror selfie', 'looking glass'],
+        '白色床单': ['white sheets', 'crisp bedding', 'minimal bed'],
+        '薄纱窗帘': ['sheer curtain', 'transparent veil', 'soft fabric'],
+        '浴缸': ['bathtub', 'bath time', 'soaking tub'],
+        '玫瑰花瓣': ['rose petals', 'romantic bath', 'flower petals'],
+        '高脚凳': ['bar stool', 'high chair', 'counter seat'],
+        '镜子': ['mirror', 'reflection', 'vanity mirror'],
+        '楼梯': ['stairs', 'staircase', 'steps'],
+        '霓虹灯': ['neon lights', 'neon sign', 'neon glow'],
+        '烟花棒': ['sparklers', 'sparkler light', 'night sparkles'],
+        '雨伞': ['umbrella', 'rainy day', 'parasol'],
+        '酒杯': ['wine glass', 'drinking glass', 'glassware'],
+        '婚戒': ['wedding ring', 'engagement ring', 'ring closeup']
+    },
+    
+    // 焦距映射
+    focalLengthKeywords: {
+        '8mm f/3.5 全圆鱼眼': ['circular fisheye', 'extreme wide angle', 'spherical distortion'],
+        '9mm f/2.8 鱼眼': ['fisheye lens', 'ultra wide fisheye', '9mm fisheye'],
+        '15mm f/2.8 半鱼眼': ['semi fisheye', '15mm wide', 'wide angle portrait'],
+        '16mm f/2.8 超广角': ['16mm ultra wide', 'super wide angle', 'extreme wide'],
+        '20mm f/2.8': ['20mm wide angle', 'wide environmental', 'architectural portrait'],
+        '24mm f/1.4': ['24mm wide', 'environmental portrait', 'wide angle bokeh'],
+        '24mm f/2.8': ['24mm wide angle', 'street photography', 'wide portrait'],
+        '24-70mm @35mm': ['35mm zoom', 'standard zoom', 'versatile focal'],
+        '35mm f/1.4': ['35mm portrait', 'environmental portrait', 'storytelling lens'],
+        '35mm f/2': ['35mm wide', 'classic 35mm', 'documentary style'],
+        '50mm f/1.2': ['50mm portrait', 'low light portrait', 'bokeh master'],
+        '50mm f/1.4': ['50mm standard', 'nifty fifty', 'classic portrait'],
+        '50mm f/1.8': ['50mm nifty fifty', 'budget portrait', 'sharp 50mm'],
+        '70-200mm @135mm': ['135mm zoom', 'telephoto zoom', 'compressed portrait'],
+        '70-200mm @200mm': ['200mm zoom', 'long telephoto', 'compressed perspective'],
+        '85mm f/1.2': ['85mm portrait', 'creamy bokeh', 'portrait king'],
+        '85mm f/1.4': ['85mm portrait', 'professional portrait', 'bokehlicious'],
+        '85mm f/1.8': ['85mm portrait', 'affordable portrait', 'sharp 85mm'],
+        '105mm f/2.8 微距': ['105mm macro', 'macro portrait', 'detail photography'],
+        '100mm f/2.8 微距': ['100mm macro', 'macro lens', 'close up portrait'],
+        '135mm f/2': ['135mm portrait', 'telephoto portrait', 'compressed beauty'],
+        '135mm f/2.8': ['135mm telephoto', 'medium telephoto', 'portrait telephoto'],
+        '200mm f/2.8': ['200mm telephoto', 'long lens portrait', 'extreme compression'],
+        '24-70mm @50mm': ['standard zoom', '50mm equivalent', 'versatile portrait']
+    }
+};
+
+// Generate search queries for a shot based on its attributes
+function generateShotSearchQueries(shot, style) {
+    const queries = [];
+    const map = referenceCategoryMap;
+    
+    // Get keywords for each dimension
+    const styleKeywords = map.styleKeywords[style] || map.styleKeywords['复古'];
+    const sceneKeywords = map.sceneKeywords[shot.scene] || ['portrait'];
+    const propsKeywords = map.propsKeywords[shot.props] || ['portrait'];
+    const focalKeywords = map.focalLengthKeywords[shot.focalLength] || ['portrait photography'];
+    
+    // Generate combination queries (prioritize specific combinations)
+    // Query 1: Style + Scene (most important)
+    queries.push({
+        query: `${styleKeywords[0]} ${sceneKeywords[0]}`,
+        category: '风格+场景',
+        description: `${style}风格在${shot.scene}的典型拍摄`
+    });
+    
+    // Query 2: Style + Props
+    if (shot.props && shot.props !== '无') {
+        queries.push({
+            query: `${styleKeywords[1]} ${propsKeywords[0]}`,
+            category: '风格+道具',
+            description: `${style}风格使用${shot.props}的参考`
+        });
+    }
+    
+    // Query 3: Scene + Focal Length
+    queries.push({
+        query: `${sceneKeywords[0]} portrait ${shot.focalLength.split(' ')[0]}`,
+        category: '场景+焦距',
+        description: `${shot.scene}使用${shot.focalLength}的拍摄效果`
+    });
+    
+    // Query 4: Style + Mood
+    if (shot.mood) {
+        queries.push({
+            query: `${styleKeywords[2]} ${shot.mood} portrait`,
+            category: '风格+情绪',
+            description: `${style}风格${shot.mood}情绪的表达`
+        });
+    }
+    
+    // Query 5: Composition type
+    if (shot.composition) {
+        const compKeywords = shot.composition.includes('剪影') ? 'silhouette portrait' :
+                            shot.composition.includes('逆光') ? 'backlight portrait' :
+                            shot.composition.includes('框架') ? 'frame within frame' :
+                            shot.composition.includes('对称') ? 'symmetrical portrait' :
+                            shot.composition.includes('三分') ? 'rule of thirds portrait' :
+                            'portrait composition';
+        queries.push({
+            query: `${styleKeywords[0]} ${compKeywords}`,
+            category: '风格+构图',
+            description: `${style}风格的${shot.composition}构图参考`
+        });
+    }
+    
+    // Query 6: Lighting style
+    if (shot.lighting) {
+        const lightKeywords = shot.lighting.includes('自然光') ? 'natural light portrait' :
+                             shot.lighting.includes('逆光') ? 'backlit portrait' :
+                             shot.lighting.includes('侧光') ? 'side light portrait' :
+                             shot.lighting.includes('柔光') ? 'soft light portrait' :
+                             shot.lighting.includes('硬光') ? 'hard light portrait' :
+                             'portrait lighting';
+        queries.push({
+            query: `${lightKeywords} ${styleKeywords[0]}`,
+            category: '光线+风格',
+            description: `${shot.lighting}在${style}风格中的应用`
+        });
+    }
+    
+    return queries;
+}
+
+// Search Pexels API for reference images
+async function searchPexelsImages(query, perPage = 4) {
+    try {
+        const response = await fetch(`${PEXELS_API_URL}/search?query=${encodeURIComponent(query)}&per_page=${perPage}&orientation=all`, {
+            headers: {
+                'Authorization': PEXELS_API_KEY
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`API error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        return data.photos.map(photo => ({
+            id: photo.id,
+            url: photo.src.medium,
+            largeUrl: photo.src.large,
+            originalUrl: photo.src.original,
+            photographer: photo.photographer,
+            photographerUrl: photo.photographer_url,
+            width: photo.width,
+            height: photo.height,
+            avgColor: photo.avg_color,
+            source: 'pexels'
+        }));
+    } catch (error) {
+        console.error('Pexels search error:', error);
+        return [];
+    }
+}
+
+// Cache for reference images
+const referenceImageCache = {};
+
+// Get reference images for a shot with caching
+async function getShotReferenceImages(shot, style) {
+    const cacheKey = `${style}_${shot.scene}_${shot.props}_${shot.focalLength}`;
+    
+    if (referenceImageCache[cacheKey]) {
+        return referenceImageCache[cacheKey];
+    }
+    
+    const queries = generateShotSearchQueries(shot, style);
+    const results = [];
+    
+    // Search for each query (limit to first 3 to avoid rate limits)
+    for (const queryObj of queries.slice(0, 3)) {
+        const images = await searchPexelsImages(queryObj.query, 3);
+        if (images.length > 0) {
+            results.push({
+                category: queryObj.category,
+                description: queryObj.description,
+                query: queryObj.query,
+                images: images
+            });
+        }
+    }
+    
+    referenceImageCache[cacheKey] = results;
+    return results;
+}
+
+// Render reference images gallery for a shot
+function renderShotReferenceGallery(shot, style, shotIndex) {
+    const queries = generateShotSearchQueries(shot, style);
+    
+    return `
+        <div class="shot-reference-gallery" id="ref-gallery-${shotIndex}" style="margin-top:1rem;padding:1rem;background:var(--bg2);border-radius:var(--radius-sm);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;">
+                <h5 style="color:var(--ac);font-size:.85rem;margin:0;">📸 参考图库</h5>
+                <button class="btn btn-s btn-sm" onclick="loadShotReferences(${shotIndex}, '${style}', '${encodeURIComponent(JSON.stringify(shot).replace(/'/g, "&#39;"))}')">
+                    🔍 搜索参考图
+                </button>
+            </div>
+            <div class="ref-categories" style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.75rem;">
+                ${queries.map((q, i) => `
+                    <span class="ref-category-tag" style="padding:.25rem .5rem;background:var(--bg3);border-radius:4px;font-size:.75rem;color:var(--t2);cursor:pointer;"
+                          onclick="highlightRefCategory(${shotIndex}, ${i})" data-cat="${i}">
+                        ${q.category}
+                    </span>
+                `).join('')}
+            </div>
+            <div class="ref-images-container" id="ref-images-${shotIndex}" style="min-height:100px;display:flex;align-items:center;justify-content:center;color:var(--t3);font-size:.8rem;">
+                点击"搜索参考图"加载相关参考图片
+            </div>
+            <div class="ref-search-terms" style="margin-top:.5rem;font-size:.7rem;color:var(--t3);">
+                <strong>搜索词：</strong>${queries.map(q => q.query).join(' | ')}
+            </div>
+        </div>
+    `;
+}
+
+// Load reference images for a specific shot
+async function loadShotReferences(shotIndex, style, shotDataEncoded) {
+    const container = document.getElementById(`ref-images-${shotIndex}`);
+    const gallery = document.getElementById(`ref-gallery-${shotIndex}`);
+    
+    container.innerHTML = '<div class="spinner" style="width:30px;height:30px;"></div><p style="margin-left:.5rem;">搜索中...</p>';
+    container.style.display = 'flex';
+    
+    try {
+        const shot = JSON.parse(decodeURIComponent(shotDataEncoded));
+        const results = await getShotReferenceImages(shot, style);
+        
+        if (results.length === 0) {
+            container.innerHTML = '<p>未找到相关参考图，请稍后重试</p>';
+            return;
+        }
+        
+        container.innerHTML = results.map((result, catIndex) => `
+            <div class="ref-category-section" data-cat-index="${catIndex}" style="width:100%;margin-bottom:1rem;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">
+                    <span style="font-size:.75rem;color:var(--ac);font-weight:500;">${result.category}</span>
+                    <span style="font-size:.7rem;color:var(--t3);">${result.description}</span>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:.5rem;">
+                    ${result.images.map(img => `
+                        <div class="ref-image-item" style="position:relative;aspect-ratio:3/4;border-radius:8px;overflow:hidden;cursor:pointer;"
+                             onclick="openRefImageModal('${img.largeUrl}', '${img.photographer}', '${img.photographerUrl}')">
+                            <img src="${img.url}" alt="${result.category}" style="width:100%;height:100%;object-fit:cover;transition:transform .3s;"
+                                 onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                            <div style="position:absolute;bottom:0;left:0;right:0;padding:.25rem;background:linear-gradient(transparent,rgba(0,0,0,.7));font-size:.6rem;color:#fff;">
+                                ${img.photographer}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `).join('');
+        
+        // Mark gallery as loaded
+        gallery.dataset.loaded = 'true';
+        
+    } catch (error) {
+        console.error('Load references error:', error);
+        container.innerHTML = '<p>加载失败，请检查网络连接</p>';
+    }
+}
+
+// Highlight a specific reference category
+function highlightRefCategory(shotIndex, catIndex) {
+    const gallery = document.getElementById(`ref-gallery-${shotIndex}`);
+    const sections = gallery.querySelectorAll('.ref-category-section');
+    const tags = gallery.querySelectorAll('.ref-category-tag');
+    
+    tags.forEach((tag, i) => {
+        if (i === catIndex) {
+            tag.style.background = 'var(--ac)';
+            tag.style.color = '#fff';
+        } else {
+            tag.style.background = 'var(--bg3)';
+            tag.style.color = 'var(--t2)';
+        }
+    });
+    
+    sections.forEach((section, i) => {
+        if (i === catIndex) {
+            section.style.display = 'block';
+            section.style.opacity = '1';
+        } else {
+            section.style.opacity = '0.3';
+        }
+    });
+}
+
+// Open reference image modal
+function openRefImageModal(imageUrl, photographer, photographerUrl) {
+    const modal = document.createElement('div');
+    modal.id = 'refImageModal';
+    modal.style.cssText = `
+        position:fixed;inset:0;z-index:9999;
+        background:rgba(0,0,0,.9);
+        display:flex;align-items:center;justify-content:center;
+        padding:2rem;backdrop-filter:blur(10px);
+    `;
+    modal.innerHTML = `
+        <div style="position:relative;max-width:90vw;max-height:90vh;">
+            <button onclick="closeRefImageModal()" style="position:absolute;top:-40px;right:0;background:none;border:none;color:#fff;font-size:1.5rem;cursor:pointer;">✕</button>
+            <img src="${imageUrl}" style="max-width:100%;max-height:85vh;object-fit:contain;border-radius:8px;">
+            <div style="margin-top:1rem;text-align:center;color:#fff;">
+                <p style="margin:0;font-size:.9rem;">摄影师: <a href="${photographerUrl}" target="_blank" style="color:var(--ac);text-decoration:none;">${photographer}</a></p>
+                <p style="margin:.5rem 0 0;font-size:.75rem;opacity:.7;">图片来自 Pexels - 免费商用</p>
+            </div>
+        </div>
+    `;
+    modal.onclick = (e) => { if (e.target === modal) closeRefImageModal(); };
+    document.body.appendChild(modal);
+    document.body.style.overflow = 'hidden';
+}
+
+// Close reference image modal
+function closeRefImageModal() {
+    const modal = document.getElementById('refImageModal');
+    if (modal) {
+        modal.remove();
+        document.body.style.overflow = '';
+    }
+}
+
+// Batch load all references for a plan
+async function loadAllPlanReferences(planId) {
+    const plans = sg(SK.P) || [];
+    const plan = plans.find(p => p.id === planId);
+    if (!plan) return;
+    
+    const shotList = generateShotList(plan);
+    const style = plan.input && plan.input.style || '复古';
+    
+    toast('正在批量加载参考图，请稍候...', 'i');
+    
+    for (let i = 0; i < Math.min(shotList.length, 5); i++) {
+        const shot = shotList[i];
+        const container = document.getElementById(`ref-images-${i}`);
+        if (container && !container.dataset.loaded) {
+            await loadShotReferences(i, style, encodeURIComponent(JSON.stringify(shot)));
+            await new Promise(r => setTimeout(r, 500)); // Rate limiting
+        }
+    }
+    
+    toast('参考图加载完成', 'ok');
+}
 
 // ===== Init =====
 updateBadge();renderHistMini();renderQuickVenue();renderCalendar();renderSchedules();
