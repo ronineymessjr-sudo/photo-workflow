@@ -4975,57 +4975,118 @@ function generateShotList(plan) {
     else if (duration === '半天') shotCount = 15;
     else if (duration === '全天') shotCount = 20;
     
-    // 专业分镜模板 - 包含焦距、构图、灯光、道具等
+    // 专业分镜模板 - 包含完整焦距系列、构图、灯光、道具等
     const shotTemplates = {
         '时尚': [
-            { scene: '入口/门厅', description: '模特走进，回头望向镜头', shotSize: '全景', method: '跟拍+定格', focalLength: '35mm', composition: '中心构图，留白', lighting: '自然光+补光', props: '无', angle: '平视', mood: '自信', duration: 5, notes: '抓拍回头瞬间' },
-            { scene: '主场景', description: '站姿挺拔，双手叉腰，目光坚定', shotSize: '半身', method: '正面平拍', focalLength: '85mm', composition: '三分法，眼神在交叉点', lighting: '硬光，强调轮廓', props: '无', angle: '平视', mood: '强势', duration: 8, notes: '眼神要有力量感' },
-            { scene: '主场景', description: '侧身行走，自然回头', shotSize: '全身', method: '侧面跟拍', focalLength: '50mm', composition: '对角线构图', lighting: '侧逆光', props: '无', angle: '侧面', mood: '动感', duration: 6, notes: '行走节奏要自然' },
-            { scene: '靠墙区域', description: '倚靠墙面，一腿弯曲', shotSize: '半身', method: '45度侧拍', focalLength: '85mm', composition: '人物偏右，墙面纹理', lighting: '单侧硬光', props: '无', angle: '45度侧', mood: '酷感', duration: 8, notes: '身体线条要舒展' },
-            { scene: '高脚凳', description: '坐在高脚凳上，双腿交叉', shotSize: '中景', method: '低角度仰拍', focalLength: '50mm', composition: '对角线，腿延伸', lighting: '顶光+轮廓光', props: '高脚凳', angle: '仰拍', mood: '优雅', duration: 10, notes: '注意腿型线条' },
-            { scene: '主场景', description: '背对镜头，转身回眸', shotSize: '半身', method: '抓拍瞬间', focalLength: '85mm', composition: '背影+侧脸', lighting: '逆光轮廓', props: '无', angle: '背面转', mood: '神秘', duration: 5, notes: '抓拍转身瞬间' },
-            { scene: '窗边', description: '侧身站窗边，剪影效果', shotSize: '全身', method: '逆光拍摄', focalLength: '35mm', composition: '剪影构图', lighting: '纯逆光', props: '无', angle: '正面', mood: '艺术', duration: 8, notes: '曝光减1-2档' },
-            { scene: '主场景', description: '特写：眼神、手部、配饰', shotSize: '特写', method: '大光圈虚化', focalLength: '85mm f/1.4', composition: '填满画面', lighting: '柔光箱', props: '配饰', angle: '平视', mood: '精致', duration: 10, notes: '焦点在眼睛/产品' }
+            { scene: '入口/门厅', description: '模特走进，回头望向镜头', shotSize: '全景', method: '跟拍+定格', focalLength: '24mm f/2.8', composition: '中心构图，留白', lighting: '自然光+补光', props: '无', angle: '平视', mood: '自信', duration: 5, notes: '广角拉伸腿部线条，抓拍回头瞬间' },
+            { scene: '主场景', description: '站姿挺拔，双手叉腰，目光坚定', shotSize: '半身', method: '正面平拍', focalLength: '85mm f/1.4', composition: '三分法，眼神在交叉点', lighting: '硬光，强调轮廓', props: '无', angle: '平视', mood: '强势', duration: 8, notes: '85mm压缩背景，眼神要有力量感' },
+            { scene: '主场景', description: '侧身行走，自然回头', shotSize: '全身', method: '侧面跟拍', focalLength: '50mm f/1.8', composition: '对角线构图', lighting: '侧逆光', props: '无', angle: '侧面', mood: '动感', duration: 6, notes: '50mm接近人眼视角，行走节奏要自然' },
+            { scene: '靠墙区域', description: '倚靠墙面，一腿弯曲', shotSize: '半身', method: '45度侧拍', focalLength: '135mm f/2', composition: '人物偏右，墙面纹理', lighting: '单侧硬光', props: '无', angle: '45度侧', mood: '酷感', duration: 8, notes: '135mm强烈压缩感，身体线条要舒展' },
+            { scene: '高脚凳', description: '坐在高脚凳上，双腿交叉', shotSize: '中景', method: '低角度仰拍', focalLength: '50mm f/1.4', composition: '对角线，腿延伸', lighting: '顶光+轮廓光', props: '高脚凳', angle: '仰拍', mood: '优雅', duration: 10, notes: '低角度显腿长，注意腿型线条' },
+            { scene: '主场景', description: '背对镜头，转身回眸', shotSize: '半身', method: '抓拍瞬间', focalLength: '105mm f/2.8', composition: '背影+侧脸', lighting: '逆光轮廓', props: '无', angle: '背面转', mood: '神秘', duration: 5, notes: '105mm中长焦抓拍转身瞬间' },
+            { scene: '窗边', description: '侧身站窗边，剪影效果', shotSize: '全身', method: '逆光拍摄', focalLength: '35mm f/1.4', composition: '剪影构图', lighting: '纯逆光', props: '无', angle: '正面', mood: '艺术', duration: 8, notes: '35mm交代环境，曝光减1-2档' },
+            { scene: '主场景', description: '特写：眼神、手部、配饰', shotSize: '特写', method: '大光圈虚化', focalLength: '85mm f/1.2', composition: '填满画面', lighting: '柔光箱', props: '配饰', angle: '平视', mood: '精致', duration: 10, notes: '85mm f/1.2极致虚化，焦点在眼睛/产品' },
+            { scene: '楼梯', description: '走下楼梯，裙摆飘动', shotSize: '全身', method: '仰拍', focalLength: '20mm f/2.8', composition: '对角线引导', lighting: '顶光', props: '楼梯', angle: '仰拍', mood: '大气', duration: 8, notes: '20mm超广角夸张透视' },
+            { scene: '走廊', description: '走廊尽头走来，长焦压缩', shotSize: '全身', method: '正面拍摄', focalLength: '200mm f/2.8', composition: '中心对称', lighting: '侧光', props: '无', angle: '正面', mood: '压迫感', duration: 7, notes: '200mm长焦压缩空间' },
+            { scene: '镜子前', description: '对镜自拍姿势', shotSize: '半身', method: '侧面拍摄', focalLength: '35mm f/1.4', composition: '镜中镜', lighting: '环形光', props: '镜子', angle: '侧面', mood: '自信', duration: 8, notes: '35mm避免畸变' },
+            { scene: '天台', description: '天台边缘，城市背景', shotSize: '全身', method: '平视', focalLength: '24-70mm @35mm', composition: '三分法', lighting: '自然光', props: '无', angle: '平视', mood: '自由', duration: 10, notes: '变焦方便构图' }
         ],
         '复古': [
-            { scene: '沙发区', description: '慵懒倚靠沙发，望向窗外', shotSize: '半身', method: '侧面平拍', focalLength: '50mm', composition: '人物偏左，窗外留白', lighting: '窗户自然光', props: '老式沙发', angle: '侧面', mood: '慵懒', duration: 10, notes: '眼神要有故事感' },
-            { scene: '窗边', description: '侧坐窗边，手持书籍', shotSize: '中景', method: '自然光侧拍', focalLength: '35mm', composition: '窗框做前景', lighting: '窗户柔光', props: '老式书籍', angle: '45度侧', mood: '文艺', duration: 8, notes: '书页要有质感' },
-            { scene: '浴缸区', description: '躺在浴缸边缘，若有所思', shotSize: '半身', method: '俯拍', focalLength: '50mm', composition: '对角线，身体延伸', lighting: '暖色烛光', props: '浴缸、蜡烛', angle: '俯拍', mood: '私密', duration: 12, notes: '注意水光反射' },
-            { scene: '梳妆台', description: '手持老式梳子，眼神朦胧', shotSize: '特写', method: '镜面反射', focalLength: '85mm', composition: '镜中人物', lighting: '暖色台灯', props: '老式梳子、镜子', angle: '镜面', mood: '怀旧', duration: 8, notes: '可拍镜中反射' },
-            { scene: '床铺区', description: '俯身床铺，床单半遮', shotSize: '中景', method: '高角度俯拍', focalLength: '35mm', composition: '对角线，床单褶皱', lighting: '暖色柔光', props: '白色床单', angle: '俯拍', mood: '暧昧', duration: 10, notes: '注意肌肤质感' },
-            { scene: '复古家具旁', description: '站立，手持老式相机', shotSize: '全身', method: '环境人像', focalLength: '35mm', composition: '人物居中，环境交代', lighting: '窗户侧光', props: '老式相机', angle: '平视', mood: '复古', duration: 8, notes: '相机做道具' },
-            { scene: '门框', description: '倚靠门框，手指轻触锁骨', shotSize: '半身', method: '45度侧拍', focalLength: '85mm', composition: '门框做框', lighting: '侧光+反光板', props: '无', angle: '45度侧', mood: '性感', duration: 8, notes: '手指动作要自然' },
-            { scene: '壁炉旁', description: '手持烛台，光影塑造', shotSize: '中景', method: '暖光氛围', focalLength: '50mm', composition: '明暗对比', lighting: '烛光主光', props: '烛台', angle: '侧面', mood: '神秘', duration: 10, notes: '利用光影塑造立体感' }
+            { scene: '沙发区', description: '慵懒倚靠沙发，望向窗外', shotSize: '半身', method: '侧面平拍', focalLength: '50mm f/1.4', composition: '人物偏左，窗外留白', lighting: '窗户自然光', props: '天鹅绒沙发', angle: '侧面', mood: '慵懒', duration: 10, notes: '50mm标准镜头，眼神要有故事感' },
+            { scene: '窗边', description: '侧坐窗边，手持书籍', shotSize: '中景', method: '自然光侧拍', focalLength: '35mm f/2', composition: '窗框做前景', lighting: '窗户柔光', props: '精装书、咖啡杯', angle: '45度侧', mood: '文艺', duration: 8, notes: '35mm交代环境，书页要有质感' },
+            { scene: '浴缸区', description: '躺在浴缸边缘，若有所思', shotSize: '半身', method: '俯拍', focalLength: '50mm f/1.8', composition: '对角线，身体延伸', lighting: '暖色烛光', props: '复古浴缸、香薰蜡烛', angle: '俯拍', mood: '私密', duration: 12, notes: '50mm避免畸变，注意水光反射' },
+            { scene: '梳妆台', description: '手持老式梳子，眼神朦胧', shotSize: '特写', method: '镜面反射', focalLength: '85mm f/1.8', composition: '镜中人物', lighting: '暖色台灯', props: '象牙梳、铜镜', angle: '镜面', mood: '怀旧', duration: 8, notes: '85mm虚化背景，可拍镜中反射' },
+            { scene: '床铺区', description: '俯身床铺，床单半遮', shotSize: '中景', method: '高角度俯拍', focalLength: '35mm f/1.4', composition: '对角线，床单褶皱', lighting: '暖色柔光', props: '亚麻床单、羽毛枕', angle: '俯拍', mood: '暧昧', duration: 10, notes: '35mm俯拍显脸小，注意肌肤质感' },
+            { scene: '复古家具旁', description: '站立，手持老式相机', shotSize: '全身', method: '环境人像', focalLength: '24mm f/2.8', composition: '人物居中，环境交代', lighting: '窗户侧光', props: '双反相机、皮箱', angle: '平视', mood: '复古', duration: 8, notes: '24mm广角交代环境，相机做道具' },
+            { scene: '门框', description: '倚靠门框，手指轻触锁骨', shotSize: '半身', method: '45度侧拍', focalLength: '85mm f/1.4', composition: '门框做框', lighting: '侧光+反光板', props: '无', angle: '45度侧', mood: '性感', duration: 8, notes: '85mm压缩空间，手指动作要自然' },
+            { scene: '壁炉旁', description: '手持烛台，光影塑造', shotSize: '中景', method: '暖光氛围', focalLength: '50mm f/1.2', composition: '明暗对比', lighting: '烛光主光', props: '铜烛台、干花', angle: '侧面', mood: '神秘', duration: 10, notes: '50mm大光圈，利用光影塑造立体感' },
+            { scene: '书房', description: '写字台前写信', shotSize: '中景', method: '侧面', focalLength: '50mm f/1.8', composition: 'L型构图', lighting: '台灯暖光', props: '羽毛笔、信纸、火漆', angle: '侧面', mood: '怀旧', duration: 12, notes: '50mm自然视角' },
+            { scene: '留声机旁', description: '手摇留声机，音乐中', shotSize: '全身', method: '环境人像', focalLength: '35mm f/2', composition: '黄金分割', lighting: '侧逆光', props: '留声机、黑胶唱片', angle: '45度侧', mood: '优雅', duration: 10, notes: '35mm交代复古环境' },
+            { scene: '窗帘旁', description: '拉开蕾丝窗帘', shotSize: '半身', method: '逆光', focalLength: '85mm f/1.8', composition: '框架构图', lighting: '窗户逆光', props: '蕾丝窗帘', angle: '背面', mood: '朦胧', duration: 8, notes: '85mm虚化窗帘' },
+            { scene: '老式电话旁', description: '手持听筒，等待接听', shotSize: '特写', method: '侧面', focalLength: '105mm f/2.8', composition: '特写', lighting: '暖光', props: '旋转拨号电话', angle: '侧面', mood: '期待', duration: 8, notes: '105mm微距质感' }
         ],
         '文艺': [
-            { scene: '草地/户外', description: '坐在草地上，抱膝望向远方', shotSize: '全景', method: '自然光', focalLength: '35mm', composition: '人物偏右，天空留白', lighting: '傍晚逆光', props: '无', angle: '侧面', mood: '清新', duration: 10, notes: '逆光发丝发光' },
-            { scene: '树下', description: '站在树下，阳光透过树叶', shotSize: '半身', method: '逆光拍摄', focalLength: '50mm', composition: '树叶做前景', lighting: '斑驳阳光', props: '无', angle: '仰拍', mood: '梦幻', duration: 8, notes: '光斑在脸上' },
-            { scene: '小径', description: '漫步小径，自然回头', shotSize: '全身', method: '跟拍', focalLength: '35mm', composition: '小径延伸', lighting: '自然光', props: '无', angle: '背面转', mood: '自然', duration: 6, notes: '抓拍回头瞬间' },
-            { scene: '墙边', description: '靠在墙边，若有所思', shotSize: '中景', method: '侧面平拍', focalLength: '85mm', composition: '墙面纹理背景', lighting: '侧光', props: '无', angle: '侧面', mood: '沉思', duration: 8, notes: '眼神要有故事' },
-            { scene: '阅读区', description: '手持书本，低头阅读', shotSize: '特写', method: '大光圈', focalLength: '85mm f/1.8', composition: '书本+手+脸', lighting: '窗户柔光', props: '书本', angle: '俯拍', mood: '安静', duration: 10, notes: '焦点在眼睛' },
-            { scene: '花丛', description: '手持花束，低头闻香', shotSize: '半身', method: '柔光拍摄', focalLength: '50mm', composition: '花朵做前景', lighting: '柔光', props: '花束', angle: '侧面', mood: '浪漫', duration: 8, notes: '花朵颜色搭配服装' },
-            { scene: '窗边', description: '坐在窗边，望向窗外', shotSize: '中景', method: '自然侧光', focalLength: '35mm', composition: '窗框构图', lighting: '窗户侧光', props: '无', angle: '侧面', mood: '思念', duration: 8, notes: '侧光塑造轮廓' },
-            { scene: '户外', description: '背影，走向远方', shotSize: '全景', method: '远景拍摄', focalLength: '35mm', composition: '背影+远方', lighting: '夕阳', props: '无', angle: '背面', mood: '诗意', duration: 6, notes: '剪影效果' }
+            { scene: '草地/户外', description: '坐在草地上，抱膝望向远方', shotSize: '全景', method: '自然光', focalLength: '35mm f/1.4', composition: '人物偏右，天空留白', lighting: '傍晚逆光', props: '野餐篮、草帽', angle: '侧面', mood: '清新', duration: 10, notes: '35mm交代环境，逆光发丝发光' },
+            { scene: '树下', description: '站在树下，阳光透过树叶', shotSize: '半身', method: '逆光拍摄', focalLength: '50mm f/1.8', composition: '树叶做前景', lighting: '斑驳阳光', props: '无', angle: '仰拍', mood: '梦幻', duration: 8, notes: '50mm标准镜头，光斑在脸上' },
+            { scene: '小径', description: '漫步小径，自然回头', shotSize: '全身', method: '跟拍', focalLength: '85mm f/1.8', composition: '小径延伸', lighting: '自然光', props: '无', angle: '背面转', mood: '自然', duration: 6, notes: '85mm压缩背景，抓拍回头瞬间' },
+            { scene: '墙边', description: '靠在墙边，若有所思', shotSize: '中景', method: '侧面平拍', focalLength: '135mm f/2', composition: '墙面纹理背景', lighting: '侧光', props: '无', angle: '侧面', mood: '沉思', duration: 8, notes: '135mm长焦虚化墙面，眼神要有故事' },
+            { scene: '阅读区', description: '手持书本，低头阅读', shotSize: '特写', method: '大光圈', focalLength: '85mm f/1.4', composition: '书本+手+脸', lighting: '窗户柔光', props: '精装书、眼镜', angle: '俯拍', mood: '安静', duration: 10, notes: '85mm f/1.4极致虚化，焦点在眼睛' },
+            { scene: '花丛', description: '手持花束，低头闻香', shotSize: '半身', method: '柔光拍摄', focalLength: '50mm f/1.4', composition: '花朵做前景', lighting: '柔光', props: '花束', angle: '侧面', mood: '浪漫', duration: 8, notes: '50mm标准镜头，花朵颜色搭配服装' },
+            { scene: '湖边', description: '坐在湖边石头上，望向水面', shotSize: '全景', method: '远景拍摄', focalLength: '35mm f/1.4', composition: '湖水平静倒影', lighting: '傍晚侧光', props: '无', angle: '侧面', mood: '宁静', duration: 10, notes: '35mm交代环境，利用倒影' },
+            { scene: '咖啡馆', description: '坐在窗边，手托腮望向窗外', shotSize: '中景', method: '侧面拍摄', focalLength: '50mm f/1.8', composition: '窗框构图', lighting: '窗户柔光', props: '咖啡杯', angle: '侧面', mood: '慵懒', duration: 8, notes: '50mm自然视角，眼神要有情绪' },
+            { scene: '老建筑', description: '站在拱门下，仰望天空', shotSize: '全身', method: '仰拍', focalLength: '24mm f/2.8', composition: '拱门框架', lighting: '逆光', props: '无', angle: '仰拍', mood: '向往', duration: 8, notes: '24mm广角夸张拱门' },
+            { scene: '书店', description: '书架前挑选书籍', shotSize: '中景', method: '侧面', focalLength: '35mm f/2', composition: '书架延伸', lighting: '室内灯光', props: '书本', angle: '侧面', mood: '知性', duration: 10, notes: '35mm交代书架环境' },
+            { scene: '楼梯', description: '走下旋转楼梯', shotSize: '全身', method: '俯拍', focalLength: '24-70mm @50mm', composition: '螺旋引导线', lighting: '顶光', props: '无', angle: '俯拍', mood: '优雅', duration: 8, notes: '变焦抓拍动态' }
         ],
         '性感': [
-            { scene: '床铺', description: '躺在丝绸床单上，眼神迷离', shotSize: '中景', method: '俯拍', focalLength: '50mm', composition: '对角线，丝绸褶皱', lighting: '暖色柔光', props: '丝绸床单', angle: '俯拍', mood: '诱惑', duration: 10, notes: '注意肌肤质感' },
-            { scene: '门框', description: '倚靠门框，手指轻触锁骨', shotSize: '半身', method: '侧面拍摄', focalLength: '85mm', composition: '门框做框', lighting: '侧逆光', props: '无', angle: '侧面', mood: '暧昧', duration: 8, notes: '手指动作要慢' },
-            { scene: '沙发', description: '侧卧沙发，曲线展现', shotSize: '全身', method: '侧面拍摄', focalLength: '50mm', composition: 'S型曲线', lighting: '柔光', props: '沙发', angle: '侧面', mood: '性感', duration: 12, notes: '注意身体曲线' },
-            { scene: '窗边', description: '站在窗前，剪影效果', shotSize: '全身', method: '逆光拍摄', focalLength: '35mm', composition: '剪影构图', lighting: '纯逆光', props: '无', angle: '正面', mood: '神秘', duration: 8, notes: '曝光减2档' },
-            { scene: '浴缸', description: '坐在浴缸边，水珠滑落', shotSize: '半身', method: '侧面拍摄', focalLength: '85mm', composition: '水珠特写', lighting: '暖色柔光', props: '浴缸', angle: '侧面', mood: '私密', duration: 10, notes: '水珠要有质感' }
+            { scene: '床铺', description: '躺在丝绸床单上，眼神迷离', shotSize: '中景', method: '俯拍', focalLength: '50mm f/1.4', composition: '对角线，丝绸褶皱', lighting: '暖色柔光', props: '丝绸床单', angle: '俯拍', mood: '诱惑', duration: 10, notes: '50mm避免畸变，注意肌肤质感' },
+            { scene: '门框', description: '倚靠门框，手指轻触锁骨', shotSize: '半身', method: '侧面拍摄', focalLength: '85mm f/1.4', composition: '门框做框', lighting: '侧逆光', props: '无', angle: '侧面', mood: '暧昧', duration: 8, notes: '85mm压缩空间，手指动作要慢' },
+            { scene: '沙发', description: '侧卧沙发，曲线展现', shotSize: '全身', method: '侧面拍摄', focalLength: '50mm f/1.4', composition: 'S型曲线', lighting: '柔光', props: '沙发', angle: '侧面', mood: '性感', duration: 12, notes: '50mm标准镜头，注意身体曲线' },
+            { scene: '窗边', description: '站在窗前，剪影效果', shotSize: '全身', method: '逆光拍摄', focalLength: '35mm f/1.4', composition: '剪影构图', lighting: '纯逆光', props: '薄纱窗帘', angle: '正面', mood: '神秘', duration: 8, notes: '35mm交代环境，曝光减2档' },
+            { scene: '浴缸', description: '坐在浴缸边，水珠滑落', shotSize: '半身', method: '侧面拍摄', focalLength: '85mm f/1.8', composition: '水珠特写', lighting: '暖色柔光', props: '浴缸、玫瑰花瓣', angle: '侧面', mood: '私密', duration: 10, notes: '85mm虚化背景，水珠要有质感' },
+            { scene: '落地窗前', description: '站在落地窗前，城市夜景', shotSize: '全身', method: '夜景拍摄', focalLength: '50mm f/1.2', composition: '人物+城市光斑', lighting: '城市灯光', props: '红酒杯', angle: '背面', mood: '孤独', duration: 10, notes: '50mm大光圈，大光圈虚化城市灯光' },
+            { scene: '镜子前', description: '对镜整理头发', shotSize: '半身', method: '侧面', focalLength: '85mm f/1.4', composition: '镜中人物', lighting: '环形灯', props: '镜子', angle: '侧面', mood: '自信', duration: 8, notes: '85mm虚化镜面反光' },
+            { scene: '白色床单', description: '白色床单半遮身体', shotSize: '中景', method: '俯拍', focalLength: '35mm f/1.4', composition: '对角线', lighting: '柔光', props: '白色床单', angle: '俯拍', mood: '纯洁', duration: 10, notes: '35mm俯拍显脸小' }
         ],
         '古风': [
-            { scene: '庭院', description: '手持团扇，半遮面', shotSize: '半身', method: '侧面拍摄', focalLength: '85mm', composition: '团扇做前景', lighting: '自然柔光', props: '团扇', angle: '侧面', mood: '古典', duration: 10, notes: '扇子遮面若隐若现' },
-            { scene: '古建筑', description: '站在古建筑前', shotSize: '全身', method: '环境人像', focalLength: '35mm', composition: '建筑对称', lighting: '晨光/夕阳', props: '无', angle: '正面', mood: '典雅', duration: 8, notes: '建筑要完整' },
-            { scene: '石阶', description: '坐在石阶上，裙摆铺开', shotSize: '全身', method: '俯拍', focalLength: '35mm', composition: '裙摆延伸', lighting: '自然光', props: '汉服', angle: '俯拍', mood: '飘逸', duration: 12, notes: '裙摆要有层次' },
-            { scene: '花丛', description: '手持花枝，低头闻香', shotSize: '半身', method: '侧面拍摄', focalLength: '50mm', composition: '花朵前景', lighting: '柔光', props: '花枝', angle: '侧面', mood: '唯美', duration: 8, notes: '花枝颜色搭配服装' },
-            { scene: '桥上', description: '站在桥上，望向水面', shotSize: '全身', method: '远景拍摄', focalLength: '35mm', composition: '桥+水+人', lighting: '夕阳', props: '无', angle: '侧面', mood: '诗意', duration: 10, notes: '倒影效果' }
+            { scene: '庭院', description: '手持团扇，半遮面', shotSize: '半身', method: '侧面拍摄', focalLength: '85mm f/1.8', composition: '团扇做前景', lighting: '自然柔光', props: '团扇、发簪', angle: '侧面', mood: '古典', duration: 10, notes: '85mm虚化背景，扇子遮面若隐若现' },
+            { scene: '古建筑', description: '站在古建筑前', shotSize: '全身', method: '环境人像', focalLength: '24mm f/2.8', composition: '建筑对称', lighting: '晨光/夕阳', props: '无', angle: '正面', mood: '典雅', duration: 8, notes: '24mm广角交代建筑全貌' },
+            { scene: '石阶', description: '坐在石阶上，裙摆铺开', shotSize: '全身', method: '俯拍', focalLength: '35mm f/2', composition: '裙摆延伸', lighting: '自然光', props: '汉服、油纸伞', angle: '俯拍', mood: '飘逸', duration: 12, notes: '35mm俯拍，裙摆要有层次' },
+            { scene: '花丛', description: '手持花枝，低头闻香', shotSize: '半身', method: '侧面拍摄', focalLength: '50mm f/1.4', composition: '花朵前景', lighting: '柔光', props: '花枝', angle: '侧面', mood: '唯美', duration: 8, notes: '50mm标准镜头，花枝颜色搭配服装' },
+            { scene: '桥上', description: '站在桥上，望向水面', shotSize: '全身', method: '远景拍摄', focalLength: '85mm f/2', composition: '桥+水+人', lighting: '夕阳', props: '无', angle: '侧面', mood: '诗意', duration: 10, notes: '85mm压缩空间，倒影效果' },
+            { scene: '竹林', description: '竹林中漫步', shotSize: '全身', method: '侧面', focalLength: '35mm f/1.4', composition: '竹林引导线', lighting: '斑驳阳光', props: '竹笛', angle: '侧面', mood: '清幽', duration: 10, notes: '35mm交代竹林环境' },
+            { scene: '亭子', description: '亭中抚琴', shotSize: '中景', method: '侧面', focalLength: '50mm f/1.8', composition: '亭柱框架', lighting: '柔光', props: '古琴', angle: '侧面', mood: '雅致', duration: 12, notes: '50mm自然视角' },
+            { scene: '回廊', description: '回廊中回眸', shotSize: '全身', method: '侧面', focalLength: '85mm f/1.8', composition: '回廊延伸', lighting: '侧光', props: '无', angle: '背面转', mood: '温婉', duration: 8, notes: '85mm压缩回廊空间' }
         ],
         '婚纱': [
-            { scene: '教堂门口', description: '手捧花束，微笑', shotSize: '全身', method: '正面拍摄', focalLength: '50mm', composition: '对称构图', lighting: '自然光', props: '花束', angle: '正面', mood: '幸福', duration: 10, notes: '裙摆要完整' },
-            { scene: '窗边', description: '坐在窗边，侧身', shotSize: '中景', method: '侧面拍摄', focalLength: '85mm', composition: '窗框构图', lighting: '柔光', props: '头纱', angle: '侧面', mood: '浪漫', duration: 8, notes: '头纱要有质感' },
-            { scene: '户外', description: '裙摆飘扬', shotSize: '全身', method: '抓拍', focalLength: '35mm', composition: '动态构图', lighting: '夕阳', props: '婚纱', angle: '侧面', mood: '梦幻', duration: 6, notes: '抓拍裙摆飘起' },
-            { scene: '教堂', description: '与新郎对视', shotSize: '中景', method: '侧面拍摄', focalLength: '50mm', composition: '双人构图', lighting: '教堂光线', props: '无', angle: '侧面', mood: '甜蜜', duration: 10, notes: '眼神要有爱意' }
+            { scene: '教堂门口', description: '手捧花束，微笑', shotSize: '全身', method: '正面拍摄', focalLength: '50mm f/1.4', composition: '对称构图', lighting: '自然光', props: '捧花、头纱', angle: '正面', mood: '幸福', duration: 10, notes: '50mm标准镜头，裙摆要完整' },
+            { scene: '窗边', description: '坐在窗边，侧身', shotSize: '中景', method: '侧面拍摄', focalLength: '85mm f/1.8', composition: '窗框构图', lighting: '柔光', props: '头纱', angle: '侧面', mood: '浪漫', duration: 8, notes: '85mm虚化背景，头纱要有质感' },
+            { scene: '户外草坪', description: '裙摆飘扬', shotSize: '全身', method: '抓拍', focalLength: '35mm f/1.4', composition: '动态构图', lighting: '夕阳', props: '婚纱', angle: '侧面', mood: '梦幻', duration: 6, notes: '35mm交代环境，抓拍裙摆飘起' },
+            { scene: '教堂内', description: '与新郎对视', shotSize: '中景', method: '侧面拍摄', focalLength: '50mm f/1.4', composition: '双人构图', lighting: '教堂光线', props: '无', angle: '侧面', mood: '甜蜜', duration: 10, notes: '50mm自然视角，眼神要有爱意' },
+            { scene: '海边', description: '海边漫步，裙摆拖尾', shotSize: '全身', method: '侧面', focalLength: '24mm f/2.8', composition: '海天一线', lighting: '夕阳逆光', props: '无', angle: '侧面', mood: '浪漫', duration: 10, notes: '24mm广角交代海景' },
+            { scene: '楼梯', description: '走下楼梯，裙摆展开', shotSize: '全身', method: '俯拍', focalLength: '35mm f/2', composition: '螺旋楼梯', lighting: '室内灯光', props: '无', angle: '俯拍', mood: '优雅', duration: 8, notes: '35mm俯拍显裙摆' },
+            { scene: '花园', description: '花丛中微笑', shotSize: '半身', method: '正面', focalLength: '85mm f/1.4', composition: '花朵前景', lighting: '柔光', props: '捧花', angle: '正面', mood: '甜美', duration: 8, notes: '85mm虚化花朵前景' },
+            { scene: '夜景', description: '夜景烟花', shotSize: '全身', method: '长曝光', focalLength: '35mm f/1.4', composition: '人物+烟花', lighting: '烟花光', props: '烟花棒', angle: '背面', mood: '梦幻', duration: 15, notes: '35mm交代烟花全景' }
+        ],
+        '街拍': [
+            { scene: '街角', description: '街角等红绿灯', shotSize: '全身', method: '抓拍', focalLength: '35mm f/2', composition: '街景延伸', lighting: '自然光', props: '咖啡杯', angle: '侧面', mood: '随性', duration: 5, notes: '35mm交代街景' },
+            { scene: '地铁口', description: '走出地铁站', shotSize: '中景', method: '抓拍', focalLength: '50mm f/1.8', composition: '动态模糊', lighting: '自然光', props: '无', angle: '正面', mood: '都市', duration: 6, notes: '50mm抓拍动态' },
+            { scene: '咖啡馆外', description: '坐在户外座位', shotSize: '全身', method: '侧面', focalLength: '85mm f/1.8', composition: '街道背景', lighting: '自然光', props: '咖啡', angle: '侧面', mood: '悠闲', duration: 8, notes: '85mm虚化街道' },
+            { scene: '斑马线', description: '走过斑马线', shotSize: '全身', method: '抓拍', focalLength: '24mm f/2.8', composition: '线条引导', lighting: '自然光', props: '无', angle: '侧面', mood: '动感', duration: 5, notes: '24mm广角夸张透视' },
+            { scene: '建筑前', description: '倚靠现代建筑', shotSize: '全身', method: '仰拍', focalLength: '20mm f/2.8', composition: '建筑线条', lighting: '侧光', props: '无', angle: '仰拍', mood: '酷感', duration: 8, notes: '20mm超广角夸张建筑' },
+            { scene: '市场', description: '市场中挑选水果', shotSize: '中景', method: '抓拍', focalLength: '35mm f/1.4', composition: '市场环境', lighting: '自然光', props: '水果', angle: '侧面', mood: '生活', duration: 8, notes: '35mm交代市场环境' },
+            { scene: '天桥', description: '天桥上俯瞰', shotSize: '全身', method: '俯拍', focalLength: '50mm f/1.4', composition: '城市背景', lighting: '夕阳', props: '无', angle: '背面', mood: '思考', duration: 8, notes: '50mm压缩城市背景' },
+            { scene: '小巷', description: '小巷中行走', shotSize: '全身', method: '侧面', focalLength: '35mm f/2', composition: '小巷延伸', lighting: '侧光', props: '无', angle: '背面', mood: '神秘', duration: 6, notes: '35mm交代小巷环境' }
+        ],
+        '运动': [
+            { scene: '跑道', description: '起跑姿势', shotSize: '全身', method: '低角度', focalLength: '24mm f/2.8', composition: '跑道引导线', lighting: '自然光', props: '无', angle: '仰拍', mood: '力量', duration: 5, notes: '24mm广角显力量感' },
+            { scene: '跑道', description: '奔跑中', shotSize: '全身', method: '追焦', focalLength: '70-200mm @135mm', composition: '动态模糊', lighting: '自然光', props: '无', angle: '侧面', mood: '速度', duration: 6, notes: '长焦追焦效果' },
+            { scene: '健身房', description: '举重', shotSize: '半身', method: '正面', focalLength: '50mm f/1.4', composition: '对称构图', lighting: '健身房灯光', props: '哑铃', angle: '正面', mood: '力量', duration: 8, notes: '50mm标准镜头' },
+            { scene: '瑜伽垫', description: '瑜伽动作', shotSize: '全身', method: '侧面', focalLength: '85mm f/1.8', composition: '线条展示', lighting: '柔光', props: '瑜伽垫', angle: '侧面', mood: '柔韧', duration: 10, notes: '85mm压缩背景' },
+            { scene: '游泳池', description: '泳池边', shotSize: '全身', method: '侧面', focalLength: '35mm f/1.4', composition: '水面倒影', lighting: '自然光', props: '泳镜', angle: '侧面', mood: '清爽', duration: 8, notes: '35mm交代泳池环境' },
+            { scene: '篮球场', description: '投篮', shotSize: '全身', method: '仰拍', focalLength: '24mm f/2.8', composition: '篮筐背景', lighting: '自然光', props: '篮球', angle: '仰拍', mood: '活力', duration: 6, notes: '24mm广角夸张动作' },
+            { scene: '网球场', description: '挥拍', shotSize: '全身', method: '侧面', focalLength: '135mm f/2', composition: '动态抓拍', lighting: '自然光', props: '网球拍', angle: '侧面', mood: '专注', duration: 5, notes: '135mm长焦抓拍' },
+            { scene: '休息区', description: '运动后休息', shotSize: '半身', method: '正面', focalLength: '50mm f/1.8', composition: '特写', lighting: '自然光', props: '毛巾、水壶', angle: '正面', mood: '放松', duration: 8, notes: '50mm自然视角' }
+        ],
+        '情绪': [
+            { scene: '窗边', description: '窗边沉思', shotSize: '半身', method: '侧面', focalLength: '85mm f/1.4', composition: '窗框构图', lighting: '侧光', props: '无', angle: '侧面', mood: '忧郁', duration: 10, notes: '85mm虚化窗外' },
+            { scene: '空旷房间', description: '蜷缩角落', shotSize: '全身', method: '俯拍', focalLength: '35mm f/1.4', composition: '空间对比', lighting: '顶光', props: '无', angle: '俯拍', mood: '孤独', duration: 10, notes: '35mm交代空旷环境' },
+            { scene: '雨中', description: '雨中站立', shotSize: '全身', method: '正面', focalLength: '50mm f/1.4', composition: '雨滴效果', lighting: '阴天', props: '雨伞', angle: '正面', mood: '悲伤', duration: 8, notes: '50mm标准镜头' },
+            { scene: '废墟', description: '废墟中行走', shotSize: '全身', method: '侧面', focalLength: '24mm f/2.8', composition: '废墟环境', lighting: '侧光', props: '无', angle: '侧面', mood: '迷茫', duration: 10, notes: '24mm广角交代废墟' },
+            { scene: '海边', description: '海边背影', shotSize: '全身', method: '背面', focalLength: '85mm f/1.8', composition: '海天一线', lighting: '阴天', props: '无', angle: '背面', mood: '失落', duration: 10, notes: '85mm压缩海景' },
+            { scene: '楼梯间', description: '楼梯间独坐', shotSize: '中景', method: '俯拍', focalLength: '35mm f/2', composition: '楼梯延伸', lighting: '顶光', props: '无', angle: '俯拍', mood: '压抑', duration: 10, notes: '35mm俯拍显孤独' },
+            { scene: '镜子前', description: '对镜凝视', shotSize: '特写', method: '正面', focalLength: '50mm f/1.2', composition: '镜中眼神', lighting: '侧光', props: '镜子', angle: '正面', mood: '困惑', duration: 12, notes: '50mm大光圈虚化镜面' },
+            { scene: '夜晚', description: '夜晚独坐', shotSize: '全身', method: '侧面', focalLength: '50mm f/1.4', composition: '夜景背景', lighting: '城市灯光', props: '无', angle: '侧面', mood: '寂寞', duration: 10, notes: '50mm大光圈虚化城市灯光' }
+        ],
+        '商业': [
+            { scene: '办公室', description: '办公桌前工作', shotSize: '中景', method: '侧面', focalLength: '50mm f/1.8', composition: '办公环境', lighting: '室内灯光', props: '笔记本、咖啡', angle: '侧面', mood: '专业', duration: 10, notes: '50mm自然视角' },
+            { scene: '会议室', description: '会议中发言', shotSize: '半身', method: '正面', focalLength: '85mm f/1.8', composition: '会议桌背景', lighting: '室内灯光', props: '文件', angle: '正面', mood: '自信', duration: 8, notes: '85mm虚化背景' },
+            { scene: '产品前', description: '展示产品', shotSize: '半身', method: '正面', focalLength: '50mm f/1.4', composition: '产品特写', lighting: '专业灯光', props: '产品', angle: '正面', mood: '专业', duration: 10, notes: '50mm标准镜头' },
+            { scene: '工厂', description: '工厂视察', shotSize: '全身', method: '侧面', focalLength: '35mm f/1.4', composition: '工厂环境', lighting: '工厂灯光', props: '安全帽', angle: '侧面', mood: '严谨', duration: 10, notes: '35mm交代工厂环境' },
+            { scene: '店面', description: '店面门口', shotSize: '全身', method: '正面', focalLength: '24mm f/2.8', composition: '店面招牌', lighting: '自然光', props: '无', angle: '正面', mood: '亲和', duration: 8, notes: '24mm广角交代店面' },
+            { scene: '团队', description: '团队合影', shotSize: '全身', method: '正面', focalLength: '35mm f/2', composition: '团队排列', lighting: '自然光', props: '无', angle: '正面', mood: '团结', duration: 10, notes: '35mm容纳团队' },
+            { scene: '演讲台', description: '演讲', shotSize: '半身', method: '正面', focalLength: '85mm f/1.4', composition: '演讲台背景', lighting: '舞台灯光', props: '话筒', angle: '正面', mood: '权威', duration: 10, notes: '85mm压缩背景' },
+            { scene: '握手', description: '商务握手', shotSize: '特写', method: '正面', focalLength: '50mm f/1.8', composition: '手部特写', lighting: '自然光', props: '无', angle: '正面', mood: '合作', duration: 5, notes: '50mm特写' }
         ]
     };
     
