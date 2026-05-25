@@ -4851,51 +4851,67 @@ function renderPlanContent(plan) {
         </div>
     `;
 
-    // 分镜脚本（核心功能）
+    // 分镜脚本（核心功能）- 专业版
     const shotList = generateShotList(plan);
     const shotListHtml = `
         <div class="ps" style="margin-top:1.5rem;border-top:2px solid #ffd700;padding-top:1rem">
             <div class="ps-hdr">
                 <div class="ps-icon">🎬</div>
-                <h3 class="ps-title">分镜脚本</h3>
+                <h3 class="ps-title">专业分镜脚本</h3>
                 <button class="btn btn-s btn-sm" onclick="exportShotList('${plan.id}')" style="margin-left:auto">📥 导出</button>
             </div>
             <div class="ps-cnt">
-                <p style="font-size:.8rem;color:var(--t2);margin-bottom:1rem;">专业分镜清单，包含镜头编号、场景、画面描述、拍摄方法、时长估算</p>
+                <p style="font-size:.8rem;color:var(--t2);margin-bottom:1rem;">专业分镜清单：镜头编号、场景、画面描述、景别、焦距、构图、灯光、道具、角度、情绪、时长、备注</p>
                 <div style="overflow-x:auto;">
-                    <table style="width:100%;border-collapse:collapse;font-size:.78rem;">
+                    <table style="width:100%;border-collapse:collapse;font-size:.72rem;min-width:900px;">
                         <thead>
                             <tr style="background:var(--bg2);border-bottom:2px solid var(--bd);">
-                                <th style="padding:.5rem;text-align:left;color:var(--ac);">镜头</th>
-                                <th style="padding:.5rem;text-align:left;color:var(--ac);">场景</th>
-                                <th style="padding:.5rem;text-align:left;color:var(--ac);">画面描述</th>
-                                <th style="padding:.5rem;text-align:left;color:var(--ac);">景别</th>
-                                <th style="padding:.5rem;text-align:left;color:var(--ac);">拍摄方法</th>
-                                <th style="padding:.5rem;text-align:center;color:var(--ac);">时长</th>
-                                <th style="padding:.5rem;text-align:center;color:var(--ac);">状态</th>
+                                <th style="padding:.4rem;text-align:center;color:var(--ac);width:40px;">#</th>
+                                <th style="padding:.4rem;text-align:left;color:var(--ac);">场景</th>
+                                <th style="padding:.4rem;text-align:left;color:var(--ac);min-width:120px;">画面描述</th>
+                                <th style="padding:.4rem;text-align:center;color:var(--ac);">景别</th>
+                                <th style="padding:.4rem;text-align:center;color:#4ecdc4;">焦距</th>
+                                <th style="padding:.4rem;text-align:left;color:#4ecdc4;">构图</th>
+                                <th style="padding:.4rem;text-align:left;color:#f59e0b;">灯光</th>
+                                <th style="padding:.4rem;text-align:left;color:#8b5cf6;">道具</th>
+                                <th style="padding:.4rem;text-align:center;color:var(--t2);">角度</th>
+                                <th style="padding:.4rem;text-align:center;color:#ec4899;">情绪</th>
+                                <th style="padding:.4rem;text-align:center;color:var(--ac);">时长</th>
+                                <th style="padding:.4rem;text-align:left;color:var(--t3);min-width:100px;">备注</th>
+                                <th style="padding:.4rem;text-align:center;color:#22c55e;width:30px;">✓</th>
                             </tr>
                         </thead>
                         <tbody>
                             ${shotList.map((shot, i) => `
-                                <tr style="border-bottom:1px solid var(--bd);">
-                                    <td style="padding:.5rem;font-weight:600;color:var(--ac);">#${String(i + 1).padStart(2, '0')}</td>
-                                    <td style="padding:.5rem;">${escHtml(shot.scene)}</td>
-                                    <td style="padding:.5rem;max-width:200px;">${escHtml(shot.description)}</td>
-                                    <td style="padding:.5rem;"><span class="eq-tag" style="font-size:.7rem;">${shot.shotSize}</span></td>
-                                    <td style="padding:.5rem;font-size:.75rem;">${shot.method}</td>
-                                    <td style="padding:.5rem;text-align:center;font-weight:500;">${shot.duration}min</td>
-                                    <td style="padding:.5rem;text-align:center;">
-                                        <input type="checkbox" class="shot-check" data-shot="${i}" style="width:18px;height:18px;cursor:pointer;">
+                                <tr style="border-bottom:1px solid var(--bd);background:${i % 2 === 0 ? 'transparent' : 'var(--bg-subtle)'};">
+                                    <td style="padding:.4rem;text-align:center;font-weight:600;color:var(--ac);">#${String(i + 1).padStart(2, '0')}</td>
+                                    <td style="padding:.4rem;font-weight:500;">${escHtml(shot.scene)}</td>
+                                    <td style="padding:.4rem;">${escHtml(shot.description)}</td>
+                                    <td style="padding:.4rem;text-align:center;"><span class="eq-tag" style="font-size:.65rem;padding:.15rem .4rem;">${shot.shotSize}</span></td>
+                                    <td style="padding:.4rem;text-align:center;font-weight:500;color:#4ecdc4;">${shot.focalLength}</td>
+                                    <td style="padding:.4rem;font-size:.7rem;">${shot.composition}</td>
+                                    <td style="padding:.4rem;font-size:.7rem;color:#f59e0b;">${shot.lighting}</td>
+                                    <td style="padding:.4rem;font-size:.7rem;color:#8b5cf6;">${shot.props}</td>
+                                    <td style="padding:.4rem;text-align:center;font-size:.7rem;">${shot.angle}</td>
+                                    <td style="padding:.4rem;text-align:center;"><span style="font-size:.7rem;color:#ec4899;">${shot.mood}</span></td>
+                                    <td style="padding:.4rem;text-align:center;font-weight:600;">${shot.duration}min</td>
+                                    <td style="padding:.4rem;font-size:.7rem;color:var(--t3);">${shot.notes}</td>
+                                    <td style="padding:.4rem;text-align:center;">
+                                        <input type="checkbox" class="shot-check" data-shot="${i}" style="width:16px;height:16px;cursor:pointer;">
                                     </td>
                                 </tr>
                             `).join('')}
                         </tbody>
                     </table>
                 </div>
-                <div style="margin-top:1rem;display:flex;gap:.5rem;flex-wrap:wrap;">
+                <div style="margin-top:1rem;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;">
                     <button class="btn btn-s btn-sm" onclick="addCustomShot()">➕ 添加镜头</button>
                     <button class="btn btn-s btn-sm" onclick="reorderShots()">🔄 调整顺序</button>
-                    <span style="margin-left:auto;font-size:.75rem;color:var(--t3);">总时长: ${shotList.reduce((sum, s) => sum + s.duration, 0)} 分钟</span>
+                    <button class="btn btn-s btn-sm" onclick="toggleShotView()">📋 简洁视图</button>
+                    <span style="margin-left:auto;font-size:.75rem;color:var(--t3);">
+                        📊 总时长: <strong style="color:var(--ac);">${shotList.reduce((sum, s) => sum + s.duration, 0)} 分钟</strong>
+                        | 镜头数: <strong style="color:var(--ac);">${shotList.length}</strong>
+                    </span>
                 </div>
             </div>
         </div>
@@ -4959,37 +4975,57 @@ function generateShotList(plan) {
     else if (duration === '半天') shotCount = 15;
     else if (duration === '全天') shotCount = 20;
     
-    // 风格对应的镜头模板
+    // 专业分镜模板 - 包含焦距、构图、灯光、道具等
     const shotTemplates = {
         '时尚': [
-            { scene: '入口/门厅', description: '模特走进，回头望向镜头', shotSize: '全景', method: '跟拍+定格', duration: 5 },
-            { scene: '主场景', description: '站姿挺拔，双手叉腰，目光坚定', shotSize: '半身', method: '正面平拍', duration: 8 },
-            { scene: '主场景', description: '侧身行走，自然回头', shotSize: '全身', method: '侧面跟拍', duration: 6 },
-            { scene: '靠墙区域', description: '倚靠墙面，一腿弯曲', shotSize: '半身', method: '45度侧拍', duration: 8 },
-            { scene: '高脚凳', description: '坐在高脚凳上，双腿交叉', shotSize: '中景', method: '低角度仰拍', duration: 10 },
-            { scene: '主场景', description: '背对镜头，转身回眸', shotSize: '半身', method: '抓拍瞬间', duration: 5 },
-            { scene: '窗边', description: '侧身站窗边，剪影效果', shotSize: '全身', method: '逆光拍摄', duration: 8 },
-            { scene: '主场景', description: '特写：眼神、手部、配饰', shotSize: '特写', method: '大光圈虚化', duration: 10 }
+            { scene: '入口/门厅', description: '模特走进，回头望向镜头', shotSize: '全景', method: '跟拍+定格', focalLength: '35mm', composition: '中心构图，留白', lighting: '自然光+补光', props: '无', angle: '平视', mood: '自信', duration: 5, notes: '抓拍回头瞬间' },
+            { scene: '主场景', description: '站姿挺拔，双手叉腰，目光坚定', shotSize: '半身', method: '正面平拍', focalLength: '85mm', composition: '三分法，眼神在交叉点', lighting: '硬光，强调轮廓', props: '无', angle: '平视', mood: '强势', duration: 8, notes: '眼神要有力量感' },
+            { scene: '主场景', description: '侧身行走，自然回头', shotSize: '全身', method: '侧面跟拍', focalLength: '50mm', composition: '对角线构图', lighting: '侧逆光', props: '无', angle: '侧面', mood: '动感', duration: 6, notes: '行走节奏要自然' },
+            { scene: '靠墙区域', description: '倚靠墙面，一腿弯曲', shotSize: '半身', method: '45度侧拍', focalLength: '85mm', composition: '人物偏右，墙面纹理', lighting: '单侧硬光', props: '无', angle: '45度侧', mood: '酷感', duration: 8, notes: '身体线条要舒展' },
+            { scene: '高脚凳', description: '坐在高脚凳上，双腿交叉', shotSize: '中景', method: '低角度仰拍', focalLength: '50mm', composition: '对角线，腿延伸', lighting: '顶光+轮廓光', props: '高脚凳', angle: '仰拍', mood: '优雅', duration: 10, notes: '注意腿型线条' },
+            { scene: '主场景', description: '背对镜头，转身回眸', shotSize: '半身', method: '抓拍瞬间', focalLength: '85mm', composition: '背影+侧脸', lighting: '逆光轮廓', props: '无', angle: '背面转', mood: '神秘', duration: 5, notes: '抓拍转身瞬间' },
+            { scene: '窗边', description: '侧身站窗边，剪影效果', shotSize: '全身', method: '逆光拍摄', focalLength: '35mm', composition: '剪影构图', lighting: '纯逆光', props: '无', angle: '正面', mood: '艺术', duration: 8, notes: '曝光减1-2档' },
+            { scene: '主场景', description: '特写：眼神、手部、配饰', shotSize: '特写', method: '大光圈虚化', focalLength: '85mm f/1.4', composition: '填满画面', lighting: '柔光箱', props: '配饰', angle: '平视', mood: '精致', duration: 10, notes: '焦点在眼睛/产品' }
         ],
         '复古': [
-            { scene: '沙发区', description: '慵懒倚靠沙发，望向窗外', shotSize: '半身', method: '侧面平拍', duration: 10 },
-            { scene: '窗边', description: '侧坐窗边，手持书籍', shotSize: '中景', method: '自然光侧拍', duration: 8 },
-            { scene: '浴缸区', description: '躺在浴缸边缘，若有所思', shotSize: '半身', method: '俯拍', duration: 12 },
-            { scene: '梳妆台', description: '手持老式梳子，眼神朦胧', shotSize: '特写', method: '镜面反射', duration: 8 },
-            { scene: '床铺区', description: '俯身床铺，床单半遮', shotSize: '中景', method: '高角度俯拍', duration: 10 },
-            { scene: '复古家具旁', description: '站立，手持老式相机', shotSize: '全身', method: '环境人像', duration: 8 },
-            { scene: '门框', description: '倚靠门框，手指轻触锁骨', shotSize: '半身', method: '45度侧拍', duration: 8 },
-            { scene: '壁炉旁', description: '手持烛台，光影塑造', shotSize: '中景', method: '暖光氛围', duration: 10 }
+            { scene: '沙发区', description: '慵懒倚靠沙发，望向窗外', shotSize: '半身', method: '侧面平拍', focalLength: '50mm', composition: '人物偏左，窗外留白', lighting: '窗户自然光', props: '老式沙发', angle: '侧面', mood: '慵懒', duration: 10, notes: '眼神要有故事感' },
+            { scene: '窗边', description: '侧坐窗边，手持书籍', shotSize: '中景', method: '自然光侧拍', focalLength: '35mm', composition: '窗框做前景', lighting: '窗户柔光', props: '老式书籍', angle: '45度侧', mood: '文艺', duration: 8, notes: '书页要有质感' },
+            { scene: '浴缸区', description: '躺在浴缸边缘，若有所思', shotSize: '半身', method: '俯拍', focalLength: '50mm', composition: '对角线，身体延伸', lighting: '暖色烛光', props: '浴缸、蜡烛', angle: '俯拍', mood: '私密', duration: 12, notes: '注意水光反射' },
+            { scene: '梳妆台', description: '手持老式梳子，眼神朦胧', shotSize: '特写', method: '镜面反射', focalLength: '85mm', composition: '镜中人物', lighting: '暖色台灯', props: '老式梳子、镜子', angle: '镜面', mood: '怀旧', duration: 8, notes: '可拍镜中反射' },
+            { scene: '床铺区', description: '俯身床铺，床单半遮', shotSize: '中景', method: '高角度俯拍', focalLength: '35mm', composition: '对角线，床单褶皱', lighting: '暖色柔光', props: '白色床单', angle: '俯拍', mood: '暧昧', duration: 10, notes: '注意肌肤质感' },
+            { scene: '复古家具旁', description: '站立，手持老式相机', shotSize: '全身', method: '环境人像', focalLength: '35mm', composition: '人物居中，环境交代', lighting: '窗户侧光', props: '老式相机', angle: '平视', mood: '复古', duration: 8, notes: '相机做道具' },
+            { scene: '门框', description: '倚靠门框，手指轻触锁骨', shotSize: '半身', method: '45度侧拍', focalLength: '85mm', composition: '门框做框', lighting: '侧光+反光板', props: '无', angle: '45度侧', mood: '性感', duration: 8, notes: '手指动作要自然' },
+            { scene: '壁炉旁', description: '手持烛台，光影塑造', shotSize: '中景', method: '暖光氛围', focalLength: '50mm', composition: '明暗对比', lighting: '烛光主光', props: '烛台', angle: '侧面', mood: '神秘', duration: 10, notes: '利用光影塑造立体感' }
         ],
         '文艺': [
-            { scene: '草地/户外', description: '坐在草地上，抱膝望向远方', shotSize: '全景', method: '自然光', duration: 10 },
-            { scene: '树下', description: '站在树下，阳光透过树叶', shotSize: '半身', method: '逆光拍摄', duration: 8 },
-            { scene: '小径', description: '漫步小径，自然回头', shotSize: '全身', method: '跟拍', duration: 6 },
-            { scene: '墙边', description: '靠在墙边，若有所思', shotSize: '中景', method: '侧面平拍', duration: 8 },
-            { scene: '阅读区', description: '手持书本，低头阅读', shotSize: '特写', method: '大光圈', duration: 10 },
-            { scene: '花丛', description: '手持花束，低头闻香', shotSize: '半身', method: '柔光拍摄', duration: 8 },
-            { scene: '窗边', description: '坐在窗边，望向窗外', shotSize: '中景', method: '自然侧光', duration: 8 },
-            { scene: '户外', description: '背影，走向远方', shotSize: '全景', method: '远景拍摄', duration: 6 }
+            { scene: '草地/户外', description: '坐在草地上，抱膝望向远方', shotSize: '全景', method: '自然光', focalLength: '35mm', composition: '人物偏右，天空留白', lighting: '傍晚逆光', props: '无', angle: '侧面', mood: '清新', duration: 10, notes: '逆光发丝发光' },
+            { scene: '树下', description: '站在树下，阳光透过树叶', shotSize: '半身', method: '逆光拍摄', focalLength: '50mm', composition: '树叶做前景', lighting: '斑驳阳光', props: '无', angle: '仰拍', mood: '梦幻', duration: 8, notes: '光斑在脸上' },
+            { scene: '小径', description: '漫步小径，自然回头', shotSize: '全身', method: '跟拍', focalLength: '35mm', composition: '小径延伸', lighting: '自然光', props: '无', angle: '背面转', mood: '自然', duration: 6, notes: '抓拍回头瞬间' },
+            { scene: '墙边', description: '靠在墙边，若有所思', shotSize: '中景', method: '侧面平拍', focalLength: '85mm', composition: '墙面纹理背景', lighting: '侧光', props: '无', angle: '侧面', mood: '沉思', duration: 8, notes: '眼神要有故事' },
+            { scene: '阅读区', description: '手持书本，低头阅读', shotSize: '特写', method: '大光圈', focalLength: '85mm f/1.8', composition: '书本+手+脸', lighting: '窗户柔光', props: '书本', angle: '俯拍', mood: '安静', duration: 10, notes: '焦点在眼睛' },
+            { scene: '花丛', description: '手持花束，低头闻香', shotSize: '半身', method: '柔光拍摄', focalLength: '50mm', composition: '花朵做前景', lighting: '柔光', props: '花束', angle: '侧面', mood: '浪漫', duration: 8, notes: '花朵颜色搭配服装' },
+            { scene: '窗边', description: '坐在窗边，望向窗外', shotSize: '中景', method: '自然侧光', focalLength: '35mm', composition: '窗框构图', lighting: '窗户侧光', props: '无', angle: '侧面', mood: '思念', duration: 8, notes: '侧光塑造轮廓' },
+            { scene: '户外', description: '背影，走向远方', shotSize: '全景', method: '远景拍摄', focalLength: '35mm', composition: '背影+远方', lighting: '夕阳', props: '无', angle: '背面', mood: '诗意', duration: 6, notes: '剪影效果' }
+        ],
+        '性感': [
+            { scene: '床铺', description: '躺在丝绸床单上，眼神迷离', shotSize: '中景', method: '俯拍', focalLength: '50mm', composition: '对角线，丝绸褶皱', lighting: '暖色柔光', props: '丝绸床单', angle: '俯拍', mood: '诱惑', duration: 10, notes: '注意肌肤质感' },
+            { scene: '门框', description: '倚靠门框，手指轻触锁骨', shotSize: '半身', method: '侧面拍摄', focalLength: '85mm', composition: '门框做框', lighting: '侧逆光', props: '无', angle: '侧面', mood: '暧昧', duration: 8, notes: '手指动作要慢' },
+            { scene: '沙发', description: '侧卧沙发，曲线展现', shotSize: '全身', method: '侧面拍摄', focalLength: '50mm', composition: 'S型曲线', lighting: '柔光', props: '沙发', angle: '侧面', mood: '性感', duration: 12, notes: '注意身体曲线' },
+            { scene: '窗边', description: '站在窗前，剪影效果', shotSize: '全身', method: '逆光拍摄', focalLength: '35mm', composition: '剪影构图', lighting: '纯逆光', props: '无', angle: '正面', mood: '神秘', duration: 8, notes: '曝光减2档' },
+            { scene: '浴缸', description: '坐在浴缸边，水珠滑落', shotSize: '半身', method: '侧面拍摄', focalLength: '85mm', composition: '水珠特写', lighting: '暖色柔光', props: '浴缸', angle: '侧面', mood: '私密', duration: 10, notes: '水珠要有质感' }
+        ],
+        '古风': [
+            { scene: '庭院', description: '手持团扇，半遮面', shotSize: '半身', method: '侧面拍摄', focalLength: '85mm', composition: '团扇做前景', lighting: '自然柔光', props: '团扇', angle: '侧面', mood: '古典', duration: 10, notes: '扇子遮面若隐若现' },
+            { scene: '古建筑', description: '站在古建筑前', shotSize: '全身', method: '环境人像', focalLength: '35mm', composition: '建筑对称', lighting: '晨光/夕阳', props: '无', angle: '正面', mood: '典雅', duration: 8, notes: '建筑要完整' },
+            { scene: '石阶', description: '坐在石阶上，裙摆铺开', shotSize: '全身', method: '俯拍', focalLength: '35mm', composition: '裙摆延伸', lighting: '自然光', props: '汉服', angle: '俯拍', mood: '飘逸', duration: 12, notes: '裙摆要有层次' },
+            { scene: '花丛', description: '手持花枝，低头闻香', shotSize: '半身', method: '侧面拍摄', focalLength: '50mm', composition: '花朵前景', lighting: '柔光', props: '花枝', angle: '侧面', mood: '唯美', duration: 8, notes: '花枝颜色搭配服装' },
+            { scene: '桥上', description: '站在桥上，望向水面', shotSize: '全身', method: '远景拍摄', focalLength: '35mm', composition: '桥+水+人', lighting: '夕阳', props: '无', angle: '侧面', mood: '诗意', duration: 10, notes: '倒影效果' }
+        ],
+        '婚纱': [
+            { scene: '教堂门口', description: '手捧花束，微笑', shotSize: '全身', method: '正面拍摄', focalLength: '50mm', composition: '对称构图', lighting: '自然光', props: '花束', angle: '正面', mood: '幸福', duration: 10, notes: '裙摆要完整' },
+            { scene: '窗边', description: '坐在窗边，侧身', shotSize: '中景', method: '侧面拍摄', focalLength: '85mm', composition: '窗框构图', lighting: '柔光', props: '头纱', angle: '侧面', mood: '浪漫', duration: 8, notes: '头纱要有质感' },
+            { scene: '户外', description: '裙摆飘扬', shotSize: '全身', method: '抓拍', focalLength: '35mm', composition: '动态构图', lighting: '夕阳', props: '婚纱', angle: '侧面', mood: '梦幻', duration: 6, notes: '抓拍裙摆飘起' },
+            { scene: '教堂', description: '与新郎对视', shotSize: '中景', method: '侧面拍摄', focalLength: '50mm', composition: '双人构图', lighting: '教堂光线', props: '无', angle: '侧面', mood: '甜蜜', duration: 10, notes: '眼神要有爱意' }
         ]
     };
     
@@ -5007,30 +5043,66 @@ function exportShotList(planId) {
     if (!plan) { toast('方案不存在', 'er'); return; }
     
     const shotList = generateShotList(plan);
-    let text = `分镜脚本 - ${plan.title}\n`;
+    let text = `════════════════════════════════════════════════════════════\n`;
+    text += `                    专业分镜脚本\n`;
+    text += `════════════════════════════════════════════════════════════\n\n`;
+    text += `方案名称: ${plan.title}\n`;
     text += `风格: ${plan.input && plan.input.style || '待定'}\n`;
     text += `场景: ${plan.input && plan.input.scene || '待定'}\n`;
     text += `时长: ${plan.input && plan.input.duration || '待定'}\n`;
-    text += `\n${'='.repeat(60)}\n\n`;
+    text += `模特: ${plan.input && plan.input.modelDesc || '待定'}\n`;
+    text += `\n────────────────────────────────────────────────────────────\n`;
+    text += `镜头统计: 共 ${shotList.length} 个镜头 | 总时长 ${shotList.reduce((sum, s) => sum + s.duration, 0)} 分钟\n`;
+    text += `────────────────────────────────────────────────────────────\n\n`;
     
     shotList.forEach((shot, i) => {
-        text += `镜头 #${String(i + 1).padStart(2, '0')}\n`;
-        text += `场景: ${shot.scene}\n`;
-        text += `画面: ${shot.description}\n`;
-        text += `景别: ${shot.shotSize}\n`;
-        text += `方法: ${shot.method}\n`;
-        text += `时长: ${shot.duration}分钟\n`;
-        text += `\n`;
+        text += `┌─────────────────────────────────────────────────────────┐\n`;
+        text += `│ 镜头 #${String(i + 1).padStart(2, '0')}                                              │\n`;
+        text += `├─────────────────────────────────────────────────────────┤\n`;
+        text += `│ 场景: ${shot.scene.padEnd(47)}│\n`;
+        text += `│ 画面: ${shot.description.padEnd(47)}│\n`;
+        text += `├─────────────────────────────────────────────────────────┤\n`;
+        text += `│ 景别: ${shot.shotSize.padEnd(20)}│ 焦距: ${shot.focalLength.padEnd(20)}│\n`;
+        text += `│ 构图: ${shot.composition.padEnd(47)}│\n`;
+        text += `│ 灯光: ${shot.lighting.padEnd(47)}│\n`;
+        text += `│ 道具: ${shot.props.padEnd(47)}│\n`;
+        text += `│ 角度: ${shot.angle.padEnd(20)}│ 情绪: ${shot.mood.padEnd(20)}│\n`;
+        text += `│ 时长: ${String(shot.duration + '分钟').padEnd(47)}│\n`;
+        text += `├─────────────────────────────────────────────────────────┤\n`;
+        text += `│ 备注: ${shot.notes.padEnd(47)}│\n`;
+        text += `└─────────────────────────────────────────────────────────┘\n\n`;
     });
+    
+    text += `════════════════════════════════════════════════════════════\n`;
+    text += `                    设备清单\n`;
+    text += `════════════════════════════════════════════════════════════\n\n`;
+    
+    // 收集所有需要的设备
+    const allProps = new Set();
+    const allFocalLengths = new Set();
+    shotList.forEach(shot => {
+        if (shot.props && shot.props !== '无') {
+            shot.props.split('、').forEach(p => allProps.add(p.trim()));
+        }
+        allFocalLengths.add(shot.focalLength);
+    });
+    
+    text += `【镜头焦距】\n`;
+    text += Array.from(allFocalLengths).join('、') + '\n\n';
+    text += `【道具清单】\n`;
+    text += allProps.size > 0 ? Array.from(allProps).map((p, i) => `${i+1}. ${p}`).join('\n') : '无特殊道具\n';
+    text += `\n\n`;
+    text += `生成时间: ${new Date().toLocaleString()}\n`;
+    text += `PhotoAtelier - 专业摄影方案工作流\n`;
     
     const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `分镜脚本_${plan.title}_${new Date().toISOString().slice(0, 10)}.txt`;
+    a.download = `专业分镜脚本_${plan.title}_${new Date().toISOString().slice(0, 10)}.txt`;
     a.click();
     URL.revokeObjectURL(url);
-    toast('分镜脚本已导出', 'ok');
+    toast('专业分镜脚本已导出', 'ok');
 }
 
 // 添加自定义镜头
