@@ -7372,13 +7372,44 @@ const referenceCategoryMap = {
     }
 };
 
-// Build direct search URLs for free image platforms (no API key needed)
+// Build direct search URLs for ALL free image platforms (no API key needed)
+// 20+ free commercial-use stock photo sites
 function buildSearchUrls(query) {
     return {
-        pexels: `https://www.pexels.com/search/${encodeURIComponent(query)}/`,
-        unsplash: `https://unsplash.com/s/photos/${encodeURIComponent(query)}`,
-        pixabay: `https://pixabay.com/images/search/${encodeURIComponent(query)}/`,
-        xiaohongshu: `https://www.xiaohongshu.com/search_result?keyword=${encodeURIComponent(query)}&source=web_search_result_notes`
+        // Major platforms (most popular)
+        pexels: { url: `https://www.pexels.com/search/${encodeURIComponent(query)}/`, name: 'Pexels', color: '#05a081', tip: '海量高质量，完全免费商用' },
+        unsplash: { url: `https://unsplash.com/s/photos/${encodeURIComponent(query)}`, name: 'Unsplash', color: '#111', tip: '艺术感强，摄影师社区' },
+        pixabay: { url: `https://pixabay.com/images/search/${encodeURIComponent(query)}/`, name: 'Pixabay', color: '#00ab6c', tip: '图片+矢量+视频，全免费' },
+        
+        // Chinese platforms (good for local references)
+        xiaohongshu: { url: `https://www.xiaohongshu.com/search_result?keyword=${encodeURIComponent(query)}&source=web_search_result_notes`, name: '小红书', color: '#ff2442', tip: '中文参考，真实案例多' },
+        huaban: { url: `https://huaban.com/search?q=${encodeURIComponent(query)}`, name: '花瓣网', color: '#e8e8e8', tip: '国内设计师灵感库' },
+        zcool: { url: `https://www.zcool.com.cn/search/content?word=${encodeURIComponent(query)}`, name: '站酷', color: '#f5c918', tip: '国内设计师作品' },
+        
+        // More free stock sites
+        freepik: { url: `https://www.freepik.com/search?format=search&query=${encodeURIComponent(query)}`, name: 'Freepik', color: '#00b386', tip: '矢量+PSD+图片' },
+        burst: { url: `https://burst.shopify.com/search?q=${encodeURIComponent(query)}`, name: 'Burst', color: '#008060', tip: 'Shopify出品，电商风格' },
+        stocksnap: { url: `https://stocksnap.io/search/${encodeURIComponent(query)}`, name: 'StockSnap', color: '#3d5afe', tip: '高质量免版税' },
+        kaboompics: { url: `https://kaboompics.com/search/${encodeURIComponent(query)}`, name: 'Kaboompics', color: '#ff6b6b', tip: '风格化强，配色好看' },
+        
+        // Artistic/mood-focused sites
+        morguefile: { url: `https://morguefile.com/search?q=${encodeURIComponent(query)}`, name: 'Morguefile', color: '#666', tip: '老牌免费图库' },
+        lifeofpix: { url: `https://www.lifeofpix.com/search?q=${encodeURIComponent(query)}`, name: 'Life of Pix', color: '#2196f3', tip: '摄影师分享，艺术感' },
+        gratisography: { url: `https://gratisography.com/search/${encodeURIComponent(query)}/`, name: 'Gratisography', color: '#9c27b0', tip: ' quirky创意风格' },
+        magdeleine: { url: `https://magdeleine.com/search/${encodeURIComponent(query)}/`, name: 'Magdeleine', color: '#795548', tip: '自然风光，情绪感' },
+        picjumbo: { url: `https://picjumbo.com/search/${encodeURIComponent(query)}/`, name: 'Picjumbo', color: '#ff9800', tip: '日常生活场景' },
+        
+        // Niche/specialized sites
+        newoldstock: { url: `https://newoldstock.info/search/${encodeURIComponent(query)}/`, name: 'New Old Stock', color: '#607d8b', tip: '复古老照片' },
+        splitshire: { url: `https://www.splitshire.com/search/${encodeURIComponent(query)}/`, name: 'Splitshire', color: '#e91e63', tip: '独特风格' },
+        jaymantri: { url: `https://jaymantri.com/search/${encodeURIComponent(query)}/`, name: 'Jay Mantri', color: '#00bcd4', tip: '黑白艺术' },
+        isorepublic: { url: `https://isorepublic.com/search/${encodeURIComponent(query)}/`, name: 'ISO Republic', color: '#4caf50', tip: 'CC0免费' },
+        styledstock: { url: `https://styledstock.com/search/${encodeURIComponent(query)}/`, name: 'Styled Stock', color: '#ff4081', tip: '女性风格' },
+        
+        // Additional free resources
+        flickr_cc: { url: `https://www.flickr.com/search/?text=${encodeURIComponent(query)}&license=2%2C3%2C4%2C5%2C6%2C9`, name: 'Flickr CC', color: '#0063dc', tip: 'Creative Commons授权' },
+        wikimedia: { url: `https://commons.wikimedia.org/w/index.php?search=${encodeURIComponent(query)}&title=Special:MediaSearch`, name: 'Wikimedia', color: '#6c5ce7', tip: '维基共享资源' },
+        everypixel: { url: `https://everypixel.com/search?q=${encodeURIComponent(query)}`, name: 'Everypixel', color: '#1e88e5', tip: '聚合搜索多个图库' }
     };
 }
 
@@ -7470,6 +7501,14 @@ function renderShotReferenceGallery(shot, style, shotIndex) {
             <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:.75rem;">
                 ${queries.map((q, i) => {
                     const urls = buildSearchUrls(q.query);
+                    // Group platforms by category
+                    const majorPlatforms = ['pexels', 'unsplash', 'pixabay'];
+                    const chinesePlatforms = ['xiaohongshu', 'huaban', 'zcool'];
+                    const morePlatforms = ['freepik', 'burst', 'stocksnap', 'kaboompics'];
+                    const artisticPlatforms = ['morguefile', 'lifeofpix', 'gratisography', 'magdeleine', 'picjumbo'];
+                    const nichePlatforms = ['newoldstock', 'splitshire', 'jaymantri', 'isorepublic', 'styledstock'];
+                    const extraPlatforms = ['flickr_cc', 'wikimedia', 'everypixel'];
+                    
                     return `
                     <div style="background:var(--bg);border-radius:8px;padding:.75rem;border-left:3px solid ${q.color};">
                         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">
@@ -7479,12 +7518,21 @@ function renderShotReferenceGallery(shot, style, shotIndex) {
                         <div style="font-size:.68rem;color:var(--t3);margin-bottom:.5rem;word-break:break-all;">
                             🔑 ${q.query}
                         </div>
-                        <div style="display:flex;flex-wrap:wrap;gap:.35rem;">
-                            <a href="${urls.pexels}" target="_blank" rel="noopener" style="padding:.2rem .5rem;background:rgba(0,0,0,.15);border-radius:4px;font-size:.7rem;color:#05a081;text-decoration:none;transition:background .2s;" onmouseover="this.style.background='rgba(0,0,0,.25)'" onmouseout="this.style.background='rgba(0,0,0,.15)'">Pexels</a>
-                            <a href="${urls.unsplash}" target="_blank" rel="noopener" style="padding:.2rem .5rem;background:rgba(0,0,0,.15);border-radius:4px;font-size:.7rem;color:#111;text-decoration:none;transition:background .2s;" onmouseover="this.style.background='rgba(0,0,0,.25)'" onmouseout="this.style.background='rgba(0,0,0,.15)'">Unsplash</a>
-                            <a href="${urls.pixabay}" target="_blank" rel="noopener" style="padding:.2rem .5rem;background:rgba(0,0,0,.15);border-radius:4px;font-size:.7rem;color:#00ab6c;text-decoration:none;transition:background .2s;" onmouseover="this.style.background='rgba(0,0,0,.25)'" onmouseout="this.style.background='rgba(0,0,0,.15)'">Pixabay</a>
-                            <a href="${urls.xiaohongshu}" target="_blank" rel="noopener" style="padding:.2rem .5rem;background:rgba(0,0,0,.15);border-radius:4px;font-size:.7rem;color:#ff2442;text-decoration:none;transition:background .2s;" onmouseover="this.style.background='rgba(0,0,0,.25)'" onmouseout="this.style.background='rgba(0,0,0,.15)'">小红书</a>
+                        <!-- Major platforms (always show) -->
+                        <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.35rem;">
+                            ${majorPlatforms.map(k => `<a href="${urls[k].url}" target="_blank" rel="noopener" title="${urls[k].tip}" style="padding:.2rem .5rem;background:${urls[k].color}15;border-radius:4px;font-size:.7rem;color:${urls[k].color};text-decoration:none;transition:all .2s;border:1px solid ${urls[k].color}30;" onmouseover="this.style.background='${urls[k].color}30'" onmouseout="this.style.background='${urls[k].color}15'">${urls[k].name}</a>`).join('')}
                         </div>
+                        <!-- Chinese platforms -->
+                        <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.35rem;">
+                            ${chinesePlatforms.map(k => `<a href="${urls[k].url}" target="_blank" rel="noopener" title="${urls[k].tip}" style="padding:.2rem .5rem;background:${urls[k].color}15;border-radius:4px;font-size:.7rem;color:${urls[k].color};text-decoration:none;transition:all .2s;border:1px solid ${urls[k].color}30;" onmouseover="this.style.background='${urls[k].color}30'" onmouseout="this.style.background='${urls[k].color}15'">${urls[k].name}</a>`).join('')}
+                        </div>
+                        <!-- More platforms (collapsible) -->
+                        <details style="margin-top:.35rem;">
+                            <summary style="cursor:pointer;font-size:.7rem;color:var(--t3);padding:.25rem 0;">📂 更多免费图库 (${morePlatforms.length + artisticPlatforms.length + nichePlatforms.length + extraPlatforms.length}个)</summary>
+                            <div style="display:flex;flex-wrap:wrap;gap:.25rem;margin-top:.35rem;">
+                                ${[...morePlatforms, ...artisticPlatforms, ...nichePlatforms, ...extraPlatforms].map(k => `<a href="${urls[k].url}" target="_blank" rel="noopener" title="${urls[k].tip}" style="padding:.15rem .4rem;background:${urls[k].color}10;border-radius:3px;font-size:.65rem;color:${urls[k].color};text-decoration:none;transition:all .2s;" onmouseover="this.style.background='${urls[k].color}20'" onmouseout="this.style.background='${urls[k].color}10'">${urls[k].name}</a>`).join('')}
+                            </div>
+                        </details>
                     </div>`;
                 }).join('')}
             </div>
