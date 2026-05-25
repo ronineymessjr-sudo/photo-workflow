@@ -4910,6 +4910,67 @@ function renderPlanContent(plan) {
                         </tbody>
                     </table>
                 </div>
+                
+                <!-- 详细执行步骤 -->
+                <div style="margin-top:1.5rem;padding:1rem;background:var(--bg2);border-radius:var(--radius-sm);">
+                    <h4 style="color:var(--ac);margin-bottom:.75rem;font-size:.9rem;">📋 详细执行步骤</h4>
+                    ${shotList.map((shot, i) => `
+                        <div style="margin-bottom:1rem;padding:.75rem;background:var(--bg);border-radius:var(--radius-sm);border-left:3px solid var(--ac);">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">
+                                <span style="font-weight:600;color:var(--ac);">镜头 #${String(i + 1).padStart(2, '0')} - ${escHtml(shot.scene)}</span>
+                                <span style="font-size:.75rem;color:var(--t3);">${shot.focalLength} · ${shot.duration}min</span>
+                            </div>
+                            <div style="font-size:.78rem;color:var(--t2);line-height:1.6;">
+                                <p><strong style="color:var(--t1);">动作：</strong>${escHtml(shot.description)}</p>
+                                <p><strong style="color:var(--t1);">执行要点：</strong>${escHtml(shot.notes)}</p>
+                                <p><strong style="color:var(--t1);">引导话术：</strong>"${getShotDirection(shot)}"</p>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <!-- 例图参考来源 -->
+                <div style="margin-top:1.5rem;padding:1rem;background:linear-gradient(135deg,rgba(78,205,196,0.1),rgba(139,92,246,0.1));border-radius:var(--radius-sm);">
+                    <h4 style="color:var(--ac);margin-bottom:.75rem;font-size:.9rem;">📸 例图参考来源</h4>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;font-size:.78rem;">
+                        <div>
+                            <strong style="color:#e60023;">Pinterest</strong>
+                            <ul style="margin:.25rem 0;padding-left:1rem;color:var(--t2);">
+                                <li>搜索："${plan.input && plan.input.style || 'portrait'} photography poses"</li>
+                                <li>搜索："${plan.input && plan.input.focalLength || '85mm'} portrait"</li>
+                                <li>创建画板保存参考图</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <strong style="color:#e4405f;">Instagram</strong>
+                            <ul style="margin:.25rem 0;padding-left:1rem;color:var(--t2);">
+                                <li>标签：#${plan.input && plan.input.style || 'portrait'}photography</li>
+                                <li>标签：#${plan.input && plan.input.focalLength || '85mm'}mm</li>
+                                <li>关注相关摄影师</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <strong style="color:#ff2442;">小红书</strong>
+                            <ul style="margin:.25rem 0;padding-left:1rem;color:var(--t2);">
+                                <li>搜索："${plan.input && plan.input.style || '人像'}写真姿势"</li>
+                                <li>搜索："${plan.input && plan.input.focalLength || '85mm'}镜头人像"</li>
+                                <li>收藏喜欢的笔记</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <strong style="color:#4285f4;">500px</strong>
+                            <ul style="margin:.25rem 0;padding-left:1rem;color:var(--t2);">
+                                <li>分类：Portrait</li>
+                                <li>筛选：${plan.input && plan.input.focalLength || '85mm'}</li>
+                                <li>高质量专业作品</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div style="margin-top:.75rem;padding:.5rem;background:var(--bg);border-radius:var(--radius-sm);font-size:.75rem;color:var(--t3);">
+                        💡 <strong>提示：</strong>拍摄前将参考图保存到手机，现场给模特看，沟通更直观
+                    </div>
+                </div>
+                
                 <div style="margin-top:1rem;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;">
                     <button class="btn btn-s btn-sm" onclick="addCustomShot()">➕ 添加镜头</button>
                     <button class="btn btn-s btn-sm" onclick="reorderShots()">🔄 调整顺序</button>
@@ -5238,6 +5299,65 @@ function addCustomShot() {
 // 调整镜头顺序
 function reorderShots() {
     toast('拖拽表格行可调整顺序（功能开发中）', 'i');
+}
+
+// 生成分镜引导话术
+function getShotDirection(shot) {
+    const directions = {
+        '全景': ['放松，想象自己是这个场景的主角', '慢慢走，我喊停的时候回头看我', '背对我，然后慢慢转头'],
+        '全身': ['站直，肩膀放松', '一只脚往前迈一点，重心在后脚', '手自然垂下，或者插口袋'],
+        '半身': ['肩膀稍微侧一点，对，就这样', '下巴微微收一点，眼神看镜头上方', '手可以摸头发或者轻触脸颊'],
+        '中景': ['坐直，背挺直但不要僵硬', '手放在膝盖上，自然一点', '头稍微歪一点，对，很自然'],
+        '特写': ['眼睛看这里，对，不要动', '想象你在想一个很美好的事情', '放松眉毛，嘴角微微上扬']
+    };
+    
+    const poseDirections = {
+        '站': ['双脚分开与肩同宽', '重心放在一只脚上', '肩膀放松下沉'],
+        '坐': ['坐直但放松', '腿可以交叉或并拢', '手放在腿上或扶手上'],
+        '躺': ['完全放松，像在家里一样', '头稍微侧一点', '手可以放在头上或肚子上'],
+        '走': ['自然走，不要看镜头', '听到我喊再回头', '步伐慢一点'],
+        '靠': ['完全靠上去，放松', '头可以歪一点', '手自然垂下或插口袋']
+    };
+    
+    // 根据shot内容生成话术
+    let direction = '';
+    
+    // 根据景别选择
+    if (directions[shot.shotSize]) {
+        direction = directions[shot.shotSize][Math.floor(Math.random() * directions[shot.shotSize].length)];
+    }
+    
+    // 根据动作关键词补充
+    const action = shot.description || '';
+    if (action.includes('站')) {
+        direction += '，' + poseDirections['站'][Math.floor(Math.random() * poseDirections['站'].length)];
+    } else if (action.includes('坐')) {
+        direction += '，' + poseDirections['坐'][Math.floor(Math.random() * poseDirections['坐'].length)];
+    } else if (action.includes('躺')) {
+        direction += '，' + poseDirections['躺'][Math.floor(Math.random() * poseDirections['躺'].length)];
+    } else if (action.includes('走')) {
+        direction += '，' + poseDirections['走'][Math.floor(Math.random() * poseDirections['走'].length)];
+    } else if (action.includes('靠')) {
+        direction += '，' + poseDirections['靠'][Math.floor(Math.random() * poseDirections['靠'].length)];
+    }
+    
+    // 根据情绪调整
+    const moodDirections = {
+        '自信': '，想象你是这个世界上最自信的人',
+        '慵懒': '，完全放松，像刚睡醒一样',
+        '性感': '，眼神要有故事，嘴唇微张',
+        '忧郁': '，想一个让你有点难过的事情',
+        '开心': '，想一个让你开心的事情',
+        '神秘': '，眼神看向远方，不要看镜头',
+        '强势': '，想象你正在征服这个世界',
+        '温柔': '，想象你在看一个你爱的人'
+    };
+    
+    if (moodDirections[shot.mood]) {
+        direction += moodDirections[shot.mood];
+    }
+    
+    return direction || '放松，自然一点，你很漂亮/帅';
 }
 
 // AI智能推荐
