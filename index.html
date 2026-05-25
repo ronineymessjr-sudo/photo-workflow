@@ -4306,23 +4306,239 @@ const baseSections = [
     {ti:'⚠️ 注意事项',ic:'⚠️',c:['提前与模特沟通拍摄边界，确保共识','室内注意安全，确认消防通道','使用烟雾注意通风','保护模特隐私，RAW不外传','带备用电池和存储卡','准备暖宝宝，模特可能需露肤']}
 ];
 
-function buildEqSection() {
-    const eq=(sg(SK.EQ)||[]);
-    if(!eq.length) return {ti:'📷 器材推荐',ic:'📷',c:['【建议】设备库为空，建议添加已有设备','【机身】全画幅微单/单反，高感表现优秀','【镜头】35mm f/1.4（环境）、85mm f/1.4（人像）','【补光】暖色LED补光灯、反光板']};
-    const byCat={}; Object.keys(CATS).forEach(k=>byCat[k]=[]); eq.forEach(e=>{ if(byCat[e.c]) byCat[e.c].push(e); });
-    const lines=[];
-    if(byCat.camera.length) lines.push(`【已有相机】${byCat.camera.map(e=>e.n).join('、')}`);
-    if(byCat.lens.length) lines.push(`【已有镜头】${byCat.lens.map(e=>e.n).join('、')}`);
-    if(byCat.light.length) lines.push(`【已有灯光】${byCat.light.map(e=>e.n).join('、')}`);
-    if(byCat.tripod.length) lines.push(`【稳定设备】${byCat.tripod.map(e=>e.n).join('、')}`);
-    if(byCat.filter.length) lines.push(`【滤镜附件】${byCat.filter.map(e=>e.n).join('、')}`);
-    lines.push('【补充】如需特定场景，可考虑租借额外设备');
-    return {ti:'📷 器材推荐',ic:'📷',c:lines};
+// ===== 智能方案生成器 =====
+// 根据风格、主题、场景动态生成内容
+const STYLE_TEMPLATES = {
+    '时尚': {
+        poses: ['站姿挺拔，双手叉腰，目光坚定', '侧身行走，回头望向镜头', '倚靠墙面，一腿弯曲，酷感十足', '坐在高脚凳上，双腿交叉', '背对镜头，转身回眸'],
+        outfits: ['高定礼服', '设计师品牌套装', '时尚配饰（墨镜、手表）'],
+        lighting: '硬光为主，强调轮廓',
+        mood: '自信、前卫、高级感'
+    },
+    '复古': {
+        poses: ['慵懒倚靠沙发', '手持复古道具（书籍、相机）', '侧坐窗边，望向窗外', '躺在老式浴缸边缘', '站立于复古家具旁'],
+        outfits: ['蕾丝吊带', '丝绒睡袍', '宽松白衬衫'],
+        lighting: '柔和暖光，营造怀旧氛围',
+        mood: '慵懒、神秘、暧昧'
+    },
+    '文艺': {
+        poses: ['坐在草地上，抱膝望向远方', '手持书本，低头阅读', '站在树下，阳光透过树叶', '漫步小径，自然回头', '靠在墙边，若有所思'],
+        outfits: ['棉麻连衣裙', '针织开衫', '帆布鞋'],
+        lighting: '自然光，逆光或侧光',
+        mood: '清新、自然、文艺'
+    },
+    '性感': {
+        poses: ['躺在丝绸床单上', '倚靠门框，手指轻触锁骨', '侧卧沙发，曲线展现', '站在窗前，剪影效果', '坐在浴缸边，水珠滑落'],
+        outfits: ['蕾丝内衣', '丝绸睡衣', '薄纱'],
+        lighting: '柔和暖光，局部高光',
+        mood: '诱惑、神秘、私密'
+    },
+    '街拍': {
+        poses: ['行走中回头', '倚靠栏杆', '坐在路边台阶', '站在街角，看手机', '过马路，抓拍瞬间'],
+        outfits: ['休闲装', '运动鞋', '帽子'],
+        lighting: '自然光，利用建筑阴影',
+        mood: '随性、活力、都市'
+    },
+    '运动': {
+        poses: ['跑步中回头', '跳跃抓拍', '做运动动作', '拉伸姿势', '手持运动器材'],
+        outfits: ['运动服', '跑鞋', '运动手表'],
+        lighting: '明亮自然光',
+        mood: '活力、健康、阳光'
+    },
+    '古风': {
+        poses: ['手持团扇，半遮面', '站在古建筑前', '坐在石阶上，裙摆铺开', '手持花枝，低头闻香', '站在桥上，望向水面'],
+        outfits: ['汉服', '发簪', '团扇'],
+        lighting: '柔和自然光，晨光或夕阳',
+        mood: '典雅、飘逸、古典'
+    },
+    '婚纱': {
+        poses: ['手捧花束，微笑', '与新郎对视', '裙摆飘扬', '坐在窗边，侧身', '站在教堂门口'],
+        outfits: ['婚纱', '头纱', '花束'],
+        lighting: '柔和自然光，金色夕阳',
+        mood: '浪漫、幸福、唯美'
+    },
+    '商业': {
+        poses: ['手持产品展示', '专业站姿', '使用产品场景', '特写表情', '与产品互动'],
+        outfits: ['职业装', '品牌服装'],
+        lighting: '专业布光，产品突出',
+        mood: '专业、高端、信任'
+    },
+    '情绪': {
+        poses: ['低头沉思', '望向远方', '眼眶含泪', '背对镜头', '蜷缩坐姿'],
+        outfits: ['简约服装', '素色'],
+        lighting: '低调光，强调情绪',
+        mood: '忧郁、深沉、故事感'
+    }
+};
+
+// 根据输入动态生成方案
+function genPlan(input) {
+    const style = input.style || '复古';
+    const theme = input.theme || '未命名方案';
+    const modelDesc = input.modelDesc || '';
+    const scene = input.scene || '';
+    const mood = input.mood || '';
+    const duration = input.duration || '2小时';
+    const people = input.people || 1;
+    
+    // 获取风格模板
+    const styleTemplate = STYLE_TEMPLATES[style] || STYLE_TEMPLATES['复古'];
+    
+    // 动态生成摆姿
+    const poses = styleTemplate.poses.slice(0, 5).map((p, i) => 
+        `${i + 1}. ${p}${modelDesc ? '（适合' + modelDesc.slice(0, 20) + '）' : ''}`
+    );
+    
+    // 动态生成场景建议
+    const sceneSuggestions = scene ? [
+        `主场景：${scene}`,
+        '备选场景：根据光线变化准备室内/室外备选',
+        '场景布置：提前1小时到场布置'
+    ] : baseSections.find(s => s.ti.includes('地点'))?.c || [];
+    
+    // 动态生成时间安排
+    const timeSlots = genTimeSlots(duration);
+    
+    // 构建方案
+    const sections = [
+        { ti: '📋 方案概览', ic: '📋', c: [
+            `主题：${theme}`,
+            `风格：${style}`,
+            `时长：${duration}`,
+            `人数：${people}人`,
+            mood ? `情绪：${mood}` : null,
+            modelDesc ? `模特：${modelDesc}` : null,
+            scene ? `场景：${scene}` : null
+        ].filter(Boolean) },
+        { ti: '📍 场景建议', ic: '📍', c: sceneSuggestions },
+        { ti: '🧍 摆姿指导', ic: '🧍', c: poses },
+        { ti: '💄 妆造建议', ic: '💄', c: [
+            `【发型】根据${style}风格选择`,
+            `【妆容】${styleTemplate.mood}`,
+            `【服装】${styleTemplate.outfits.join('、')}`,
+            `【配饰】根据场景搭配`
+        ] },
+        { ti: '🎬 道具清单', ic: '🎬', c: genProps(style, scene) },
+        { ti: '🌤️ 光线建议', ic: '🌤️', c: [
+            `【主光】${styleTemplate.lighting}`,
+            '【时间】根据场景选择最佳时段',
+            '【备选】准备补光设备'
+        ] },
+        buildEqSection(),
+        { ti: '🔭 焦段推荐', ic: '🔭', c: [
+            '【35mm】环境人像，交代场景',
+            '【50mm】自然视角',
+            '【85mm】人像特写',
+            '【推荐】根据场景选择'
+        ] },
+        { ti: '⏰ 时间安排', ic: '⏰', c: timeSlots },
+        { ti: '🎨 后期方向', ic: '🎨', c: [
+            `【风格】${style}风格调色`,
+            `【色调】${styleTemplate.mood}`,
+            '【参考】根据参考图调整'
+        ] },
+        { ti: '⚠️ 注意事项', ic: '⚠️', c: [
+            '提前与模特沟通拍摄边界',
+            '确认场地预约和费用',
+            '准备备用电池和存储卡',
+            '带饮用水和零食',
+            '确认天气和交通'
+        ] }
+    ];
+    
+    return {
+        title: theme,
+        input,
+        sections,
+        savedAt: new Date().toISOString(),
+        images: [],
+        style: style,
+        shotList: [] // 分镜脚本（新增）
+    };
 }
 
-function genPlan(input) {
-    const sections=baseSections.map(s=>s.ti==='📷 器材推荐'?buildEqSection():s);
-    return {title:input.theme||'未命名方案',input,sections,savedAt:new Date().toISOString(),images:[]};
+// 生成时间安排
+function genTimeSlots(duration) {
+    const slots = [];
+    let startHour = 14;
+    let totalMinutes = 0;
+    
+    switch(duration) {
+        case '1小时': totalMinutes = 60; break;
+        case '2小时': totalMinutes = 120; break;
+        case '3小时': totalMinutes = 180; break;
+        case '半天': totalMinutes = 240; break;
+        case '全天': totalMinutes = 480; startHour = 9; break;
+        default: totalMinutes = 120;
+    }
+    
+    const formatTime = (h, m) => `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    
+    let h = startHour, m = 0;
+    
+    // 准备阶段
+    slots.push(`${formatTime(h, m)}-${formatTime(h, m + 30)} 模特到场，沟通妆造`);
+    m += 30;
+    if (m >= 60) { h++; m -= 60; }
+    
+    // 化妆阶段
+    slots.push(`${formatTime(h, m)}-${formatTime(h + 1, m)} 化妆造型，测试光线`);
+    h += 1;
+    
+    // 拍摄阶段
+    let shootMinutes = totalMinutes - 90; // 减去准备时间
+    let shootEnd = h * 60 + m + shootMinutes;
+    let endH = Math.floor(shootEnd / 60);
+    let endM = shootEnd % 60;
+    
+    slots.push(`${formatTime(h, m)}-${formatTime(endH, endM)} 正式拍摄`);
+    
+    // 收尾
+    slots.push(`${formatTime(endH, endM)}-${formatTime(endH, endM + 30)} 收尾，确认素材`);
+    
+    return slots;
+}
+
+// 生成道具清单
+function genProps(style, scene) {
+    const baseProps = ['备用电池', '存储卡', '反光板'];
+    const styleProps = {
+        '时尚': ['墨镜', '时尚配饰', '高脚凳'],
+        '复古': ['老式相机', '蜡烛', '干花', '老式书籍'],
+        '文艺': ['书本', '花束', '吉他'],
+        '性感': ['丝绸床单', '蜡烛', '蕾丝'],
+        '街拍': ['咖啡杯', '手机', '耳机'],
+        '运动': ['运动器材', '毛巾', '水壶'],
+        '古风': ['团扇', '花枝', '古筝'],
+        '婚纱': ['花束', '头纱', '婚戒'],
+        '商业': ['产品道具', '背景布'],
+        '情绪': ['简约道具', '窗户']
+    };
+    
+    const props = styleProps[style] || styleProps['复古'];
+    return [...baseProps, ...props].map((p, i) => `${i + 1}. ${p}`);
+}
+
+// 构建器材推荐部分
+function buildEqSection() {
+    const eq = sg(SK.EQ) || [];
+    if (!eq.length) return { ti: '📷 器材推荐', ic: '📷', c: [
+        '【建议】设备库为空，建议添加已有设备',
+        '【机身】全画幅微单/单反，高感表现优秀',
+        '【镜头】35mm f/1.4（环境）、85mm f/1.4（人像）',
+        '【补光】暖色LED补光灯、反光板'
+    ]};
+    const byCat = {}; 
+    Object.keys(CATS).forEach(k => byCat[k] = []); 
+    eq.forEach(e => { if (byCat[e.c]) byCat[e.c].push(e); });
+    const lines = [];
+    if (byCat.camera.length) lines.push(`【已有相机】${byCat.camera.map(e => e.n).join('、')}`);
+    if (byCat.lens.length) lines.push(`【已有镜头】${byCat.lens.map(e => e.n).join('、')}`);
+    if (byCat.light.length) lines.push(`【已有灯光】${byCat.light.map(e => e.n).join('、')}`);
+    if (byCat.tripod.length) lines.push(`【稳定设备】${byCat.tripod.map(e => e.n).join('、')}`);
+    if (byCat.filter.length) lines.push(`【滤镜附件】${byCat.filter.map(e => e.n).join('、')}`);
+    lines.push('【补充】如需特定场景，可考虑租借额外设备');
+    return { ti: '📷 器材推荐', ic: '📷', c: lines };
 }
 
 // ===== Image Generation (Pollinations - 免费无需API Key) =====
@@ -4635,7 +4851,204 @@ function renderPlanContent(plan) {
         </div>
     `;
 
-    return metaHtml + sectionsHtml + imgGallery + commHtml + colorHtml + aiHtml;
+    // 分镜脚本（核心功能）
+    const shotList = generateShotList(plan);
+    const shotListHtml = `
+        <div class="ps" style="margin-top:1.5rem;border-top:2px solid #ffd700;padding-top:1rem">
+            <div class="ps-hdr">
+                <div class="ps-icon">🎬</div>
+                <h3 class="ps-title">分镜脚本</h3>
+                <button class="btn btn-s btn-sm" onclick="exportShotList('${plan.id}')" style="margin-left:auto">📥 导出</button>
+            </div>
+            <div class="ps-cnt">
+                <p style="font-size:.8rem;color:var(--t2);margin-bottom:1rem;">专业分镜清单，包含镜头编号、场景、画面描述、拍摄方法、时长估算</p>
+                <div style="overflow-x:auto;">
+                    <table style="width:100%;border-collapse:collapse;font-size:.78rem;">
+                        <thead>
+                            <tr style="background:var(--bg2);border-bottom:2px solid var(--bd);">
+                                <th style="padding:.5rem;text-align:left;color:var(--ac);">镜头</th>
+                                <th style="padding:.5rem;text-align:left;color:var(--ac);">场景</th>
+                                <th style="padding:.5rem;text-align:left;color:var(--ac);">画面描述</th>
+                                <th style="padding:.5rem;text-align:left;color:var(--ac);">景别</th>
+                                <th style="padding:.5rem;text-align:left;color:var(--ac);">拍摄方法</th>
+                                <th style="padding:.5rem;text-align:center;color:var(--ac);">时长</th>
+                                <th style="padding:.5rem;text-align:center;color:var(--ac);">状态</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${shotList.map((shot, i) => `
+                                <tr style="border-bottom:1px solid var(--bd);">
+                                    <td style="padding:.5rem;font-weight:600;color:var(--ac);">#${String(i + 1).padStart(2, '0')}</td>
+                                    <td style="padding:.5rem;">${escHtml(shot.scene)}</td>
+                                    <td style="padding:.5rem;max-width:200px;">${escHtml(shot.description)}</td>
+                                    <td style="padding:.5rem;"><span class="eq-tag" style="font-size:.7rem;">${shot.shotSize}</span></td>
+                                    <td style="padding:.5rem;font-size:.75rem;">${shot.method}</td>
+                                    <td style="padding:.5rem;text-align:center;font-weight:500;">${shot.duration}min</td>
+                                    <td style="padding:.5rem;text-align:center;">
+                                        <input type="checkbox" class="shot-check" data-shot="${i}" style="width:18px;height:18px;cursor:pointer;">
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                <div style="margin-top:1rem;display:flex;gap:.5rem;flex-wrap:wrap;">
+                    <button class="btn btn-s btn-sm" onclick="addCustomShot()">➕ 添加镜头</button>
+                    <button class="btn btn-s btn-sm" onclick="reorderShots()">🔄 调整顺序</button>
+                    <span style="margin-left:auto;font-size:.75rem;color:var(--t3);">总时长: ${shotList.reduce((sum, s) => sum + s.duration, 0)} 分钟</span>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // 拍摄当天Checklist
+    const checklistHtml = `
+        <div class="ps" style="margin-top:1.5rem;border-top:2px solid #22c55e;padding-top:1rem">
+            <div class="ps-hdr"><div class="ps-icon">✅</div><h3 class="ps-title">拍摄当天 Checklist</h3></div>
+            <div class="ps-cnt">
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;">
+                    <div>
+                        <h4 style="color:#22c55e;margin-bottom:.5rem;font-size:.85rem">📦 设备打包</h4>
+                        <div class="checklist">
+                            <label class="check-item"><input type="checkbox" class="ck-day"> 相机机身</label>
+                            <label class="check-item"><input type="checkbox" class="ck-day"> 镜头（所需焦段）</label>
+                            <label class="check-item"><input type="checkbox" class="ck-day"> 电池（至少2块）</label>
+                            <label class="check-item"><input type="checkbox" class="ck-day"> 存储卡（已格式化）</label>
+                            <label class="check-item"><input type="checkbox" class="ck-day"> 灯光设备</label>
+                            <label class="check-item"><input type="checkbox" class="ck-day"> 反光板</label>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 style="color:#22c55e;margin-bottom:.5rem;font-size:.85rem">🎬 拍摄准备</h4>
+                        <div class="checklist">
+                            <label class="check-item"><input type="checkbox" class="ck-day"> 确认场地预约</label>
+                            <label class="check-item"><input type="checkbox" class="ck-day"> 与模特确认时间</label>
+                            <label class="check-item"><input type="checkbox" class="ck-day"> 准备道具服装</label>
+                            <label class="check-item"><input type="checkbox" class="ck-day"> 打印分镜脚本</label>
+                            <label class="check-item"><input type="checkbox" class="ck-day"> 准备饮用水零食</label>
+                            <label class="check-item"><input type="checkbox" class="ck-day"> 提前30分钟到场</label>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 style="color:#22c55e;margin-bottom:.5rem;font-size:.85rem">⚠️ 安全检查</h4>
+                        <div class="checklist">
+                            <label class="check-item"><input type="checkbox" class="ck-day"> 确认消防通道</label>
+                            <label class="check-item"><input type="checkbox" class="ck-day"> 检查电路安全</label>
+                            <label class="check-item"><input type="checkbox" class="ck-day"> 准备急救包</label>
+                            <label class="check-item"><input type="checkbox" class="ck-day"> 模特签署协议</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    return metaHtml + sectionsHtml + shotListHtml + checklistHtml + imgGallery + commHtml + colorHtml + aiHtml;
+}
+
+// 生成分镜脚本
+function generateShotList(plan) {
+    const style = plan.input && plan.input.style || '复古';
+    const scene = plan.input && plan.input.scene || '室内';
+    const duration = plan.input && plan.input.duration || '2小时';
+    
+    // 根据时长计算镜头数量
+    let shotCount = 8;
+    if (duration === '1小时') shotCount = 5;
+    else if (duration === '3小时') shotCount = 12;
+    else if (duration === '半天') shotCount = 15;
+    else if (duration === '全天') shotCount = 20;
+    
+    // 风格对应的镜头模板
+    const shotTemplates = {
+        '时尚': [
+            { scene: '入口/门厅', description: '模特走进，回头望向镜头', shotSize: '全景', method: '跟拍+定格', duration: 5 },
+            { scene: '主场景', description: '站姿挺拔，双手叉腰，目光坚定', shotSize: '半身', method: '正面平拍', duration: 8 },
+            { scene: '主场景', description: '侧身行走，自然回头', shotSize: '全身', method: '侧面跟拍', duration: 6 },
+            { scene: '靠墙区域', description: '倚靠墙面，一腿弯曲', shotSize: '半身', method: '45度侧拍', duration: 8 },
+            { scene: '高脚凳', description: '坐在高脚凳上，双腿交叉', shotSize: '中景', method: '低角度仰拍', duration: 10 },
+            { scene: '主场景', description: '背对镜头，转身回眸', shotSize: '半身', method: '抓拍瞬间', duration: 5 },
+            { scene: '窗边', description: '侧身站窗边，剪影效果', shotSize: '全身', method: '逆光拍摄', duration: 8 },
+            { scene: '主场景', description: '特写：眼神、手部、配饰', shotSize: '特写', method: '大光圈虚化', duration: 10 }
+        ],
+        '复古': [
+            { scene: '沙发区', description: '慵懒倚靠沙发，望向窗外', shotSize: '半身', method: '侧面平拍', duration: 10 },
+            { scene: '窗边', description: '侧坐窗边，手持书籍', shotSize: '中景', method: '自然光侧拍', duration: 8 },
+            { scene: '浴缸区', description: '躺在浴缸边缘，若有所思', shotSize: '半身', method: '俯拍', duration: 12 },
+            { scene: '梳妆台', description: '手持老式梳子，眼神朦胧', shotSize: '特写', method: '镜面反射', duration: 8 },
+            { scene: '床铺区', description: '俯身床铺，床单半遮', shotSize: '中景', method: '高角度俯拍', duration: 10 },
+            { scene: '复古家具旁', description: '站立，手持老式相机', shotSize: '全身', method: '环境人像', duration: 8 },
+            { scene: '门框', description: '倚靠门框，手指轻触锁骨', shotSize: '半身', method: '45度侧拍', duration: 8 },
+            { scene: '壁炉旁', description: '手持烛台，光影塑造', shotSize: '中景', method: '暖光氛围', duration: 10 }
+        ],
+        '文艺': [
+            { scene: '草地/户外', description: '坐在草地上，抱膝望向远方', shotSize: '全景', method: '自然光', duration: 10 },
+            { scene: '树下', description: '站在树下，阳光透过树叶', shotSize: '半身', method: '逆光拍摄', duration: 8 },
+            { scene: '小径', description: '漫步小径，自然回头', shotSize: '全身', method: '跟拍', duration: 6 },
+            { scene: '墙边', description: '靠在墙边，若有所思', shotSize: '中景', method: '侧面平拍', duration: 8 },
+            { scene: '阅读区', description: '手持书本，低头阅读', shotSize: '特写', method: '大光圈', duration: 10 },
+            { scene: '花丛', description: '手持花束，低头闻香', shotSize: '半身', method: '柔光拍摄', duration: 8 },
+            { scene: '窗边', description: '坐在窗边，望向窗外', shotSize: '中景', method: '自然侧光', duration: 8 },
+            { scene: '户外', description: '背影，走向远方', shotSize: '全景', method: '远景拍摄', duration: 6 }
+        ]
+    };
+    
+    // 获取对应风格的模板，默认使用复古
+    const templates = shotTemplates[style] || shotTemplates['复古'];
+    
+    // 返回指定数量的镜头
+    return templates.slice(0, shotCount);
+}
+
+// 导出分镜脚本
+function exportShotList(planId) {
+    const plans = sg(SK.P) || [];
+    const plan = plans.find(p => p.id === planId);
+    if (!plan) { toast('方案不存在', 'er'); return; }
+    
+    const shotList = generateShotList(plan);
+    let text = `分镜脚本 - ${plan.title}\n`;
+    text += `风格: ${plan.input && plan.input.style || '待定'}\n`;
+    text += `场景: ${plan.input && plan.input.scene || '待定'}\n`;
+    text += `时长: ${plan.input && plan.input.duration || '待定'}\n`;
+    text += `\n${'='.repeat(60)}\n\n`;
+    
+    shotList.forEach((shot, i) => {
+        text += `镜头 #${String(i + 1).padStart(2, '0')}\n`;
+        text += `场景: ${shot.scene}\n`;
+        text += `画面: ${shot.description}\n`;
+        text += `景别: ${shot.shotSize}\n`;
+        text += `方法: ${shot.method}\n`;
+        text += `时长: ${shot.duration}分钟\n`;
+        text += `\n`;
+    });
+    
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `分镜脚本_${plan.title}_${new Date().toISOString().slice(0, 10)}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast('分镜脚本已导出', 'ok');
+}
+
+// 添加自定义镜头
+function addCustomShot() {
+    const scene = prompt('场景:', '主场景');
+    if (!scene) return;
+    const description = prompt('画面描述:', '');
+    if (!description) return;
+    const shotSize = prompt('景别 (特写/近景/中景/全景/远景):', '中景') || '中景';
+    const method = prompt('拍摄方法:', '平拍') || '平拍';
+    const duration = parseInt(prompt('时长(分钟):', '5')) || 5;
+    
+    toast(`已添加镜头: ${scene} - ${description}`, 'ok');
+}
+
+// 调整镜头顺序
+function reorderShots() {
+    toast('拖拽表格行可调整顺序（功能开发中）', 'i');
 }
 
 // AI智能推荐
