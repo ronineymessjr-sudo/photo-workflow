@@ -2952,10 +2952,27 @@
         <div class="tab-cnt" id="tab-hist">
             <div style="max-width:700px;margin:0 auto;">
                 <div class="panel">
-                    <div class="p-head"><h2>全部历史方案</h2><span class="badge" id="histFullCount">0 条</span></div>
+                    <div class="p-head" style="justify-content:space-between;flex-wrap:wrap;gap:.5rem;">
+                        <div style="display:flex;align-items:center;gap:.75rem;">
+                            <h2>全部历史方案</h2>
+                            <span class="badge" id="histFullCount">0 条</span>
+                        </div>
+                        <div style="display:flex;gap:.5rem;align-items:center;">
+                            <input type="text" id="histSearch" placeholder="🔍 搜索历史..." style="padding:.35rem .75rem;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius-sm);color:var(--t1);font-size:.8rem;width:150px;" oninput="renderHistFull()">
+                            <select id="histSort" onchange="renderHistFull()" style="padding:.35rem .5rem;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius-sm);color:var(--t1);font-size:.8rem;">
+                                <option value="newest">最新优先</option>
+                                <option value="oldest">最早优先</option>
+                                <option value="style">按风格</option>
+                            </select>
+                        </div>
+                    </div>
                     <div class="hist-count" id="histHeaderCount">0 条方案</div>
                     <div class="hist-list" id="histFull"></div>
-                    <div style="padding:.75rem 1rem;"><button class="btn btn-d btn-sm" id="clearAllBtn" style="display:none;" onclick="clearAllHistory()">🗑️ 清空全部</button></div>
+                    <div style="padding:.75rem 1rem;display:flex;gap:.5rem;flex-wrap:wrap;">
+                        <button class="btn btn-d btn-sm" id="clearAllBtn" style="display:none;" onclick="clearAllHistory()">🗑️ 清空全部</button>
+                        <button class="btn btn-s btn-sm" id="exportAllBtn" style="display:none;" onclick="exportAllPlans()">📥 导出全部</button>
+                        <button class="btn btn-i btn-sm" id="batchPdfBtn" style="display:none;" onclick="batchExportPdf()">📄 批量PDF</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -3336,47 +3353,155 @@ function closeShortcutsModal(e) {
     if (e.target.id === 'shortcutsModal') hideShortcutsModal();
 }
 
-// Keyboard shortcuts
-document.addEventListener('keydown', function(e) {
-        if (e.key === '?' && !e.ctrlKey && !e.metaKey && !e.altKey) {
-            e.preventDefault();
-            showShortcutsModal();
-        }
-        if (e.ctrlKey || e.metaKey) {
-            if (e.key === 'n' || e.key === 'N') {
-                e.preventDefault();
-                showTab('gen');
-            } else if (e.key === 's' || e.key === 'S') {
-                e.preventDefault();
-                toast('数据已自动保存', 'ok');
-            } else if (e.key === 'f' || e.key === 'F') {
-                e.preventDefault();
-                var searchInput = document.querySelector('input[placeholder*="搜索"]');
-                if (searchInput) searchInput.focus();
-            }
-        }
-        // Undo/Redo shortcuts
-        if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
-            if (e.key === 'z' || e.key === 'Z') {
-                e.preventDefault();
-                performUndo();
-            }
-        }
-        if ((e.ctrlKey || e.metaKey) && e.shiftKey) {
-            if (e.key === 'z' || e.key === 'Z') {
-                e.preventDefault();
-                performRedo();
-            }
-        }
-        if (e.key === 'Escape') {
-            // 关闭弹窗等
+// Keyboard shortcuts - Enhanced
+(function initKeyboardShortcuts() {
+    // 快捷键映射
+    var shortcuts = {
+        '?': { desc: '显示快捷键帮助', action: showShortcutsModal },
+        'g n': { desc: '新建方案 (Ctrl+N)', action: function() { showTab('gen'); } },
+        'g c': { desc: '打开日历', action: function() { showTab('calendar'); } },
+        'g d': { desc: '打开数据看板', action: function() { showTab('dashboard'); } },
+        'g e': { desc: '打开设备库', action: function() { showTab('eq'); } },
+        'g v': { desc: '打开场地库', action: function() { showTab('venue'); } },
+        'g m': { desc: '打开模特库', action: function() { showTab('model'); } },
+        'g t': { desc: '打开模板', action: function() { showTab('tpl'); } },
+        'g h': { desc: '打开历史', action: function() { showTab('hist'); } },
+        'g b': { desc: '打开备份', action: function() { showTab('backup'); } },
+        '/': { desc: '聚焦搜索框', action: function() { 
+            var searchInput = document.getElementById('globalSearch');
+            if (searchInput) { searchInput.focus(); searchInput.select(); }
+        }},
+        'Escape': { desc: '关闭弹窗/取消', action: function() {
             var sidebar = document.getElementById('sidebar');
             var overlay = document.getElementById('sidebarOverlay');
             if (sidebar) sidebar.classList.remove('open');
             if (overlay) overlay.classList.remove('show');
             hideShortcutsModal();
+            // 清除搜索
+            var searchInput = document.getElementById('globalSearch');
+            if (searchInput && document.activeElement === searchInput) {
+                searchInput.value = '';
+                searchInput.blur();
+            }
+        }}
+    };
+    
+    // 序列按键状态
+    var keySequence = '';
+    var sequenceTimeout = null;
+    
+    document.addEventListener('keydown', function(e) {
+        // 忽略输入框中的快捷键（除了特定几个）
+        var isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA';
+        if (isInput && e.key !== 'Escape' && !e.ctrlKey && !e.metaKey) return;
+        
+        // ? 显示帮助
+        if (e.key === '?' && !e.ctrlKey && !e.metaKey && !e.altKey && !isInput) {
+            e.preventDefault();
+            showShortcutsModal();
+            return;
+        }
+        
+        // / 聚焦搜索
+        if (e.key === '/' && !isInput) {
+            e.preventDefault();
+            shortcuts['/'].action();
+            return;
+        }
+        
+        // g + 字母 导航序列
+        if (!isInput && !e.ctrlKey && !e.metaKey && !e.altKey) {
+            if (e.key === 'g') {
+                e.preventDefault();
+                keySequence = 'g';
+                clearTimeout(sequenceTimeout);
+                sequenceTimeout = setTimeout(function() { keySequence = ''; }, 1000);
+                toast('按 g + 字母导航 (n=方案, c=日历, d=看板...)', 'ok');
+                return;
+            }
+            if (keySequence === 'g') {
+                var navKey = 'g ' + e.key;
+                if (shortcuts[navKey]) {
+                    e.preventDefault();
+                    shortcuts[navKey].action();
+                    keySequence = '';
+                    return;
+                }
+            }
+        }
+        
+        // Ctrl/Cmd 组合键
+        if (e.ctrlKey || e.metaKey) {
+            switch(e.key.toLowerCase()) {
+                case 'n':
+                    e.preventDefault();
+                    showTab('gen');
+                    toast('新建方案', 'ok');
+                    break;
+                case 's':
+                    e.preventDefault();
+                    toast('数据已自动保存', 'ok');
+                    break;
+                case 'f':
+                    e.preventDefault();
+                    shortcuts['/'].action();
+                    break;
+                case 'k':
+                    e.preventDefault();
+                    showShortcutsModal();
+                    break;
+                case 'z':
+                    e.preventDefault();
+                    if (e.shiftKey) {
+                        performRedo();
+                    } else {
+                        performUndo();
+                    }
+                    break;
+                case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
+                    e.preventDefault();
+                    var tabs = ['gen', 'tpl', 'calendar', 'venue', 'dashboard', 'message', 'eq', 'model', 'hist'];
+                    var idx = parseInt(e.key) - 1;
+                    if (tabs[idx]) {
+                        showTab(tabs[idx]);
+                        toast('切换到: ' + tabs[idx], 'ok');
+                    }
+                    break;
+            }
+            return;
+        }
+        
+        // Escape 键
+        if (e.key === 'Escape') {
+            shortcuts['Escape'].action();
         }
     });
+    
+    // 导出快捷键列表供帮助模态框使用
+    window.getShortcutsList = function() {
+        return [
+            { key: '?', desc: '显示快捷键帮助' },
+            { key: '/', desc: '聚焦搜索框' },
+            { key: 'g + n', desc: '新建方案' },
+            { key: 'g + c', desc: '打开日历' },
+            { key: 'g + d', desc: '打开数据看板' },
+            { key: 'g + e', desc: '打开设备库' },
+            { key: 'g + v', desc: '打开场地库' },
+            { key: 'g + m', desc: '打开模特库' },
+            { key: 'g + t', desc: '打开模板' },
+            { key: 'g + h', desc: '打开历史' },
+            { key: 'g + b', desc: '打开备份' },
+            { key: 'Ctrl + N', desc: '新建方案' },
+            { key: 'Ctrl + S', desc: '保存数据' },
+            { key: 'Ctrl + F', desc: '搜索' },
+            { key: 'Ctrl + K', desc: '快捷键帮助' },
+            { key: 'Ctrl + Z', desc: '撤销' },
+            { key: 'Ctrl + Shift + Z', desc: '重做' },
+            { key: 'Ctrl + 1~9', desc: '快速切换标签页' },
+            { key: 'Escape', desc: '关闭弹窗/取消' }
+        ];
+    };
+})();
 
     // Toggle mobile sidebar
     window.toggleMobileSidebar = function() {
@@ -5132,45 +5257,116 @@ function savePlanWithImages(plan) {
     if (!searchInput) return;
     
     var searchTimeout = null;
+    var currentQuery = '';
+    
     searchInput.addEventListener('input', function(e) {
         clearTimeout(searchTimeout);
-        var query = e.target.value.trim().toLowerCase();
-        if (query.length < 1) return;
+        currentQuery = e.target.value.trim().toLowerCase();
+        if (currentQuery.length < 1) {
+            clearSearchHighlight();
+            return;
+        }
         
         searchTimeout = setTimeout(function() {
-            // 搜索方案
-            var plans = sg(SK_PLAN) || [];
-            var matches = plans.filter(function(p) {
-                return (p.input && p.input.theme && p.input.theme.toLowerCase().indexOf(query) > -1) ||
-                       (p.input && p.input.style && p.input.style.toLowerCase().indexOf(query) > -1);
-            });
-            
-            // 搜索日程
-            var schedules = sg(SK_SCHED) || [];
-            var schedMatches = schedules.filter(function(s) {
-                return (s.title && s.title.toLowerCase().indexOf(query) > -1) ||
-                       (s.location && s.location.toLowerCase().indexOf(query) > -1);
-            });
-            
-            // 显示结果
-            if (matches.length > 0) {
-                toast('找到 ' + matches.length + ' 个相关方案', 'ok');
-                showTab('tpl');
-            } else if (schedMatches.length > 0) {
-                toast('找到 ' + schedMatches.length + ' 个相关日程', 'ok');
-                showTab('calendar');
-            } else {
-                toast('未找到相关内容', 'er');
-            }
+            performSearch(currentQuery);
         }, 300);
     });
     
     searchInput.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
             e.preventDefault();
-            e.target.dispatchEvent(new Event('input'));
+            currentQuery = e.target.value.trim().toLowerCase();
+            if (currentQuery.length > 0) {
+                performSearch(currentQuery);
+            }
+        }
+        if (e.key === 'Escape') {
+            e.target.value = '';
+            clearSearchHighlight();
         }
     });
+    
+    function performSearch(query) {
+        var results = { plans: [], schedules: [], venues: [], models: [], equipment: [] };
+        var totalMatches = 0;
+        
+        // 搜索方案
+        var plans = sg(SK_PLAN) || [];
+        results.plans = plans.filter(function(p) {
+            return (p.input && p.input.theme && p.input.theme.toLowerCase().indexOf(query) > -1) ||
+                   (p.input && p.input.style && p.input.style.toLowerCase().indexOf(query) > -1) ||
+                   (p.input && p.input.modelDesc && p.input.modelDesc.toLowerCase().indexOf(query) > -1) ||
+                   (p.input && p.input.scene && p.input.scene.toLowerCase().indexOf(query) > -1);
+        });
+        totalMatches += results.plans.length;
+        
+        // 搜索日程
+        var schedules = sg(SK_SCHED) || [];
+        results.schedules = schedules.filter(function(s) {
+            return (s.title && s.title.toLowerCase().indexOf(query) > -1) ||
+                   (s.location && s.location.toLowerCase().indexOf(query) > -1) ||
+                   (s.note && s.note.toLowerCase().indexOf(query) > -1);
+        });
+        totalMatches += results.schedules.length;
+        
+        // 搜索场地
+        var venues = sg(SK.V) || [];
+        results.venues = venues.filter(function(v) {
+            return (v.name && v.name.toLowerCase().indexOf(query) > -1) ||
+                   (v.styles && v.styles.toLowerCase().indexOf(query) > -1) ||
+                   (v.addr && v.addr.toLowerCase().indexOf(query) > -1);
+        });
+        totalMatches += results.venues.length;
+        
+        // 搜索模特
+        var models = sg(SK.M) || [];
+        results.models = models.filter(function(m) {
+            return (m.name && m.name.toLowerCase().indexOf(query) > -1) ||
+                   (m.tags && m.tags.toLowerCase().indexOf(query) > -1);
+        });
+        totalMatches += results.models.length;
+        
+        // 搜索设备
+        var equipment = sg(SK.EQ) || [];
+        results.equipment = equipment.filter(function(e) {
+            return (e.name && e.name.toLowerCase().indexOf(query) > -1) ||
+                   (e.note && e.note.toLowerCase().indexOf(query) > -1);
+        });
+        totalMatches += results.equipment.length;
+        
+        // 显示搜索结果汇总
+        if (totalMatches > 0) {
+            var msg = '找到: ';
+            var parts = [];
+            if (results.plans.length) parts.push(results.plans.length + ' 个方案');
+            if (results.schedules.length) parts.push(results.schedules.length + ' 个日程');
+            if (results.venues.length) parts.push(results.venues.length + ' 个场地');
+            if (results.models.length) parts.push(results.models.length + ' 位模特');
+            if (results.equipment.length) parts.push(results.equipment.length + ' 件设备');
+            msg += parts.join('、');
+            toast(msg, 'ok');
+            
+            // 跳转到最相关的标签页
+            if (results.plans.length > 0) {
+                showTab('tpl');
+            } else if (results.schedules.length > 0) {
+                showTab('calendar');
+            } else if (results.venues.length > 0) {
+                showTab('venue');
+            } else if (results.models.length > 0) {
+                showTab('model');
+            } else if (results.equipment.length > 0) {
+                showTab('eq');
+            }
+        } else {
+            toast('未找到相关内容', 'er');
+        }
+    }
+    
+    function clearSearchHighlight() {
+        // 清除搜索高亮（如果需要）
+        currentQuery = '';
+    }
 })();
 
 // ===== Step Indicator Logic =====
@@ -5214,18 +5410,102 @@ function renderHistMini(){
     }).join(''):'<div class="hist-empty">暂无历史</div>';
 }
 function renderHistFull(){
-    const ps=getPlans();
-    $('t-hist').textContent=ps.length;
-    $('histFullCount').textContent=`${ps.length} 条`;
-    $('histHeaderCount').textContent=`${ps.length} 条方案`;
-    $('clearAllBtn').style.display=ps.length?'block':'none';
-    $('histFull').innerHTML=ps.length?ps.map(p=>{
-        const d=new Date(p.savedAt);
-        const imgCount = (p.images||[]).length;
-        return`<div class="hist-item"><div class="hist-title">${p.title} ${imgCount?`<span style="font-size:.65rem;color:var(--ac);">🖼️${imgCount}</span>`:''}</div><div class="hist-meta"><span>${p.input && p.input.style||'待定'}</span><span>${d.toLocaleString()}</span></div><div class="hist-actions"><button class="btn btn-s btn-sm" onclick="loadPlan('${p.id}')">查看</button><button class="btn btn-d btn-sm" onclick="delPlan('${p.id}');renderHistFull();renderHistMini();updateBadge();">删除</button><button class="btn btn-i btn-sm" onclick="exportPlanPdf('${p.id}')">📄 PDF</button></div></div>`;
-    }).join(''):'<div class="hist-empty">暂无历史记录</div>';
+    let ps = getPlans();
+    
+    // 搜索过滤
+    const searchInput = document.getElementById('histSearch');
+    if (searchInput && searchInput.value.trim()) {
+        const query = searchInput.value.trim().toLowerCase();
+        ps = ps.filter(p => {
+            return (p.title && p.title.toLowerCase().indexOf(query) > -1) ||
+                   (p.input && p.input.theme && p.input.theme.toLowerCase().indexOf(query) > -1) ||
+                   (p.input && p.input.style && p.input.style.toLowerCase().indexOf(query) > -1) ||
+                   (p.input && p.input.scene && p.input.scene.toLowerCase().indexOf(query) > -1);
+        });
+    }
+    
+    // 排序
+    const sortSelect = document.getElementById('histSort');
+    if (sortSelect) {
+        const sortType = sortSelect.value;
+        if (sortType === 'oldest') {
+            ps = ps.slice().sort((a, b) => new Date(a.savedAt) - new Date(b.savedAt));
+        } else if (sortType === 'style') {
+            ps = ps.slice().sort((a, b) => {
+                const styleA = (a.input && a.input.style) || '';
+                const styleB = (b.input && b.input.style) || '';
+                return styleA.localeCompare(styleB);
+            });
+        }
+        // newest 是默认顺序，不需要排序
+    }
+    
+    $('t-hist').textContent = getPlans().length;
+    $('histFullCount').textContent = `${ps.length} 条`;
+    $('histHeaderCount').textContent = `${ps.length} 条方案` + (searchInput && searchInput.value.trim() ? ` (搜索: "${searchInput.value.trim()}")` : '');
+    $('clearAllBtn').style.display = ps.length ? 'block' : 'none';
+    $('exportAllBtn').style.display = ps.length ? 'block' : 'none';
+    $('batchPdfBtn').style.display = ps.length ? 'block' : 'none';
+    
+    $('histFull').innerHTML = ps.length ? ps.map(p => {
+        const d = new Date(p.savedAt);
+        const imgCount = (p.images || []).length;
+        return `<div class="hist-item"><div class="hist-title">${p.title} ${imgCount ? `<span style="font-size:.65rem;color:var(--ac);">🖼️${imgCount}</span>` : ''}</div><div class="hist-meta"><span>${p.input && p.input.style || '待定'}</span><span>${d.toLocaleString()}</span></div><div class="hist-actions"><button class="btn btn-s btn-sm" onclick="loadPlan('${p.id}')">查看</button><button class="btn btn-d btn-sm" onclick="delPlan('${p.id}');renderHistFull();renderHistMini();updateBadge();">删除</button><button class="btn btn-i btn-sm" onclick="exportPlanPdf('${p.id}')">📄 PDF</button></div></div>`;
+    }).join('') : '<div class="hist-empty">暂无历史记录</div>';
 }
-function clearAllHistory(){if(!confirm('确定清空全部历史？'))return;savePlans([]);renderHistFull();renderHistMini();updateBadge();toast('已清空','ok');}
+
+function clearAllHistory() {
+    if (!confirm('确定清空全部历史？此操作不可恢复！')) return;
+    savePlans([]);
+    renderHistFull();
+    renderHistMini();
+    updateBadge();
+    toast('已清空', 'ok');
+}
+
+// 导出所有方案为JSON
+function exportAllPlans() {
+    const plans = getPlans();
+    if (!plans.length) {
+        toast('没有可导出的方案', 'er');
+        return;
+    }
+    const data = { plans: plans, exportedAt: new Date().toISOString(), version: 2 };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `photo_plans_all_${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast(`已导出 ${plans.length} 个方案`, 'ok');
+}
+
+// 批量导出PDF（逐个下载）
+async function batchExportPdf() {
+    const plans = getPlans();
+    if (!plans.length) {
+        toast('没有可导出的方案', 'er');
+        return;
+    }
+    if (!confirm(`确定批量导出 ${plans.length} 个方案的 PDF 吗？\n这将逐个下载文件。`)) return;
+    
+    toast('开始批量导出，请稍候...', 'ok');
+    let success = 0;
+    for (let i = 0; i < plans.length; i++) {
+        try {
+            await exportPlanPdf(plans[i].id);
+            success++;
+            // 添加延迟避免浏览器阻止批量下载
+            if (i < plans.length - 1) {
+                await new Promise(r => setTimeout(r, 800));
+            }
+        } catch (e) {
+            console.error('导出失败:', e);
+        }
+    }
+    toast(`批量导出完成: ${success}/${plans.length}`, success === plans.length ? 'ok' : 'er');
+}
 function updateBadge(){$('t-eq').textContent=(sg(SK.EQ)||[]).length;$('t-venue').textContent=(sg(SK.V)||[]).length;$('t-model').textContent=(sg(SK.M)||[]).length;$('t-tpl').textContent=(sg(SK.T)||[]).length;$('t-hist').textContent=getPlans().length;}
 
 // ===== Quick Venue =====
