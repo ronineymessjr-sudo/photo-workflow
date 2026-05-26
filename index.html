@@ -6,11 +6,14 @@
     <title>PhotoAtelier - 摄影方案智能工作流</title>
     <meta name="description" content="AI驱动的摄影方案生成工具，智能生成拍摄方案，管理日程、场地与模特资源，一键同步飞书日历与多维表格。">
     <meta name="keywords" content="摄影方案,拍摄策划,AI摄影,摄影日程管理,拍摄场地,模特管理,飞书同步,摄影工作流">
-    <meta property="og:title" content="PhotoAtelier - 摄影方案智能工作流">
-    <meta property="og:description" content="AI驱动的摄影方案生成工具，从创意到执行一站式管理。">
+    <meta property="og:title" content="PhotoAtelier - 专业摄影工作流管理">
+    <meta property="og:description" content="摄影师工作流管理工具，支持分镜脚本生成、参考图库、日程管理">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://ronineymessjr-sudo.github.io/photo-workflow/">
+    <meta property="og:image" content="https://ronineymessjr-sudo.github.io/photo-workflow/og-image.png">
     <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="PhotoAtelier - 专业摄影工作流管理">
+    <meta name="twitter:description" content="摄影师工作流管理工具">
     <link rel="canonical" href="https://ronineymessjr-sudo.github.io/photo-workflow/">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-qZvrbSO6oLHm0Dd3G7gBzSa+IDKxND4e8JZiOjkVN/bRlY7vY1WnFVW8v4wZav3vvEqRJ5x1pCB0kKxWbO3H0Q==" crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
     <!-- Lucide Icons -->
@@ -7118,7 +7121,7 @@ function savePlanWithImages(plan) {
         var totalMatches = 0;
         
         // 搜索方案
-        var plans = sg(SK_PLAN) || [];
+        var plans = sg(SK.P) || [];
         results.plans = plans.filter(function(p) {
             return (p.input && p.input.theme && p.input.theme.toLowerCase().indexOf(query) > -1) ||
                    (p.input && p.input.style && p.input.style.toLowerCase().indexOf(query) > -1) ||
@@ -7635,7 +7638,6 @@ function importData(){
 // ===== Calendar & Schedule =====
 const SK_SCHED = 'pw_schedule';
 const SK_TODO = 'pw_todos';
-const SK_PLAN = 'pw_plans';
 const SK_VENUE = 'pw_venues';
 const SK_MODEL = 'pw_models';
 
@@ -7697,7 +7699,7 @@ const UndoManager = {
 // Save initial state
 UndoManager.save({
     schedules: sg(SK_SCHED) || [],
-    plans: sg(SK_PLAN) || []
+    plans: sg(SK.P) || []
 }, 'init');
 
 // Wrapper functions with undo support
@@ -7705,7 +7707,7 @@ function saveScheduleWithUndo(schedule) {
     const schedules = sg(SK_SCHED) || [];
     schedules.push(schedule);
     ss(SK_SCHED, schedules);
-    UndoManager.save({schedules: schedules, plans: sg(SK_PLAN) || []}, 'add_schedule');
+    UndoManager.save({schedules: schedules, plans: sg(SK.P) || []}, 'add_schedule');
 }
 
 function deleteScheduleWithUndo(id) {
@@ -7713,22 +7715,22 @@ function deleteScheduleWithUndo(id) {
     const deleted = schedules.find(s => s.id === id);
     const newSchedules = schedules.filter(s => s.id !== id);
     ss(SK_SCHED, newSchedules);
-    UndoManager.save({schedules: newSchedules, plans: sg(SK_PLAN) || []}, 'delete_schedule');
+    UndoManager.save({schedules: newSchedules, plans: sg(SK.P) || []}, 'delete_schedule');
     return deleted;
 }
 
 function savePlanWithUndo(plan) {
-    const plans = sg(SK_PLAN) || [];
+    const plans = sg(SK.P) || [];
     plans.push(plan);
-    ss(SK_PLAN, plans);
+    ss(SK.P, plans);
     UndoManager.save({schedules: sg(SK_SCHED) || [], plans: plans}, 'add_plan');
 }
 
 function deletePlanWithUndo(id) {
-    const plans = sg(SK_PLAN) || [];
+    const plans = sg(SK.P) || [];
     const deleted = plans.find(p => p.id === id);
     const newPlans = plans.filter(p => p.id !== id);
-    ss(SK_PLAN, newPlans);
+    ss(SK.P, newPlans);
     UndoManager.save({schedules: sg(SK_SCHED) || [], plans: newPlans}, 'delete_plan');
     return deleted;
 }
@@ -7738,7 +7740,7 @@ function performUndo() {
     const state = UndoManager.undo();
     if (state) {
         if (state.data.schedules) ss(SK_SCHED, state.data.schedules);
-        if (state.data.plans) ss(SK_PLAN, state.data.plans);
+        if (state.data.plans) ss(SK.P, state.data.plans);
         renderSchedules();
         renderHistMini();
         toast('已撤销', 'ok');
@@ -7751,7 +7753,7 @@ function performRedo() {
     const state = UndoManager.redo();
     if (state) {
         if (state.data.schedules) ss(SK_SCHED, state.data.schedules);
-        if (state.data.plans) ss(SK_PLAN, state.data.plans);
+        if (state.data.plans) ss(SK.P, state.data.plans);
         renderSchedules();
         renderHistMini();
         toast('已重做', 'ok');
@@ -7909,12 +7911,12 @@ function duplicateSchedule(id) {
 }
 
 function duplicatePlan(id) {
-    const plans = sg(SK_PLAN) || [];
+    const plans = sg(SK.P) || [];
     const plan = plans.find(p => p.id === id);
     if (plan) {
         const newPlan = {...plan, id: Date.now().toString(), input: {...plan.input, theme: plan.input.theme + ' (复制)'}};
         plans.push(newPlan);
-        ss(SK_PLAN, plans);
+        ss(SK.P, plans);
         renderHistMini();
         toast('方案已复制', 'ok');
     }
@@ -7963,7 +7965,7 @@ function submitSchedule() {
         if (idx >= 0) {
             schedules[idx] = { ...schedules[idx], date: date, title: title, time: time, location: location };
             ss(SK_SCHED, schedules);
-            UndoManager.save({schedules: schedules, plans: sg(SK_PLAN) || []}, 'edit_schedule');
+            UndoManager.save({schedules: schedules, plans: sg(SK.P) || []}, 'edit_schedule');
             renderSchedules();
             toast('日程已更新', 'ok');
         }
@@ -8067,15 +8069,6 @@ window.addSchedule = function() {
     document.getElementById('scheduleModal').style.display = 'flex';
 };
 
-
-
-
-
-
-    renderSchedules();
-    toast('日程已删除', 'ok');
-};
-
 window.showDaySchedules = function(dateStr) {
     const schedules = sg(SK_SCHED) || [];
     const daySchedules = schedules.filter(s => s.date === dateStr);
@@ -8149,7 +8142,7 @@ window.syncToFeishuBitable = async function() {
     const schedules = sg(SK_SCHED) || [];
     const venues = sg(SK_VENUE) || [];
     const models = sg(SK_MODEL) || [];
-    const plans = sg(SK_PLAN) || [];
+    const plans = sg(SK.P) || [];
     
     if (schedules.length === 0 && venues.length === 0 && models.length === 0 && plans.length === 0) {
         toast('没有数据可同步', 'er');
