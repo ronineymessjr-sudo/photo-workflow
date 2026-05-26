@@ -7000,53 +7000,11 @@ window.addSchedule = function() {
     document.getElementById('scheduleModal').style.display = 'flex';
 };
 
-window.submitSchedule = async function() {
-    var date = document.getElementById('schedDate').value;
-    var title = document.getElementById('schedTitle').value;
-    var time = document.getElementById('schedTime').value || '';
-    var location = document.getElementById('schedLocation').value || '';
-    if (!date || !title) { toast('日期和主题为必填项', 'er'); return; }
-    
-    // Save to local
-    const schedules = sg(SK_SCHED) || [];
-    const newSchedule = {
-        id: Date.now().toString(),
-        date, title, time, location,
-        createdAt: new Date().toISOString()
-    };
-    schedules.push(newSchedule);
-    ss(SK_SCHED, schedules);
-    
-    // Sync to server
-    try {
-        await window.api.createSchedule(newSchedule);
-    } catch (e) { console.log('Server sync failed:', e); }
-    
-    closeScheduleModal();
-    renderCalendar();
-    renderSchedules();
-    toast('日程已添加', 'ok');
-};
 
-window.closeScheduleModal = function() {
-    document.getElementById('scheduleModal').style.display = 'none';
-    document.getElementById('schedDate').value = '';
-    document.getElementById('schedTitle').value = '';
-    document.getElementById('schedTime').value = '';
-    document.getElementById('schedLocation').value = '';
-};
 
-window.deleteSchedule = async function(id) {
-    if (!confirm('确定删除此日程？')) return;
-    const schedules = sg(SK_SCHED) || [];
-    ss(SK_SCHED, schedules.filter(s => s.id !== id));
-    
-    // Delete from server
-    try {
-        await window.api.deleteSchedule(id);
-    } catch (e) { console.log('Server delete failed:', e); }
-    
-    renderCalendar();
+
+
+
     renderSchedules();
     toast('日程已删除', 'ok');
 };
@@ -7145,7 +7103,7 @@ window.syncToFeishuBitable = async function() {
                 '地点': s.location || '',
                 '状态': '待拍摄'
             }));
-            results.schedules = await window.api.writeToFeishuBitable('schedules', scheduleRecords);
+            results.schedules = await window.api.writeToFeishuBitable('app_token_placeholder', 'schedules', scheduleRecords);
         }
         
         // 同步场地
@@ -7157,7 +7115,7 @@ window.syncToFeishuBitable = async function() {
                 '标签': v.tags ? v.tags.join(',') : '',
                 '备注': v.note || ''
             }));
-            results.venues = await window.api.writeToFeishuBitable('venues', venueRecords);
+            results.venues = await window.api.writeToFeishuBitable('app_token_placeholder', 'venues', venueRecords);
         }
         
         // 同步模特
@@ -7169,7 +7127,7 @@ window.syncToFeishuBitable = async function() {
                 '标签': m.tags ? m.tags.join(',') : '',
                 '备注': m.note || ''
             }));
-            results.models = await window.api.writeToFeishuBitable('models', modelRecords);
+            results.models = await window.api.writeToFeishuBitable('app_token_placeholder', 'models', modelRecords);
         }
         
         // 同步方案
@@ -7181,7 +7139,7 @@ window.syncToFeishuBitable = async function() {
                 '情绪': p.input && p.input.mood || '',
                 '创建时间': new Date(p.timestamp).toISOString()
             }));
-            results.plans = await window.api.writeToFeishuBitable('plans', planRecords);
+            results.plans = await window.api.writeToFeishuBitable('app_token_placeholder', 'plans', planRecords);
         }
         
         // 统计结果
@@ -7571,9 +7529,9 @@ function renderShotReferenceGallery(shot, style, shotIndex) {
 // Optional: Load images via Pexels API (only works if user has set API key)
 async function loadShotReferencesApi(shotIndex, style, shotDataEncoded) {
     const apiKey = getPexelsApiKey();
-    if (!apiKey) { toast('Please set Pexels API Key in settings first', 'er'); return; }
-
+    if (!apiKey) { toast('请在设置中填入 Pexels API Key', 'er'); return; }
     const container = document.getElementById(`ref-images-${shotIndex}`);
+    if (!container) { toast('找不到参考图容器', 'er'); return; }
     container.innerHTML = '<div class="spinner" style="width:24px;height:24px;"></div>';
 
     try {
@@ -7628,7 +7586,7 @@ async function loadAllPlanReferences(planId) {
     const shotList = generateShotList(plan);
     const style = plan.input && plan.input.style || '复古';
     toast('Loading references...', 'i');
-    for (let i = 0; i < Math.min(shotList.length, 5); i++) {
+    for (let i = 0; i < shotList.length; i++) {
         const container = document.getElementById(`ref-images-${i}`);
         if (container) {
             await loadShotReferencesApi(i, style, encodeURIComponent(JSON.stringify(shotList[i])));
