@@ -2110,6 +2110,328 @@
             .hamburger-btn { width: 44px; height: 44px; }
             .lang-btn { padding: 0.4rem 0.75rem; min-height: 44px; }
         }
+        
+        /* ===== Print Styles for Shot List ===== */
+        @media print {
+            body {
+                background: white !important;
+                color: black !important;
+                font-size: 10pt;
+            }
+            .sidebar, .mobile-header, .lang-switcher, .bg-orb, 
+            body::before, body::after, .floating-actions, .btn {
+                display: none !important;
+            }
+            .main-content {
+                margin-left: 0 !important;
+                padding: 0 !important;
+            }
+            .content-area {
+                padding: 10mm !important;
+            }
+            .panel {
+                background: white !important;
+                border: 1px solid #ccc !important;
+                box-shadow: none !important;
+                break-inside: avoid;
+            }
+            .ps-card {
+                border: 1px solid #ddd;
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+            .shot-print-header {
+                text-align: center;
+                border-bottom: 2px solid #333;
+                padding-bottom: 10px;
+                margin-bottom: 20px;
+            }
+            .shot-print-title {
+                font-size: 18pt;
+                font-weight: bold;
+                margin-bottom: 5px;
+            }
+            .shot-print-meta {
+                font-size: 9pt;
+                color: #666;
+            }
+            .shot-print-table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 8pt;
+            }
+            .shot-print-table th {
+                background: #f0f0f0;
+                border: 1px solid #ccc;
+                padding: 4px;
+                text-align: left;
+            }
+            .shot-print-table td {
+                border: 1px solid #ddd;
+                padding: 4px;
+                vertical-align: top;
+            }
+            .shot-print-table tr:nth-child(even) {
+                background: #fafafa;
+            }
+            .shot-print-check {
+                width: 20px;
+                height: 20px;
+                border: 2px solid #333;
+                display: inline-block;
+            }
+            .shot-print-notes {
+                font-size: 7pt;
+                color: #666;
+                margin-top: 2px;
+            }
+            .print-page-break {
+                page-break-after: always;
+            }
+            .shot-compact-card {
+                border: 1px solid #ccc;
+                padding: 8px;
+                margin-bottom: 8px;
+                break-inside: avoid;
+            }
+            .shot-compact-header {
+                display: flex;
+                justify-content: space-between;
+                border-bottom: 1px solid #eee;
+                padding-bottom: 4px;
+                margin-bottom: 4px;
+            }
+            .shot-compact-num {
+                font-weight: bold;
+                font-size: 11pt;
+            }
+            .shot-compact-scene {
+                font-size: 9pt;
+            }
+            .shot-compact-params {
+                font-size: 8pt;
+                color: #555;
+            }
+            .shot-compact-desc {
+                font-size: 8pt;
+                margin: 4px 0;
+            }
+            .shot-compact-notes {
+                font-size: 7pt;
+                color: #777;
+                font-style: italic;
+            }
+        }
+        
+        /* ===== On-Set Shooting Mode ===== */
+        .onset-mode {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg);
+            z-index: 1000;
+            overflow-y: auto;
+            display: none;
+        }
+        .onset-mode.active {
+            display: block;
+        }
+        .onset-header {
+            position: sticky;
+            top: 0;
+            background: var(--bg3);
+            padding: 1rem;
+            border-bottom: 1px solid var(--bd);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+        .onset-progress {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .onset-progress-bar {
+            width: 150px;
+            height: 8px;
+            background: var(--bg4);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .onset-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--ac), var(--ac2));
+            transition: width 0.3s;
+        }
+        .onset-timer {
+            font-family: monospace;
+            font-size: 1.2rem;
+            color: var(--ac);
+        }
+        .onset-shot-card {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--bd);
+            transition: all 0.3s;
+        }
+        .onset-shot-card.completed {
+            opacity: 0.5;
+            background: var(--bg2);
+        }
+        .onset-shot-card.current {
+            background: var(--ac-glow);
+            border-left: 4px solid var(--ac);
+        }
+        .onset-shot-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .onset-shot-num {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--ac);
+        }
+        .onset-shot-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .onset-btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius-sm);
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .onset-btn-primary {
+            background: var(--ac);
+            color: white;
+        }
+        .onset-btn-secondary {
+            background: var(--bg3);
+            color: var(--t1);
+            border: 1px solid var(--bd);
+        }
+        .onset-notes-input {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--bg2);
+            border: 1px solid var(--bd);
+            border-radius: var(--radius-sm);
+            color: var(--t1);
+            margin-top: 0.5rem;
+            resize: vertical;
+            min-height: 60px;
+        }
+        .onset-rating {
+            display: flex;
+            gap: 0.25rem;
+            margin-top: 0.5rem;
+        }
+        .onset-rating-star {
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--t3);
+            transition: color 0.2s;
+        }
+        .onset-rating-star.active {
+            color: #fbbf24;
+        }
+        .onset-keeper-btn {
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--bd);
+            background: var(--bg3);
+            color: var(--t2);
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .onset-keeper-btn.active {
+            background: #22c55e;
+            color: white;
+            border-color: #22c55e;
+        }
+        
+        /* ===== Shot Rating & Keeper Styles ===== */
+        .shot-rating {
+            display: inline-flex;
+            gap: 2px;
+        }
+        .shot-rating-star {
+            font-size: 0.9rem;
+            cursor: pointer;
+            color: var(--t3);
+            transition: color 0.2s;
+        }
+        .shot-rating-star.filled {
+            color: #fbbf24;
+        }
+        .shot-keeper-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.15rem 0.5rem;
+            background: #22c55e;
+            color: white;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+        .shot-time-actual {
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: var(--ac);
+        }
+        .shot-image-upload {
+            margin-top: 0.5rem;
+        }
+        .shot-image-preview {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin: 0.25rem;
+            border: 2px solid var(--bd);
+        }
+        
+        /* ===== Export Buttons ===== */
+        .export-btn-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .export-btn {
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--bd);
+            background: var(--bg3);
+            color: var(--t2);
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            transition: all 0.2s;
+        }
+        .export-btn:hover {
+            background: var(--bg4);
+            color: var(--t1);
+            border-color: var(--bd2);
+        }
+        .export-btn.primary {
+            background: var(--ac);
+            color: white;
+            border-color: var(--ac);
+        }
+        .export-btn.primary:hover {
+            background: var(--ach);
+        }
     </style>
     <!-- AOS Animation Library -->
     <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet" />
@@ -5091,7 +5413,12 @@ function renderPlanContent(plan) {
             <div class="ps-hdr">
                 <div class="ps-icon">🎬</div>
                 <h3 class="ps-title">专业分镜脚本</h3>
-                <button class="btn btn-s btn-sm" onclick="exportShotList('${plan.id}')" style="margin-left:auto">📥 导出</button>
+                <div class="export-btn-group" style="margin-left:auto;">
+                    <button class="export-btn primary" onclick="openOnSetMode('${plan.id}')">📱 现场模式</button>
+                    <button class="export-btn" onclick="exportShotListPDF('${plan.id}')">📄 PDF</button>
+                    <button class="export-btn" onclick="printShotList('${plan.id}')">🖨 打印</button>
+                    <button class="export-btn" onclick="exportShotList('${plan.id}')">📥 TXT</button>
+                </div>
             </div>
             <div class="ps-cnt">
                 <p style="font-size:.8rem;color:var(--t2);margin-bottom:1rem;">专业分镜清单：镜头编号、场景、画面描述、景别、焦距、构图、灯光、道具、角度、情绪、时长、备注</p>
@@ -6262,6 +6589,666 @@ function exportShotList(planId) {
     a.click();
     URL.revokeObjectURL(url);
     toast('专业分镜脚本已导出', 'ok');
+}
+
+// 导出PDF分镜脚本
+async function exportShotListPDF(planId) {
+    const plans = sg(SK.P) || [];
+    const plan = plans.find(p => p.id === planId);
+    if (!plan) { toast('方案不存在', 'er'); return; }
+    
+    // Check if jsPDF is loaded
+    if (typeof window.jspdf === 'undefined') {
+        toast('PDF库加载中，请稍后重试', 'er');
+        return;
+    }
+    
+    const { jsPDF } = window.jspdf;
+    const shotList = generateShotList(plan);
+    
+    // Create PDF with Chinese font support
+    const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+    });
+    
+    // Add custom font for Chinese support
+    doc.addFileToVFS('NotoSansCJKsc-Regular.ttf', '');
+    doc.setFont('helvetica');
+    
+    let y = 15;
+    const pageWidth = doc.internal.pageSize.width;
+    const margin = 15;
+    const contentWidth = pageWidth - 2 * margin;
+    
+    // Header
+    doc.setFontSize(18);
+    doc.setTextColor(255, 107, 107);
+    doc.text('PhotoAtelier', pageWidth / 2, y, { align: 'center' });
+    y += 8;
+    
+    doc.setFontSize(14);
+    doc.setTextColor(51, 51, 51);
+    doc.text('Professional Shot List', pageWidth / 2, y, { align: 'center' });
+    y += 12;
+    
+    // Plan Info
+    doc.setFontSize(10);
+    doc.setTextColor(80, 80, 80);
+    doc.text(`Plan: ${plan.title || 'Untitled'}`, margin, y);
+    y += 6;
+    doc.text(`Style: ${plan.input?.style || 'N/A'} | Scene: ${plan.input?.scene || 'N/A'} | Duration: ${plan.input?.duration || 'N/A'}`, margin, y);
+    y += 6;
+    doc.text(`Total Shots: ${shotList.length} | Total Time: ${shotList.reduce((sum, s) => sum + s.duration, 0)} min`, margin, y);
+    y += 10;
+    
+    // Separator line
+    doc.setDrawColor(200, 200, 200);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 8;
+    
+    // Shot List Table Header
+    const colWidths = [12, 25, 45, 18, 20, 25, 20];
+    const colX = [margin];
+    for (let i = 0; i < colWidths.length - 1; i++) {
+        colX.push(colX[i] + colWidths[i]);
+    }
+    
+    doc.setFillColor(240, 240, 240);
+    doc.rect(margin, y - 4, contentWidth, 8, 'F');
+    doc.setFontSize(8);
+    doc.setTextColor(60, 60, 60);
+    
+    const headers = ['#', 'Scene', 'Description', 'Size', 'Focal', 'Comp', 'Time'];
+    headers.forEach((h, i) => {
+        doc.text(h, colX[i] + 1, y + 1);
+    });
+    y += 8;
+    
+    // Shot rows
+    shotList.forEach((shot, i) => {
+        // Check for page break
+        if (y > 270) {
+            doc.addPage();
+            y = 15;
+            // Redraw header on new page
+            doc.setFillColor(240, 240, 240);
+            doc.rect(margin, y - 4, contentWidth, 8, 'F');
+            headers.forEach((h, j) => {
+                doc.text(h, colX[j] + 1, y + 1);
+            });
+            y += 8;
+        }
+        
+        // Alternate row background
+        if (i % 2 === 1) {
+            doc.setFillColor(250, 250, 250);
+            doc.rect(margin, y - 3, contentWidth, 6, 'F');
+        }
+        
+        doc.setTextColor(40, 40, 40);
+        
+        // Shot number
+        doc.setFontSize(8);
+        doc.setTextColor(255, 107, 107);
+        doc.text(String(i + 1), colX[0] + 3, y);
+        
+        // Scene
+        doc.setTextColor(40, 40, 40);
+        const sceneText = doc.splitTextToSize(shot.scene || '', colWidths[1] - 2);
+        doc.text(sceneText, colX[1] + 1, y);
+        
+        // Description
+        const descText = doc.splitTextToSize(shot.description || '', colWidths[2] - 2);
+        doc.text(descText, colX[2] + 1, y);
+        
+        // Shot size
+        doc.text((shot.shotSize || '').substring(0, 6), colX[3] + 1, y);
+        
+        // Focal length
+        doc.setTextColor(78, 205, 196);
+        doc.text((shot.focalLength || '').substring(0, 10), colX[4] + 1, y);
+        
+        // Composition
+        doc.setTextColor(40, 40, 40);
+        doc.text((shot.composition || '').substring(0, 8), colX[5] + 1, y);
+        
+        // Duration
+        doc.text(String(shot.duration || 0) + 'm', colX[6] + 1, y);
+        
+        y += 6;
+    });
+    
+    y += 10;
+    
+    // Equipment Summary
+    if (y > 240) {
+        doc.addPage();
+        y = 15;
+    }
+    
+    doc.setFontSize(12);
+    doc.setTextColor(255, 107, 107);
+    doc.text('Equipment Summary', margin, y);
+    y += 8;
+    
+    const allProps = new Set();
+    const allFocalLengths = new Set();
+    shotList.forEach(shot => {
+        if (shot.props && shot.props !== '无') {
+            shot.props.split('、').forEach(p => allProps.add(p.trim()));
+        }
+        allFocalLengths.add(shot.focalLength);
+    });
+    
+    doc.setFontSize(9);
+    doc.setTextColor(60, 60, 60);
+    doc.text('Focal Lengths:', margin, y);
+    y += 5;
+    doc.setTextColor(40, 40, 40);
+    const focalText = Array.from(allFocalLengths).join(', ');
+    const focalLines = doc.splitTextToSize(focalText, contentWidth);
+    doc.text(focalLines, margin, y);
+    y += focalLines.length * 4 + 5;
+    
+    if (allProps.size > 0) {
+        doc.setTextColor(60, 60, 60);
+        doc.text('Props:', margin, y);
+        y += 5;
+        doc.setTextColor(40, 40, 40);
+        const propsText = Array.from(allProps).map((p, i) => `${i+1}. ${p}`).join(', ');
+        const propsLines = doc.splitTextToSize(propsText, contentWidth);
+        doc.text(propsLines, margin, y);
+    }
+    
+    // Footer
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(150, 150, 150);
+        doc.text(`PhotoAtelier - ${new Date().toLocaleDateString()} - Page ${i}/${pageCount}`, pageWidth / 2, 285, { align: 'center' });
+    }
+    
+    // Save PDF
+    doc.save(`ShotList_${plan.title || 'Plan'}_${new Date().toISOString().slice(0, 10)}.pdf`);
+    toast('PDF分镜脚本已导出', 'ok');
+}
+
+// 打印分镜脚本
+function printShotList(planId) {
+    const plans = sg(SK.P) || [];
+    const plan = plans.find(p => p.id === planId);
+    if (!plan) { toast('方案不存在', 'er'); return; }
+    
+    const shotList = generateShotList(plan);
+    
+    // Create print window content
+    const printContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Shot List - ${plan.title}</title>
+            <style>
+                @page { size: A4; margin: 10mm; }
+                * { box-sizing: border-box; margin: 0; padding: 0; }
+                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 9pt; line-height: 1.4; color: #333; }
+                .header { text-align: center; border-bottom: 2px solid #ff6b6b; padding-bottom: 10px; margin-bottom: 15px; }
+                .header h1 { font-size: 16pt; color: #ff6b6b; margin-bottom: 5px; }
+                .header h2 { font-size: 12pt; color: #666; font-weight: normal; }
+                .meta { display: flex; justify-content: space-between; font-size: 8pt; color: #666; margin-bottom: 15px; }
+                table { width: 100%; border-collapse: collapse; font-size: 8pt; }
+                th { background: #f5f5f5; border: 1px solid #ddd; padding: 4px; text-align: left; font-weight: 600; }
+                td { border: 1px solid #eee; padding: 4px; vertical-align: top; }
+                tr:nth-child(even) { background: #fafafa; }
+                .num { color: #ff6b6b; font-weight: bold; text-align: center; }
+                .focal { color: #4ecdc4; }
+                .page-break { page-break-after: always; }
+                .section { margin-bottom: 15px; }
+                .section-title { font-size: 11pt; color: #ff6b6b; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 4px; }
+                .compact-shot { border: 1px solid #ddd; padding: 8px; margin-bottom: 8px; break-inside: avoid; }
+                .compact-header { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding-bottom: 4px; margin-bottom: 4px; }
+                .compact-num { font-weight: bold; font-size: 10pt; color: #ff6b6b; }
+                .compact-params { font-size: 7pt; color: #666; }
+                .compact-desc { font-size: 8pt; margin: 4px 0; }
+                .compact-notes { font-size: 7pt; color: #999; font-style: italic; }
+                .check-box { display: inline-block; width: 12px; height: 12px; border: 1px solid #333; margin-right: 4px; }
+                @media print {
+                    body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>PhotoAtelier</h1>
+                <h2>Professional Shot List</h2>
+            </div>
+            <div class="meta">
+                <span><strong>Plan:</strong> ${plan.title || 'Untitled'}</span>
+                <span><strong>Style:</strong> ${plan.input?.style || 'N/A'}</span>
+                <span><strong>Total Shots:</strong> ${shotList.length}</span>
+                <span><strong>Total Time:</strong> ${shotList.reduce((sum, s) => sum + s.duration, 0)} min</span>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Shot List (Compact View)</div>
+                ${shotList.map((shot, i) => `
+                    <div class="compact-shot">
+                        <div class="compact-header">
+                            <span class="compact-num"><span class="check-box"></span> #${String(i + 1).padStart(2, '0')} ${shot.scene}</span>
+                            <span class="compact-params">${shot.focalLength} · ${shot.duration}min</span>
+                        </div>
+                        <div class="compact-desc"><strong>${shot.shotSize}</strong> - ${shot.description}</div>
+                        <div class="compact-params">${shot.composition} · ${shot.lighting} · ${shot.angle} · ${shot.mood}</div>
+                        ${shot.notes ? `<div class="compact-notes">Note: ${shot.notes}</div>` : ''}
+                    </div>
+                `).join('')}
+            </div>
+            
+            <div class="page-break"></div>
+            
+            <div class="section">
+                <div class="section-title">Detailed Shot Table</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 25px;">#</th>
+                            <th style="width: 50px;">Scene</th>
+                            <th>Description</th>
+                            <th style="width: 35px;">Size</th>
+                            <th style="width: 50px;">Focal</th>
+                            <th style="width: 50px;">Comp</th>
+                            <th style="width: 40px;">Light</th>
+                            <th style="width: 30px;">Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${shotList.map((shot, i) => `
+                            <tr>
+                                <td class="num">${i + 1}</td>
+                                <td>${shot.scene}</td>
+                                <td>${shot.description}</td>
+                                <td>${shot.shotSize}</td>
+                                <td class="focal">${shot.focalLength}</td>
+                                <td>${shot.composition}</td>
+                                <td>${shot.lighting}</td>
+                                <td>${shot.duration}m</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="page-break"></div>
+            
+            <div class="section">
+                <div class="section-title">Equipment Checklist</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 30px;"><span class="check-box"></span></th>
+                            <th>Item</th>
+                            <th style="width: 100px;">Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${Array.from(new Set(shotList.map(s => s.focalLength))).map(f => `
+                            <tr>
+                                <td><span class="check-box"></span></td>
+                                <td>Lens: ${f}</td>
+                                <td></td>
+                            </tr>
+                        `).join('')}
+                        ${Array.from(new Set(shotList.flatMap(s => s.props && s.props !== '无' ? s.props.split('、') : []))).map(p => `
+                            <tr>
+                                <td><span class="check-box"></span></td>
+                                <td>Prop: ${p.trim()}</td>
+                                <td></td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        </body>
+        </html>
+    `;
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+        printWindow.print();
+    }, 500);
+    
+    toast('打印窗口已打开', 'ok');
+}
+
+// 打开拍摄现场模式
+function openOnSetMode(planId) {
+    const plans = sg(SK.P) || [];
+    const plan = plans.find(p => p.id === planId);
+    if (!plan) { toast('方案不存在', 'er'); return; }
+    
+    const shotList = generateShotList(plan);
+    
+    // Create on-set mode overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'onset-mode active';
+    overlay.id = 'onset-mode-overlay';
+    
+    overlay.innerHTML = `
+        <div class="onset-header">
+            <div style="display:flex;align-items:center;gap:1rem;">
+                <button class="onset-btn onset-btn-secondary" onclick="closeOnSetMode()">
+                    <span>←</span> 退出
+                </button>
+                <div>
+                    <div style="font-weight:600;">${plan.title}</div>
+                    <div style="font-size:0.75rem;color:var(--t3);">拍摄现场模式</div>
+                </div>
+            </div>
+            <div class="onset-progress">
+                <span id="onset-progress-text">0/${shotList.length}</span>
+                <div class="onset-progress-bar">
+                    <div class="onset-progress-fill" id="onset-progress-fill" style="width:0%"></div>
+                </div>
+                <div class="onset-timer" id="onset-timer">00:00</div>
+            </div>
+        </div>
+        <div id="onset-shots-container">
+            ${shotList.map((shot, i) => `
+                <div class="onset-shot-card ${isShotComplete(planId, i) ? 'completed' : ''}" data-index="${i}" id="onset-shot-${i}">
+                    <div class="onset-shot-header">
+                        <div>
+                            <div class="onset-shot-num">#${String(i + 1).padStart(2, '0')} ${shot.scene}</div>
+                            <div style="font-size:0.8rem;color:var(--t2);margin-top:0.25rem;">
+                                ${shot.shotSize} · <span style="color:#4ecdc4;">${shot.focalLength}</span> · ${shot.duration}分钟
+                            </div>
+                        </div>
+                        <div class="onset-shot-actions">
+                            <button class="onset-keeper-btn ${isShotKeeper(planId, i) ? 'active' : ''}" onclick="toggleShotKeeper('${planId}', ${i}, this)">
+                                ${isShotKeeper(planId, i) ? '★ 精选' : '☆ 标记精选'}
+                            </button>
+                        </div>
+                    </div>
+                    <div style="margin-bottom:1rem;">
+                        <div style="font-size:0.9rem;margin-bottom:0.5rem;"><strong>画面：</strong>${shot.description}</div>
+                        <div style="font-size:0.8rem;color:var(--t2);">
+                            <span style="display:inline-block;margin-right:1rem;"><strong>构图：</strong>${shot.composition}</span>
+                            <span style="display:inline-block;margin-right:1rem;"><strong>灯光：</strong>${shot.lighting}</span>
+                            <span style="display:inline-block;margin-right:1rem;"><strong>角度：</strong>${shot.angle}</span>
+                            <span style="display:inline-block;"><strong>情绪：</strong>${shot.mood}</span>
+                        </div>
+                    </div>
+                    <div style="background:var(--bg2);padding:0.75rem;border-radius:var(--radius-sm);margin-bottom:1rem;">
+                        <div style="font-size:0.75rem;color:var(--t3);margin-bottom:0.25rem;">引导话术</div>
+                        <div style="font-size:0.85rem;font-style:italic;">"${getShotDirection(shot)}"</div>
+                    </div>
+                    <div class="onset-rating" id="onset-rating-${i}">
+                        ${[1,2,3,4,5].map(star => `
+                            <span class="onset-rating-star ${getShotRating(planId, i) >= star ? 'active' : ''}" 
+                                  onclick="setShotRating('${planId}', ${i}, ${star})"
+                                  data-rating="${star}">★</span>
+                        `).join('')}
+                        <span style="margin-left:0.5rem;font-size:0.75rem;color:var(--t3);">评分</span>
+                    </div>
+                    <div style="margin-top:0.75rem;">
+                        <div style="font-size:0.75rem;color:var(--t3);margin-bottom:0.25rem;">实拍备注</div>
+                        <textarea class="onset-notes-input" 
+                                  placeholder="记录实拍情况、问题、心得..."
+                                  onblur="saveShotNotes('${planId}', ${i}, this.value)"
+                                  id="onset-notes-${i}">${getShotNotes(planId, i)}</textarea>
+                    </div>
+                    <div style="margin-top:0.75rem;display:flex;gap:0.5rem;align-items:center;">
+                        <button class="onset-btn ${isShotComplete(planId, i) ? 'onset-btn-secondary' : 'onset-btn-primary'}" 
+                                onclick="toggleOnSetShotComplete('${planId}', ${i}, this)">
+                            ${isShotComplete(planId, i) ? '✓ 已完成' : '标记完成'}
+                        </button>
+                        <button class="onset-btn onset-btn-secondary" onclick="startShotTimer('${planId}', ${i})">
+                            ⏱ 计时
+                        </button>
+                        <span class="shot-time-actual" id="shot-timer-${i}">${getShotActualTime(planId, i) || ''}</span>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+    
+    document.body.appendChild(overlay);
+    updateOnSetProgress(planId);
+    startOnSetTimer();
+    
+    // Scroll to first incomplete shot
+    const firstIncomplete = shotList.findIndex((_, i) => !isShotComplete(planId, i));
+    if (firstIncomplete >= 0) {
+        setTimeout(() => {
+            const el = document.getElementById(`onset-shot-${firstIncomplete}`);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+    }
+}
+
+// 关闭拍摄现场模式
+function closeOnSetMode() {
+    const overlay = document.getElementById('onset-mode-overlay');
+    if (overlay) {
+        overlay.remove();
+    }
+    stopOnSetTimer();
+}
+
+// 更新拍摄现场进度
+function updateOnSetProgress(planId) {
+    const plans = sg(SK.P) || [];
+    const plan = plans.find(p => p.id === planId);
+    if (!plan) return;
+    
+    const shotList = generateShotList(plan);
+    const completed = shotList.filter((_, i) => isShotComplete(planId, i)).length;
+    const percent = Math.round((completed / shotList.length) * 100);
+    
+    const progressText = document.getElementById('onset-progress-text');
+    const progressFill = document.getElementById('onset-progress-fill');
+    
+    if (progressText) progressText.textContent = `${completed}/${shotList.length}`;
+    if (progressFill) progressFill.style.width = `${percent}%`;
+}
+
+// 拍摄现场计时器
+let onsetTimerInterval = null;
+let onsetStartTime = null;
+
+function startOnSetTimer() {
+    onsetStartTime = Date.now();
+    onsetTimerInterval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - onsetStartTime) / 1000);
+        const mins = String(Math.floor(elapsed / 60)).padStart(2, '0');
+        const secs = String(elapsed % 60).padStart(2, '0');
+        const timer = document.getElementById('onset-timer');
+        if (timer) timer.textContent = `${mins}:${secs}`;
+    }, 1000);
+}
+
+function stopOnSetTimer() {
+    if (onsetTimerInterval) {
+        clearInterval(onsetTimerInterval);
+        onsetTimerInterval = null;
+    }
+}
+
+// 在拍摄现场模式中切换完成状态
+function toggleOnSetShotComplete(planId, shotIndex, btn) {
+    const newState = !isShotComplete(planId, shotIndex);
+    toggleShotComplete(planId, shotIndex, newState);
+    
+    const card = document.getElementById(`onset-shot-${shotIndex}`);
+    if (card) {
+        card.classList.toggle('completed', newState);
+    }
+    
+    btn.innerHTML = newState ? '✓ 已完成' : '标记完成';
+    btn.className = `onset-btn ${newState ? 'onset-btn-secondary' : 'onset-btn-primary'}`;
+    
+    updateOnSetProgress(planId);
+}
+
+// 镜头评分功能
+function setShotRating(planId, shotIndex, rating) {
+    const key = `pa_shot_rating_${planId}`;
+    const ratings = JSON.parse(localStorage.getItem(key) || '{}');
+    ratings[shotIndex] = rating;
+    localStorage.setItem(key, JSON.stringify(ratings));
+    
+    // Update UI
+    const ratingContainer = document.getElementById(`onset-rating-${shotIndex}`);
+    if (ratingContainer) {
+        const stars = ratingContainer.querySelectorAll('.onset-rating-star');
+        stars.forEach((star, i) => {
+            star.classList.toggle('active', i < rating);
+        });
+    }
+    
+    toast(`镜头 #${shotIndex + 1} 评分: ${rating}星`, 'ok');
+}
+
+function getShotRating(planId, shotIndex) {
+    const key = `pa_shot_rating_${planId}`;
+    const ratings = JSON.parse(localStorage.getItem(key) || '{}');
+    return ratings[shotIndex] || 0;
+}
+
+// 精选标记功能
+function toggleShotKeeper(planId, shotIndex, btn) {
+    const key = `pa_shot_keeper_${planId}`;
+    const keepers = JSON.parse(localStorage.getItem(key) || '{}');
+    const newState = !keepers[shotIndex];
+    keepers[shotIndex] = newState;
+    localStorage.setItem(key, JSON.stringify(keepers));
+    
+    btn.innerHTML = newState ? '★ 精选' : '☆ 标记精选';
+    btn.classList.toggle('active', newState);
+    
+    toast(newState ? `镜头 #${shotIndex + 1} 已标记为精选` : `镜头 #${shotIndex + 1} 取消精选标记`, newState ? 'ok' : 'i');
+}
+
+function isShotKeeper(planId, shotIndex) {
+    const key = `pa_shot_keeper_${planId}`;
+    const keepers = JSON.parse(localStorage.getItem(key) || '{}');
+    return !!keepers[shotIndex];
+}
+
+// 实拍备注功能
+function saveShotNotes(planId, shotIndex, notes) {
+    const key = `pa_shot_notes_${planId}`;
+    const allNotes = JSON.parse(localStorage.getItem(key) || '{}');
+    allNotes[shotIndex] = notes;
+    localStorage.setItem(key, JSON.stringify(allNotes));
+}
+
+function getShotNotes(planId, shotIndex) {
+    const key = `pa_shot_notes_${planId}`;
+    const allNotes = JSON.parse(localStorage.getItem(key) || '{}');
+    return allNotes[shotIndex] || '';
+}
+
+// 实拍计时功能
+let shotTimers = {};
+
+function startShotTimer(planId, shotIndex) {
+    const timerId = `${planId}_${shotIndex}`;
+    
+    if (shotTimers[timerId]) {
+        // Stop timer
+        clearInterval(shotTimers[timerId].interval);
+        const elapsed = Math.floor((Date.now() - shotTimers[timerId].start) / 1000);
+        delete shotTimers[timerId];
+        
+        // Save actual time
+        const key = `pa_shot_time_${planId}`;
+        const times = JSON.parse(localStorage.getItem(key) || '{}');
+        times[shotIndex] = (times[shotIndex] || 0) + elapsed;
+        localStorage.setItem(key, JSON.stringify(times));
+        
+        const display = document.getElementById(`shot-timer-${shotIndex}`);
+        if (display) display.textContent = formatDuration(times[shotIndex]);
+        
+        toast(`镜头 #${shotIndex + 1} 计时结束`, 'ok');
+    } else {
+        // Start timer
+        const startTime = Date.now();
+        shotTimers[timerId] = { start: startTime, interval: null };
+        
+        shotTimers[timerId].interval = setInterval(() => {
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const display = document.getElementById(`shot-timer-${shotIndex}`);
+            if (display) display.textContent = `⏱ ${formatDuration(elapsed)}`;
+        }, 1000);
+        
+        toast(`镜头 #${shotIndex + 1} 开始计时`, 'ok');
+    }
+}
+
+function getShotActualTime(planId, shotIndex) {
+    const key = `pa_shot_time_${planId}`;
+    const times = JSON.parse(localStorage.getItem(key) || '{}');
+    const seconds = times[shotIndex];
+    return seconds ? formatDuration(seconds) : '';
+}
+
+function formatDuration(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    if (mins > 0) {
+        return `${mins}分${secs}秒`;
+    }
+    return `${secs}秒`;
+}
+
+// 本地参考图上传功能
+function uploadShotReference(planId, shotIndex, input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const imageData = e.target.result;
+        
+        // Save to localStorage (compressed)
+        const key = `pa_shot_images_${planId}`;
+        const images = JSON.parse(localStorage.getItem(key) || '{}');
+        if (!images[shotIndex]) images[shotIndex] = [];
+        images[shotIndex].push(imageData);
+        localStorage.setItem(key, JSON.stringify(images));
+        
+        // Update UI
+        renderShotImages(planId, shotIndex);
+        toast('参考图已上传', 'ok');
+    };
+    reader.readAsDataURL(file);
+}
+
+function renderShotImages(planId, shotIndex) {
+    const key = `pa_shot_images_${planId}`;
+    const images = JSON.parse(localStorage.getItem(key) || '{}');
+    const shotImages = images[shotIndex] || [];
+    
+    const container = document.getElementById(`shot-images-${shotIndex}`);
+    if (container) {
+        container.innerHTML = shotImages.map((img, i) => `
+            <img src="${img}" class="shot-image-preview" onclick="viewShotImage('${img}')">
+        `).join('');
+    }
+}
+
+function viewShotImage(imageData) {
+    const modal = document.createElement('div');
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;';
+    modal.innerHTML = `<img src="${imageData}" style="max-width:90%;max-height:90%;object-fit:contain;">`;
+    modal.onclick = () => modal.remove();
+    document.body.appendChild(modal);
 }
 
 // 添加自定义镜头
