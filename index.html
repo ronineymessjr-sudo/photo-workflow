@@ -4310,6 +4310,80 @@ const baseSections = [
     {ti:'⚠️ 注意事项',ic:'⚠️',c:['提前与模特沟通拍摄边界，确保共识','室内注意安全，确认消防通道','使用烟雾注意通风','保护模特隐私，RAW不外传','带备用电池和存储卡','准备暖宝宝，模特可能需露肤']}
 ];
 
+// ===== 妆造建议数据 =====
+const MAKEUP_ADVICE = {
+    '时尚': [
+        '【妆容】大地色系眼影（暖棕/深咖）+ 裸粉色/豆沙色唇膏 + 自然毛流感眉形 + 轻微修容强调轮廓',
+        '【发型】高马尾或 slick back 油头，干净利落；或蓬松大波浪，增加时尚感',
+        '【服装】黑白灰基础色为主 + 一件亮色单品点缀（红/黄/蓝），廓形要挺括',
+        '【配饰】金属质感耳环或项链（金色/银色），手表或手镯，避免过多堆砌'
+    ],
+    '复古': [
+        '【妆容】哑光红唇（正红/酒红）+ 细弯眉或柳叶眉 + 轻微烟熏眼妆 + 雾面底妆',
+        '【发型】波浪卷发或手推波，发尾内扣；或盘发配发网，珍珠发饰点缀',
+        '【服装】丝绒/蕾丝/格纹等复古面料，酒红/墨绿/驼色/黑色为主，剪裁修身',
+        '【配饰】珍珠耳环、复古发夹、丝绒发带、金色复古胸针、蕾丝手套'
+    ],
+    '文艺': [
+        '【妆容】清透裸妆，珊瑚色/奶茶色唇膏 + 杏色/橘色眼影 + 野生眉 + 腮红打在眼下',
+        '【发型】自然黑长直、慵懒低马尾、松散编发或羊毛卷，配丝带或发带',
+        '【服装】棉麻/雪纺/针织材质，米白/浅灰/雾霾蓝/豆沙绿等低饱和度色系',
+        '【配饰】木质耳环、帆布包、编织手链、复古眼镜、草帽或贝雷帽'
+    ],
+    '性感': [
+        '【妆容】酒红/浆果色唇膏 + 大地色烟熏眼妆 + 高光打在锁骨和肩膀 + 猫眼眼线',
+        '【发型】大波浪卷发、湿发造型、或慵懒盘发，几缕碎发修饰脸型',
+        '【服装】蕾丝/丝绸/薄纱材质，黑色/酒红/深紫为主，露背/吊带/深V设计',
+        '【配饰】细链条项链、锁骨链、耳坠、腰链，避免过于繁复'
+    ],
+    '古风': [
+        '【妆容】柳叶眉或远山眉 + 桃花色眼影 + 咬唇妆或点绛唇 + 花钿或面靥',
+        '【发型】高髻/堕马髻/双环髻，配发簪、步摇、发钗、绢花等头饰',
+        '【服装】汉服（齐胸襦裙/齐腰襦裙/明制袄裙）或改良旗袍，配色参考传统色谱',
+        '【配饰】团扇、油纸伞、玉佩、香囊、发带、披帛'
+    ],
+    '婚纱': [
+        '【妆容】清透水润底妆 + 珊瑚粉/玫瑰色唇膏 + 香槟色/大地色眼影 + 根根分明睫毛',
+        '【发型】优雅盘发、半扎公主头、或自然卷发配头纱，配珍珠发饰或鲜花',
+        '【服装】白色/象牙白婚纱（A字裙/鱼尾/蓬蓬裙），配头纱、手套、裙撑',
+        '【配饰】珍珠项链/耳环、钻石/水晶头饰、手捧花（白玫瑰/满天星/绣球）'
+    ],
+    '街拍': [
+        '【妆容】自然日常妆，MLBB唇色 + 轻微眼妆 + 自然眉形，保持清新感',
+        '【发型】随性自然，松散马尾、棒球帽、渔夫帽，或自然披发',
+        '【服装】休闲混搭风格，T恤+牛仔裤+外套，或连衣裙+牛仔外套，色彩明快',
+        '【配饰】墨镜、帆布包、运动鞋、棒球帽、手表、简约耳环'
+    ],
+    '运动': [
+        '【妆容】轻薄防水妆，BB霜+眉笔+润色唇膏，避免厚重，保持清爽',
+        '【发型】高马尾、拳击辫、丸子头，干净利落，用发胶固定碎发',
+        '【服装】运动内衣+紧身裤、运动短裤、运动背心，亮色或撞色搭配',
+        '【配饰】运动手表、发带、运动手环、运动水壶、护腕'
+    ],
+    '情绪': [
+        '【妆容】淡妆或近乎素颜，裸色唇膏 + 轻微修容 + 强调眼神光',
+        '【发型】自然散落、微湿发感、或随意扎起，营造不经意的感觉',
+        '【服装】素色简约服装，黑白灰或大地色系，宽松或垂坠感面料',
+        '【配饰】 minimal 风格，避免过多装饰，可选单只耳环或细手链'
+    ],
+    '商业': [
+        '【妆容】精致职业妆，豆沙色/珊瑚色唇膏 + 大地色眼影 + 利落眉形 + 无瑕底妆',
+        '【发型】干练盘发、低马尾、或整齐短发，展现专业形象',
+        '【服装】职业套装、衬衫、西装外套，黑白灰蓝等商务色系，剪裁合身',
+        '【配饰】简约金属耳环、手表、细项链，避免夸张装饰'
+    ],
+    '鱼眼': [
+        '【妆容】可尝试创意妆容，亮片/闪粉/彩色眼线，或极简裸妆形成对比',
+        '【发型】夸张造型，彩色假发、冲天辫、或 slick back 贴头皮造型',
+        '【服装】紧身衣/运动装（强调身体线条）或 oversized 宽松服装（与畸变对比）',
+        '【配饰】夸张耳环、大框眼镜、彩色发带、创意头饰，增强视觉冲击力'
+    ]
+};
+
+function getMakeupAdvice(style) {
+    return MAKEUP_ADVICE[style] || MAKEUP_ADVICE['复古'];
+}
+
 // ===== 智能方案生成器 =====
 // 根据风格、主题、场景动态生成内容
 const STYLE_TEMPLATES = {
@@ -4422,19 +4496,14 @@ function genPlan(input) {
         ].filter(Boolean) },
         { ti: '📍 场景建议', ic: '📍', c: sceneSuggestions },
         { ti: '🧍 摆姿指导', ic: '🧍', c: poses },
-        { ti: '💄 妆造建议', ic: '💄', c: [
-            `【发型】根据${style}风格选择`,
-            `【妆容】${styleTemplate.mood}`,
-            `【服装】${styleTemplate.outfits.join('、')}`,
-            `【配饰】根据场景搭配`
-        ] },
+        { ti: '💄 妆造建议', ic: '💄', c: getMakeupAdvice(style) },
         { ti: '🎬 道具清单', ic: '🎬', c: genProps(style, scene) },
         { ti: '🌤️ 光线建议', ic: '🌤️', c: [
             `【主光】${styleTemplate.lighting}`,
             '【时间】根据场景选择最佳时段',
             '【备选】准备补光设备'
         ] },
-        buildEqSection(),
+        buildEqSection(style, scene),
         { ti: '🔭 焦段推荐', ic: '🔭', c: [
             '【35mm】环境人像，交代场景',
             '【50mm】自然视角',
@@ -4484,6 +4553,36 @@ function genPlan(input) {
             '· 备用LED常亮灯至少1盏',
             '· 提前确认场地是否有室内备选空间',
             '· 手机查看实时天气和光线索引App'
+        ] },
+        { ti: '📍 场地勘景清单', ic: '📍', c: [
+            '【地址与交通】',
+            '· 详细地址：________________（填写具体地址）',
+            '· 停车信息：附近是否有停车场/路边停车位/停车费用',
+            '· 公共交通：最近的地铁站/公交站及步行距离',
+            '',
+            '【场地设施】',
+            '· 电源插座：位置及数量（用于灯光/充电）',
+            '· 更衣室：是否有独立更衣空间',
+            '· 卫生间：位置及卫生状况',
+            '· 休息区：模特和团队休息空间',
+            '',
+            '【拍摄条件】',
+            '· 自然光：窗户朝向、光线最佳时段、是否需要遮光',
+            '· 人工光：是否允许使用闪光灯/LED/持续光',
+            '· 空间大小：拍摄距离是否足够（长焦镜头需要）',
+            '· 背景选择：可用的背景墙面/家具/装饰',
+            '',
+            '【费用与预约】',
+            '· 场地费用：每小时/每天费用',
+            '· 预约状态：是否已确认预约，联系人及电话',
+            '· 使用时间：最早进场时间、最晚离场时间',
+            '· 押金与退款：押金金额及退还条件',
+            '',
+            '【限制与注意事项】',
+            '· 是否允许：闪光灯/三脚架/更换服装/饮食',
+            '· 噪音限制：是否影响周围居民/商户',
+            '· 安全注意：楼梯/阳台/水池等危险区域',
+            '· 清洁要求：离场前是否需要恢复原状'
         ] }
     ];
     
@@ -4560,15 +4659,56 @@ function genProps(style, scene) {
     return [...baseProps, ...props].map((p, i) => `${i + 1}. ${p}`);
 }
 
+// 获取器材推荐
+function getEquipmentRecommendations(style, scene) {
+    const recommendations = {
+        base: ['相机机身', '备用电池×2', '存储卡×2', '镜头清洁套装'],
+        lens: {
+            '时尚': '24-70mm f/2.8（ versatility ）+ 85mm f/1.4（特写）',
+            '复古': '50mm f/1.4（标准视角）+ 35mm f/1.4（环境人像）',
+            '文艺': '35mm f/1.4（故事感）+ 85mm f/1.8（压缩感）',
+            '性感': '85mm f/1.4（虚化）+ 50mm f/1.2（氛围）',
+            '古风': '85mm f/1.8（特写）+ 135mm f/2（压缩）',
+            '婚纱': '24-70mm f/2.8（ versatility ）+ 85mm f/1.4（人像）',
+            '街拍': '35mm f/1.4（环境）+ 50mm f/1.4（标准）',
+            '运动': '70-200mm f/2.8（追焦）+ 广角（环境）',
+            '情绪': '85mm f/1.4（压缩）+ 50mm f/1.4（氛围）',
+            '商业': '100mm f/2.8 Macro（产品）+ 85mm f/1.4（人像）',
+            '鱼眼': '8mm f/3.5 鱼眼（创意）+ 16mm f/2.8（备用）'
+        },
+        lighting: {
+            '自然光': ['反光板（金银双面）', '柔光屏（1.5×2m）', '遮光板'],
+            '室内': ['LED常亮灯×2', '柔光箱（60×90cm）', '灯架×2', '反光板'],
+            '混合光': ['闪光灯+柔光箱', '色温片（CTO/CTB）', '反光板'],
+            '夜景': ['LED棒灯', '小型LED面板', '三脚架']
+        },
+        accessories: ['快门线/遥控器', '灰卡/白平衡卡', '气吹+镜头笔', '备用镜头盖']
+    };
+    
+    // Determine lighting type based on scene
+    const isOutdoor = scene && (scene.includes('户外') || scene.includes('草地') || scene.includes('天台') || scene.includes('海边'));
+    const lightingType = isOutdoor ? '自然光' : '室内';
+    
+    return [
+        `【推荐镜头】${recommendations.lens[style] || recommendations.lens['复古']}`,
+        `【灯光设备】${recommendations.lighting[lightingType].join('、')}`,
+        `【基础配件】${recommendations.base.join('、')}`,
+        `【其他配件】${recommendations.accessories.join('、')}`
+    ];
+}
+
 // 构建器材推荐部分
-function buildEqSection() {
+function buildEqSection(style, scene) {
     const eq = sg(SK.EQ) || [];
-    if (!eq.length) return { ti: '📷 器材推荐', ic: '📷', c: [
-        '【建议】设备库为空，建议添加已有设备',
-        '【机身】全画幅微单/单反，高感表现优秀',
-        '【镜头】35mm f/1.4（环境）、85mm f/1.4（人像）',
-        '【补光】暖色LED补光灯、反光板'
-    ]};
+    const recommendations = getEquipmentRecommendations(style || '复古', scene || '');
+    
+    if (!eq.length) {
+        return { ti: '📷 器材推荐', ic: '📷', c: [
+            '【建议】设备库为空，建议添加已有设备',
+            ...recommendations
+        ]};
+    }
+    
     const byCat = {}; 
     Object.keys(CATS).forEach(k => byCat[k] = []); 
     eq.forEach(e => { if (byCat[e.c]) byCat[e.c].push(e); });
@@ -4578,7 +4718,9 @@ function buildEqSection() {
     if (byCat.light.length) lines.push(`【已有灯光】${byCat.light.map(e => e.n).join('、')}`);
     if (byCat.tripod.length) lines.push(`【稳定设备】${byCat.tripod.map(e => e.n).join('、')}`);
     if (byCat.filter.length) lines.push(`【滤镜附件】${byCat.filter.map(e => e.n).join('、')}`);
-    lines.push('【补充】如需特定场景，可考虑租借额外设备');
+    lines.push('');
+    lines.push('【风格化推荐】');
+    lines.push(...recommendations);
     return { ti: '📷 器材推荐', ic: '📷', c: lines };
 }
 
@@ -4955,9 +5097,14 @@ function renderPlanContent(plan) {
                         </button>
                     </div>
                     ${shotList.map((shot, i) => `
-                        <div style="margin-bottom:1.5rem;padding:.75rem;background:var(--bg);border-radius:var(--radius-sm);border-left:3px solid var(--ac);">
+                        <div style="margin-bottom:1.5rem;padding:.75rem;background:var(--bg);border-radius:var(--radius-sm);border-left:3px solid var(--ac);${isShotComplete(plan.id, i) ? 'opacity:0.6;background:var(--bg2);' : ''}">
                             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">
-                                <span style="font-weight:600;color:var(--ac);">镜头 #${String(i + 1).padStart(2, '0')} - ${escHtml(shot.scene)}</span>
+                                <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;">
+                                    <input type="checkbox" onchange="toggleShotComplete('${plan.id}', ${i}, this.checked)"
+                                           ${isShotComplete(plan.id, i) ? 'checked' : ''}
+                                           style="width:18px;height:18px;accent-color:var(--ac);">
+                                    <span style="font-weight:600;color:var(--ac);">镜头 #${String(i + 1).padStart(2, '0')} - ${escHtml(shot.scene)}</span>
+                                </label>
                                 <span style="font-size:.75rem;color:var(--t3);">${shot.focalLength} · ${shot.duration}min</span>
                             </div>
                             <div style="font-size:.78rem;color:var(--t2);line-height:1.6;">
@@ -5960,6 +6107,38 @@ function generateShotList(plan) {
     
     // 返回指定数量的镜头
     return templates.slice(0, shotCount);
+}
+
+// 拍摄进度追踪 - 切换镜头完成状态
+function toggleShotComplete(planId, shotIndex, completed) {
+    const key = `pa_shot_status_${planId}`;
+    const status = JSON.parse(localStorage.getItem(key) || '{}');
+    status[shotIndex] = completed;
+    localStorage.setItem(key, JSON.stringify(status));
+    
+    // 更新UI - 找到对应的镜头卡片并更新样式
+    const shotCards = document.querySelectorAll('.ps-cnt > div[style*="border-left:3px solid var(--ac)"]');
+    if (shotCards[shotIndex]) {
+        const card = shotCards[shotIndex];
+        if (completed) {
+            card.style.opacity = '0.6';
+            card.style.background = 'var(--bg2)';
+        } else {
+            card.style.opacity = '1';
+            card.style.background = 'var(--bg)';
+        }
+    }
+    
+    if (completed) {
+        toast(`镜头 #${String(shotIndex + 1).padStart(2, '0')} 已完成 ✓`, 'ok');
+    }
+}
+
+// 检查镜头是否已完成
+function isShotComplete(planId, shotIndex) {
+    const key = `pa_shot_status_${planId}`;
+    const status = JSON.parse(localStorage.getItem(key) || '{}');
+    return !!status[shotIndex];
 }
 
 // 导出分镜脚本
