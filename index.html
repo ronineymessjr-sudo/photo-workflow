@@ -2159,7 +2159,7 @@
         <div id="loginForm" class="login-card" style="background:var(--bg3);border:1px solid var(--bd);border-radius:16px;padding:2rem;text-align:left;">
             <div style="margin-bottom:1.5rem;">
                 <label style="display:block;font-size:.85rem;color:var(--t2);margin-bottom:.5rem;font-weight:500;" data-i18n="login.email">邮箱地址</label>
-                <input type="email" id="loginEmail" placeholder="your@email.com" data-i18n-placeholder="login.email" style="width:100%;padding:12px 16px;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;color:var(--t1);font-family:inherit;font-size:.95rem;transition:all .2s;">
+                <input type="email" id="loginEmail" placeholder="请输入邮箱" data-i18n-placeholder="login.email" style="width:100%;padding:12px 16px;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;color:var(--t1);font-family:inherit;font-size:.95rem;transition:all .2s;">
             </div>
             <div style="margin-bottom:1.5rem;">
                 <label style="display:block;font-size:.85rem;color:var(--t2);margin-bottom:.5rem;font-weight:500;" data-i18n="login.password">密码</label>
@@ -3061,7 +3061,7 @@
 <!-- Image preview modal -->
 <div class="img-modal" id="imgModal" onclick="closeImgModal()">
     <button class="img-modal-close">✕</button>
-    <img id="imgModalSrc" src="" alt="preview">
+    <img id="imgModalSrc" src="" alt="图片预览">
 </div>
 
 <div class="toast" id="toast"></div>
@@ -4874,7 +4874,7 @@ function renderImageGallery(plan) {
     if (images.length > 0) {
         html += images.map(img => `
             <div class="img-card">
-                <img src="${img.url}" alt="generated" onclick="previewImg('${img.url}')">
+                <img src="${img.url}" alt="生成的参考图" onclick="previewImg('${img.url}'">
                 <div class="img-card-info">${new Date(img.at).toLocaleString()}</div>
             </div>`).join('');
     }
@@ -8163,7 +8163,8 @@ window.syncToFeishuBitable = async function() {
                 '地点': s.location || '',
                 '状态': '待拍摄'
             }));
-            results.schedules = await window.api.writeToFeishuBitable('app_token_placeholder', 'schedules', scheduleRecords);
+            // Feishu sync requires app_token configuration in settings
+            results.schedules = { error: '请在设置中配置飞书应用Token' };
         }
         
         // 同步场地
@@ -8175,7 +8176,8 @@ window.syncToFeishuBitable = async function() {
                 '标签': v.tags ? v.tags.join(',') : '',
                 '备注': v.note || ''
             }));
-            results.venues = await window.api.writeToFeishuBitable('app_token_placeholder', 'venues', venueRecords);
+            // Feishu sync requires app_token configuration in settings
+            results.venues = { error: '请在设置中配置飞书应用Token' };
         }
         
         // 同步模特
@@ -8187,7 +8189,8 @@ window.syncToFeishuBitable = async function() {
                 '标签': m.tags ? m.tags.join(',') : '',
                 '备注': m.note || ''
             }));
-            results.models = await window.api.writeToFeishuBitable('app_token_placeholder', 'models', modelRecords);
+            // Feishu sync requires app_token configuration in settings
+            results.models = { error: '请在设置中配置飞书应用Token' };
         }
         
         // 同步方案
@@ -8199,7 +8202,8 @@ window.syncToFeishuBitable = async function() {
                 '情绪': p.input && p.input.mood || '',
                 '创建时间': new Date(p.timestamp).toISOString()
             }));
-            results.plans = await window.api.writeToFeishuBitable('app_token_placeholder', 'plans', planRecords);
+            // Feishu sync requires app_token configuration in settings
+            results.plans = { error: '请在设置中配置飞书应用Token' };
         }
         
         // 统计结果
@@ -8613,7 +8617,7 @@ async function loadShotReferencesApi(shotIndex, style, shotDataEncoded) {
         }
 
         if (allImages.length === 0) {
-            container.innerHTML = '<p style="font-size:.8rem;color:var(--t3);">No results. Check your API key.</p>';
+            container.innerHTML = '<p style="font-size:.8rem;color:var(--t3);">未找到结果，请检查 API Key</p>';
             return;
         }
 
@@ -8623,7 +8627,7 @@ async function loadShotReferencesApi(shotIndex, style, shotDataEncoded) {
                 <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.4rem;margin-top:.3rem;">
                     ${r.photos.map(p => `
                         <div style="aspect-ratio:3/4;border-radius:6px;overflow:hidden;cursor:pointer;" onclick="window.open('${p.src.large}','_blank')">
-                            <img src="${p.src.medium}" style="width:100%;height:100%;object-fit:cover;">
+                            <img src="${p.src.medium}" alt="参考图 ${r.category}" style="width:100%;height:100%;object-fit:cover;">
                         </div>
                     `).join('')}
                 </div>
@@ -8632,7 +8636,7 @@ async function loadShotReferencesApi(shotIndex, style, shotDataEncoded) {
         toast('图片加载完成', 'ok');
     } catch (e) {
         console.error('API error:', e);
-        container.innerHTML = '<p style="font-size:.8rem;color:var(--er);">API error: ' + e.message + '</p>';
+        container.innerHTML = '<p style="font-size:.8rem;color:var(--er);">API 错误: ' + e.message + '</p>';
     }
 }
 
