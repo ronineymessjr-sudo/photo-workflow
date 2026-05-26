@@ -5400,6 +5400,100 @@ function renderPlanContent(plan) {
         </div>
     `;
 
+    // 报价计算器
+    const shotListForQuote = generateShotList(plan);
+    const quoteHtml = `
+        <div class="ps" style="margin-top:1.5rem;border-top:2px solid #22c55e;padding-top:1rem">
+            <div class="ps-hdr">
+                <div class="ps-icon">💰</div>
+                <h3 class="ps-title">报价计算器</h3>
+                <button class="btn btn-s btn-sm" onclick="openQuoteSettings()" style="margin-left:auto">⚙️ 价格设置</button>
+            </div>
+            <div class="ps-cnt">
+                <div id="quote-calculator-${plan.id}">
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1rem;">
+                        <div style="background:var(--bg2);padding:1rem;border-radius:var(--radius-sm);">
+                            <div style="font-size:.75rem;color:var(--t3);margin-bottom:.25rem;">基础拍摄费</div>
+                            <div style="display:flex;align-items:center;gap:.5rem;">
+                                <span style="color:var(--t2);">¥</span>
+                                <input type="number" id="quote-base-${plan.id}" value="${getQuoteSetting('baseFee', 800)}" 
+                                       style="width:100px;background:var(--bg3);border:1px solid var(--bd);border-radius:6px;padding:.4rem;color:var(--t1);"
+                                       onchange="calculateQuote('${plan.id}')">
+                            </div>
+                        </div>
+                        <div style="background:var(--bg2);padding:1rem;border-radius:var(--radius-sm);">
+                            <div style="font-size:.75rem;color:var(--t3);margin-bottom:.25rem;">每镜头单价</div>
+                            <div style="display:flex;align-items:center;gap:.5rem;">
+                                <span style="color:var(--t2);">¥</span>
+                                <input type="number" id="quote-per-shot-${plan.id}" value="${getQuoteSetting('perShot', 50)}" 
+                                       style="width:100px;background:var(--bg3);border:1px solid var(--bd);border-radius:6px;padding:.4rem;color:var(--t1);"
+                                       onchange="calculateQuote('${plan.id}')">
+                            </div>
+                        </div>
+                        <div style="background:var(--bg2);padding:1rem;border-radius:var(--radius-sm);">
+                            <div style="font-size:.75rem;color:var(--t3);margin-bottom:.25rem;">精修每张</div>
+                            <div style="display:flex;align-items:center;gap:.5rem;">
+                                <span style="color:var(--t2);">¥</span>
+                                <input type="number" id="quote-per-edit-${plan.id}" value="${getQuoteSetting('perEdit', 30)}" 
+                                       style="width:100px;background:var(--bg3);border:1px solid var(--bd);border-radius:6px;padding:.4rem;color:var(--t1);"
+                                       onchange="calculateQuote('${plan.id}')">
+                            </div>
+                        </div>
+                        <div style="background:var(--bg2);padding:1rem;border-radius:var(--radius-sm);">
+                            <div style="font-size:.75rem;color:var(--t3);margin-bottom:.25rem;">外景附加费</div>
+                            <div style="display:flex;align-items:center;gap:.5rem;">
+                                <span style="color:var(--t2);">¥</span>
+                                <input type="number" id="quote-location-${plan.id}" value="${getQuoteSetting('locationFee', 100)}" 
+                                       style="width:100px;background:var(--bg3);border:1px solid var(--bd);border-radius:6px;padding:.4rem;color:var(--t1);"
+                                       onchange="calculateQuote('${plan.id}')">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="background:var(--bg2);padding:1rem;border-radius:var(--radius-sm);margin-bottom:1rem;">
+                        <div style="font-size:.8rem;color:var(--t3);margin-bottom:.5rem;">数量设置</div>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem;">
+                            <div>
+                                <label style="font-size:.75rem;color:var(--t2);">精修数量</label>
+                                <input type="number" id="quote-edit-count-${plan.id}" value="${Math.min(shotListForQuote.length * 2, 20)}" 
+                                       style="width:100%;margin-top:.25rem;background:var(--bg3);border:1px solid var(--bd);border-radius:6px;padding:.4rem;color:var(--t1);"
+                                       onchange="calculateQuote('${plan.id}')">
+                            </div>
+                            <div>
+                                <label style="font-size:.75rem;color:var(--t2);">外景场地数</label>
+                                <input type="number" id="quote-location-count-${plan.id}" value="${new Set(shotListForQuote.map(s => s.scene)).size}" 
+                                       style="width:100%;margin-top:.25rem;background:var(--bg3);border:1px solid var(--bd);border-radius:6px;padding:.4rem;color:var(--t1);"
+                                       onchange="calculateQuote('${plan.id}')">
+                            </div>
+                            <div>
+                                <label style="font-size:.75rem;color:var(--t2);">其他费用</label>
+                                <input type="number" id="quote-extra-${plan.id}" value="0" 
+                                       style="width:100%;margin-top:.25rem;background:var(--bg3);border:1px solid var(--bd);border-radius:6px;padding:.4rem;color:var(--t1);"
+                                       onchange="calculateQuote('${plan.id}')">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="background:linear-gradient(135deg,rgba(34,197,94,0.1),rgba(34,197,94,0.05));padding:1.5rem;border-radius:var(--radius-sm);border:1px solid rgba(34,197,94,0.3);">
+                        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
+                            <div>
+                                <div style="font-size:.75rem;color:var(--t3);">预估报价</div>
+                                <div style="font-size:2rem;font-weight:700;color:#22c55e;" id="quote-total-${plan.id}">¥0</div>
+                            </div>
+                            <div style="display:flex;gap:.5rem;">
+                                <button class="export-btn" onclick="generateQuoteSheet('${plan.id}')">📄 生成报价单</button>
+                                <button class="export-btn primary" onclick="generateServiceSheet('${plan.id}')">📝 服务确认单</button>
+                            </div>
+                        </div>
+                        <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--bd);font-size:.75rem;color:var(--t3);" id="quote-breakdown-${plan.id}">
+                            费用明细将显示在这里
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
     // 分镜脚本（核心功能）- 专业版
     let shotList = generateShotList(plan);
     // Merge with any saved custom shots
@@ -5603,7 +5697,7 @@ function renderPlanContent(plan) {
         </div>
     `;
 
-    return metaHtml + sectionsHtml + shotListHtml + checklistHtml + imgGallery + commHtml + colorHtml + aiHtml;
+    return metaHtml + sectionsHtml + quoteHtml + shotListHtml + checklistHtml + imgGallery + commHtml + colorHtml + aiHtml;
 }
 
 // 生成分镜脚本
@@ -7251,6 +7345,477 @@ function viewShotImage(imageData) {
     document.body.appendChild(modal);
 }
 
+// ===== 报价计算器功能 =====
+
+// 获取报价设置
+function getQuoteSetting(key, defaultValue) {
+    const settings = JSON.parse(localStorage.getItem('pa_quote_settings') || '{}');
+    return settings[key] !== undefined ? settings[key] : defaultValue;
+}
+
+// 保存报价设置
+function saveQuoteSetting(key, value) {
+    const settings = JSON.parse(localStorage.getItem('pa_quote_settings') || '{}');
+    settings[key] = value;
+    localStorage.setItem('pa_quote_settings', JSON.stringify(settings));
+}
+
+// 计算报价
+function calculateQuote(planId) {
+    const plans = sg(SK.P) || [];
+    const plan = plans.find(p => p.id === planId);
+    if (!plan) return;
+
+    const shotList = generateShotList(plan);
+    const sceneCount = new Set(shotList.map(s => s.scene)).size;
+
+    // 获取输入值
+    const baseFee = parseInt(document.getElementById(`quote-base-${planId}`)?.value) || 0;
+    const perShot = parseInt(document.getElementById(`quote-per-shot-${planId}`)?.value) || 0;
+    const perEdit = parseInt(document.getElementById(`quote-per-edit-${planId}`)?.value) || 0;
+    const locationFee = parseInt(document.getElementById(`quote-location-${planId}`)?.value) || 0;
+    const editCount = parseInt(document.getElementById(`quote-edit-count-${planId}`)?.value) || 0;
+    const locationCount = parseInt(document.getElementById(`quote-location-count-${planId}`)?.value) || 0;
+    const extraFee = parseInt(document.getElementById(`quote-extra-${planId}`)?.value) || 0;
+
+    // 计算各项费用
+    const shotFee = shotList.length * perShot;
+    const editFee = editCount * perEdit;
+    const locationTotal = locationCount * locationFee;
+    const total = baseFee + shotFee + editFee + locationTotal + extraFee;
+
+    // 更新显示
+    const totalEl = document.getElementById(`quote-total-${planId}`);
+    const breakdownEl = document.getElementById(`quote-breakdown-${planId}`);
+
+    if (totalEl) {
+        totalEl.textContent = `¥${total.toLocaleString()}`;
+    }
+
+    if (breakdownEl) {
+        breakdownEl.innerHTML = `
+            基础拍摄费 ¥${baseFee} + 
+            镜头费 ${shotList.length}×¥${perShot}=¥${shotFee} + 
+            精修费 ${editCount}×¥${perEdit}=¥${editFee} + 
+            外景费 ${locationCount}×¥${locationFee}=¥${locationTotal}${extraFee > 0 ? ` + 其他¥${extraFee}` : ''}
+        `;
+    }
+
+    // 保存设置
+    saveQuoteSetting('baseFee', baseFee);
+    saveQuoteSetting('perShot', perShot);
+    saveQuoteSetting('perEdit', perEdit);
+    saveQuoteSetting('locationFee', locationFee);
+}
+
+// 打开报价设置
+function openQuoteSettings() {
+    const settings = JSON.parse(localStorage.getItem('pa_quote_settings') || '{}');
+    const baseFee = settings.baseFee || 800;
+    const perShot = settings.perShot || 50;
+    const perEdit = settings.perEdit || 30;
+    const locationFee = settings.locationFee || 100;
+
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:9999;display:flex;align-items:center;justify-content:center;';
+    modal.innerHTML = `
+        <div style="background:var(--bg3);padding:2rem;border-radius:var(--radius);max-width:400px;width:90%;max-height:80vh;overflow-y:auto;">
+            <h3 style="margin-bottom:1.5rem;color:var(--t1);">💰 默认价格设置</h3>
+            <div style="display:flex;flex-direction:column;gap:1rem;">
+                <div>
+                    <label style="font-size:.8rem;color:var(--t2);">基础拍摄费 (¥)</label>
+                    <input type="number" id="settings-base-fee" value="${baseFee}" 
+                           style="width:100%;margin-top:.25rem;background:var(--bg2);border:1px solid var(--bd);border-radius:6px;padding:.5rem;color:var(--t1);">
+                </div>
+                <div>
+                    <label style="font-size:.8rem;color:var(--t2);">每镜头单价 (¥)</label>
+                    <input type="number" id="settings-per-shot" value="${perShot}" 
+                           style="width:100%;margin-top:.25rem;background:var(--bg2);border:1px solid var(--bd);border-radius:6px;padding:.5rem;color:var(--t1);">
+                </div>
+                <div>
+                    <label style="font-size:.8rem;color:var(--t2);">精修每张 (¥)</label>
+                    <input type="number" id="settings-per-edit" value="${perEdit}" 
+                           style="width:100%;margin-top:.25rem;background:var(--bg2);border:1px solid var(--bd);border-radius:6px;padding:.5rem;color:var(--t1);">
+                </div>
+                <div>
+                    <label style="font-size:.8rem;color:var(--t2);">外景附加费/场地 (¥)</label>
+                    <input type="number" id="settings-location-fee" value="${locationFee}" 
+                           style="width:100%;margin-top:.25rem;background:var(--bg2);border:1px solid var(--bd);border-radius:6px;padding:.5rem;color:var(--t1);">
+                </div>
+            </div>
+            <div style="display:flex;gap:.5rem;margin-top:1.5rem;">
+                <button class="btn btn-p" onclick="saveQuoteSettings()" style="flex:1;">保存设置</button>
+                <button class="btn btn-s" onclick="this.closest('.modal-overlay').remove()" style="flex:1;">取消</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+// 保存报价设置
+function saveQuoteSettings() {
+    const baseFee = parseInt(document.getElementById('settings-base-fee')?.value) || 800;
+    const perShot = parseInt(document.getElementById('settings-per-shot')?.value) || 50;
+    const perEdit = parseInt(document.getElementById('settings-per-edit')?.value) || 30;
+    const locationFee = parseInt(document.getElementById('settings-location-fee')?.value) || 100;
+
+    saveQuoteSetting('baseFee', baseFee);
+    saveQuoteSetting('perShot', perShot);
+    saveQuoteSetting('perEdit', perEdit);
+    saveQuoteSetting('locationFee', locationFee);
+
+    document.querySelector('.modal-overlay')?.remove();
+    toast('价格设置已保存', 'ok');
+
+    // 刷新当前显示的报价
+    if (currentPlanId) {
+        setTimeout(() => calculateQuote(currentPlanId), 100);
+    }
+}
+
+// 生成报价单
+function generateQuoteSheet(planId) {
+    const plans = sg(SK.P) || [];
+    const plan = plans.find(p => p.id === planId);
+    if (!plan) { toast('方案不存在', 'er'); return; }
+
+    const shotList = generateShotList(plan);
+    const baseFee = parseInt(document.getElementById(`quote-base-${planId}`)?.value) || 0;
+    const perShot = parseInt(document.getElementById(`quote-per-shot-${planId}`)?.value) || 0;
+    const perEdit = parseInt(document.getElementById(`quote-per-edit-${planId}`)?.value) || 0;
+    const locationFee = parseInt(document.getElementById(`quote-location-${planId}`)?.value) || 0;
+    const editCount = parseInt(document.getElementById(`quote-edit-count-${planId}`)?.value) || 0;
+    const locationCount = parseInt(document.getElementById(`quote-location-count-${planId}`)?.value) || 0;
+    const extraFee = parseInt(document.getElementById(`quote-extra-${planId}`)?.value) || 0;
+
+    const shotFee = shotList.length * perShot;
+    const editFee = editCount * perEdit;
+    const locationTotal = locationCount * locationFee;
+    const total = baseFee + shotFee + editFee + locationTotal + extraFee;
+
+    const quoteContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>拍摄报价单 - ${plan.title}</title>
+            <style>
+                @page { size: A4; margin: 15mm; }
+                * { box-sizing: border-box; margin: 0; padding: 0; }
+                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 10pt; line-height: 1.6; color: #333; padding: 20px; }
+                .header { text-align: center; border-bottom: 3px solid #22c55e; padding-bottom: 15px; margin-bottom: 20px; }
+                .header h1 { font-size: 20pt; color: #22c55e; margin-bottom: 5px; }
+                .header p { color: #666; font-size: 9pt; }
+                .info { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 9pt; }
+                .info-item { flex: 1; }
+                .info-label { color: #666; font-size: 8pt; }
+                .info-value { font-weight: 600; }
+                table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                th { background: #f0fdf4; color: #166534; padding: 8px; text-align: left; font-size: 9pt; border-bottom: 2px solid #22c55e; }
+                td { padding: 8px; border-bottom: 1px solid #e5e7eb; font-size: 9pt; }
+                .text-right { text-align: right; }
+                .total { background: #f0fdf4; padding: 15px; border-radius: 8px; margin-top: 20px; }
+                .total-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
+                .total-final { font-size: 16pt; font-weight: bold; color: #22c55e; border-top: 2px solid #22c55e; padding-top: 10px; margin-top: 10px; }
+                .notes { margin-top: 20px; padding: 15px; background: #f9fafb; border-radius: 8px; font-size: 8pt; color: #666; }
+                .footer { margin-top: 30px; text-align: center; font-size: 8pt; color: #9ca3af; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>📸 拍摄服务报价单</h1>
+                <p>PhotoAtelier 摄影方案工作流</p>
+            </div>
+            
+            <div class="info">
+                <div class="info-item">
+                    <div class="info-label">方案名称</div>
+                    <div class="info-value">${plan.title || '未命名方案'}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">拍摄风格</div>
+                    <div class="info-value">${plan.input?.style || '待定'}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">拍摄时长</div>
+                    <div class="info-value">${plan.input?.duration || '待定'}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">报价日期</div>
+                    <div class="info-value">${new Date().toLocaleDateString()}</div>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>项目</th>
+                        <th>数量</th>
+                        <th>单价</th>
+                        <th class="text-right">小计</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>基础拍摄费</td>
+                        <td>1</td>
+                        <td>¥${baseFee}</td>
+                        <td class="text-right">¥${baseFee}</td>
+                    </tr>
+                    <tr>
+                        <td>镜头拍摄费</td>
+                        <td>${shotList.length} 个镜头</td>
+                        <td>¥${perShot}</td>
+                        <td class="text-right">¥${shotFee}</td>
+                    </tr>
+                    <tr>
+                        <td>照片精修</td>
+                        <td>${editCount} 张</td>
+                        <td>¥${perEdit}</td>
+                        <td class="text-right">¥${editFee}</td>
+                    </tr>
+                    <tr>
+                        <td>外景场地费</td>
+                        <td>${locationCount} 个场地</td>
+                        <td>¥${locationFee}</td>
+                        <td class="text-right">¥${locationTotal}</td>
+                    </tr>
+                    ${extraFee > 0 ? `
+                    <tr>
+                        <td>其他费用</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td class="text-right">¥${extraFee}</td>
+                    </tr>
+                    ` : ''}
+                </tbody>
+            </table>
+
+            <div class="total">
+                <div class="total-row">
+                    <span>合计</span>
+                    <span>¥${total.toLocaleString()}</span>
+                </div>
+                <div class="total-final">
+                    <span>预估报价</span>
+                    <span>¥${total.toLocaleString()}</span>
+                </div>
+            </div>
+
+            <div class="notes">
+                <strong>备注说明：</strong><br>
+                1. 本报价为预估价格，实际费用可能根据拍摄情况调整<br>
+                2. 报价有效期为30天<br>
+                3. 定金为总价的50%，拍摄前支付<br>
+                4. 尾款于交付成片时结清<br>
+                5. 如需额外精修，按 ¥${perEdit}/张 计费
+            </div>
+
+            <div class="footer">
+                <p>本报价单由 PhotoAtelier 自动生成</p>
+                <p>最终价格以双方协商确认为准</p>
+            </div>
+        </body>
+        </html>
+    `;
+
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(quoteContent);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+        printWindow.print();
+    }, 500);
+
+    toast('报价单已生成', 'ok');
+}
+
+// 生成服务确认单
+function generateServiceSheet(planId) {
+    const plans = sg(SK.P) || [];
+    const plan = plans.find(p => p.id === planId);
+    if (!plan) { toast('方案不存在', 'er'); return; }
+
+    const shotList = generateShotList(plan);
+    const baseFee = parseInt(document.getElementById(`quote-base-${planId}`)?.value) || 0;
+    const perShot = parseInt(document.getElementById(`quote-per-shot-${planId}`)?.value) || 0;
+    const perEdit = parseInt(document.getElementById(`quote-per-edit-${planId}`)?.value) || 0;
+    const locationFee = parseInt(document.getElementById(`quote-location-${planId}`)?.value) || 0;
+    const editCount = parseInt(document.getElementById(`quote-edit-count-${planId}`)?.value) || 0;
+    const locationCount = parseInt(document.getElementById(`quote-location-count-${planId}`)?.value) || 0;
+    const extraFee = parseInt(document.getElementById(`quote-extra-${planId}`)?.value) || 0;
+
+    const shotFee = shotList.length * perShot;
+    const editFee = editCount * perEdit;
+    const locationTotal = locationCount * locationFee;
+    const total = baseFee + shotFee + editFee + locationTotal + extraFee;
+
+    const sheetContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>拍摄服务确认单 - ${plan.title}</title>
+            <style>
+                @page { size: A4; margin: 15mm; }
+                * { box-sizing: border-box; margin: 0; padding: 0; }
+                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 10pt; line-height: 1.6; color: #333; padding: 20px; }
+                .header { text-align: center; border-bottom: 3px solid #3b82f6; padding-bottom: 15px; margin-bottom: 20px; }
+                .header h1 { font-size: 18pt; color: #3b82f6; margin-bottom: 5px; }
+                .header p { color: #666; font-size: 9pt; }
+                .section { margin-bottom: 20px; }
+                .section-title { font-size: 11pt; font-weight: bold; color: #3b82f6; margin-bottom: 10px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; }
+                .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 9pt; }
+                .info-item { display: flex; }
+                .info-label { color: #666; width: 80px; }
+                .info-value { font-weight: 500; }
+                .service-list { font-size: 9pt; }
+                .service-item { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #e5e7eb; }
+                .total { background: #eff6ff; padding: 15px; border-radius: 8px; margin: 20px 0; }
+                .total-row { display: flex; justify-content: space-between; font-size: 14pt; font-weight: bold; color: #3b82f6; }
+                .signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 40px; }
+                .signature-box { border: 1px solid #d1d5db; padding: 15px; border-radius: 8px; }
+                .signature-title { font-size: 9pt; color: #666; margin-bottom: 30px; }
+                .signature-line { border-bottom: 1px solid #333; margin-bottom: 5px; height: 30px; }
+                .signature-label { font-size: 8pt; color: #666; }
+                .notice { background: #fef3c7; padding: 15px; border-radius: 8px; font-size: 8pt; color: #92400e; margin-top: 20px; }
+                .footer { margin-top: 30px; text-align: center; font-size: 8pt; color: #9ca3af; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>📋 拍摄服务确认单</h1>
+                <p>（非正式合同，仅作服务确认用途）</p>
+            </div>
+
+            <div class="section">
+                <div class="section-title">基本信息</div>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">方案名称：</div>
+                        <div class="info-value">${plan.title || '未命名'}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">拍摄风格：</div>
+                        <div class="info-value">${plan.input?.style || '待定'}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">预计时长：</div>
+                        <div class="info-value">${plan.input?.duration || '待定'}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">拍摄日期：</div>
+                        <div class="info-value">____年__月__日</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">拍摄地点：</div>
+                        <div class="info-value">________________</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">确认日期：</div>
+                        <div class="info-value">${new Date().toLocaleDateString()}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">服务内容</div>
+                <div class="service-list">
+                    <div class="service-item">
+                        <span>拍摄镜头数</span>
+                        <span>${shotList.length} 个</span>
+                    </div>
+                    <div class="service-item">
+                        <span>精修照片</span>
+                        <span>${editCount} 张</span>
+                    </div>
+                    <div class="service-item">
+                        <span>外景场地</span>
+                        <span>${locationCount} 个</span>
+                    </div>
+                    <div class="service-item">
+                        <span>交付周期</span>
+                        <span>拍摄后 7-15 个工作日</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">费用明细</div>
+                <div class="service-list">
+                    <div class="service-item">
+                        <span>基础拍摄费</span>
+                        <span>¥${baseFee}</span>
+                    </div>
+                    <div class="service-item">
+                        <span>镜头拍摄费 (${shotList.length}×¥${perShot})</span>
+                        <span>¥${shotFee}</span>
+                    </div>
+                    <div class="service-item">
+                        <span>照片精修 (${editCount}×¥${perEdit})</span>
+                        <span>¥${editFee}</span>
+                    </div>
+                    <div class="service-item">
+                        <span>外景场地费 (${locationCount}×¥${locationFee})</span>
+                        <span>¥${locationTotal}</span>
+                    </div>
+                    ${extraFee > 0 ? `
+                    <div class="service-item">
+                        <span>其他费用</span>
+                        <span>¥${extraFee}</span>
+                    </div>
+                    ` : ''}
+                </div>
+            </div>
+
+            <div class="total">
+                <div class="total-row">
+                    <span>服务费用合计</span>
+                    <span>¥${total.toLocaleString()}</span>
+                </div>
+            </div>
+
+            <div class="signatures">
+                <div class="signature-box">
+                    <div class="signature-title">甲方（客户）确认</div>
+                    <div class="signature-line"></div>
+                    <div class="signature-label">签名 / 日期</div>
+                </div>
+                <div class="signature-box">
+                    <div class="signature-title">乙方（摄影师）确认</div>
+                    <div class="signature-line"></div>
+                    <div class="signature-label">签名 / 日期</div>
+                </div>
+            </div>
+
+            <div class="notice">
+                <strong>重要提示：</strong><br>
+                1. 本确认单仅供服务确认使用，不构成正式法律合同<br>
+                2. 如需正式合同，请另行签署《摄影服务合同》<br>
+                3. 双方确认以上服务内容后，请签字确认<br>
+                4. 实际拍摄以双方协商为准
+            </div>
+
+            <div class="footer">
+                <p>本确认单由 PhotoAtelier 自动生成</p>
+                <p>生成时间：${new Date().toLocaleString()}</p>
+            </div>
+        </body>
+        </html>
+    `;
+
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(sheetContent);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+        printWindow.print();
+    }, 500);
+
+    toast('服务确认单已生成', 'ok');
+}
+
 // 添加自定义镜头
 function addCustomShot() {
     const scene = prompt('场景名称（如：窗边、沙发区）:');
@@ -7964,6 +8529,8 @@ function loadPlan(id){
     document.querySelectorAll('.tab-cnt').forEach(c=>c.classList.remove('active'));
     document.querySelector('[data-tab="gen"]').classList.add('active');
     $('tab-gen').classList.add('active');
+    // 初始化报价计算器
+    setTimeout(() => calculateQuote(plan.id), 100);
     renderHistMini();
 }
 
@@ -7987,6 +8554,8 @@ async function handleSubmit(e){
         $('outCnt').innerHTML=renderPlanContent(plan);
         renderHistMini(); updateBadge();
         $('outLoad').classList.remove('active'); $('outCnt').classList.add('active');
+        // 初始化报价计算器
+        setTimeout(() => calculateQuote(plan.id), 100);
         toast('方案已生成并保存','ok');
     }catch(e){toast('生成失败','er');$('outLoad').classList.remove('active');$('outEmpty').classList.add('active');}
     finally{btn.disabled=false;btn.classList.remove('btn-loading');btn.innerHTML=btnOrigHTML;}
