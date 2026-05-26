@@ -3252,10 +3252,42 @@ if (document.getElementById('loginOverlay')) {
 
 // ===== Auth System & App Entry =====
 (function() {
-    const API_BASE = 'https://photoatelier-api.photomagic.workers.dev';
+    const API_BASE = localStorage.getItem('pa_api_base') || 'https://photoatelier-api.photomagic.workers.dev';
+    const USE_LOCAL_MODE = localStorage.getItem('pa_use_local') === 'true' || false;
     const TOKEN_KEY = 'pw_token';
     const USER_KEY = 'pw_user';
     const ROLE_KEY = 'pw_role';
+
+    // Local mode API mock for offline usage
+    const localApi = {
+        async login(credentials) {
+            // Simulate successful login with local user
+            const localUser = { id: 'local', email: credentials.email, name: '本地用户', role: 'photographer' };
+            localStorage.setItem('pa_user', JSON.stringify(localUser));
+            return { user: localUser, token: 'local-token' };
+        },
+        async getPlans() {
+            return JSON.parse(localStorage.getItem('pw_plans') || '[]');
+        },
+        async createPlan(plan) {
+            const plans = JSON.parse(localStorage.getItem('pw_plans') || '[]');
+            plans.unshift(plan);
+            localStorage.setItem('pw_plans', JSON.stringify(plans.slice(0, 50)));
+            return plan;
+        },
+        async getSchedules() {
+            return JSON.parse(localStorage.getItem('pw_schedules') || '[]');
+        },
+        async createSchedule(schedule) {
+            const schedules = JSON.parse(localStorage.getItem('pw_schedules') || '[]');
+            schedules.push(schedule);
+            localStorage.setItem('pw_schedules', JSON.stringify(schedules));
+            return schedule;
+        },
+        async getMessages() {
+            return JSON.parse(localStorage.getItem('pw_messages') || '[]');
+        }
+    };
 
     window.api = {
         base: API_BASE,
@@ -3297,8 +3329,17 @@ if (document.getElementById('loginOverlay')) {
         document.getElementById('loginLoading').style.display = 'block';
 
         try {
-            const res = await window.api.login(email, password);
-            if (res.success) {
+            let res;
+            try {
+                res = await window.api.login(email, password);
+            } catch (e) {
+                // Fallback to local mode
+                console.log('Backend unreachable, switching to local mode');
+                localStorage.setItem('pa_use_local', 'true');
+                res = await localApi.login({ email, password });
+                toast('后端服务不可用，已切换到本地模式', 'i');
+            }
+            if (res.success || res.token === 'local-token') {
                 localStorage.setItem(TOKEN_KEY, res.token);
                 localStorage.setItem(USER_KEY, JSON.stringify(res.user));
                 document.getElementById('welcomeEmail').textContent = res.user.email;
@@ -5035,7 +5076,13 @@ function renderPlanContent(plan) {
     `;
 
     // 分镜脚本（核心功能）- 专业版
-    const shotList = generateShotList(plan);
+    let shotList = generateShotList(plan);
+    // Merge with any saved custom shots
+    const savedShots = JSON.parse(localStorage.getItem(`pa_shots_${plan.id}`) || '[]');
+    if (savedShots.length > 0) {
+        // Use saved shots if available
+        shotList = savedShots;
+    }
     const shotListHtml = `
         <div class="ps" style="margin-top:1.5rem;border-top:2px solid #ffd700;padding-top:1rem">
             <div class="ps-hdr">
@@ -6105,8 +6152,12 @@ function generateShotList(plan) {
     // 获取对应风格的模板，默认使用复古
     const templates = shotTemplates[style] || shotTemplates['复古'];
     
-    // 返回指定数量的镜头
-    return templates.slice(0, shotCount);
+    const finalShots = templates.slice(0, shotCount);
+    // Save to localStorage for persistence
+    if (plan && plan.id) {
+        localStorage.setItem(`pa_shots_${plan.id}`, JSON.stringify(finalShots));
+    }
+    return finalShots;
 }
 
 // 拍摄进度追踪 - 切换镜头完成状态
@@ -8191,10 +8242,10 @@ function getPexelsApiKey() {
 function savePexelsApiKey(key) {
     if (key && key.trim()) {
         localStorage.setItem('pa_pexels_key', key.trim());
-        toast('Pexels API Key saved', 'ok');
+        toast('Pexels API Key 已保存', 'ok');
     } else {
         localStorage.removeItem('pa_pexels_key');
-        toast('API Key removed, using direct links', 'i');
+        toast('API Key 已移除，将使用直链', 'i');
     }
 }
 
@@ -8585,7 +8636,7 @@ async function loadShotReferencesApi(shotIndex, style, shotDataEncoded) {
                 </div>
             </div>
         `).join('');
-        toast('Images loaded', 'ok');
+        toast('图片加载完成', 'ok');
     } catch (e) {
         console.error('API error:', e);
         container.innerHTML = '<p style="font-size:.8rem;color:var(--er);">API error: ' + e.message + '</p>';
@@ -8595,13 +8646,13 @@ async function loadShotReferencesApi(shotIndex, style, shotDataEncoded) {
 // Batch load (API mode)
 async function loadAllPlanReferences(planId) {
     const apiKey = getPexelsApiKey();
-    if (!apiKey) { toast('Please set Pexels API Key in settings first', 'er'); return; }
+    if (!apiKey) { toast('请在设置中填入 Pexels API Key', 'er'); return; }
     const plans = sg(SK.P) || [];
     const plan = plans.find(p => p.id === planId);
     if (!plan) return;
     const shotList = generateShotList(plan);
     const style = plan.input && plan.input.style || '复古';
-    toast('Loading references...', 'i');
+    toast('正在加载参考图...', 'i');
     for (let i = 0; i < shotList.length; i++) {
         const container = document.getElementById(`ref-images-${i}`);
         if (container) {
@@ -8609,7 +8660,7 @@ async function loadAllPlanReferences(planId) {
             await new Promise(r => setTimeout(r, 500));
         }
     }
-    toast('Done', 'ok');
+    toast('完成', 'ok');
 }
 
 // ===== Settings Modal =====
