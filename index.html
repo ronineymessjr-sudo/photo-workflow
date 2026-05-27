@@ -43,10 +43,10 @@
             --t1: #fafafa;
             --t2: rgba(255,255,255,0.55);
             --t3: rgba(255,255,255,0.3);
-            --ac: #ff6b6b;
-            --ac2: #4ecdc4;
-            --ach: #ff8585;
-            --ac-glow: rgba(255,107,107,0.15);
+            --ac: #d4956a;
+            --ac2: #a08060;
+            --ach: #e0a87a;
+            --ac-glow: rgba(212,149,106,0.15);
             --ok: #22c55e;
             --er: #ef4444;
             --radius: 24px;
@@ -79,10 +79,10 @@
             --t1: #1a1a1a;
             --t2: rgba(0,0,0,0.6);
             --t3: rgba(0,0,0,0.4);
-            --ac: #d4605a;
-            --ac2: #3db8b0;
-            --ach: #e0706a;
-            --ac-glow: rgba(212,96,90,0.15);
+            --ac: #b07848;
+            --ac2: #8a6840;
+            --ach: #c08858;
+            --ac-glow: rgba(176,120,72,0.12);
             --shadow: 0 4px 24px rgba(0,0,0,0.08);
             --dot-color: rgba(0,0,0,0.04);
             --dot-color2: rgba(0,0,0,0.03);
@@ -161,25 +161,27 @@
         .icon-btn { display: inline-flex; align-items: center; gap: .35rem; }
         .icon-btn .lucide { width: 1.1em; height: 1.1em; }
 
-        /* ===== Mesh Gradient Background ===== */
+        /* ===== Background Image ===== */
         body::before {
             content: '';
             position: fixed;
             inset: 0;
             z-index: 0;
             pointer-events: none;
-            background:
-                /* 主色调渐变球 - 珊瑚红 */
-                radial-gradient(ellipse 1200px 1000px at 10% 10%, rgba(255, 107, 107, 0.15) 0%, transparent 60%),
-                /* 辅助色渐变球 - 青绿色 */
-                radial-gradient(ellipse 1000px 800px at 90% 90%, rgba(78, 205, 196, 0.12) 0%, transparent 55%),
-                /* 中间过渡色 - 紫色 */
-                radial-gradient(ellipse 800px 700px at 70% 20%, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
-                /* 底部暖色 - 琥珀 */
-                radial-gradient(ellipse 900px 600px at 30% 95%, rgba(245, 158, 11, 0.06) 0%, transparent 50%),
-                /* 中心微光 */
-                radial-gradient(ellipse 600px 500px at 50% 50%, rgba(255, 107, 107, 0.05) 0%, transparent 45%);
-            animation: meshFlow 20s ease-in-out infinite;
+            background-image: url('assets/bg-fluid-silk.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            opacity: 0.6;
+        }
+        
+        /* 暗角遮罩层 - 增强可读性 */
+        body .bg-vignette {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background: radial-gradient(ellipse at center, transparent 0%, rgba(10,10,12,0.4) 100%);
         }
         
         /* 噪点纹理层 */
@@ -223,7 +225,7 @@
         @keyframes bgPulse {
             0%, 100% { opacity: 1; transform: scale(1) rotate(0deg); }
             33% { opacity: 0.85; transform: scale(1.02) rotate(1deg); }
-            66% { opacity: 0.9; transform: scale(1.01) rotate(-1deg);
+            66% { opacity: 0.9; transform: scale(1.01) rotate(-1deg); }
         }
         /* Floating orbs - Mesh Gradient 光晕效果 */
         .bg-orb {
@@ -238,9 +240,9 @@
             width: 600px;
             height: 600px;
             background: radial-gradient(circle at 30% 30%, 
-                rgba(255, 107, 107, 0.4) 0%, 
-                rgba(255, 107, 107, 0.15) 30%, 
-                rgba(139, 92, 246, 0.08) 60%, 
+                rgba(217, 159, 80, 0.30) 0%, 
+                rgba(217, 159, 80, 0.10) 30%, 
+                rgba(180, 130, 90, 0.05) 60%, 
                 transparent 80%);
             top: -200px;
             right: -150px;
@@ -250,9 +252,9 @@
             width: 500px;
             height: 500px;
             background: radial-gradient(circle at 70% 70%, 
-                rgba(78, 205, 196, 0.35) 0%, 
-                rgba(78, 205, 196, 0.12) 35%, 
-                rgba(59, 130, 246, 0.06) 65%, 
+                rgba(160, 130, 100, 0.25) 0%, 
+                rgba(160, 130, 100, 0.08) 35%, 
+                rgba(140, 110, 80, 0.04) 65%, 
                 transparent 85%);
             bottom: -100px;
             left: -150px;
@@ -262,8 +264,8 @@
             width: 450px;
             height: 450px;
             background: radial-gradient(circle at 50% 50%, 
-                rgba(245, 158, 11, 0.25) 0%, 
-                rgba(236, 72, 153, 0.1) 40%, 
+                rgba(200, 170, 120, 0.18) 0%, 
+                rgba(180, 140, 100, 0.06) 40%, 
                 transparent 75%);
             top: 50%;
             left: 50%;
@@ -274,8 +276,8 @@
             width: 350px;
             height: 350px;
             background: radial-gradient(circle at 40% 60%, 
-                rgba(139, 92, 246, 0.3) 0%, 
-                rgba(59, 130, 246, 0.1) 50%, 
+                rgba(160, 90, 70, 0.20) 0%, 
+                rgba(140, 100, 80, 0.06) 50%, 
                 transparent 80%);
             bottom: 20%;
             right: 10%;
@@ -492,6 +494,25 @@
         .sidebar.collapsed .nav-badge {
             opacity: 0;
             position: absolute;
+        }
+        .sidebar.collapsed .nav-item {
+            flex-direction: column;
+            justify-content: center;
+            padding: .75rem .5rem;
+            gap: .3rem;
+            border-left: none;
+            border-bottom: 3px solid transparent;
+        }
+        .sidebar.collapsed .nav-item.active {
+            border-left-color: transparent;
+            border-bottom-color: var(--ac);
+        }
+        .sidebar.collapsed .nav-item svg {
+            width: 22px;
+            height: 22px;
+        }
+        .sidebar.collapsed .nav-item::before {
+            display: none;
         }
         /* Theme Switcher */
         .theme-switcher {
@@ -2515,6 +2536,9 @@
     <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet" />
 </head>
 <body>
+<!-- Background Vignette Overlay -->
+<div class="bg-vignette"></div>
+
 <!-- Floating Background Orbs -->
 <div class="bg-orb bg-orb-1"></div>
 <div class="bg-orb bg-orb-2"></div>
@@ -3418,7 +3442,7 @@
                         <button class="btn btn-s" onclick="importData()">📤 导入数据</button>
                     </div>
                 </div>
-                <div class="panel" style="background:linear-gradient(135deg,rgba(34,197,94,0.08),rgba(59,130,246,0.08));">
+                <div class="panel" style="background:linear-gradient(135deg,rgba(212,149,106,0.08),rgba(160,128,96,0.08));">
                     <div class="p-head"><h2>💡 数据安全建议</h2></div>
                     <div class="p-body" style="font-size:.8rem;color:var(--t2);">
                         <ul style="margin:0;padding-left:1.2rem;line-height:1.8;">
@@ -4197,9 +4221,9 @@ function filterMessages(status) {
     }
     if (emptyEl) emptyEl.style.display = 'none';
 
-    var statusColors = { new: '#f59e0b', pending: '#3b82f6', completed: '#4ade80' };
+    var statusColors = { new: '#f59e0b', pending: '#d4956a', completed: '#4ade80' };
     var statusLabels = { new: '🆕 新消息', pending: '⏳ 处理中', completed: '✅ 已完成' };
-    var statusBg = { new: 'rgba(245,158,11,0.1)', pending: 'rgba(59,130,246,0.1)', completed: 'rgba(74,222,128,0.1)' };
+    var statusBg = { new: 'rgba(245,158,11,0.1)', pending: 'rgba(212,149,106,0.1)', completed: 'rgba(74,222,128,0.1)' };
 
     listEl.innerHTML = filtered.map(function(m) {
         var st = m.status || 'new';
@@ -5669,9 +5693,9 @@ function renderPlanContent(plan) {
                             <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.5rem;">
                                 <span style="padding:.15rem .4rem;background:rgba(255,107,107,0.15);color:var(--ac);border-radius:4px;font-size:.7rem;">${plan.input && plan.input.style || '复古'}</span>
                                 <span style="padding:.15rem .4rem;background:rgba(78,205,196,0.15);color:#4ecdc4;border-radius:4px;font-size:.7rem;">${shot.focalLength.split(' ')[0]}</span>
-                                <span style="padding:.15rem .4rem;background:rgba(139,92,246,0.15);color:#8b5cf6;border-radius:4px;font-size:.7rem;">${shot.props !== '无' ? shot.props : '无道具'}</span>
+                                <span style="padding:.15rem .4rem;background:rgba(212,149,106,0.15);color:#d4956a;border-radius:4px;font-size:.7rem;">${shot.props !== '无' ? shot.props : '无道具'}</span>
                                 <span style="padding:.15rem .4rem;background:rgba(245,158,11,0.15);color:#f59e0b;border-radius:4px;font-size:.7rem;">${shot.mood}</span>
-                                ${shot.priority ? `<span style="padding:.15rem .4rem;background:${shot.priority === '必拍' ? 'rgba(239,68,68,0.15)' : shot.priority === '推荐' ? 'rgba(59,130,246,0.15)' : 'rgba(156,163,175,0.15)'};color:${shot.priority === '必拍' ? '#ef4444' : shot.priority === '推荐' ? '#3b82f6' : '#9ca3af'};border-radius:4px;font-size:.7rem;">${shot.priority === '必拍' ? '★ ' : ''}${shot.priority}</span>` : ''}
+                                ${shot.priority ? `<span style="padding:.15rem .4rem;background:${shot.priority === '必拍' ? 'rgba(239,68,68,0.15)' : shot.priority === '推荐' ? 'rgba(212,149,106,0.15)' : 'rgba(156,163,175,0.15)'};color:${shot.priority === '必拍' ? '#ef4444' : shot.priority === '推荐' ? '#d4956a' : '#9ca3af'};border-radius:4px;font-size:.7rem;">${shot.priority === '必拍' ? '★ ' : ''}${shot.priority}</span>` : ''}
                             </div>
                             <!-- 参考图库 -->
                             ${renderShotReferenceGallery(shot, plan.input && plan.input.style || '复古', i)}
@@ -5680,7 +5704,7 @@ function renderPlanContent(plan) {
                 </div>
                 
                 <!-- 例图参考来源 -->
-                <div style="margin-top:1.5rem;padding:1rem;background:linear-gradient(135deg,rgba(78,205,196,0.1),rgba(139,92,246,0.1));border-radius:var(--radius-sm);">
+                <div style="margin-top:1.5rem;padding:1rem;background:linear-gradient(135deg,rgba(212,149,106,0.1),rgba(160,128,96,0.1));border-radius:var(--radius-sm);">
                     <h4 style="color:var(--ac);margin-bottom:.75rem;font-size:.9rem;">📸 例图参考来源</h4>
                     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;font-size:.78rem;">
                         <div>
