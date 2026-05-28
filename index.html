@@ -3220,7 +3220,7 @@
                 var token = localStorage.getItem('pw_token');
                 
                 if (token) {
-                    fetch(API_BASE + '/dashboard/stats', {
+                    fetch(API_BASE + '/api/dashboard/stats', {
                         headers: { 'Authorization': 'Bearer ' + token }
                     })
                     .then(function(r) { return r.json(); })
@@ -3731,19 +3731,19 @@ if (document.getElementById('loginOverlay')) {
             const text = await r.text();
             try { return JSON.parse(text); } catch(e) { throw new Error('响应格式错误'); }
         },
-        login(email, password) { return this.request('/auth/login', 'POST', { email, password }); },
-        getSchedules() { return this.request('/schedules'); },
-        createSchedule(data) { return this.request('/schedules', 'POST', data); },
-        deleteSchedule(id) { return this.request(`/schedules/${id}`, 'DELETE'); },
-        getPlans() { return this.request('/plans'); },
-        createPlan(data) { return this.request('/plans', 'POST', data); },
-        syncToFeishuCalendar(schedules) { return this.request('/feishu/sync-calendar', 'POST', { schedules }); },
-        writeToFeishuBitable(app_token, table_id, records) { return this.request('/feishu/bitable', 'POST', { app_token, table_id, records }); },
+        login(email, password) { return this.request('/api/auth/login', 'POST', { email, password }); },
+        getSchedules() { return this.request('/api/schedules'); },
+        createSchedule(data) { return this.request('/api/schedules', 'POST', data); },
+        deleteSchedule(id) { return this.request(`/api/schedules/${id}`, 'DELETE'); },
+        getPlans() { return this.request('/api/plans'); },
+        createPlan(data) { return this.request('/api/plans', 'POST', data); },
+        syncToFeishuCalendar(schedules) { return this.request('/api/feishu/sync-calendar', 'POST', { schedules }); },
+        writeToFeishuBitable(app_token, table_id, records) { return this.request('/api/feishu/bitable', 'POST', { app_token, table_id, records }); },
         // Messages
-        getMessages() { return this.request('/messages'); },
-        createMessage(data) { return this.request('/messages', 'POST', data); },
-        updateMessageStatus(id, status) { return this.request(`/messages/${id}`, 'PATCH', { status }); },
-        deleteMessage(id) { return this.request(`/messages/${id}`, 'DELETE'); }
+        getMessages() { return this.request('/api/messages'); },
+        createMessage(data) { return this.request('/api/messages', 'POST', data); },
+        updateMessageStatus(id, status) { return this.request(`/api/messages/${id}`, 'PATCH', { status }); },
+        deleteMessage(id) { return this.request(`/api/messages/${id}`, 'DELETE'); }
     };
 
     // Login handler
@@ -4015,6 +4015,11 @@ function closeShortcutsModal(e) {
 
     // Load data from server
     async function loadServerData() {
+        const token = localStorage.getItem(TOKEN_KEY);
+        if (!token) {
+            console.log('Not logged in, skipping server sync');
+            return;
+        }
         try {
             const schedules = await window.api.getSchedules();
             if (schedules.schedules) {
@@ -4025,7 +4030,7 @@ function closeShortcutsModal(e) {
                 renderCalendar();
                 renderSchedules();
             }
-        } catch (e) { console.log('Sync error:', e); }
+        } catch (e) { console.log('Sync error:', e.message || e); }
     }
 
     // Check auth state on load (with error handling for mobile browsers)
