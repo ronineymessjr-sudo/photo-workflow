@@ -823,11 +823,7 @@
             transition: all 0.2s ease;
         }
         textarea { min-height: 70px; resize: vertical; line-height: 1.5; }
-        input:focus, textarea:focus, select:focus {
-            outline: none;
-            border-color: var(--ac);
-            box-shadow: 0 0 0 3px rgba(255,107,107,0.15);
-        }
+        /* focus 样式统一在行 672 定义 */
         input::placeholder, textarea::placeholder { color: var(--t3); }
         select {
             cursor: pointer;
@@ -1869,6 +1865,39 @@
             from { opacity: 0; }
             to { opacity: 1; }
         }
+        @keyframes modalFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes modalSlideIn {
+            from { opacity: 0; transform: translateY(20px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes modalFadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        @keyframes modalSlideOut {
+            from { opacity: 1; transform: translateY(0) scale(1); }
+            to { opacity: 0; transform: translateY(20px) scale(0.97); }
+        }
+        /* 通用模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            animation: modalFadeIn 0.2s ease;
+        }
+        .modal.opening { animation: modalFadeIn 0.2s ease forwards; }
+        .modal.closing { animation: modalFadeOut 0.15s ease forwards; }
+        .modal-content {
+            animation: modalSlideIn 0.25s ease;
+        }
+        .modal.closing .modal-content { animation: modalSlideOut 0.15s ease forwards; }
         @keyframes slideInLeft {
             from { opacity: 0; transform: translateX(-20px); }
             to { opacity: 1; transform: translateX(0); }
@@ -2633,47 +2662,17 @@
         /* ===== Mobile Responsive ===== */
         @media (max-width: 768px) {
             :root {
-                --sidebar-w: 0px;
                 --radius: 16px;
                 --radius-sm: 12px;
             }
             body {
                 font-size: 13px;
             }
-            .sidebar {
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                top: auto;
-                width: 100%;
-                height: auto;
-                flex-direction: row;
-                padding: .5rem;
-                z-index: 100;
-                background: var(--bg-sidebar);
-                border-top: 1px solid var(--border-subtle);
-                box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
-            }
-            .sidebar-nav {
-                flex-direction: row;
-                width: 100%;
-                overflow-x: auto;
-                gap: .25rem;
-            }
-            .nav-item {
-                flex: 1;
-                justify-content: center;
-                padding: .6rem .5rem;
-                border-radius: 12px;
-                min-width: 60px;
-            }
-            .nav-item span { display: none; }
-            .nav-item .lucide { width: 1.4rem; height: 1.4rem; }
+            /* sidebar 由行 1261 的媒体查询处理（汉堡菜单 + 侧滑） */
             main {
                 margin: 0;
                 padding: 1rem;
-                padding-bottom: 80px;
+                padding-bottom: 1rem;
             }
             .panel {
                 padding: 1rem;
@@ -2706,6 +2705,34 @@
                 width: 95%;
                 max-height: 90vh;
                 margin: 5% auto;
+            }
+            .modal-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 1rem 1.5rem;
+                border-bottom: 1px solid var(--border-subtle);
+            }
+            .modal-header h3 {
+                margin: 0;
+                font-size: 1.1rem;
+                color: var(--t1);
+            }
+            .modal-close {
+                background: none;
+                border: none;
+                color: var(--t3);
+                font-size: 1.2rem;
+                cursor: pointer;
+                padding: .25rem;
+                border-radius: 6px;
+                transition: background 0.2s;
+            }
+            .modal-close:hover { background: var(--bg2); }
+            .modal-body {
+                padding: 1.5rem;
+                overflow-y: auto;
+                max-height: calc(90vh - 60px);
             }
             .btn-group {
                 flex-direction: column;
@@ -3223,25 +3250,25 @@
                         <div class="panel" style="text-align:center;">
                             <div style="font-size:2rem;font-weight:600;color:var(--ac);" id="stat-shoots">23</div>
                             <div style="font-size:.8rem;color:var(--t3);margin-top:.25rem;" data-i18n="dashboard.month">本月拍摄</div>
-                            <div style="font-size:.7rem;color:#4ade80;margin-top:.25rem;">↑ 15%</div>
+                            <div style="font-size:.7rem;color:#4ade80;margin-top:.25rem;" id="stat-growth">--</div>
                         </div>
                         <div class="panel" style="text-align:center;">
-                            <div style="font-size:2rem;font-weight:600;color:var(--ac);" id="stat-completion">87%</div>
+                            <div style="font-size:2rem;font-weight:600;color:var(--ac);" id="stat-completion">--%</div>
                             <div style="font-size:.8rem;color:var(--t3);margin-top:.25rem;" data-i18n="dashboard.completion">完成率</div>
                             <div style="width:80%;height:4px;background:var(--bg2);border-radius:2px;margin:.5rem auto 0;overflow:hidden;">
-                                <div style="width:87%;height:100%;background:var(--ac);border-radius:2px;"></div>
+                                <div id="stat-completion-bar" style="width:0%;height:100%;background:var(--ac);border-radius:2px;transition:width 0.6s ease;"></div>
                             </div>
                         </div>
                         <div class="panel" style="text-align:center;">
-                            <div style="font-size:2rem;font-weight:600;color:var(--ac);" id="stat-clients">12</div>
+                            <div style="font-size:2rem;font-weight:600;color:var(--ac);" id="stat-clients">--</div>
                             <div style="font-size:.8rem;color:var(--t3);margin-top:.25rem;" data-i18n="dashboard.clients">活跃客户</div>
-                            <div style="font-size:.7rem;color:#4ade80;margin-top:.25rem;">+ 3 新增</div>
+                            <div style="font-size:.7rem;color:#4ade80;margin-top:.25rem;" id="stat-client-growth">--</div>
                         </div>
                         <div class="panel" style="text-align:center;">
-                            <div style="font-size:2rem;font-weight:600;color:var(--ac);" id="stat-equipment">76%</div>
+                            <div style="font-size:2rem;font-weight:600;color:var(--ac);" id="stat-equipment">--%</div>
                             <div style="font-size:.8rem;color:var(--t3);margin-top:.25rem;" data-i18n="dashboard.equipment">设备使用率</div>
                             <div style="width:80%;height:4px;background:var(--bg2);border-radius:2px;margin:.5rem auto 0;overflow:hidden;">
-                                <div style="width:76%;height:100%;background:var(--ac);border-radius:2px;"></div>
+                                <div id="stat-equipment-bar" style="width:0%;height:100%;background:var(--ac);border-radius:2px;transition:width 0.6s ease;"></div>
                             </div>
                         </div>
                     </div>
@@ -3432,6 +3459,27 @@
                     if (completionEl) completionEl.textContent = data.stats.completionRate + '%';
                     if (clientsEl) clientsEl.textContent = data.stats.activeClients;
                     if (equipmentEl) equipmentEl.textContent = data.stats.equipmentRate + '%';
+                    
+                    // 更新增长率
+                    var growthEl = document.getElementById('stat-growth');
+                    if (growthEl) {
+                        var g = data.stats.monthGrowth;
+                        growthEl.textContent = (g >= 0 ? '↑ ' : '↓ ') + Math.abs(g) + '%';
+                        growthEl.style.color = g >= 0 ? '#4ade80' : '#ef4444';
+                    }
+                    
+                    // 更新客户增长
+                    var clientGrowthEl = document.getElementById('stat-client-growth');
+                    if (clientGrowthEl) {
+                        var cg = data.stats.activeClients > 0 ? '+' + data.stats.activeClients + ' 活跃' : '暂无';
+                        clientGrowthEl.textContent = cg;
+                    }
+                    
+                    // 更新进度条
+                    var compBar = document.getElementById('stat-completion-bar');
+                    if (compBar) compBar.style.width = data.stats.completionRate + '%';
+                    var eqBar = document.getElementById('stat-equipment-bar');
+                    if (eqBar) eqBar.style.width = data.stats.equipmentRate + '%';
                     
                     // 更新趋势图
                     updateTrendChart(data.trends);
