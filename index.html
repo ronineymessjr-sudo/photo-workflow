@@ -778,10 +778,7 @@
             animation: shimmer 1.5s infinite;
             border-radius: var(--radius-sm);
         }
-        @keyframes skeleton-shimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
+        /* shimmer 已在行 1401 定义 */
         .skeleton-text { height: 1rem; margin-bottom: .5rem; }
         .skeleton-text.sm { height: .75rem; width: 60%; }
         .skeleton-text.lg { height: 1.25rem; }
@@ -791,10 +788,8 @@
             border-radius: var(--radius);
             margin-bottom: .75rem;
         }
-        .skeleton-avatar { width: 40px; height: 40px; border-radius: 50%; }
-        .skeleton-btn { height: 2.5rem; width: 120px; }
-        
-        .loading-overlay {
+        /* skeleton-avatar, skeleton-btn, skeleton-img 未使用，已删除 */
+        .skeleton-card {
             position: absolute;
             inset: 0;
             background: var(--bg2);
@@ -921,8 +916,7 @@
         .output-cnt.active { display: block; }
         .output-load { display: none; flex-direction: column; align-items: center; justify-content: center; min-height: 320px; }
         .output-load.active { display: flex; }
-        .spinner { width: 28px; height: 28px; border: 3px solid var(--bd); border-top-color: var(--ac); border-radius: 50%; animation: s 1s linear infinite; margin-bottom: .8rem; }
-        @keyframes s { to { transform: rotate(360deg); } }
+        .spinner { width: 28px; height: 28px; border: 3px solid var(--bd); border-top-color: var(--ac); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: .8rem; }
         .output-load p { color: var(--t2); font-size: .85rem; }
 
         /* ===== Case Reference ===== */
@@ -1902,10 +1896,7 @@
             from { opacity: 0; transform: translateX(-20px); }
             to { opacity: 1; transform: translateX(0); }
         }
-        @keyframes shimmer {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
-        }
+        /* shimmer 已在行 1401 定义 */
         @keyframes ripple {
             to { transform: scale(4); opacity: 0; }
         }
@@ -1994,10 +1985,7 @@
             animation: float 3s ease-in-out infinite;
         }
 
-        /* 6. 旋转加载器 */
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+        /* 6. 旋转加载器 - spin 已在行 1841 定义 */
         @keyframes spin-reverse {
             to { transform: rotate(-360deg); }
         }
@@ -2570,8 +2558,7 @@
             }
         }
         
-        /* ===== Loading Spinner ===== */
-        @keyframes spin { to { transform: rotate(360deg); } }
+        /* ===== Loading Spinner ===== - spin 已在行 1841 定义 */
         .spinner {
             display: inline-block;
             width: 1em;
@@ -2630,11 +2617,7 @@
             margin-top: .5rem;
         }
         
-        /* ===== Skeleton Loading ===== */
-        @keyframes shimmer {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
-        }
+        /* ===== Skeleton Loading ===== - shimmer 已在行 1398 定义 */
         .skeleton {
             background: linear-gradient(90deg, var(--bg2) 25%, var(--bg3) 50%, var(--bg2) 75%);
             background-size: 200% 100%;
@@ -2888,7 +2871,7 @@
             <div style="width:24px;height:24px;border:2px solid var(--bd);border-top-color:var(--ac);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto;"></div>
             <p style="font-size:.85rem;color:var(--t3);margin-top:.75rem;">正在登录...</p>
         </div>
-        <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+        <!-- spin 已在主 CSS 中定义 -->
     </div>
 </div>
 
