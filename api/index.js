@@ -1,8 +1,26 @@
 // Photo Workflow Backend API - Cloudflare Workers
 import { createHash, createHmac } from 'node:crypto';
 
-function hashPassword(password) {
-    return createHash('sha256').update(password + '_photoatelier_salt').digest('hex');
+// ===== Input Validation =====
+function validateEmail(email) {
+    if (!email || typeof email !== 'string') return false;
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length <= 255;
+}
+
+function validatePassword(password) {
+    if (!password || typeof password !== 'string') return false;
+    return password.length >= 6 && password.length <= 128;
+}
+
+function sanitizeString(str, maxLength = 500) {
+    if (!str || typeof str !== 'string') return '';
+    return str.slice(0, maxLength).replace(/[<>"'&]/g, '');
+}
+
+// ===== Password Hashing =====
+function hashPassword(password, env) {
+    const salt = env.PASSWORD_SALT || 'photoatelier_salt_2025';
+    return createHash('sha256').update(password + salt).digest('hex');
 }
 
 const CORS = {
@@ -30,7 +48,8 @@ async function sbQuery(env, path, method = 'GET', body = null) {
 
 // ===== Auth =====
 function genToken(userId, env) {
-    const secret = env.JWT_SECRET || 'photoatelier-default-secret';
+    const secret = env.JWT_SECRET;
+    if (!secret) throw new Error('JWT_SECRET not configured');
     const payload = JSON.stringify({ uid: userId, t: Date.now() });
     const sig = createHmac('sha256', secret).update(payload).digest('hex');
     return Buffer.from(JSON.stringify({ p: payload, s: sig })).toString('base64url');
@@ -38,7 +57,8 @@ function genToken(userId, env) {
 
 function verifyToken(authHeader, env) {
     if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
-    const secret = env.JWT_SECRET || 'photoatelier-default-secret';
+    const secret = env.JWT_SECRET;
+    if (!secret) return null;
     try {
         const decoded = JSON.parse(Buffer.from(authHeader.slice(7), 'base64url').toString());
         const expectedSig = createHmac('sha256', secret).update(decoded.p).digest('hex');
@@ -52,15 +72,20 @@ function verifyToken(authHeader, env) {
 // ===== Handlers =====
 async function handleLogin(env, body) {
     const { email, password } = body;
-    if (!email || !password) return { status: 400, body: { error: '请输入邮箱和密码' } };
-
-    const users = await sbQuery(env, `users?email=eq.${encodeURIComponent(email)}&select=*`);
+    
+    // 输入验证
+    if (!validateEmail(email)) return { status: 400, body: { error: '邮箱格式不正确' } };
+    if (!validatePassword(password)) return { status: 400, body: { error: '密码长度需为6-128位' } };
+    
+    const sanitizedEmail = sanitizeString(email, 255);
+    const users = await sbQuery(env, `users?email=eq.${encodeURIComponent(sanitizedEmail)}&select=*`);
+    
     if (users && users.length > 0) {
-        if (users[0].password_hash !== hashPassword(password)) return { status: 401, body: { error: '密码错误' } };
+        if (users[0].password_hash !== hashPassword(password, env)) return { status: 401, body: { error: '密码错误' } };
         return { status: 200, body: { success: true, user: { id: users[0].id, email: users[0].email }, token: genToken(users[0].id, env) } };
     }
 
-    const newUser = await sbQuery(env, 'users', 'POST', { email, password_hash: hashPassword(password) });
+    const newUser = await sbQuery(env, 'users', 'POST', { email: sanitizedEmail, password_hash: hashPassword(password, env) });
     if (newUser.error) return { status: 500, body: { error: '注册失败' } };
     return { status: 201, body: { success: true, user: { id: newUser[0].id, email: newUser[0].email }, token: genToken(newUser[0].id, env) } };
 }
