@@ -36,7 +36,7 @@
             --bg3: #1a1a1d;
             --bg4: #222225;
             --bg-sidebar: linear-gradient(180deg, rgba(16,16,18,0.95) 0%, rgba(12,12,14,0.98) 100%);
-            --bg-panel: linear-gradient(145deg, rgba(20,20,22,0.8) 0%, rgba(16,16,18,0.6) 100%);
+            --bg-panel: linear-gradient(145deg, rgba(20,20,22,0.92) 0%, rgba(16,16,18,0.88) 100%);
             --bg-subtle: rgba(255,255,255,0.04);
             --bg-subtle2: rgba(255,255,255,0.08);
             --border-subtle: rgba(255,255,255,0.05);
@@ -72,7 +72,7 @@
             --bg3: #f0f0f0;
             --bg4: #e8e8e8;
             --bg-sidebar: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
-            --bg-panel: linear-gradient(145deg, #ffffff 0%, #fcfcfc 100%);
+            --bg-panel: linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(252,252,252,0.92) 100%);
             --bg-subtle: rgba(0,0,0,0.03);
             --bg-subtle2: rgba(0,0,0,0.05);
             --border-subtle: rgba(0,0,0,0.06);
@@ -99,7 +99,7 @@
             --bg3: #fff3e0;
             --bg4: #f5e6d0;
             --bg-sidebar: linear-gradient(180deg, #fffdf9 0%, #fff9f0 100%);
-            --bg-panel: linear-gradient(145deg, #ffffff 0%, #fffcf7 100%);
+            --bg-panel: linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(255,252,247,0.92) 100%);
             --bg-subtle: rgba(180,140,80,0.06);
             --bg-subtle2: rgba(180,140,80,0.1);
             --border-subtle: rgba(180,140,80,0.1);
@@ -126,7 +126,7 @@
             --bg3: #2d251c;
             --bg4: #3a3025;
             --bg-sidebar: linear-gradient(180deg, rgba(26,20,16,0.95) 0%, rgba(18,14,10,0.98) 100%);
-            --bg-panel: linear-gradient(145deg, rgba(30,24,18,0.8) 0%, rgba(26,20,16,0.6) 100%);
+            --bg-panel: linear-gradient(145deg, rgba(30,24,18,0.92) 0%, rgba(26,20,16,0.88) 100%);
             --bg-subtle: rgba(255,180,100,0.05);
             --bg-subtle2: rgba(255,180,100,0.08);
             --border-subtle: rgba(255,180,100,0.06);
@@ -181,7 +181,7 @@
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
-            opacity: 0.6;
+            opacity: 0.3;
         }
         
         /* 暗角遮罩层 - 增强可读性 */
@@ -190,7 +190,7 @@
             inset: 0;
             z-index: 0;
             pointer-events: none;
-            background: radial-gradient(ellipse at center, transparent 0%, rgba(10,10,12,0.4) 100%);
+            background: radial-gradient(ellipse at center, transparent 0%, rgba(10,10,12,0.6) 100%);
         }
         
         /* 噪点纹理层 */
@@ -592,6 +592,16 @@
             position: relative;
             min-height: 100vh;
         }
+        /* 主内容区域背景遮罩 - 防止背景图干扰阅读 */
+        .main-content::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--bg);
+            opacity: 0.85;
+            z-index: -1;
+            pointer-events: none;
+        }
         .sidebar.collapsed ~ .main-content {
             margin-left: var(--sidebar-collapsed);
         }
@@ -725,13 +735,13 @@
         /* ===== Panel / Card ===== */
         .panel {
             background: var(--bg-panel);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
+            backdrop-filter: blur(32px);
+            -webkit-backdrop-filter: blur(32px);
             border: 1px solid var(--bd);
             border-radius: var(--radius);
             overflow: hidden;
-            box-shadow: 
-                0 4px 24px rgba(0,0,0,0.4),
+            box-shadow:
+                0 4px 24px rgba(0,0,0,0.5),
                 inset 0 1px 0 var(--inset-top);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
             position: relative;
