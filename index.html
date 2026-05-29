@@ -11017,6 +11017,28 @@ window.addEventListener('online', function() { toast('网络已恢复', 'ok'); }
   if (typeof lucide !== 'undefined') {
     lucide.createIcons();
   }
+
+  // ===== 预置模板初始化 =====
+  // 首次使用时自动添加预置模板
+  (function initDefaultTemplates() {
+    const existing = sg(SK.T) || [];
+    if (existing.length > 0) return; // 用户已有模板，不覆盖
+
+    const defaultTemplates = [
+      { id: 'tpl-default-1', name: '复古私房通用方案', desc: '适用于复古风格室内私房拍摄，暖色调、慵懒氛围', at: Date.now(), count: 0, input: { style: '复古', scene: '室内/老式公寓', mood: '慵懒私密', duration: '2小时', people: '1' } },
+      { id: 'tpl-default-2', name: '时尚街拍方案', desc: '城市街头时尚人像，动感构图、自然光', at: Date.now(), count: 0, input: { style: '时尚', scene: '城市街道/商圈', mood: '自信洒脱', duration: '3小时', people: '1' } },
+      { id: 'tpl-default-3', name: '日系清新写真', desc: '日系小清新风格，自然光、柔色调', at: Date.now(), count: 0, input: { style: '日系', scene: '公园/咖啡馆/校园', mood: '清新自然', duration: '2小时', people: '1' } },
+      { id: 'tpl-default-4', name: '商业人像方案', desc: '专业商业人像拍摄，高质感、精准光线', at: Date.now(), count: 0, input: { style: '商业', scene: '影棚/办公室', mood: '专业干练', duration: '4小时', people: '1' } },
+      { id: 'tpl-default-5', name: '情绪写真方案', desc: '情绪感写真，氛围感强、故事性', at: Date.now(), count: 0, input: { style: '情绪', scene: '废弃建筑/黄昏海边', mood: '忧郁深沉', duration: '2小时', people: '1' } },
+      { id: 'tpl-default-6', name: '古风汉服方案', desc: '古风汉服拍摄，古典意境、自然场景', at: Date.now(), count: 0, input: { style: '古风', scene: '古镇/园林/竹林', mood: '古典优雅', duration: '3小时', people: '1' } },
+      { id: 'tpl-default-7', name: '情侣双人方案', desc: '情侣双人拍摄，互动感、甜蜜氛围', at: Date.now(), count: 0, input: { style: '情侣', scene: '公园/咖啡馆/海边', mood: '甜蜜温馨', duration: '2小时', people: '2' } },
+      { id: 'tpl-default-8', name: '家庭亲子方案', desc: '家庭亲子拍摄，自然互动、温馨记录', at: Date.now(), count: 0, input: { style: '家庭', scene: '家中/公园/游乐场', mood: '温馨自然', duration: '2小时', people: '3+' } },
+    ];
+
+    ss(SK.T, defaultTemplates);
+    console.log('已初始化 8 个预置模板');
+    renderTpl();
+  })();
 </script>
 
 <!-- Keyboard Shortcuts Modal -->
