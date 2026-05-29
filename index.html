@@ -46,8 +46,8 @@
             --bd: rgba(255,255,255,0.06);
             --bd2: rgba(255,255,255,0.12);
             --t1: #fafafa;
-            --t2: rgba(255,255,255,0.55);
-            --t3: rgba(255,255,255,0.3);
+            --t2: rgba(255,255,255,0.72);
+            --t3: rgba(255,255,255,0.45);
             --ac: #d4956a;
             --ac2: #a08060;
             --ach: #e0a87a;
@@ -82,8 +82,8 @@
             --bd: rgba(0,0,0,0.08);
             --bd2: rgba(0,0,0,0.15);
             --t1: #1a1a1a;
-            --t2: rgba(0,0,0,0.6);
-            --t3: rgba(0,0,0,0.4);
+            --t2: rgba(0,0,0,0.72);
+            --t3: rgba(0,0,0,0.5);
             --ac: #b07848;
             --ac2: #8a6840;
             --ach: #c08858;
@@ -109,12 +109,12 @@
             --bd: rgba(180,140,80,0.12);
             --bd2: rgba(180,140,80,0.2);
             --t1: #3d2e1a;
-            --t2: rgba(61,46,26,0.65);
-            --t3: rgba(61,46,26,0.4);
+            --t2: rgba(61,46,26,0.75);
+            --t3: rgba(61,46,26,0.5);
             --ac: #c87a2a;
             --ac2: #5a9e8a;
             --ach: #d98e3a;
-            --ac-glow: rgba(200,122,42,0.12);
+            --ac-glow: rgba(200,122,42,0.15);
             --shadow: 0 4px 24px rgba(180,140,80,0.08);
             --dot-color: rgba(180,140,80,0.04);
             --dot-color2: rgba(180,140,80,0.03);
@@ -136,8 +136,8 @@
             --bd: rgba(255,180,100,0.08);
             --bd2: rgba(255,180,100,0.15);
             --t1: #fff5e6;
-            --t2: rgba(255,245,230,0.6);
-            --t3: rgba(255,245,230,0.35);
+            --t2: rgba(255,245,230,0.72);
+            --t3: rgba(255,245,230,0.45);
             --ac: #ff9955;
             --ac2: #88ccaa;
             --ach: #ffaa66;
@@ -198,7 +198,7 @@
             content: '';
             position: fixed;
             inset: 0;
-            z-index: 1;
+            z-index: 0;
             pointer-events: none;
             opacity: 0.03;
             background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
@@ -352,7 +352,7 @@
             display: flex;
             min-height: 100vh;
             position: relative;
-            z-index: 1;
+            z-index: 2;
         }
 
         /* ===== Sidebar ===== */
@@ -466,7 +466,7 @@
         }
         .nav-item.active {
             border-left-color: var(--ac);
-            background: var(--ac-glow);
+            background: linear-gradient(90deg, var(--ac-glow), transparent);
             color: var(--t1);
         }
         .nav-item.active::before {
@@ -483,6 +483,7 @@
         .nav-item:hover svg {
             opacity: 1;
         }
+        .nav-item.active svg { color: var(--ac); }
         .nav-label {
             opacity: 1;
             transition: opacity 200ms ease;
@@ -6029,19 +6030,19 @@ function renderPlanContent(plan) {
                     <h4 style="color:var(--ac);margin-bottom:.75rem;font-size:.9rem;">📸 例图参考来源</h4>
                     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;font-size:.78rem;">
                         <div>
-                            <strong style="color:#e60023;">Pinterest</strong>
+                            <strong style="color:#e8e8e8;">花瓣网(huaban.com)</strong>
                             <ul style="margin:.25rem 0;padding-left:1rem;color:var(--t2);">
-                                <li>搜索："${plan.input && plan.input.style || 'portrait'} photography poses"</li>
-                                <li>搜索："${plan.input && plan.input.focalLength || '85mm'} portrait"</li>
-                                <li>创建画板保存参考图</li>
+                                <li>搜索关键词：<a href="https://huaban.com/search?q=${encodeURIComponent(plan.input && plan.input.style || '人像')}" target="_blank" style="color:var(--ac);">${plan.input && plan.input.style || '人像'} 摄影</a></li>
+                                <li>国内最大灵感采集平台</li>
+                                <li>点击上方链接直达搜索</li>
                             </ul>
                         </div>
                         <div>
-                            <strong style="color:#e4405f;">Instagram</strong>
+                            <strong style="color:#f5c918;">站酷(zcool.com.cn)</strong>
                             <ul style="margin:.25rem 0;padding-left:1rem;color:var(--t2);">
-                                <li>标签：#${plan.input && plan.input.style || 'portrait'}photography</li>
-                                <li>标签：#${plan.input && plan.input.focalLength || '85mm'}mm</li>
-                                <li>关注相关摄影师</li>
+                                <li>搜索关键词：<a href="https://www.zcool.com.cn/search/content?word=${encodeURIComponent(plan.input && plan.input.style || '人像摄影')}" target="_blank" style="color:var(--ac);">${plan.input && plan.input.style || '人像'} 摄影</a></li>
+                                <li>国内专业设计师社区</li>
+                                <li>点击上方链接直达搜索</li>
                             </ul>
                         </div>
                         <div>
@@ -11099,14 +11100,14 @@ window.addEventListener('online', function() { toast('网络已恢复', 'ok'); }
 <div id="settingsModal" class="modal" style="display:none;">
     <div class="modal-content" style="max-width:520px;">
         <div class="modal-header">
-            <h3>⚙️ 设置</h3>
+            <h3>设置</h3>
             <button class="modal-close" onclick="closeSettingsModal()">&times;</button>
         </div>
         <div class="modal-body" style="max-height:70vh;overflow-y:auto;">
             <!-- Pexels API Key -->
             <div style="margin-bottom:1.5rem;">
                 <label style="display:block;font-weight:600;margin-bottom:.5rem;color:var(--t1);">
-                    📸 Pexels API Key <span style="font-size:.75rem;color:var(--t3);font-weight:400;">（可选，用于自动加载参考图）</span>
+                    Pexels API Key <span style="font-size:.75rem;color:var(--t3);font-weight:400;">（可选，用于自动加载参考图）</span>
                 </label>
                 <div style="display:flex;gap:.5rem;">
                     <input type="text" id="settingsPexelsKey" placeholder="粘贴你的 Pexels API Key..." 
@@ -11121,7 +11122,7 @@ window.addEventListener('online', function() { toast('网络已恢复', 'ok'); }
             
             <!-- Theme -->
             <div style="margin-bottom:1.5rem;">
-                <label style="display:block;font-weight:600;margin-bottom:.5rem;color:var(--t1);">🎨 主题</label>
+                <label style="display:block;font-weight:600;margin-bottom:.5rem;color:var(--t1);">主题</label>
                 <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
                     <button class="btn btn-s" onclick="setTheme('auto')" style="font-size:.8rem;">自动</button>
                     <button class="btn btn-s" onclick="setTheme('dark')" style="font-size:.8rem;">暗色</button>
