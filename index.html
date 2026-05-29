@@ -153,6 +153,10 @@
             letter-spacing: .01em;
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+        body * {
+            transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
         }
         h1, h2, h3, .serif { font-family: var(--font-serif); }
         h1 { font-weight: 600; letter-spacing: -0.02em; }
@@ -1633,15 +1637,15 @@
             animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
         .login-card {
-            background: rgba(20, 20, 22, 0.7);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--bd);
+            background: rgba(18, 18, 20, 0.85);
+            backdrop-filter: blur(30px) saturate(180%);
+            -webkit-backdrop-filter: blur(30px) saturate(180%);
+            border: 1px solid var(--bd2);
             border-radius: var(--radius);
-            padding: 1.8rem;
+            padding: 2rem;
             text-align: left;
-            box-shadow: 0 8px 40px rgba(0,0,0,0.4), inset 0 1px 0 var(--inset-top);
-            transition: border-color 0.3s ease;
+            box-shadow: 0 12px 60px rgba(0,0,0,0.5), inset 0 1px 0 var(--inset-top);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
         }
         .login-card:hover {
             border-color: var(--bd2);
@@ -2532,6 +2536,261 @@
                 justify-content: center;
                 min-width: 0;
             }
+        }
+        
+        /* ===== Loading Spinner ===== */
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner {
+            display: inline-block;
+            width: 1em;
+            height: 1em;
+            border: 2px solid var(--bd);
+            border-top-color: var(--ac);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            vertical-align: middle;
+            margin-right: .4em;
+        }
+        .btn.loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+        .btn.loading::after {
+            content: '';
+            display: inline-block;
+            width: 1em;
+            height: 1em;
+            border: 2px solid currentColor;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-left: .4em;
+            vertical-align: middle;
+        }
+        
+        /* ===== Empty State ===== */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 1.5rem;
+            text-align: center;
+            color: var(--t3);
+            min-height: 200px;
+        }
+        .empty-state .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.4;
+        }
+        .empty-state h3 {
+            font-size: 1.1rem;
+            color: var(--t2);
+            margin-bottom: .5rem;
+        }
+        .empty-state p {
+            font-size: .85rem;
+            max-width: 280px;
+            margin-bottom: 1.2rem;
+        }
+        .empty-state .btn {
+            margin-top: .5rem;
+        }
+        
+        /* ===== Skeleton Loading ===== */
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .skeleton {
+            background: linear-gradient(90deg, var(--bg2) 25%, var(--bg3) 50%, var(--bg2) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s ease-in-out infinite;
+            border-radius: 8px;
+        }
+        .skeleton-text {
+            height: 14px;
+            margin-bottom: .5rem;
+        }
+        .skeleton-title {
+            height: 24px;
+            width: 60%;
+            margin-bottom: 1rem;
+        }
+        .skeleton-card {
+            padding: 1.2rem;
+            margin-bottom: 1rem;
+        }
+        .skeleton-img {
+            height: 120px;
+            margin-bottom: .8rem;
+        }
+        
+        /* ===== Mobile Responsive ===== */
+        @media (max-width: 768px) {
+            :root {
+                --sidebar-w: 0px;
+                --radius: 16px;
+                --radius-sm: 12px;
+            }
+            body {
+                font-size: 13px;
+            }
+            .sidebar {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                top: auto;
+                width: 100%;
+                height: auto;
+                flex-direction: row;
+                padding: .5rem;
+                z-index: 100;
+                background: var(--bg-sidebar);
+                border-top: 1px solid var(--border-subtle);
+                box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+            }
+            .sidebar-nav {
+                flex-direction: row;
+                width: 100%;
+                overflow-x: auto;
+                gap: .25rem;
+            }
+            .nav-item {
+                flex: 1;
+                justify-content: center;
+                padding: .6rem .5rem;
+                border-radius: 12px;
+                min-width: 60px;
+            }
+            .nav-item span { display: none; }
+            .nav-item .lucide { width: 1.4rem; height: 1.4rem; }
+            main {
+                margin: 0;
+                padding: 1rem;
+                padding-bottom: 80px;
+            }
+            .panel {
+                padding: 1rem;
+                border-radius: var(--radius);
+            }
+            .login-container {
+                padding: 1rem;
+            }
+            .login-card {
+                padding: 1.5rem;
+                border-radius: 16px;
+            }
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            .tpl-card {
+                padding: 1rem;
+            }
+            .result-section {
+                padding: 1rem;
+            }
+            .shot-item {
+                flex-direction: column;
+                gap: .5rem;
+            }
+            .shot-meta {
+                flex-wrap: wrap;
+            }
+            .modal-content {
+                width: 95%;
+                max-height: 90vh;
+                margin: 5% auto;
+            }
+            .btn-group {
+                flex-direction: column;
+            }
+            .btn-group .btn {
+                width: 100%;
+            }
+            .calendar-grid {
+                font-size: .75rem;
+            }
+            .cal-day {
+                min-height: 36px;
+                padding: 2px;
+            }
+        }
+        @media (max-width: 480px) {
+            main { padding: .75rem; padding-bottom: 75px; }
+            .login-card { padding: 1.2rem; }
+            h1 { font-size: 1.5rem; }
+            h2 { font-size: 1.2rem; }
+            .panel { padding: .85rem; }
+            .tab-bar {
+                overflow-x: auto;
+                flex-wrap: nowrap;
+            }
+            .tab-btn {
+                flex-shrink: 0;
+                padding: .5rem .75rem;
+                font-size: .8rem;
+            }
+        }
+        
+        /* ===== Lazy Load ===== */
+        img.lazy {
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        img.lazy.loaded {
+            opacity: 1;
+        }
+        img.lazy::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--bg2);
+        }
+        
+        /* ===== Batch Actions ===== */
+        .batch-bar {
+            display: none;
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg3);
+            border: 1px solid var(--bd2);
+            border-radius: 50px;
+            padding: .6rem 1rem;
+            gap: .5rem;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+            z-index: 99;
+            animation: fadeInUp 0.3s ease;
+        }
+        .batch-bar.active {
+            display: flex;
+        }
+        .batch-bar .count {
+            color: var(--ac);
+            font-weight: 600;
+            padding: 0 .5rem;
+        }
+        
+        /* ===== List Search ===== */
+        .list-search-wrapper {
+            padding: .5rem 0;
+            margin-bottom: .5rem;
+        }
+        .list-search-input {
+            width: 100%;
+            padding: .6rem 1rem;
+            background: var(--bg2);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            font-size: .9rem;
+        }
+        .list-search-input:focus {
+            outline: none;
+            border-color: var(--ac);
         }
     </style>
     <!-- AOS Animation Library -->
@@ -8870,7 +9129,7 @@ function savePlanWithImages(plan) {
     const form=$('briefForm');
     if(!form)return;
     const stepFields={
-        1:['f-theme','f-style','f-mood'],
+        1:['f-theme','f-style','f-m-mood'],
         2:['f-model','f-scene','f-dur','f-people'],
         3:['f-extra']
     };
@@ -8895,6 +9154,270 @@ function savePlanWithImages(plan) {
     window._updateStepIndicator=updateSteps;
     updateSteps();
 })();
+
+// ===== Empty State =====
+function showEmptyState(container, type) {
+    const emptyStates = {
+        schedule: { icon: '📅', title: '暂无日程', desc: '点击下方按钮添加第一个拍摄日程', btn: { text: '添加日程', onclick: 'switchTab("schedule"); setTimeout(() => $("addScheduleBtn")?.click(), 300)' } },
+        plan: { icon: '📋', title: '暂无方案', desc: '填写拍摄需求，让 AI 为你生成专属方案', btn: { text: '创建方案', onclick: 'switchTab("brief")' } },
+        location: { icon: '📍', title: '暂无场地', desc: '添加拍摄场地，方便快速选择', btn: { text: '添加场地', onclick: 'switchTab("location")' } },
+        model: { icon: '👤', title: '暂无模特', desc: '管理模特资源，快速匹配拍摄需求', btn: { text: '添加模特', onclick: 'switchTab("model")' } }
+    };
+    const state = emptyStates[type] || emptyStates.plan;
+    return `<div class="empty-state">
+        <div class="empty-icon">${state.icon}</div>
+        <h3>${state.title}</h3>
+        <p>${state.desc}</p>
+        ${state.btn ? `<button class="btn btn-primary" onclick="${state.btn.onclick}">${state.btn.text}</button>` : ''}
+    </div>`;
+}
+
+// ===== Loading State =====
+function setButtonLoading(btn, loading) {
+    if (!btn) return;
+    if (loading) {
+        btn.dataset.originalText = btn.innerHTML;
+        btn.classList.add('loading');
+        btn.disabled = true;
+    } else {
+        btn.classList.remove('loading');
+        btn.disabled = false;
+        if (btn.dataset.originalText) {
+            btn.innerHTML = btn.dataset.originalText;
+        }
+    }
+}
+
+// ===== Lazy Load Images =====
+(function initLazyLoad() {
+    if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    if (img.dataset.src) {
+                        img.src = img.dataset.src;
+                        img.removeAttribute('data-src');
+                    }
+                    img.classList.add('loaded');
+                    observer.unobserve(img);
+                }
+            });
+        }, { rootMargin: '50px' });
+        
+        document.querySelectorAll('img.lazy').forEach(img => observer.observe(img));
+    } else {
+        // Fallback for old browsers
+        document.querySelectorAll('img.lazy').forEach(img => {
+            if (img.dataset.src) {
+                img.src = img.dataset.src;
+                img.removeAttribute('data-src');
+            }
+            img.classList.add('loaded');
+        });
+    }
+})();
+
+// ===== Export Functions =====
+function exportPlanAsJSON(planId) {
+    const plans = getPlans();
+    const plan = plans.find(p => p.id === planId);
+    if (!plan) { showToast('方案不存在'); return; }
+    
+    const blob = new Blob([JSON.stringify(plan, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `方案_${plan.title || planId}_${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('JSON 导出成功');
+}
+
+function exportPlanAsPDF(planId) {
+    const plans = getPlans();
+    const plan = plans.find(p => p.id === planId);
+    if (!plan) { showToast('方案不存在'); return; }
+    
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // Title
+    doc.setFontSize(20);
+    doc.text(plan.title || '拍摄方案', 20, 25);
+    
+    // Info
+    doc.setFontSize(12);
+    doc.text(`风格: ${plan.input?.style || '待定'}`, 20, 40);
+    doc.text(`主题: ${plan.input?.theme || '待定'}`, 20, 48);
+    doc.text(`情绪: ${plan.input?.mood || '待定'}`, 20, 56);
+    doc.text(`场景: ${plan.input?.scene || '待定'}`, 20, 64);
+    doc.text(`时长: ${plan.input?.duration || '待定'}`, 20, 72);
+    doc.text(`人数: ${plan.input?.people || '待定'}`, 20, 80);
+    
+    // Brief
+    if (plan.result?.brief) {
+        doc.setFontSize(14);
+        doc.text('方案概要', 20, 95);
+        doc.setFontSize(11);
+        let y = 105;
+        const brief = plan.result.brief;
+        Object.entries(brief).forEach(([key, value]) => {
+            if (y > 270) { doc.addPage(); y = 20; }
+            doc.text(`${key}: ${value}`, 20, y);
+            y += 10;
+        });
+    }
+    
+    // Shots
+    if (plan.result?.shots?.length) {
+        doc.addPage();
+        doc.setFontSize(14);
+        doc.text('分镜列表', 20, 20);
+        doc.setFontSize(10);
+        let y = 35;
+        plan.result.shots.forEach((shot, i) => {
+            if (y > 270) { doc.addPage(); y = 20; }
+            doc.text(`${i+1}. ${shot.desc || shot.description || '分镜 ' + (i+1)}`, 20, y);
+            y += 8;
+        });
+    }
+    
+    doc.save(`方案_${plan.title || planId}_${new Date().toISOString().slice(0,10)}.pdf`);
+    showToast('PDF 导出成功');
+}
+
+// ===== Search & Filter =====
+function initListSearch(containerId, items, renderFn) {
+    const container = $(containerId);
+    if (!container) return;
+    
+    // Create search input if not exists
+    let searchWrapper = container.previousElementSibling;
+    if (!searchWrapper || !searchWrapper.classList.contains('list-search-wrapper')) {
+        searchWrapper = document.createElement('div');
+        searchWrapper.className = 'list-search-wrapper';
+        searchWrapper.innerHTML = `<input type="text" class="input list-search-input" placeholder="搜索..." oninput="handleListSearch('${containerId}', this.value, ${JSON.stringify(items).replace(/"/g, '&quot;')}, ${renderFn.name})">`;
+        container.parentNode.insertBefore(searchWrapper, container);
+    }
+}
+
+function handleListSearch(containerId, query, items, renderFn) {
+    const container = $(containerId);
+    if (!container) return;
+    
+    const q = query.toLowerCase().trim();
+    if (!q) {
+        renderFn(items);
+        return;
+    }
+    
+    const filtered = items.filter(item => {
+        const text = JSON.stringify(item).toLowerCase();
+        return text.includes(q);
+    });
+    renderFn(filtered);
+    
+    if (filtered.length === 0) {
+        container.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><h3>无搜索结果</h3><p>没有找到匹配 "${query}" 的内容</p></div>`;
+    }
+}
+
+// ===== Batch Operations =====
+(function initBatchOperations() {
+    window.selectedItems = new Set();
+    
+    // Create batch bar
+    const batchBar = document.createElement('div');
+    batchBar.className = 'batch-bar';
+    batchBar.id = 'batchBar';
+    batchBar.innerHTML = `
+        <span class="count">0</span> 已选
+        <button class="btn btn-sm btn-danger" onclick="batchDelete()">删除</button>
+        <button class="btn btn-sm" onclick="clearSelection()">取消</button>
+    `;
+    document.body.appendChild(batchBar);
+    
+    window.toggleBatchSelect = function(id) {
+        if (selectedItems.has(id)) {
+            selectedItems.delete(id);
+        } else {
+            selectedItems.add(id);
+        }
+        updateBatchBar();
+    };
+    
+    window.updateBatchBar = function() {
+        const bar = $('batchBar');
+        const count = $('batchBar .count');
+        if (bar && count) {
+            count.textContent = selectedItems.size;
+            bar.classList.toggle('active', selectedItems.size > 0);
+        }
+    };
+    
+    window.clearSelection = function() {
+        selectedItems.clear();
+        document.querySelectorAll('.batch-checkbox').forEach(cb => cb.checked = false);
+        updateBatchBar();
+    };
+    
+    window.batchDelete = function() {
+        if (selectedItems.size === 0) return;
+        if (!confirm(`确定删除选中的 ${selectedItems.size} 项吗？`)) return;
+        // Delete logic will be handled by the calling function
+        showToast(`已删除 ${selectedItems.size} 项`);
+        clearSelection();
+    };
+})();
+
+// ===== CSV Import =====
+function importCSV() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.csv';
+    input.onchange = function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const text = e.target.result;
+                const lines = text.split('\n').filter(l => l.trim());
+                const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+                
+                const items = [];
+                for (let i = 1; i < lines.length; i++) {
+                    const values = lines[i].split(',');
+                    const item = {};
+                    headers.forEach((h, idx) => {
+                        item[h] = values[idx]?.trim() || '';
+                    });
+                    items.push(item);
+                }
+                
+                if (items.length > 0) {
+                    // Handle imported items
+                    const existing = JSON.parse(localStorage.getItem('pw_schedule') || '[]');
+                    const imported = items.map(item => ({
+                        ...item,
+                        id: 'imported_' + Date.now() + '_' + Math.random().toString(36).slice(2),
+                        importedAt: new Date().toISOString()
+                    }));
+                    localStorage.setItem('pw_schedule', JSON.stringify([...existing, ...imported]));
+                    showToast(`成功导入 ${imported.length} 条数据`);
+                    renderCalendar();
+                    renderSchedules();
+                }
+            } catch (err) {
+                showToast('CSV 解析失败：' + err.message);
+            }
+        };
+        reader.readAsText(file);
+    };
+    input.click();
+}
 
 // ===== History =====
 function renderHistMini(){
