@@ -3149,7 +3149,7 @@
                             <form id="eqForm">
                                 <div class="fg"><label>设备名称</label><input id="eq-name" placeholder="如：Sony A7M4"></div>
                                 <div class="fg"><label>分类</label>
-                                    <select id="eq-cat"><option value="camera">📷 相机机身</option><option value="lens">🔭 镜头</option><option value="light">💡 灯光设备</option><option value="audio">🎙️ 音频</option><option value="tripod">🗼 三脚架/稳定器</option><option value="filter">🔘 滤镜/附件</option><option value="other">📦 其他</option></select>
+                                    <select id="eq-cat"><option value="camera">相机机身</option><option value="lens">镜头</option><option value="light">灯光设备</option><option value="audio">音频</option><option value="tripod">三脚架/稳定器</option><option value="filter">滤镜/附件</option><option value="other">其他</option></select>
                                 </div>
                                 <div class="fg"><label>备注</label><input id="eq-note" placeholder="如：2024年购入，9成新"></div>
                                 <button type="submit" class="btn btn-p">+ 添加设备</button>
@@ -3533,9 +3533,9 @@
                             <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;">
                                 <div style="display:flex;gap:.25rem;">
                                     <button class="btn btn-s btn-sm msg-filter active" data-filter="all" onclick="filterMessages('all')">全部</button>
-                                    <button class="btn btn-s btn-sm msg-filter" data-filter="new" onclick="filterMessages('new')">🆕 新消息</button>
-                                    <button class="btn btn-s btn-sm msg-filter" data-filter="pending" onclick="filterMessages('pending')">⏳ 处理中</button>
-                                    <button class="btn btn-s btn-sm msg-filter" data-filter="completed" onclick="filterMessages('completed')">✅ 已完成</button>
+                                    <button class="btn btn-s btn-sm msg-filter" data-filter="new" onclick="filterMessages('new')">新消息</button>
+                                    <button class="btn btn-s btn-sm msg-filter" data-filter="pending" onclick="filterMessages('pending')">处理中</button>
+                                    <button class="btn btn-s btn-sm msg-filter" data-filter="completed" onclick="filterMessages('completed')">已完成</button>
                                 </div>
                                 <select id="msg-type-filter" onchange="filterMessages()" style="padding:.35rem .6rem;border-radius:8px;border:1px solid var(--bd);background:var(--bg2);color:var(--t1);font-size:.75rem;">
                                     <option value="all">所有类型</option>
@@ -3556,15 +3556,15 @@
                     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:1rem;">
                         <div class="panel" style="text-align:center;cursor:pointer;" onclick="filterMessages('new')">
                             <div style="font-size:1.5rem;font-weight:600;color:#f59e0b;" id="msg-count-new">0</div>
-                            <div style="font-size:.75rem;color:var(--t3);">🆕 新消息</div>
+                            <div style="font-size:.75rem;color:var(--t3);">新消息</div>
                         </div>
                         <div class="panel" style="text-align:center;cursor:pointer;" onclick="filterMessages('pending')">
                             <div style="font-size:1.5rem;font-weight:600;color:#3b82f6;" id="msg-count-pending">0</div>
-                            <div style="font-size:.75rem;color:var(--t3);">⏳ 处理中</div>
+                            <div style="font-size:.75rem;color:var(--t3);">处理中</div>
                         </div>
                         <div class="panel" style="text-align:center;cursor:pointer;" onclick="filterMessages('completed')">
                             <div style="font-size:1.5rem;font-weight:600;color:#4ade80;" id="msg-count-completed">0</div>
-                            <div style="font-size:.75rem;color:var(--t3);">✅ 已完成</div>
+                            <div style="font-size:.75rem;color:var(--t3);">已完成</div>
                         </div>
                     </div>
 
@@ -3605,10 +3605,10 @@
                                 <div class="fg"><label>风格标签（逗号分隔）</label><input id="m-styles" placeholder="如：文艺、清冷、性感、复古"></div>
                                 <div class="fg"><label>联系方式</label><input id="m-contact" placeholder="微信或电话"></div>
                                 <div class="fg"><label>档期状态</label>
-                                    <select id="m-avail"><option value="available">✅ 可用</option><option value="booked">📅 已预约</option><option value="unavailable">❌ 暂不可用</option></select>
+                                    <select id="m-avail"><option value="available">可用</option><option value="booked">已预约</option><option value="unavailable">暂不可用</option></select>
                                 </div>
                                 <div class="fg"><label>肖像授权</label>
-                                    <select id="m-auth"><option value="authorized">✅ 已授权</option><option value="pending">⏳ 待确认</option><option value="none">❌ 未授权</option></select>
+                                    <select id="m-auth"><option value="authorized">已授权</option><option value="pending">待确认</option><option value="none">未授权</option></select>
                                 </div>
                                 <div class="fg"><label>备注</label><textarea id="m-note" placeholder="身高体重、外貌特征、偏好等"></textarea></div>
                                 <button type="submit" class="btn btn-p">+ 添加模特</button>
@@ -3635,7 +3635,7 @@
                         <div class="p-body" id="tplSavePanel" style="display:none;">
                             <div class="fg"><label>模板名称</label><input id="tpl-name" placeholder="如：复古私房通用方案"></div>
                             <div class="fg"><label>模板描述</label><input id="tpl-desc" placeholder="简短描述适用场景"></div>
-                            <button class="btn btn-p" onclick="saveAsTemplate()">💾 保存为模板</button>
+                            <button class="btn btn-p" onclick="saveAsTemplate()">保存为模板</button>
                         </div>
                         <div style="padding:1rem;text-align:center;color:var(--t3);font-size:.82rem;" id="tplSaveHint">先生成一个方案，即可保存为模板</div>
                     </div>
@@ -3671,9 +3671,9 @@
                     <div class="hist-count" id="histHeaderCount">0 条方案</div>
                     <div class="hist-list" id="histFull"></div>
                     <div style="padding:.75rem 1rem;display:flex;gap:.5rem;flex-wrap:wrap;">
-                        <button class="btn btn-d btn-sm" id="clearAllBtn" style="display:none;" onclick="clearAllHistory()">🗑️ 清空全部</button>
-                        <button class="btn btn-s btn-sm" id="exportAllBtn" style="display:none;" onclick="exportAllPlans()">📥 导出全部</button>
-                        <button class="btn btn-i btn-sm" id="batchPdfBtn" style="display:none;" onclick="batchExportPdf()">📄 批量PDF</button>
+                        <button class="btn btn-d btn-sm" id="clearAllBtn" style="display:none;" onclick="clearAllHistory()">清空全部</button>
+                        <button class="btn btn-s btn-sm" id="exportAllBtn" style="display:none;" onclick="exportAllPlans()">导出全部</button>
+                        <button class="btn btn-i btn-sm" id="batchPdfBtn" style="display:none;" onclick="batchExportPdf()">批量PDF</button>
                     </div>
                 </div>
             </div>
@@ -3683,37 +3683,37 @@
         <div class="tab-cnt" id="tab-backup">
             <div style="max-width:700px;margin:0 auto;">
                 <div class="panel" style="margin-bottom:1rem;">
-                    <div class="p-head"><h2>📤 导出数据</h2></div>
+                    <div class="p-head"><h2>导出数据</h2></div>
                     <div class="p-body">
                         <p style="color:var(--t2);font-size:.85rem;margin-bottom:1rem;">将数据导出备份，可用于数据迁移或在Excel中分析。</p>
                         <div style="color:var(--t3);font-size:.78rem;margin-bottom:1rem;">包含：<span id="backupStats"></span></div>
                         <div style="display:flex;flex-direction:column;gap:.75rem;">
                             <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
-                                <button class="btn btn-p" onclick="exportData()">📥 JSON 全量备份</button>
-                                <button class="btn btn-s" onclick="exportDataCSV()">📊 CSV（Excel）</button>
+                                <button class="btn btn-p" onclick="exportData()">JSON 全量备份</button>
+                                <button class="btn btn-s" onclick="exportDataCSV()">CSV（Excel）</button>
                             </div>
                             <div>
                                 <span style="font-size:.75rem;color:var(--t3);margin-bottom:.5rem;display:block;">选择性导出：</span>
                                 <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
-                                    <button class="btn btn-s btn-sm" onclick="exportSelected('plans')">📋 方案</button>
-                                    <button class="btn btn-s btn-sm" onclick="exportSelected('schedules')">📅 日程</button>
-                                    <button class="btn btn-s btn-sm" onclick="exportSelected('equipment')">📷 设备</button>
-                                    <button class="btn btn-s btn-sm" onclick="exportSelected('venues')">🏠 场地</button>
+                                    <button class="btn btn-s btn-sm" onclick="exportSelected('plans')">方案</button>
+                                    <button class="btn btn-s btn-sm" onclick="exportSelected('schedules')">日程</button>
+                                    <button class="btn btn-s btn-sm" onclick="exportSelected('equipment')">设备</button>
+                                    <button class="btn btn-s btn-sm" onclick="exportSelected('venues')">场地</button>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="panel">
-                    <div class="p-head"><h2>📥 导入数据</h2></div>
+                    <div class="p-head"><h2>导入数据</h2></div>
                     <div class="p-body">
                         <p style="color:var(--t2);font-size:.85rem;margin-bottom:1rem;">从 JSON 备份文件恢复数据。导入将合并现有数据，不会覆盖。</p>
                         <input type="file" id="importFile" accept=".json" style="margin-bottom:.75rem;">
-                        <button class="btn btn-s" onclick="importData()">📤 导入数据</button>
+                        <button class="btn btn-s" onclick="importData()">导入数据</button>
                     </div>
                 </div>
                 <div class="panel" style="background:linear-gradient(135deg,rgba(212,149,106,0.08),rgba(160,128,96,0.08));">
-                    <div class="p-head"><h2>💡 数据安全建议</h2></div>
+                    <div class="p-head"><h2>数据安全建议</h2></div>
                     <div class="p-body" style="font-size:.8rem;color:var(--t2);">
                         <ul style="margin:0;padding-left:1.2rem;line-height:1.8;">
                             <li>建议每周导出一次 JSON 备份</li>
@@ -3731,7 +3731,7 @@
             <div style="max-width:900px;margin:0 auto;">
                 <div class="panel" style="margin-bottom:1rem;">
                     <div class="p-head" style="justify-content:space-between">
-                        <h2 data-i18n="calendar.title">📅 拍摄日程</h2>
+                        <h2 data-i18n="calendar.title">拍摄日程</h2>
                         <button class="btn btn-s btn-sm" onclick="addSchedule()" data-i18n="calendar.add">+ 添加日程</button>
                     </div>
                     <div class="p-body">
@@ -3740,10 +3740,10 @@
                 </div>
                 <div class="panel">
                     <div class="p-head" style="justify-content:space-between">
-                        <h2>📋 待办事项</h2>
+                        <h2>待办事项</h2>
                         <div style="display:flex;gap:.5rem;">
-                            <button class="btn btn-s btn-sm" onclick="exportToFeishu()" data-i18n="calendar.sync">📤 同步到飞书日历</button>
-                            <button class="btn btn-s btn-sm" onclick="syncToFeishuBitable()">📊 同步到多维表格</button>
+                            <button class="btn btn-s btn-sm" onclick="exportToFeishu()" data-i18n="calendar.sync">同步到飞书日历</button>
+                            <button class="btn btn-s btn-sm" onclick="syncToFeishuBitable()">同步到多维表格</button>
                         </div>
                     </div>
                     <div class="p-body" id="todoList"></div>
@@ -4510,7 +4510,7 @@ function filterMessages(status) {
     if (emptyEl) emptyEl.style.display = 'none';
 
     var statusColors = { new: '#f59e0b', pending: '#d4956a', completed: '#4ade80' };
-    var statusLabels = { new: '🆕 新消息', pending: '⏳ 处理中', completed: '✅ 已完成' };
+    var statusLabels = { new: '新消息', pending: '处理中', completed: '已完成' };
     var statusBg = { new: 'rgba(245,158,11,0.1)', pending: 'rgba(212,149,106,0.1)', completed: 'rgba(74,222,128,0.1)' };
 
     listEl.innerHTML = filtered.map(function(m) {
@@ -4529,9 +4529,9 @@ function filterMessages(status) {
                         (m.service_type ? '<span style="padding:.1rem .4rem;border-radius:4px;font-size:.65rem;background:var(--bg2);color:var(--t3);">' + escHtml(m.service_type) + '</span>' : '') +
                     '</div>' +
                     '<div style="font-size:.75rem;color:var(--t3);display:flex;gap:.75rem;flex-wrap:wrap;">' +
-                        '<span>📧 ' + escHtml(m.email) + '</span>' +
-                        (m.phone ? '<span>📱 ' + escHtml(m.phone) + '</span>' : '') +
-                        (time ? '<span>🕐 ' + time + '</span>' : '') +
+                        '<span>' + escHtml(m.email) + '</span>' +
+                        (m.phone ? '<span>' + escHtml(m.phone) + '</span>' : '') +
+                        (time ? '<span>' + time + '</span>' : '') +
                     '</div>' +
                     (m.message ? '<div style="font-size:.8rem;color:var(--t2);margin-top:.4rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:400px;">' + escHtml(m.message) + '</div>' : '') +
                 '</div>' +
@@ -4553,24 +4553,24 @@ function openMsgDetail(id) {
     var time = m.created_at ? new Date(m.created_at).toLocaleString('zh-CN') : '未知';
     bodyEl.innerHTML =
         '<div style="display:grid;grid-template-columns:auto 1fr;gap:.5rem .75rem;font-size:.85rem;">' +
-            '<span style="color:var(--t3);">📧 邮箱</span><span>' + escHtml(m.email) + '</span>' +
-            (m.phone ? '<span style="color:var(--t3);">📱 电话</span><span>' + escHtml(m.phone) + '</span>' : '') +
-            (m.service_type ? '<span style="color:var(--t3);">📋 服务类型</span><span>' + escHtml(m.service_type) + '</span>' : '') +
-            '<span style="color:var(--t3);">🕐 时间</span><span>' + time + '</span>' +
-            '<span style="color:var(--t3);">📝 留言</span><span style="white-space:pre-wrap;">' + escHtml(m.message || '无') + '</span>' +
+            '<span style="color:var(--t3);">邮箱</span><span>' + escHtml(m.email) + '</span>' +
+            (m.phone ? '<span style="color:var(--t3);">电话</span><span>' + escHtml(m.phone) + '</span>' : '') +
+            (m.service_type ? '<span style="color:var(--t3);">服务类型</span><span>' + escHtml(m.service_type) + '</span>' : '') +
+            '<span style="color:var(--t3);">时间</span><span>' + time + '</span>' +
+            '<span style="color:var(--t3);">留言</span><span style="white-space:pre-wrap;">' + escHtml(m.message || '无') + '</span>' +
         '</div>';
 
     var st = m.status || 'new';
     actEl.innerHTML = '';
     var safeId = escHtml(id).replace(/'/g, "\\'");
     if (st === 'new') {
-        actEl.innerHTML += '<button class="btn btn-s btn-sm" onclick="updateMsg(\'' + safeId + '\',\'pending\')">⏳ 标记处理中</button>';
+        actEl.innerHTML += '<button class="btn btn-s btn-sm" onclick="updateMsg(\'' + safeId + '\',\'pending\')">标记处理中</button>';
     }
     if (st === 'pending') {
-        actEl.innerHTML += '<button class="btn btn-p btn-sm" onclick="updateMsg(\'' + safeId + '\',\'completed\')">✅ 标记完成</button>';
+        actEl.innerHTML += '<button class="btn btn-p btn-sm" onclick="updateMsg(\'' + safeId + '\',\'completed\')">标记完成</button>';
     }
-    actEl.innerHTML += '<a class="btn btn-s btn-sm" href="mailto:' + escHtml(m.email) + (m.name ? '?subject=Re: ' + encodeURIComponent(m.name) + ' 的咨询' : '') + '" style="text-decoration:none;">📧 回复邮件</a>';
-    actEl.innerHTML += '<button class="btn btn-sm" style="color:#ef4444;border:1px solid rgba(239,68,68,0.3);" onclick="deleteMsg(\'' + safeId + '\')">🗑️ 删除</button>';
+    actEl.innerHTML += '<a class="btn btn-s btn-sm" href="mailto:' + escHtml(m.email) + (m.name ? '?subject=Re: ' + encodeURIComponent(m.name) + ' 的咨询' : '') + '" style="text-decoration:none;">回复邮件</a>';
+    actEl.innerHTML += '<button class="btn btn-sm" style="color:#ef4444;border:1px solid rgba(239,68,68,0.3);" onclick="deleteMsg(\'' + safeId + '\')">删除</button>';
 
     modal.style.display = 'flex';
 }
@@ -4655,7 +4655,7 @@ var _msgNotifyTimer = setInterval(function() {
 })();
 
 // ===== Category Config =====
-const CATS = { camera:{n:'📷 相机机身',ic:'📷'}, lens:{n:'🔭 镜头',ic:'🔭'}, light:{n:'💡 灯光设备',ic:'💡'}, audio:{n:'🎙️ 音频',ic:'🎙️'}, tripod:{n:'🗼 三脚架/稳定器',ic:'🗼'}, filter:{n:'🔘 滤镜/附件',ic:'🔘'}, other:{n:'📦 其他',ic:'📦'} };
+const CATS = { camera:{n:'相机机身',ic:'camera'}, lens:{n:'镜头',ic:'lens'}, light:{n:'灯光设备',ic:'lightbulb'}, audio:{n:'音频',ic:'mic'}, tripod:{n:'三脚架/稳定器',ic:'grip-vertical'}, filter:{n:'滤镜/附件',ic:'circle'}, other:{n:'其他',ic:'package'} };
 
 // ===== Photo Shot Analyzer =====
 
@@ -4814,14 +4814,14 @@ async function generatePhotoAnalysis(imageUrl, style) {
 <p><strong>推荐设备：</strong></p>
 <ul>${guide.equipment.map(e => `<li class="eq-tag">${e}</li>`).join('')}</ul>
 
-<h4>🎨 调色方案</h4>
+<h4>调色方案</h4>
 <p>${guide.color}</p>
 
-<h4>📷 推荐器材</h4>
+<h4>推荐器材</h4>
 <p><strong>镜头：</strong>${guide.lens}</p>
 <p><strong>参数：</strong>${guide.params}</p>
 
-<h4>🌤️ 拍摄条件</h4>
+<h4>拍摄条件</h4>
 <p>${guide.time}</p>
 
 <h4>⚡ 执行要点</h4>
@@ -4832,7 +4832,7 @@ async function generatePhotoAnalysis(imageUrl, style) {
     <li>RAW格式拍摄，方便后期调整</li>
 </ul>
 
-<button class="btn btn-p" style="margin-top:1rem;width:100%" onclick="applyAnalysisToForm('${style}')">📋 应用到方案生成</button>
+<button class="btn btn-p" style="margin-top:1rem;width:100%" onclick="applyAnalysisToForm('${style}')">应用到方案生成</button>
     `;
 }
 
@@ -4959,12 +4959,12 @@ function renderVenue() {
     if(!list.length){ $('venue-list').innerHTML='<div class="eq-empty">' + (searchTerm ? '未找到匹配的场地' : '场地库为空') + '</div>'; return; }
     $('venue-list').innerHTML=list.map(v=>`
         <div class="venue-card" data-aos="fade-up">
-            <div class="venue-name">📍 ${escHtml(v.name)} <button class="btn-i2" onclick="delVenue('${v.id}')" title="删除" style="margin-left:auto;">✕</button></div>
+            <div class="venue-name">${escHtml(v.name)} <button class="btn-i2" onclick="delVenue('${v.id}')" title="删除" style="margin-left:auto;">✕</button></div>
             ${v.styles?`<div class="venue-tags">${v.styles.split(',').map(s=>`<span class="venue-tag style-tag">${escHtml(s.trim())}</span>`).join('')}</div>`:''}
-            ${v.addr?`<div class="venue-addr">📌 ${escHtml(v.addr)}</div>`:''}
-            ${v.contact?`<div class="venue-addr">📞 ${escHtml(v.contact)}</div>`:''}
+            ${v.addr?`<div class="venue-addr">${escHtml(v.addr)}</div>`:''}
+            ${v.contact?`<div class="venue-addr">${escHtml(v.contact)}</div>`:''}
             ${v.note?`<div class="venue-note">${escHtml(v.note)}</div>`:''}
-            <div class="venue-actions"><button class="btn btn-s btn-sm" onclick="useVenue('${v.id}')">📋 引用到方案</button></div>
+            <div class="venue-actions"><button class="btn btn-s btn-sm" onclick="useVenue('${v.id}')">引用到方案</button></div>
         </div>`).join('');
     if(typeof AOS !== 'undefined') AOS.refresh();
 }
@@ -4987,12 +4987,12 @@ function renderModel() {
     if(!list.length){ $('model-list').innerHTML='<div class="eq-empty">模特库为空</div>'; return; }
     $('model-list').innerHTML=list.map(m=>`
         <div class="model-card">
-            <div class="model-name">👤 ${escHtml(m.name)} <button class="btn-i2" onclick="delModel('${m.id}')" title="删除" style="margin-left:auto;">✕</button></div>
+            <div class="model-name">${escHtml(m.name)} <button class="btn-i2" onclick="delModel('${m.id}')" title="删除" style="margin-left:auto;">✕</button></div>
             ${m.styles?`<div class="model-tags">${m.styles.split(',').map(s=>`<span class="model-tag">${escHtml(s.trim())}</span>`).join('')}</div>`:''}
-            <div class="model-meta">📅 ${m.avail==='available'?'可用':m.avail==='booked'?'已预约':'暂不可用'} &nbsp;|&nbsp; 肖像权：${m.auth==='authorized'?'✅已授权':m.auth==='pending'?'⏳待确认':'❌未授权'}</div>
-            ${m.contact?`<div class="venue-addr">📞 ${escHtml(m.contact)}</div>`:''}
+            <div class="model-meta">${m.avail==='available'?'可用':m.avail==='booked'?'已预约':'暂不可用'} &nbsp;|&nbsp; 肖像权：${m.auth==='authorized'?'已授权':m.auth==='pending'?'待确认':'未授权'}</div>
+            ${m.contact?`<div class="venue-addr">${escHtml(m.contact)}</div>`:''}
             ${m.note?`<div class="model-note">${escHtml(m.note)}</div>`:''}
-            <div class="model-actions"><button class="btn btn-s btn-sm" onclick="useModel('${m.id}')">📋 引用到方案</button></div>
+            <div class="model-actions"><button class="btn btn-s btn-sm" onclick="useModel('${m.id}')">引用到方案</button></div>
         </div>`).join('');
 }
 function delModel(id){ let l=sg(SK.M)||[]; l=l.filter(m=>m.id!==id); ss(SK.M,l); renderModel(); toast('已删除'); }
@@ -5057,16 +5057,16 @@ function saveAsTemplate() {
 
 // ===== Plan Generation =====
 const baseSections = [
-    {ti:'📍 地点推荐',ic:'📍',c:['上海老洋行酒店式公寓 — 1920年代Art Deco装修，暖色木地板、老式黄铜灯具','广州沙面岛欧式建筑群 — 百年老建筑，罗马柱、拱形窗、老式阳台','重庆山前旧租界 — 依山而建的老式石库门建筑群，层次感强']},
-    {ti:'🧍 摆姿指导',ic:'🧍',c:['坐在老式皮沙发上，一腿蜷曲，另一腿自然垂落，目光看向窗外','站立于落地窗前，侧身45度，手指轻触窗框，头微微侧倾','倚靠在复古梳妆台旁，手持老式梳子，眼神朦胧望向镜头外','躺在老式浴缸边缘，半身出水，手臂轻搭在浴缸边沿','坐于老式木椅上，双脚蜷起，下巴微收，营造私密感','站立于复古书架前，抽出一本书，眼神若有所思','倚靠拱形门框，手指轻触颈部锁骨，展现颈部线条','俯身于老式床铺，白色床单半遮身体，眼神神秘慵懒','立于老式壁炉旁，手持烛台，光影塑造立体感','坐在梳妆镜前，从镜中捕捉背影或侧影']},
-    {ti:'💄 妆造建议',ic:'💄',c:['【发型】自然黑长直或慵懒卷发，复古发夹或丝绒发带','【妆容】哑光雾面底妆，大地色系眼妆，砖红或复古正红唇色','【服装】黑色蕾丝吊带、白色宽松衬衫、丝绒睡袍','【配饰】珍珠耳环、金色复古手表、细链条项链']},
-    {ti:'🎬 道具清单',ic:'🎬',c:['老式胶片相机（可选）— 增加复古质感','香薰蜡烛/烛台 — 营造暖色光影氛围','干花束（玫瑰、满天星）— 置于床头或梳妆台','老式书籍或杂志 — 英文原版或年代感旧书','丝绸眼罩或蕾丝扇子 — 增添私密慵懒感','烟雾机/干冰 — 制造朦胧神秘感','老式行李箱 — 复古皮箱作为拍摄道具']},
-    {ti:'🌤️ 天气建议',ic:'🌤️',c:['【最佳】阴天或小雨 — 漫射光线柔和，避免硬阴影','【备选】晴天傍晚16:00-18:00 — 柔和侧逆光','【不建议】正午强光 — 室内硬光难以控制']},
-    {ti:'📷 器材推荐',ic:'📷',c:[]},
-    {ti:'🔭 焦段推荐',ic:'🔭',c:['【35mm】环境人像首选，交代场景，叙事感强','【50mm】最接近人眼视角，真实自然','【85mm】人像黄金焦段，优秀背景虚化','【135mm】强烈空间压缩感，特写专用','【推荐组合】35mm + 85mm 双镜头组合']},
-    {ti:'⏰ 时间安排',ic:'⏰',c:['14:00-14:30 模特到场，沟通妆造，挑选服装','14:30-15:30 化妆造型，测试光线，确定机位','15:30-15:45 模特热身、摆姿练习','15:45-17:15 正式拍摄（约1.5小时），分场景进行','17:15-17:30 休息，补充水分','17:30-18:00 弱光场景拍摄','18:00-18:30 收尾，确认素材，补拍镜头']},
-    {ti:'🎨 后期调色',ic:'🎨',c:['【整体】低饱和度、高对比度、暖色温（3200K-4000K）','【色调】Film LUT风格，参考Kodak Portra 400胶片','【肤色】保留细节不过曝，暖调中略带粉感','【阴影】适当压暗，增加神秘感','【颗粒】轻微胶片颗粒（10-15%），增强复古质感']},
-    {ti:'⚠️ 注意事项',ic:'⚠️',c:['提前与模特沟通拍摄边界，确保共识','室内注意安全，确认消防通道','使用烟雾注意通风','保护模特隐私，RAW不外传','带备用电池和存储卡','准备暖宝宝，模特可能需露肤']}
+    {ti:'地点推荐',ic:'map-pin',c:['上海老洋行酒店式公寓 — 1920年代Art Deco装修，暖色木地板、老式黄铜灯具','广州沙面岛欧式建筑群 — 百年老建筑，罗马柱、拱形窗、老式阳台','重庆山前旧租界 — 依山而建的老式石库门建筑群，层次感强']},
+    {ti:'摆姿指导',ic:'user',c:['坐在老式皮沙发上，一腿蜷曲，另一腿自然垂落，目光看向窗外','站立于落地窗前，侧身45度，手指轻触窗框，头微微侧倾','倚靠在复古梳妆台旁，手持老式梳子，眼神朦胧望向镜头外','躺在老式浴缸边缘，半身出水，手臂轻搭在浴缸边沿','坐于老式木椅上，双脚蜷起，下巴微收，营造私密感','站立于复古书架前，抽出一本书，眼神若有所思','倚靠拱形门框，手指轻触颈部锁骨，展现颈部线条','俯身于老式床铺，白色床单半遮身体，眼神神秘慵懒','立于老式壁炉旁，手持烛台，光影塑造立体感','坐在梳妆镜前，从镜中捕捉背影或侧影']},
+    {ti:'妆造建议',ic:'sparkles',c:['【发型】自然黑长直或慵懒卷发，复古发夹或丝绒发带','【妆容】哑光雾面底妆，大地色系眼妆，砖红或复古正红唇色','【服装】黑色蕾丝吊带、白色宽松衬衫、丝绒睡袍','【配饰】珍珠耳环、金色复古手表、细链条项链']},
+    {ti:'道具清单',ic:'box',c:['老式胶片相机（可选）— 增加复古质感','香薰蜡烛/烛台 — 营造暖色光影氛围','干花束（玫瑰、满天星）— 置于床头或梳妆台','老式书籍或杂志 — 英文原版或年代感旧书','丝绸眼罩或蕾丝扇子 — 增添私密慵懒感','烟雾机/干冰 — 制造朦胧神秘感','老式行李箱 — 复古皮箱作为拍摄道具']},
+    {ti:'天气建议',ic:'cloud-sun',c:['【最佳】阴天或小雨 — 漫射光线柔和，避免硬阴影','【备选】晴天傍晚16:00-18:00 — 柔和侧逆光','【不建议】正午强光 — 室内硬光难以控制']},
+    {ti:'器材推荐',ic:'camera',c:[]},
+    {ti:'焦段推荐',ic:'aperture',c:['【35mm】环境人像首选，交代场景，叙事感强','【50mm】最接近人眼视角，真实自然','【85mm】人像黄金焦段，优秀背景虚化','【135mm】强烈空间压缩感，特写专用','【推荐组合】35mm + 85mm 双镜头组合']},
+    {ti:'时间安排',ic:'clock',c:['14:00-14:30 模特到场，沟通妆造，挑选服装','14:30-15:30 化妆造型，测试光线，确定机位','15:30-15:45 模特热身、摆姿练习','15:45-17:15 正式拍摄（约1.5小时），分场景进行','17:15-17:30 休息，补充水分','17:30-18:00 弱光场景拍摄','18:00-18:30 收尾，确认素材，补拍镜头']},
+    {ti:'后期调色',ic:'palette',c:['【整体】低饱和度、高对比度、暖色温（3200K-4000K）','【色调】Film LUT风格，参考Kodak Portra 400胶片','【肤色】保留细节不过曝，暖调中略带粉感','【阴影】适当压暗，增加神秘感','【颗粒】轻微胶片颗粒（10-15%），增强复古质感']},
+    {ti:'注意事项',ic:'alert-triangle',c:['提前与模特沟通拍摄边界，确保共识','室内注意安全，确认消防通道','使用烟雾注意通风','保护模特隐私，RAW不外传','带备用电池和存储卡','准备暖宝宝，模特可能需露肤']}
 ];
 
 // ===== 妆造建议数据 =====
