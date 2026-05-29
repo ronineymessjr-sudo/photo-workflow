@@ -3041,12 +3041,12 @@
                                     <div class="image-preview-grid" id="imagePreviewGrid"></div>
                                 </div>
 
-                                <button type="submit" class="btn btn-p" id="genBtn" style="width:100%;margin-top:0.5rem;" data-i18n="gen.button">⚡ 生成并保存</button>
+                                <button type="submit" class="btn btn-p" id="genBtn" style="width:100%;margin-top:0.5rem;" data-i18n="gen.button"><i data-lucide="zap" style="width:1em;height:1em;vertical-align:middle;margin-right:.3em;"></i>生成并保存</button>
                             </form>
 
                             <!-- 案例参考 -->
                             <div class="case-ref">
-                                <div class="p-head" style="margin-top:1rem"><h2>📸 案例参考</h2><button class="btn btn-s btn-sm" id="analyzeImgBtn" onclick="analyzeReference()">🔍 分析此图</button></div>
+                                <div class="p-head" style="margin-top:1rem"><h2><i data-lucide="camera" style="width:1em;height:1em;vertical-align:middle;margin-right:.3em;"></i>案例参考</h2><button class="btn btn-s btn-sm" id="analyzeImgBtn" onclick="analyzeReference()"><i data-lucide="search" style="width:1em;height:1em;vertical-align:middle;margin-right:.3em;"></i>分析此图</button></div>
                                 <div class="case-ref-input">
                                     <input id="caseRefUrl" placeholder="粘贴参考图 URL（picsum/unsplash/本地均可）" oninput="previewRefImage()">
                                 </div>
@@ -3054,7 +3054,7 @@
                                     <img id="caseRefImg" src="" alt="参考图">
                                     <div class="case-ref-actions">
                                         <button class="btn btn-s btn-sm" onclick="analyzeReference()">🔍 AI 分析</button>
-                                        <button class="btn btn-s btn-sm" onclick="clearRefImage()">✕ 清除</button>
+                                        <button class="btn btn-s btn-sm" onclick="clearRefImage()"><i data-lucide="x" style="width:1em;height:1em;vertical-align:middle;margin-right:.3em;"></i>清除</button>
                                     </div>
                                 </div>
                                 <div class="case-ref-result" id="caseRefResult" style="display:none"></div>
@@ -3072,23 +3072,23 @@
                     <!-- 专业工具 -->
                     <div class="side-panel">
                         <div class="panel">
-                            <div class="p-head"><h2>🛠️ 专业工具</h2></div>
+                            <div class="p-head"><h2><i data-lucide="wrench" style="width:1em;height:1em;vertical-align:middle;margin-right:.3em;"></i>专业工具</h2></div>
                             <div class="p-body">
                                 <div class="tool-section">
-                                    <h4>📍 勘景/光线</h4>
+                                    <h4><i data-lucide="map-pin" style="width:1em;height:1em;vertical-align:middle;margin-right:.3em;"></i>勘景/光线</h4>
                                     <a href="https://www.photopills.com/" target="_blank" class="tool-link">PhotoPills - 太阳轨迹预测</a>
                                     <a href="https://www.windy.com/" target="_blank" class="tool-link">Windy - 云层天气预测</a>
                                     <a href="https://www.sunearthtools.com/" target="_blank" class="tool-link">Sun Surveyor - 光线模拟</a>
                                     <a href="https://www.google.com/earth/" target="_blank" class="tool-link">Google Earth - 卫星勘景</a>
                                 </div>
                                 <div class="tool-section">
-                                    <h4>🎨 LUT/预设</h4>
+                                    <h4><i data-lucide="palette" style="width:1em;height:1em;vertical-align:middle;margin-right:.3em;"></i>LUT/预设</h4>
                                     <a href="https://groundcontrolcolor.com/free-luts/" target="_blank" class="tool-link">Ground Control - 免费LUT</a>
                                     <a href="https://lutify.me/" target="_blank" class="tool-link">Lutify.me - 电影LUT</a>
                                     <a href="https://www.iwltbap.com/" target="_blank" class="tool-link">IWLTBAP - 胶片模拟</a>
                                 </div>
                                 <div class="tool-section">
-                                    <h4>💡 灵感参考</h4>
+                                    <h4><i data-lucide="lightbulb" style="width:1em;height:1em;vertical-align:middle;margin-right:.3em;"></i>灵感参考</h4>
                                     <a href="https://www.pinterest.com/" target="_blank" class="tool-link">Pinterest - 情绪板</a>
                                     <a href="https://www.behance.net/" target="_blank" class="tool-link">Behance - 高质量作品</a>
                                     <a href="https://500px.com/" target="_blank" class="tool-link">500px - 摄影作品</a>
@@ -3100,7 +3100,7 @@
                     <!-- 拍摄清单 -->
                     <div class="side-panel">
                         <div class="panel">
-                            <div class="p-head"><h2>📋 拍摄清单</h2></div>
+                            <div class="p-head"><h2><i data-lucide="clipboard-list" style="width:1em;height:1em;vertical-align:middle;margin-right:.3em;"></i>拍摄清单</h2></div>
                             <div class="p-body">
                                 <div class="checklist">
                                     <label class="check-item"><input type="checkbox" class="ck"> 勘景踩点（2次）</label>
