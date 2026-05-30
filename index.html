@@ -152,16 +152,22 @@
             color: var(--t1);
             min-height: 100vh;
             font-size: 14px;
-            line-height: 1.7;
-            letter-spacing: .01em;
+            line-height: 1.8;
+            letter-spacing: .02em;
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
             transition: background-color 0.4s ease, color 0.4s ease;
         }
         body * {
             transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
         }
         h1, h2, h3, .serif { font-family: var(--font-serif); }
+        /* 文字可读性增强 - 微弱阴影防止底图干扰 */
+        h1, h2, h3, h4, p, span, a, li, td, th, label {
+            text-shadow: 0 0 8px var(--bg), 0 0 16px var(--bg);
+        }
         h1 { font-weight: 600; letter-spacing: -0.02em; }
         h2 { font-weight: 600; letter-spacing: -0.01em; }
         
@@ -375,6 +381,22 @@
         }
         .sidebar.collapsed {
             width: var(--sidebar-collapsed);
+        }
+        .sidebar.hidden {
+            width: 0;
+            overflow: hidden;
+            border: none;
+        }
+        .sidebar.hidden .sidebar-brand,
+        .sidebar.hidden .sidebar-nav,
+        .sidebar.hidden .sidebar-toggle {
+            display: none;
+        }
+        .sidebar.hidden ~ .main-content {
+            margin-left: 0 !important;
+        }
+        .sidebar.hidden ~ .main-content .scroll-progress {
+            left: 0 !important;
         }
         .sidebar-brand {
             padding: 1.5rem 1.4rem;
@@ -598,9 +620,14 @@
             position: absolute;
             inset: 0;
             background: var(--bg);
-            opacity: 0.85;
-            z-index: -1;
+            opacity: 0.92;
+            z-index: 0;
             pointer-events: none;
+        }
+        /* 确保内容在遮罩之上 */
+        .main-content > * {
+            position: relative;
+            z-index: 1;
         }
         .sidebar.collapsed ~ .main-content {
             margin-left: var(--sidebar-collapsed);
@@ -4404,13 +4431,21 @@ function closeShortcutsModal(e) {
     var toggle = document.getElementById('sidebarToggle');
     if (!sidebar || !toggle) return;
     toggle.addEventListener('click', function() {
-        sidebar.classList.toggle('collapsed');
-        try { localStorage.setItem('pw_sidebar_collapsed', sidebar.classList.contains('collapsed')); } catch(e) {}
-    });
-    try {
-        if (localStorage.getItem('pw_sidebar_collapsed') === 'true') {
+        if (sidebar.classList.contains('hidden')) {
+            sidebar.classList.remove('hidden');
+            sidebar.classList.remove('collapsed');
+        } else if (sidebar.classList.contains('collapsed')) {
+            sidebar.classList.remove('collapsed');
+            sidebar.classList.add('hidden');
+        } else {
             sidebar.classList.add('collapsed');
         }
+        try { localStorage.setItem('pw_sidebar_state', sidebar.classList.contains('hidden') ? 'hidden' : sidebar.classList.contains('collapsed') ? 'collapsed' : 'open'); } catch(e) {}
+    });
+    try {
+        var state = localStorage.getItem('pw_sidebar_state') || localStorage.getItem('pw_sidebar_collapsed');
+        if (state === 'hidden') sidebar.classList.add('hidden');
+        else if (state === 'collapsed' || state === 'true') sidebar.classList.add('collapsed');
     } catch(e) {}
 })();
 
