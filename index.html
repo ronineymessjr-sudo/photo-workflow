@@ -53,7 +53,15 @@
             --ach: #e0a87a;
             --ac-glow: rgba(212,149,106,0.15);
             --ok: #22c55e;
+            --ok-soft: #4ade80;
             --er: #ef4444;
+            --er-soft: #ff6b6b;
+            --warn: #f59e0b;
+            --info: #3b82f6;
+            --teal: #4ecdc4;
+            --t-muted: #666;
+            --t-dim: #333;
+            --t-faint: #ddd;
             --radius: 24px;
             --radius-sm: 16px;
             --radius-lg: 32px;
@@ -2149,7 +2157,7 @@
             background: var(--bg2);
         }
         .context-menu-item.delete {
-            color: #ef4444;
+            color: var(--er);
         }
         .context-menu-item.delete:hover {
             background: rgba(239,68,68,0.1);
@@ -2281,13 +2289,13 @@
                 break-inside: avoid;
             }
             .ps-card {
-                border: 1px solid #ddd;
+                border: 1px solid var(--t-faint);
                 break-inside: avoid;
                 page-break-inside: avoid;
             }
             .shot-print-header {
                 text-align: center;
-                border-bottom: 2px solid #333;
+                border-bottom: 2px solid var(--t-dim);
                 padding-bottom: 10px;
                 margin-bottom: 20px;
             }
@@ -2298,7 +2306,7 @@
             }
             .shot-print-meta {
                 font-size: 9pt;
-                color: #666;
+                color: var(--t-muted);
             }
             .shot-print-table {
                 width: 100%;
@@ -2312,7 +2320,7 @@
                 text-align: left;
             }
             .shot-print-table td {
-                border: 1px solid #ddd;
+                border: 1px solid var(--t-faint);
                 padding: 4px;
                 vertical-align: top;
             }
@@ -2322,12 +2330,12 @@
             .shot-print-check {
                 width: 20px;
                 height: 20px;
-                border: 2px solid #333;
+                border: 2px solid var(--t-dim);
                 display: inline-block;
             }
             .shot-print-notes {
                 font-size: 7pt;
-                color: #666;
+                color: var(--t-muted);
                 margin-top: 2px;
             }
             .print-page-break {
@@ -2498,9 +2506,9 @@
             font-size: 0.8rem;
         }
         .onset-keeper-btn.active {
-            background: #22c55e;
+            background: var(--ok);
             color: white;
-            border-color: #22c55e;
+            border-color: var(--ok);
         }
         
         /* ===== Shot Rating & Keeper Styles ===== */
@@ -2522,7 +2530,7 @@
             align-items: center;
             gap: 0.25rem;
             padding: 0.15rem 0.5rem;
-            background: #22c55e;
+            background: var(--ok);
             color: white;
             border-radius: 4px;
             font-size: 0.7rem;
@@ -3266,7 +3274,7 @@
                         <div class="panel" style="text-align:center;">
                             <div style="font-size:2rem;font-weight:600;color:var(--ac);" id="stat-shoots">23</div>
                             <div style="font-size:.8rem;color:var(--t3);margin-top:.25rem;" data-i18n="dashboard.month">本月拍摄</div>
-                            <div style="font-size:.7rem;color:#4ade80;margin-top:.25rem;" id="stat-growth">--</div>
+                            <div style="font-size:.7rem;color:var(--ok-soft);margin-top:.25rem;" id="stat-growth">--</div>
                         </div>
                         <div class="panel" style="text-align:center;">
                             <div style="font-size:2rem;font-weight:600;color:var(--ac);" id="stat-completion">--%</div>
@@ -3278,7 +3286,7 @@
                         <div class="panel" style="text-align:center;">
                             <div style="font-size:2rem;font-weight:600;color:var(--ac);" id="stat-clients">--</div>
                             <div style="font-size:.8rem;color:var(--t3);margin-top:.25rem;" data-i18n="dashboard.clients">活跃客户</div>
-                            <div style="font-size:.7rem;color:#4ade80;margin-top:.25rem;" id="stat-client-growth">--</div>
+                            <div style="font-size:.7rem;color:var(--ok-soft);margin-top:.25rem;" id="stat-client-growth">--</div>
                         </div>
                         <div class="panel" style="text-align:center;">
                             <div style="font-size:2rem;font-weight:600;color:var(--ac);" id="stat-equipment">--%</div>
@@ -3325,10 +3333,10 @@
                         <div class="panel">
                             <div class="p-head"><h2>客户类型分布</h2></div>
                             <div class="p-body" style="display:flex;align-items:center;gap:1.5rem;">
-                                <div style="width:100px;height:100px;border-radius:50%;background:conic-gradient(var(--ac) 0deg 144deg, #4ade80 144deg 270deg, #60a5fa 270deg 360deg);"></div>
+                                <div style="width:100px;height:100px;border-radius:50%;background:conic-gradient(var(--ac) 0deg 144deg, var(--ok-soft) 144deg 270deg, #60a5fa 270deg 360deg);"></div>
                                 <div style="display:flex;flex-direction:column;gap:.5rem;">
                                     <div style="display:flex;align-items:center;gap:.5rem;"><span style="width:8px;height:8px;border-radius:50%;background:var(--ac);"></span><span style="font-size:.75rem;color:var(--t2);">新客户 40%</span></div>
-                                    <div style="display:flex;align-items:center;gap:.5rem;"><span style="width:8px;height:8px;border-radius:50%;background:#4ade80;"></span><span style="font-size:.75rem;color:var(--t2);">老客户 35%</span></div>
+                                    <div style="display:flex;align-items:center;gap:.5rem;"><span style="width:8px;height:8px;border-radius:50%;background:var(--ok-soft);"></span><span style="font-size:.75rem;color:var(--t2);">老客户 35%</span></div>
                                     <div style="display:flex;align-items:center;gap:.5rem;"><span style="width:8px;height:8px;border-radius:50%;background:#60a5fa;"></span><span style="font-size:.75rem;color:var(--t2);">复购 25%</span></div>
                                 </div>
                             </div>
@@ -3374,14 +3382,14 @@
                                     <div style="font-size:1.2rem;font-weight:600;color:var(--t1);margin-top:.25rem;">4.8/5</div>
                                 </div>
                                 <div>
-                                    <div style="font-size:1.5rem;color:#4ade80;margin-bottom:.25rem;">68%</div>
+                                    <div style="font-size:1.5rem;color:var(--ok-soft);margin-bottom:.25rem;">68%</div>
                                     <div style="font-size:.8rem;color:var(--t3);">复购率</div>
-                                    <div style="font-size:.75rem;color:#4ade80;margin-top:.25rem;">↑ 8%</div>
+                                    <div style="font-size:.75rem;color:var(--ok-soft);margin-top:.25rem;">↑ 8%</div>
                                 </div>
                                 <div>
                                     <div style="display:flex;justify-content:center;gap:.5rem;margin-bottom:.25rem;">
                                         <span style="padding:.15rem .4rem;background:rgba(255,107,107,0.2);border-radius:4px;font-size:.65rem;color:var(--ac);">个人45%</span>
-                                        <span style="padding:.15rem .4rem;background:rgba(74,222,128,0.2);border-radius:4px;font-size:.65rem;color:#4ade80;">工作室35%</span>
+                                        <span style="padding:.15rem .4rem;background:rgba(74,222,128,0.2);border-radius:4px;font-size:.65rem;color:var(--ok-soft);">工作室35%</span>
                                         <span style="padding:.15rem .4rem;background:rgba(96,165,250,0.2);border-radius:4px;font-size:.65rem;color:#60a5fa;">企业20%</span>
                                     </div>
                                     <div style="font-size:.8rem;color:var(--t3);">客户类型占比</div>
@@ -3619,15 +3627,15 @@
                     <!-- 消息统计卡片 -->
                     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:1rem;">
                         <div class="panel" style="text-align:center;cursor:pointer;" onclick="filterMessages('new')">
-                            <div style="font-size:1.5rem;font-weight:600;color:#f59e0b;" id="msg-count-new">0</div>
+                            <div style="font-size:1.5rem;font-weight:600;color:var(--warn);" id="msg-count-new">0</div>
                             <div style="font-size:.75rem;color:var(--t3);">新消息</div>
                         </div>
                         <div class="panel" style="text-align:center;cursor:pointer;" onclick="filterMessages('pending')">
-                            <div style="font-size:1.5rem;font-weight:600;color:#3b82f6;" id="msg-count-pending">0</div>
+                            <div style="font-size:1.5rem;font-weight:600;color:var(--info);" id="msg-count-pending">0</div>
                             <div style="font-size:.75rem;color:var(--t3);">处理中</div>
                         </div>
                         <div class="panel" style="text-align:center;cursor:pointer;" onclick="filterMessages('completed')">
-                            <div style="font-size:1.5rem;font-weight:600;color:#4ade80;" id="msg-count-completed">0</div>
+                            <div style="font-size:1.5rem;font-weight:600;color:var(--ok-soft);" id="msg-count-completed">0</div>
                             <div style="font-size:.75rem;color:var(--t3);">已完成</div>
                         </div>
                     </div>
@@ -4642,7 +4650,7 @@ function openMsgDetail(id) {
         actEl.innerHTML += '<button class="btn btn-p btn-sm" onclick="updateMsg(\'' + safeId + '\',\'completed\')">标记完成</button>';
     }
     actEl.innerHTML += '<a class="btn btn-s btn-sm" href="mailto:' + escHtml(m.email) + (m.name ? '?subject=Re: ' + encodeURIComponent(m.name) + ' 的咨询' : '') + '" style="text-decoration:none;">回复邮件</a>';
-    actEl.innerHTML += '<button class="btn btn-sm" style="color:#ef4444;border:1px solid rgba(239,68,68,0.3);" onclick="deleteMsg(\'' + safeId + '\')">删除</button>';
+    actEl.innerHTML += '<button class="btn btn-sm" style="color:var(--er);border:1px solid rgba(239,68,68,0.3);" onclick="deleteMsg(\'' + safeId + '\')">删除</button>';
 
     modal.style.display = 'flex';
 }
@@ -4786,7 +4794,7 @@ window.analyzeReference = async function() {
         const analysis = await generatePhotoAnalysis(url, style);
         resultEl.innerHTML = analysis;
     } catch(e) {
-        resultEl.innerHTML = '<p style="color:#ef4444">分析失败: ' + (e.message||'未知错误') + '</p>';
+        resultEl.innerHTML = '<p style="color:var(--er)">分析失败: ' + (e.message||'未知错误') + '</p>';
     }
 };
 
@@ -5786,7 +5794,7 @@ function renderPlanContent(plan) {
                 <h4 style="color:var(--ac);margin:.8rem 0 .4rem;font-size:.85rem">情绪调动</h4>
                 <ul>${communicationTips.emotion.map(c=>`<li>${c}</li>`).join('')}</ul>
                 <h4 style="color:var(--ac);margin:.8rem 0 .4rem;font-size:.85rem">禁忌用语（绝对避免）</h4>
-                <ul style="color:#ef4444">${communicationTips.avoid.map(c=>`<li>${c}</li>`).join('')}</ul>
+                <ul style="color:var(--er)">${communicationTips.avoid.map(c=>`<li>${c}</li>`).join('')}</ul>
             </div>
         </div>
     `;
@@ -5868,7 +5876,7 @@ function renderPlanContent(plan) {
     // 报价计算器
     const shotListForQuote = generateShotList(plan);
     const quoteHtml = `
-        <div class="ps" style="margin-top:1.5rem;border-top:2px solid #22c55e;padding-top:1rem">
+        <div class="ps" style="margin-top:1.5rem;border-top:2px solid var(--ok);padding-top:1rem">
             <div class="ps-hdr">
                 <div class="ps-icon">💰</div>
                 <h3 class="ps-title">报价计算器</h3>
@@ -5943,7 +5951,7 @@ function renderPlanContent(plan) {
                         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
                             <div>
                                 <div style="font-size:.75rem;color:var(--t3);">预估报价</div>
-                                <div style="font-size:2rem;font-weight:700;color:#22c55e;" id="quote-total-${plan.id}">¥0</div>
+                                <div style="font-size:2rem;font-weight:700;color:var(--ok);" id="quote-total-${plan.id}">¥0</div>
                             </div>
                             <div style="display:flex;gap:.5rem;">
                                 <button class="export-btn" onclick="generateQuoteSheet('${plan.id}')">📄 生成报价单</button>
@@ -5989,15 +5997,15 @@ function renderPlanContent(plan) {
                                 <th style="padding:.4rem;text-align:left;color:var(--ac);">场景</th>
                                 <th style="padding:.4rem;text-align:left;color:var(--ac);min-width:120px;">画面描述</th>
                                 <th style="padding:.4rem;text-align:center;color:var(--ac);">景别</th>
-                                <th style="padding:.4rem;text-align:center;color:#4ecdc4;">焦距</th>
-                                <th style="padding:.4rem;text-align:left;color:#4ecdc4;">构图</th>
-                                <th style="padding:.4rem;text-align:left;color:#f59e0b;">灯光</th>
+                                <th style="padding:.4rem;text-align:center;color:var(--teal);">焦距</th>
+                                <th style="padding:.4rem;text-align:left;color:var(--teal);">构图</th>
+                                <th style="padding:.4rem;text-align:left;color:var(--warn);">灯光</th>
                                 <th style="padding:.4rem;text-align:left;color:#8b5cf6;">道具</th>
                                 <th style="padding:.4rem;text-align:center;color:var(--t2);">角度</th>
                                 <th style="padding:.4rem;text-align:center;color:#ec4899;">情绪</th>
                                 <th style="padding:.4rem;text-align:center;color:var(--ac);">时长</th>
                                 <th style="padding:.4rem;text-align:left;color:var(--t3);min-width:100px;">备注</th>
-                                <th style="padding:.4rem;text-align:center;color:#22c55e;width:30px;">✓</th>
+                                <th style="padding:.4rem;text-align:center;color:var(--ok);width:30px;">✓</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -6007,9 +6015,9 @@ function renderPlanContent(plan) {
                                     <td style="padding:.4rem;font-weight:500;">${escHtml(shot.scene)}</td>
                                     <td style="padding:.4rem;">${escHtml(shot.description)}</td>
                                     <td style="padding:.4rem;text-align:center;"><span class="eq-tag" style="font-size:.65rem;padding:.15rem .4rem;">${shot.shotSize}</span></td>
-                                    <td style="padding:.4rem;text-align:center;font-weight:500;color:#4ecdc4;">${shot.focalLength}</td>
+                                    <td style="padding:.4rem;text-align:center;font-weight:500;color:var(--teal);">${shot.focalLength}</td>
                                     <td style="padding:.4rem;font-size:.7rem;">${shot.composition}</td>
-                                    <td style="padding:.4rem;font-size:.7rem;color:#f59e0b;">${shot.lighting}</td>
+                                    <td style="padding:.4rem;font-size:.7rem;color:var(--warn);">${shot.lighting}</td>
                                     <td style="padding:.4rem;font-size:.7rem;color:#8b5cf6;">${shot.props}</td>
                                     <td style="padding:.4rem;text-align:center;font-size:.7rem;">${shot.angle}</td>
                                     <td style="padding:.4rem;text-align:center;"><span style="font-size:.7rem;color:#ec4899;">${shot.mood}</span></td>
@@ -6054,9 +6062,9 @@ function renderPlanContent(plan) {
                             <!-- 分类标签 -->
                             <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.5rem;">
                                 <span style="padding:.15rem .4rem;background:rgba(255,107,107,0.15);color:var(--ac);border-radius:4px;font-size:.7rem;">${plan.input && plan.input.style || '复古'}</span>
-                                <span style="padding:.15rem .4rem;background:rgba(78,205,196,0.15);color:#4ecdc4;border-radius:4px;font-size:.7rem;">${shot.focalLength.split(' ')[0]}</span>
+                                <span style="padding:.15rem .4rem;background:rgba(78,205,196,0.15);color:var(--teal);border-radius:4px;font-size:.7rem;">${shot.focalLength.split(' ')[0]}</span>
                                 <span style="padding:.15rem .4rem;background:rgba(212,149,106,0.15);color:#d4956a;border-radius:4px;font-size:.7rem;">${shot.props !== '无' ? shot.props : '无道具'}</span>
-                                <span style="padding:.15rem .4rem;background:rgba(245,158,11,0.15);color:#f59e0b;border-radius:4px;font-size:.7rem;">${shot.mood}</span>
+                                <span style="padding:.15rem .4rem;background:rgba(245,158,11,0.15);color:var(--warn);border-radius:4px;font-size:.7rem;">${shot.mood}</span>
                                 ${shot.priority ? `<span style="padding:.15rem .4rem;background:${shot.priority === '必拍' ? 'rgba(239,68,68,0.15)' : shot.priority === '推荐' ? 'rgba(212,149,106,0.15)' : 'rgba(156,163,175,0.15)'};color:${shot.priority === '必拍' ? '#ef4444' : shot.priority === '推荐' ? '#d4956a' : '#9ca3af'};border-radius:4px;font-size:.7rem;">${shot.priority === '必拍' ? '★ ' : ''}${shot.priority}</span>` : ''}
                             </div>
                             <!-- 参考图库 -->
@@ -6122,12 +6130,12 @@ function renderPlanContent(plan) {
 
     // 拍摄当天Checklist
     const checklistHtml = `
-        <div class="ps" style="margin-top:1.5rem;border-top:2px solid #22c55e;padding-top:1rem">
+        <div class="ps" style="margin-top:1.5rem;border-top:2px solid var(--ok);padding-top:1rem">
             <div class="ps-hdr"><div class="ps-icon">✅</div><h3 class="ps-title">拍摄当天 Checklist</h3></div>
             <div class="ps-cnt">
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;">
                     <div>
-                        <h4 style="color:#22c55e;margin-bottom:.5rem;font-size:.85rem">📦 设备打包</h4>
+                        <h4 style="color:var(--ok);margin-bottom:.5rem;font-size:.85rem">📦 设备打包</h4>
                         <div class="checklist">
                             <label class="check-item"><input type="checkbox" class="ck-day"> 相机机身</label>
                             <label class="check-item"><input type="checkbox" class="ck-day"> 镜头（所需焦段）</label>
@@ -6138,7 +6146,7 @@ function renderPlanContent(plan) {
                         </div>
                     </div>
                     <div>
-                        <h4 style="color:#22c55e;margin-bottom:.5rem;font-size:.85rem">🎬 拍摄准备</h4>
+                        <h4 style="color:var(--ok);margin-bottom:.5rem;font-size:.85rem">🎬 拍摄准备</h4>
                         <div class="checklist">
                             <label class="check-item"><input type="checkbox" class="ck-day"> 确认场地预约</label>
                             <label class="check-item"><input type="checkbox" class="ck-day"> 与模特确认时间</label>
@@ -6149,7 +6157,7 @@ function renderPlanContent(plan) {
                         </div>
                     </div>
                     <div>
-                        <h4 style="color:#22c55e;margin-bottom:.5rem;font-size:.85rem">⚠️ 安全检查</h4>
+                        <h4 style="color:var(--ok);margin-bottom:.5rem;font-size:.85rem">⚠️ 安全检查</h4>
                         <div class="checklist">
                             <label class="check-item"><input type="checkbox" class="ck-day"> 确认消防通道</label>
                             <label class="check-item"><input type="checkbox" class="ck-day"> 检查电路安全</label>
@@ -7353,27 +7361,27 @@ function printShotList(planId) {
             <style>
                 @page { size: A4; margin: 10mm; }
                 * { box-sizing: border-box; margin: 0; padding: 0; }
-                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 9pt; line-height: 1.4; color: #333; }
-                .header { text-align: center; border-bottom: 2px solid #ff6b6b; padding-bottom: 10px; margin-bottom: 15px; }
-                .header h1 { font-size: 16pt; color: #ff6b6b; margin-bottom: 5px; }
-                .header h2 { font-size: 12pt; color: #666; font-weight: normal; }
-                .meta { display: flex; justify-content: space-between; font-size: 8pt; color: #666; margin-bottom: 15px; }
+                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 9pt; line-height: 1.4; color: var(--t-dim); }
+                .header { text-align: center; border-bottom: 2px solid var(--er-soft); padding-bottom: 10px; margin-bottom: 15px; }
+                .header h1 { font-size: 16pt; color: var(--er-soft); margin-bottom: 5px; }
+                .header h2 { font-size: 12pt; color: var(--t-muted); font-weight: normal; }
+                .meta { display: flex; justify-content: space-between; font-size: 8pt; color: var(--t-muted); margin-bottom: 15px; }
                 table { width: 100%; border-collapse: collapse; font-size: 8pt; }
-                th { background: #f5f5f5; border: 1px solid #ddd; padding: 4px; text-align: left; font-weight: 600; }
+                th { background: #f5f5f5; border: 1px solid var(--t-faint); padding: 4px; text-align: left; font-weight: 600; }
                 td { border: 1px solid #eee; padding: 4px; vertical-align: top; }
                 tr:nth-child(even) { background: #fafafa; }
-                .num { color: #ff6b6b; font-weight: bold; text-align: center; }
-                .focal { color: #4ecdc4; }
+                .num { color: var(--er-soft); font-weight: bold; text-align: center; }
+                .focal { color: var(--teal); }
                 .page-break { page-break-after: always; }
                 .section { margin-bottom: 15px; }
-                .section-title { font-size: 11pt; color: #ff6b6b; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 4px; }
-                .compact-shot { border: 1px solid #ddd; padding: 8px; margin-bottom: 8px; break-inside: avoid; }
+                .section-title { font-size: 11pt; color: var(--er-soft); margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 4px; }
+                .compact-shot { border: 1px solid var(--t-faint); padding: 8px; margin-bottom: 8px; break-inside: avoid; }
                 .compact-header { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding-bottom: 4px; margin-bottom: 4px; }
-                .compact-num { font-weight: bold; font-size: 10pt; color: #ff6b6b; }
-                .compact-params { font-size: 7pt; color: #666; }
+                .compact-num { font-weight: bold; font-size: 10pt; color: var(--er-soft); }
+                .compact-params { font-size: 7pt; color: var(--t-muted); }
                 .compact-desc { font-size: 8pt; margin: 4px 0; }
                 .compact-notes { font-size: 7pt; color: #999; font-style: italic; }
-                .check-box { display: inline-block; width: 12px; height: 12px; border: 1px solid #333; margin-right: 4px; }
+                .check-box { display: inline-block; width: 12px; height: 12px; border: 1px solid var(--t-dim); margin-right: 4px; }
                 @media print {
                     body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
                 }
@@ -7524,7 +7532,7 @@ function openOnSetMode(planId) {
                         <div>
                             <div class="onset-shot-num">#${String(i + 1).padStart(2, '0')} ${shot.scene}</div>
                             <div style="font-size:0.8rem;color:var(--t2);margin-top:0.25rem;">
-                                ${shot.shotSize} · <span style="color:#4ecdc4;">${shot.focalLength}</span> · ${shot.duration}分钟
+                                ${shot.shotSize} · <span style="color:var(--teal);">${shot.focalLength}</span> · ${shot.duration}分钟
                             </div>
                         </div>
                         <div class="onset-shot-actions">
@@ -7968,22 +7976,22 @@ function generateQuoteSheet(planId) {
             <style>
                 @page { size: A4; margin: 15mm; }
                 * { box-sizing: border-box; margin: 0; padding: 0; }
-                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 10pt; line-height: 1.6; color: #333; padding: 20px; }
-                .header { text-align: center; border-bottom: 3px solid #22c55e; padding-bottom: 15px; margin-bottom: 20px; }
-                .header h1 { font-size: 20pt; color: #22c55e; margin-bottom: 5px; }
-                .header p { color: #666; font-size: 9pt; }
+                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 10pt; line-height: 1.6; color: var(--t-dim); padding: 20px; }
+                .header { text-align: center; border-bottom: 3px solid var(--ok); padding-bottom: 15px; margin-bottom: 20px; }
+                .header h1 { font-size: 20pt; color: var(--ok); margin-bottom: 5px; }
+                .header p { color: var(--t-muted); font-size: 9pt; }
                 .info { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 9pt; }
                 .info-item { flex: 1; }
-                .info-label { color: #666; font-size: 8pt; }
+                .info-label { color: var(--t-muted); font-size: 8pt; }
                 .info-value { font-weight: 600; }
                 table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-                th { background: #f0fdf4; color: #166534; padding: 8px; text-align: left; font-size: 9pt; border-bottom: 2px solid #22c55e; }
+                th { background: #f0fdf4; color: #166534; padding: 8px; text-align: left; font-size: 9pt; border-bottom: 2px solid var(--ok); }
                 td { padding: 8px; border-bottom: 1px solid #e5e7eb; font-size: 9pt; }
                 .text-right { text-align: right; }
                 .total { background: #f0fdf4; padding: 15px; border-radius: 8px; margin-top: 20px; }
                 .total-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
-                .total-final { font-size: 16pt; font-weight: bold; color: #22c55e; border-top: 2px solid #22c55e; padding-top: 10px; margin-top: 10px; }
-                .notes { margin-top: 20px; padding: 15px; background: #f9fafb; border-radius: 8px; font-size: 8pt; color: #666; }
+                .total-final { font-size: 16pt; font-weight: bold; color: var(--ok); border-top: 2px solid var(--ok); padding-top: 10px; margin-top: 10px; }
+                .notes { margin-top: 20px; padding: 15px; background: #f9fafb; border-radius: 8px; font-size: 8pt; color: var(--t-muted); }
                 .footer { margin-top: 30px; text-align: center; font-size: 8pt; color: #9ca3af; }
             </style>
         </head>
@@ -8125,25 +8133,25 @@ function generateServiceSheet(planId) {
             <style>
                 @page { size: A4; margin: 15mm; }
                 * { box-sizing: border-box; margin: 0; padding: 0; }
-                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 10pt; line-height: 1.6; color: #333; padding: 20px; }
-                .header { text-align: center; border-bottom: 3px solid #3b82f6; padding-bottom: 15px; margin-bottom: 20px; }
-                .header h1 { font-size: 18pt; color: #3b82f6; margin-bottom: 5px; }
-                .header p { color: #666; font-size: 9pt; }
+                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 10pt; line-height: 1.6; color: var(--t-dim); padding: 20px; }
+                .header { text-align: center; border-bottom: 3px solid var(--info); padding-bottom: 15px; margin-bottom: 20px; }
+                .header h1 { font-size: 18pt; color: var(--info); margin-bottom: 5px; }
+                .header p { color: var(--t-muted); font-size: 9pt; }
                 .section { margin-bottom: 20px; }
-                .section-title { font-size: 11pt; font-weight: bold; color: #3b82f6; margin-bottom: 10px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; }
+                .section-title { font-size: 11pt; font-weight: bold; color: var(--info); margin-bottom: 10px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; }
                 .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 9pt; }
                 .info-item { display: flex; }
-                .info-label { color: #666; width: 80px; }
+                .info-label { color: var(--t-muted); width: 80px; }
                 .info-value { font-weight: 500; }
                 .service-list { font-size: 9pt; }
                 .service-item { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #e5e7eb; }
                 .total { background: #eff6ff; padding: 15px; border-radius: 8px; margin: 20px 0; }
-                .total-row { display: flex; justify-content: space-between; font-size: 14pt; font-weight: bold; color: #3b82f6; }
+                .total-row { display: flex; justify-content: space-between; font-size: 14pt; font-weight: bold; color: var(--info); }
                 .signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 40px; }
                 .signature-box { border: 1px solid #d1d5db; padding: 15px; border-radius: 8px; }
-                .signature-title { font-size: 9pt; color: #666; margin-bottom: 30px; }
-                .signature-line { border-bottom: 1px solid #333; margin-bottom: 5px; height: 30px; }
-                .signature-label { font-size: 8pt; color: #666; }
+                .signature-title { font-size: 9pt; color: var(--t-muted); margin-bottom: 30px; }
+                .signature-line { border-bottom: 1px solid var(--t-dim); margin-bottom: 5px; height: 30px; }
+                .signature-label { font-size: 8pt; color: var(--t-muted); }
                 .notice { background: #fef3c7; padding: 15px; border-radius: 8px; font-size: 8pt; color: #92400e; margin-top: 20px; }
                 .footer { margin-top: 30px; text-align: center; font-size: 8pt; color: #9ca3af; }
             </style>
