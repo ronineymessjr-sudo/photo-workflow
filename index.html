@@ -1862,10 +1862,7 @@
         }
 
         /* ===== Advanced Animations ===== */
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        /* fadeInUp 已在行 1636 定义 */
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
@@ -3547,7 +3544,7 @@
                         }
                     })
                     .catch(function(e) { clearTimeout(timeoutId); 
-                        console.log('Dashboard API not available, using local data');
+                        /* Dashboard API not available, using local data */
                     });
                 }
                 
@@ -4087,7 +4084,7 @@ if (document.getElementById('loginOverlay')) {
                 res = await window.api.login(email, password);
             } catch (e) {
                 // Fallback to local mode
-                console.log('Backend unreachable, switching to local mode');
+                /* Backend unreachable, switching to local mode */
                 localStorage.setItem('pa_use_local', 'true');
                 res = await localApi.login({ email, password });
                 toast('后端服务不可用，已切换到本地模式', 'i');
@@ -4342,7 +4339,7 @@ function closeShortcutsModal(e) {
     async function loadServerData() {
         const token = localStorage.getItem(TOKEN_KEY);
         if (!token) {
-            console.log('Not logged in, skipping server sync');
+            /* Not logged in, skipping server sync */
             return;
         }
         try {
@@ -4355,7 +4352,7 @@ function closeShortcutsModal(e) {
                 renderCalendar();
                 renderSchedules();
             }
-        } catch (e) { console.log('Sync error:', e.message || e); }
+        } catch (e) { /* Sync error */ }
     }
 
     // Check auth state on load (with error handling for mobile browsers)
@@ -4365,7 +4362,7 @@ function closeShortcutsModal(e) {
         user = localStorage.getItem(USER_KEY);
         role = localStorage.getItem(ROLE_KEY);
     } catch (e) {
-        console.log('localStorage not available, using session mode');
+        /* localStorage not available, using session mode */
     }
 
     if (token && user) {
@@ -4486,7 +4483,7 @@ function renderMessages() {
         updateMsgStats();
         filterMessages(_msgFilter);
     }).catch(function(e) {
-        console.log('Messages load error:', e);
+        /* Messages load error */
         _msgCache = [];
         updateMsgStats();
         filterMessages(_msgFilter);
@@ -9717,7 +9714,7 @@ async function exportModelPdf(id) {
                     doc.text(img.variant.pose, x + imgSize/2, imgY + imgSize + 4, {align:'center'});
                 }
             } catch(e) {
-                console.log('图片添加失败', e);
+                /* 图片添加失败 */
             }
             col++;
         }
@@ -10363,7 +10360,7 @@ window.exportToFeishu = async function() {
         const result = await window.api.syncToFeishuCalendar(schedules);
         if (result.success) {
             toast(`成功同步 ${result.synced}/${result.total} 条日程到飞书`, 'ok');
-            console.log('Sync results:', result.results);
+            /* Sync results */
         } else {
             toast('同步失败: ' + (result.error || '未知错误'), 'er');
         }
@@ -10472,7 +10469,7 @@ window.syncToFeishuBitable = async function() {
         }
         
         toast(`同步完成: ${totalSynced} 成功, ${totalFailed} 失败`, totalFailed > 0 ? 'er' : 'ok');
-        console.log('Bitable sync results:', results);
+        /* Bitable sync results */
         
     } catch (e) {
         toast('同步失败: ' + e.message, 'er');
@@ -10875,7 +10872,7 @@ async function loadShotReferencesApi(shotIndex, style, shotDataEncoded) {
                 }
             } catch (err) {
                 clearTimeout(timeoutId);
-                console.log('Pexels fetch error:', err);
+                /* Pexels fetch error */
             }
             await new Promise(r => setTimeout(r, 300));
         }
@@ -11049,7 +11046,7 @@ window.addEventListener('online', function() { toast('网络已恢复', 'ok'); }
     });
 
     ss(SK.T, defaultTemplates);
-    console.log('已初始化 ' + defaultTemplates.length + ' 个预置模板（基于 shotTemplates）');
+    /* 已初始化预置模板 */
     if (typeof renderTpl === 'function') renderTpl();
   })();
 </script>
