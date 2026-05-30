@@ -45,9 +45,9 @@
             --inset-top-hover: rgba(255,255,255,0.06);
             --bd: rgba(255,255,255,0.06);
             --bd2: rgba(255,255,255,0.12);
-            --t1: #fafafa;
-            --t2: rgba(255,255,255,0.72);
-            --t3: rgba(255,255,255,0.45);
+            --t1: #ffffff;
+            --t2: rgba(255,255,255,0.85);
+            --t3: rgba(255,255,255,0.6);
             --ac: #d4956a;
             --ac2: #a08060;
             --ach: #e0a87a;
@@ -136,8 +136,8 @@
             --bd: rgba(255,180,100,0.08);
             --bd2: rgba(255,180,100,0.15);
             --t1: #fff5e6;
-            --t2: rgba(255,245,230,0.72);
-            --t3: rgba(255,245,230,0.45);
+            --t2: rgba(255,245,230,0.85);
+            --t3: rgba(255,245,230,0.6);
             --ac: #ff9955;
             --ac2: #88ccaa;
             --ach: #ffaa66;
@@ -152,6 +152,7 @@
             color: var(--t1);
             min-height: 100vh;
             font-size: 14px;
+            font-weight: 500;
             line-height: 1.8;
             letter-spacing: .02em;
             overflow-x: hidden;
@@ -164,12 +165,9 @@
             transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
         }
         h1, h2, h3, .serif { font-family: var(--font-serif); }
-        /* 文字可读性增强 - 微弱阴影防止底图干扰 */
-        h1, h2, h3, h4, p, span, a, li, td, th, label {
-            text-shadow: 0 0 8px var(--bg), 0 0 16px var(--bg);
-        }
-        h1 { font-weight: 600; letter-spacing: -0.02em; }
-        h2 { font-weight: 600; letter-spacing: -0.01em; }
+        h1 { font-weight: 700; letter-spacing: -0.02em; }
+        h2 { font-weight: 700; letter-spacing: -0.01em; }
+        h3 { font-weight: 600; }
         
         /* Lucide Icons */
         .lucide { width: 1em; height: 1em; stroke-width: 1.5; vertical-align: middle; }
