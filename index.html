@@ -4104,11 +4104,11 @@ if (document.getElementById('loginOverlay')) {
         const actualTheme = theme === 'auto' ? getAutoTheme() : theme;
         document.documentElement.setAttribute('data-theme', actualTheme);
         
-        // Update button
+        // Update button - 使用 actualTheme 显示正确的图标
         const label = document.getElementById('themeLabel');
         const icon = document.getElementById('themeIcon');
         if (label) label.textContent = THEME_LABELS[theme];
-        if (icon) icon.innerHTML = THEME_ICONS[theme];
+        if (icon) icon.innerHTML = THEME_ICONS[actualTheme] || THEME_ICONS[theme];
     }
     
     window.cycleTheme = function() {
@@ -4551,21 +4551,14 @@ function closeShortcutsModal(e) {
     var toggle = document.getElementById('sidebarToggle');
     if (!sidebar || !toggle) return;
     toggle.addEventListener('click', function() {
-        if (sidebar.classList.contains('hidden')) {
-            sidebar.classList.remove('hidden');
-            sidebar.classList.remove('collapsed');
-        } else if (sidebar.classList.contains('collapsed')) {
-            sidebar.classList.remove('collapsed');
-            sidebar.classList.add('hidden');
-        } else {
-            sidebar.classList.add('collapsed');
-        }
-        try { localStorage.setItem('pw_sidebar_state', sidebar.classList.contains('hidden') ? 'hidden' : sidebar.classList.contains('collapsed') ? 'collapsed' : 'open'); } catch(e) {}
+        // 两态切换：展开 <-> 折叠
+        sidebar.classList.toggle('collapsed');
+        try { localStorage.setItem('pw_sidebar_state', sidebar.classList.contains('collapsed') ? 'collapsed' : 'open'); } catch(e) {}
     });
     try {
         var state = localStorage.getItem('pw_sidebar_state') || localStorage.getItem('pw_sidebar_collapsed');
-        if (state === 'hidden') sidebar.classList.add('hidden');
-        else if (state === 'collapsed' || state === 'true') sidebar.classList.add('collapsed');
+        if (state === 'collapsed' || state === 'true') sidebar.classList.add('collapsed');
+        else sidebar.classList.remove('collapsed');
     } catch(e) {}
 })();
 
