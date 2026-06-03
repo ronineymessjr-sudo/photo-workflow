@@ -4428,6 +4428,12 @@ function closeShortcutsModal(e) {
         } catch (e) {
             console.error('Auth check error:', e);
         }
+    } else {
+        // 未登录 - 强制显示登录界面，隐藏主应用
+        const loginOverlay = document.getElementById('loginOverlay');
+        const appLayout = document.getElementById('appLayout');
+        if (loginOverlay) loginOverlay.style.display = 'flex';
+        if (appLayout) appLayout.style.display = 'none';
     }
 })();
 
