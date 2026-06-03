@@ -5883,18 +5883,24 @@ function renderPlanContent(plan) {
 
     // 添加模特沟通话术
     const communicationTips = getCommunicationTips(plan.input && plan.input.style);
+    // 兼容不同属性名（icebreaker/opening, poses/guidance, avoid/taboo）
+    const icebreaker = communicationTips.icebreaker || communicationTips.opening || [];
+    const poses = communicationTips.poses || communicationTips.guidance || [];
+    const avoid = communicationTips.avoid || communicationTips.taboo || [];
+    const emotion = communicationTips.emotion || [];
+    
     const commHtml = `
         <div class="ps" style="margin-top:1.5rem;border-top:2px solid var(--ac);padding-top:1rem">
             <div class="ps-hdr"><div class="ps-icon">💬</div><h3 class="ps-title">模特沟通话术</h3></div>
             <div class="ps-cnt">
                 <h4 style="color:var(--ac);margin:.8rem 0 .4rem;font-size:.85rem">开场破冰</h4>
-                <ul>${communicationTips.icebreaker.map(c=>`<li>${c}</li>`).join('')}</ul>
+                <ul>${icebreaker.map(c=>`<li>${c}</li>`).join('')}</ul>
                 <h4 style="color:var(--ac);margin:.8rem 0 .4rem;font-size:.85rem">万能引导话术</h4>
-                <ul>${communicationTips.poses.map(c=>`<li>${c}</li>`).join('')}</ul>
+                <ul>${poses.map(c=>`<li>${c}</li>`).join('')}</ul>
                 <h4 style="color:var(--ac);margin:.8rem 0 .4rem;font-size:.85rem">情绪调动</h4>
-                <ul>${communicationTips.emotion.map(c=>`<li>${c}</li>`).join('')}</ul>
+                <ul>${emotion.map(c=>`<li>${c}</li>`).join('')}</ul>
                 <h4 style="color:var(--ac);margin:.8rem 0 .4rem;font-size:.85rem">禁忌用语（绝对避免）</h4>
-                <ul style="color:var(--er)">${communicationTips.avoid.map(c=>`<li>${c}</li>`).join('')}</ul>
+                <ul style="color:var(--er)">${avoid.map(c=>`<li>${c}</li>`).join('')}</ul>
             </div>
         </div>
     `;
@@ -9130,7 +9136,7 @@ async function handleSubmit(e){
         // 初始化报价计算器
         setTimeout(() => calculateQuote(plan.id), 100);
         toast('方案已生成并保存','ok');
-    }catch(e){toast('生成失败','er');$('outLoad').classList.remove('active');$('outEmpty').classList.add('active');}
+    }catch(e){console.error('生成失败:', e); toast('生成失败: ' + (e.message || '未知错误'),'er');$('outLoad').classList.remove('active');$('outEmpty').classList.add('active');}
     finally{btn.disabled=false;btn.classList.remove('btn-loading');btn.innerHTML=btnOrigHTML;}
 }
 $('briefForm').addEventListener('submit',handleSubmit);
