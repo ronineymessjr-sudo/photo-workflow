@@ -3169,8 +3169,26 @@
                                 <!-- Step 2: 详细描述 -->
                                 <div class="step-section" data-step-section="2">
                                     <div class="step-section-title">详细描述</div>
-                                    <div class="fg"><label data-i18n="gen.model">模特特征</label><textarea id="f-model" placeholder="外貌、身材、气质">身高168，黑色长发，偏瘦，气质慵懒神秘，肤质白皙</textarea></div>
-                                    <div class="fg"><label data-i18n="gen.scene">场景偏好</label><textarea id="f-scene" placeholder="拍摄场景">老式酒店房间，复古家具，落地窗，老式浴缸</textarea></div>
+                                    <div class="fg">
+                                        <label data-i18n="gen.model">模特特征</label>
+                                        <div style="display:flex;gap:.4rem;margin-bottom:.4rem;">
+                                            <select id="importModelSelect" style="flex:1;padding:.4rem .6rem;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;color:var(--t1);font-size:.85rem;">
+                                                <option value="">-- 从模特库导入 --</option>
+                                            </select>
+                                            <button type="button" class="btn btn-s btn-sm" onclick="importFromModel()">导入</button>
+                                        </div>
+                                        <textarea id="f-model" placeholder="外貌、身材、气质">身高168，黑色长发，偏瘦，气质慵懒神秘，肤质白皙</textarea>
+                                    </div>
+                                    <div class="fg">
+                                        <label data-i18n="gen.scene">场景偏好</label>
+                                        <div style="display:flex;gap:.4rem;margin-bottom:.4rem;">
+                                            <select id="importVenueSelect" style="flex:1;padding:.4rem .6rem;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;color:var(--t1);font-size:.85rem;">
+                                                <option value="">-- 从场地库导入 --</option>
+                                            </select>
+                                            <button type="button" class="btn btn-s btn-sm" onclick="importFromVenue()">导入</button>
+                                        </div>
+                                        <textarea id="f-scene" placeholder="拍摄场景">老式酒店房间，复古家具，落地窗，老式浴缸</textarea>
+                                    </div>
                                     <div class="g2">
                                         <div class="fg"><label data-i18n="gen.duration">拍摄时长</label>
                                             <select id="f-dur"><option>1小时</option><option selected>2小时</option><option>3小时</option><option>半天</option><option>全天</option></select>
@@ -3182,6 +3200,15 @@
                                 <!-- Step 3: 附加要求 -->
                                 <div class="step-section" data-step-section="3">
                                     <div class="step-section-title">附加要求</div>
+                                    <div class="fg">
+                                        <label>快速导入模板</label>
+                                        <div style="display:flex;gap:.4rem;margin-bottom:.4rem;">
+                                            <select id="importTplSelect" style="flex:1;padding:.4rem .6rem;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;color:var(--t1);font-size:.85rem;">
+                                                <option value="">-- 从模板库导入 --</option>
+                                            </select>
+                                            <button type="button" class="btn btn-p btn-sm" onclick="importFromTpl()">导入</button>
+                                        </div>
+                                    </div>
                                     <div class="fg"><label data-i18n="gen.extra">其他要求</label><textarea id="f-extra" placeholder="服装、道具等">暖色调，复古质感，烟雾效果</textarea></div>
                                 </div>
 
@@ -5225,6 +5252,92 @@ function genFromTpl(id) {
     const list=sg(SK.T)||[]; const idx=list.findIndex(t=>t.id===id); if(idx>-1)list[idx]=tpl; ss(SK.T,list);
     $('briefForm').dispatchEvent(new Event('submit'));
 }
+// ===== 一键导入功能 =====
+function refreshImportSelects() {
+    // 刷新模特选择器
+    const modelSelect = $('importModelSelect');
+    if (modelSelect) {
+        const models = sg(SK.M) || [];
+        modelSelect.innerHTML = '<option value="">-- 从模特库导入 --</option>' + 
+            models.map(m => `<option value="${m.id}">${escHtml(m.name)}${m.styles ? ' (' + escHtml(m.styles) + ')' : ''}</option>`).join('');
+    }
+    // 刷新场地选择器
+    const venueSelect = $('importVenueSelect');
+    if (venueSelect) {
+        const venues = sg(SK.V) || [];
+        venueSelect.innerHTML = '<option value="">-- 从场地库导入 --</option>' + 
+            venues.map(v => `<option value="${v.id}">${escHtml(v.name)}${v.addr ? ' - ' + escHtml(v.addr) : ''}</option>`).join('');
+    }
+    // 刷新模板选择器
+    const tplSelect = $('importTplSelect');
+    if (tplSelect) {
+        const tpls = sg(SK.T) || [];
+        tplSelect.innerHTML = '<option value="">-- 从模板库导入 --</option>' + 
+            tpls.map(t => `<option value="${t.id}">${escHtml(t.name)}${t.desc ? ' - ' + escHtml(t.desc) : ''}</option>`).join('');
+    }
+}
+
+function importFromModel() {
+    const select = $('importModelSelect');
+    const id = select.value;
+    if (!id) { toast('请先选择模特', 'er'); return; }
+    const m = (sg(SK.M) || []).find(x => x.id === id);
+    if (!m) { toast('模特不存在', 'er'); return; }
+    
+    const info = [];
+    if (m.name) info.push(`姓名：${m.name}`);
+    if (m.styles) info.push(`风格：${m.styles}`);
+    if (m.note) info.push(`备注：${m.note}`);
+    if (m.contact) info.push(`联系方式：${m.contact}`);
+    
+    const current = $('f-model').value.trim();
+    $('f-model').value = current ? current + '\n' + info.join('，') : info.join('，');
+    toast(`已导入模特：${m.name}`, 'ok');
+}
+
+function importFromVenue() {
+    const select = $('importVenueSelect');
+    const id = select.value;
+    if (!id) { toast('请先选择场地', 'er'); return; }
+    const v = (sg(SK.V) || []).find(x => x.id === id);
+    if (!v) { toast('场地不存在', 'er'); return; }
+    
+    const info = [];
+    if (v.name) info.push(`场地：${v.name}`);
+    if (v.addr) info.push(`地址：${v.addr}`);
+    if (v.styles) info.push(`风格：${v.styles}`);
+    if (v.note) info.push(`备注：${v.note}`);
+    if (v.contact) info.push(`联系：${v.contact}`);
+    
+    const current = $('f-scene').value.trim();
+    $('f-scene').value = current ? current + '\n' + info.join('，') : info.join('，');
+    toast(`已导入场地：${v.name}`, 'ok');
+}
+
+function importFromTpl() {
+    const select = $('importTplSelect');
+    const id = select.value;
+    if (!id) { toast('请先选择模板', 'er'); return; }
+    const tpl = (sg(SK.T) || []).find(t => t.id === id);
+    if (!tpl || !tpl.input) { toast('模板不存在或无效', 'er'); return; }
+    
+    const inp = tpl.input;
+    if (inp.style) $('f-style').value = inp.style;
+    if (inp.modelDesc) $('f-model').value = inp.modelDesc;
+    if (inp.scene) $('f-scene').value = inp.scene;
+    if (inp.mood) $('f-mood').value = inp.mood;
+    if (inp.duration) $('f-dur').value = inp.duration;
+    if (inp.people) $('f-people').value = inp.people;
+    if (inp.extra) $('f-extra').value = inp.extra;
+    
+    toast(`已导入模板：${tpl.name}`, 'ok');
+}
+
+// 页面加载时刷新选择器
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(refreshImportSelects, 500);
+});
+
 function saveAsTemplate() {
     if(!currentPlanData){toast('先生成一个方案','er');return;}
     const name=$('tpl-name').value.trim(),desc=$('tpl-desc').value.trim();
