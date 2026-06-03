@@ -1,6 +1,17 @@
 // Photo Workflow Backend API - Cloudflare Workers
 import { createHash, createHmac } from 'node:crypto';
 
+// Cloudflare Workers 环境中 Buffer 不可用，使用替代方案
+function base64UrlEncode(str) {
+    return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function base64UrlDecode(str) {
+    str = str.replace(/-/g, '+').replace(/_/g, '/');
+    while (str.length % 4) str += '=';
+    return atob(str);
+}
+
 // ===== Input Validation =====
 function validateEmail(email) {
     if (!email || typeof email !== 'string') return false;
@@ -32,7 +43,13 @@ const CORS = {
 
 // ===== HTTP Helper using fetch =====
 async function sbQuery(env, path, method = 'GET', body = null) {
+    // 调试：检查环境变量
+    if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) {
+        console.error('Supabase secrets not configured:', { hasUrl: !!env.SUPABASE_URL, hasKey: !!env.SUPABASE_ANON_KEY });
+        throw new Error('Supabase not configured');
+    }
     const url = `https://${env.SUPABASE_URL}/rest/v1/${path}`;
+    console.log('Supabase query:', { url, method, hasBody: !!body });
     const headers = {
         'apikey': env.SUPABASE_ANON_KEY,
         'Authorization': `Bearer ${env.SUPABASE_ANON_KEY}`,
@@ -43,6 +60,18 @@ async function sbQuery(env, path, method = 'GET', body = null) {
     }
     const res = await fetch(url, { method, headers, body: body ? JSON.stringify(body) : null });
     const text = await res.text();
+    console.log('Supabase response:', { status: res.status, body: text.substring(0, 200) });
+    
+    // 处理错误响应
+    if (!res.ok) {
+        let errorMsg = `Supabase error ${res.status}`;
+        try {
+            const errJson = JSON.parse(text);
+            errorMsg = errJson.message || errJson.error || errJson.details || errorMsg;
+        } catch {}
+        throw new Error(errorMsg);
+    }
+    
     try { return JSON.parse(text); } catch { return text; }
 }
 
@@ -52,7 +81,7 @@ function genToken(userId, env) {
     if (!secret) throw new Error('JWT_SECRET not configured');
     const payload = JSON.stringify({ uid: userId, t: Date.now() });
     const sig = createHmac('sha256', secret).update(payload).digest('hex');
-    return Buffer.from(JSON.stringify({ p: payload, s: sig })).toString('base64url');
+    return base64UrlEncode(JSON.stringify({ p: payload, s: sig }));
 }
 
 function verifyToken(authHeader, env) {
@@ -60,7 +89,7 @@ function verifyToken(authHeader, env) {
     const secret = env.JWT_SECRET;
     if (!secret) return null;
     try {
-        const decoded = JSON.parse(Buffer.from(authHeader.slice(7), 'base64url').toString());
+        const decoded = JSON.parse(base64UrlDecode(authHeader.slice(7)));
         const expectedSig = createHmac('sha256', secret).update(decoded.p).digest('hex');
         if (decoded.s !== expectedSig) return null;
         const payload = JSON.parse(decoded.p);
@@ -71,23 +100,28 @@ function verifyToken(authHeader, env) {
 
 // ===== Handlers =====
 async function handleLogin(env, body) {
-    const { email, password } = body;
-    
-    // 输入验证
-    if (!validateEmail(email)) return { status: 400, body: { error: '邮箱格式不正确' } };
-    if (!validatePassword(password)) return { status: 400, body: { error: '密码长度需为6-128位' } };
-    
-    const sanitizedEmail = sanitizeString(email, 255);
-    const users = await sbQuery(env, `users?email=eq.${encodeURIComponent(sanitizedEmail)}&select=*`);
-    
-    if (users && users.length > 0) {
-        if (users[0].password_hash !== hashPassword(password, env)) return { status: 401, body: { error: '密码错误' } };
-        return { status: 200, body: { success: true, user: { id: users[0].id, email: users[0].email }, token: genToken(users[0].id, env) } };
-    }
+    try {
+        const { email, password } = body;
+        
+        // 输入验证
+        if (!validateEmail(email)) return { status: 400, body: { error: '邮箱格式不正确' } };
+        if (!validatePassword(password)) return { status: 400, body: { error: '密码长度需为6-128位' } };
+        
+        const sanitizedEmail = sanitizeString(email, 255);
+        const users = await sbQuery(env, `users?email=eq.${encodeURIComponent(sanitizedEmail)}&select=*`);
+        
+        if (users && users.length > 0) {
+            if (users[0].password_hash !== hashPassword(password, env)) return { status: 401, body: { error: '密码错误' } };
+            return { status: 200, body: { success: true, user: { id: users[0].id, email: users[0].email }, token: genToken(users[0].id, env) } };
+        }
 
-    const newUser = await sbQuery(env, 'users', 'POST', { email: sanitizedEmail, password_hash: hashPassword(password, env) });
-    if (newUser.error) return { status: 500, body: { error: '注册失败' } };
-    return { status: 201, body: { success: true, user: { id: newUser[0].id, email: newUser[0].email }, token: genToken(newUser[0].id, env) } };
+        const newUser = await sbQuery(env, 'users', 'POST', { email: sanitizedEmail, password_hash: hashPassword(password, env) });
+        if (newUser.error) return { status: 500, body: { error: '注册失败: ' + (newUser.error.message || newUser.error) } };
+        return { status: 201, body: { success: true, user: { id: newUser[0].id, email: newUser[0].email }, token: genToken(newUser[0].id, env) } };
+    } catch (err) {
+        console.error('Login error:', err);
+        return { status: 500, body: { error: '服务器错误: ' + err.message } };
+    }
 }
 
 async function handleGetSchedules(env, uid) {
@@ -284,7 +318,11 @@ export default {
             return new Response(JSON.stringify(result.body), { status: result.status, headers: CORS });
 
         } catch (e) {
-            return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: CORS });
+            console.error('API Error:', e);
+            return new Response(JSON.stringify({ error: e.message || 'Unknown error', stack: e.stack?.split('\n')[0] }), { 
+                status: 500, 
+                headers: { ...CORS, 'Content-Type': 'application/json' } 
+            });
         }
     }
 };
