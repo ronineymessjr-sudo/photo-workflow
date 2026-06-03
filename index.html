@@ -236,9 +236,30 @@
             transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
         }
         h1, h2, h3, .serif { font-family: var(--font-serif); }
-        h1 { font-weight: 700; letter-spacing: -0.02em; }
-        h2 { font-weight: 700; letter-spacing: -0.01em; }
-        h3 { font-weight: 600; }
+        h1 { font-weight: 700; letter-spacing: -0.02em; font-size: 1.75rem; }
+        h2 { font-weight: 700; letter-spacing: -0.01em; font-size: 1.35rem; }
+        h3 { font-weight: 600; font-size: 1.1rem; }
+        
+        /* 统一字体层级系统 */
+        .text-xs { font-size: 0.75rem; }
+        .text-sm { font-size: 0.875rem; }
+        .text-base { font-size: 1rem; }
+        .text-lg { font-size: 1.125rem; }
+        .text-xl { font-size: 1.25rem; }
+        .text-2xl { font-size: 1.5rem; }
+        .text-3xl { font-size: 1.875rem; }
+        
+        /* 统一间距系统 */
+        .gap-1 { gap: 0.25rem; }
+        .gap-2 { gap: 0.5rem; }
+        .gap-3 { gap: 0.75rem; }
+        .gap-4 { gap: 1rem; }
+        .p-2 { padding: 0.5rem; }
+        .p-3 { padding: 0.75rem; }
+        .p-4 { padding: 1rem; }
+        .p-6 { padding: 1.5rem; }
+        .m-2 { margin: 0.5rem; }
+        .m-4 { margin: 1rem; }
         
         /* Lucide Icons */
         .lucide { width: 1em; height: 1em; stroke-width: 1.5; vertical-align: middle; }
@@ -2840,7 +2861,14 @@
             .login-card { padding: 1.2rem; }
             h1 { font-size: 1.5rem; }
             h2 { font-size: 1.2rem; }
+            h3 { font-size: 1rem; }
             .panel { padding: .85rem; }
+            .p-head { padding: 1rem; }
+            .p-body { padding: 1rem; }
+            .top-tab-nav { margin: .75rem !important; padding: .25rem !important; }
+            .top-tab-btn { padding: .4rem .6rem !important; font-size: .75rem !important; }
+            .quick-actions { margin: .75rem !important; flex-wrap: wrap; }
+            .quick-actions .btn { font-size: .75rem; padding: .4rem .6rem; }
             .tab-bar {
                 overflow-x: auto;
                 flex-wrap: nowrap;
@@ -2850,6 +2878,7 @@
                 padding: .5rem .75rem;
                 font-size: .8rem;
             }
+            .grid { grid-template-columns: 1fr !important; }
         }
         
         /* ===== Lazy Load ===== */
@@ -3061,8 +3090,24 @@
     <main class="main-content">
         <div class="scroll-progress"></div>
 
+        <!-- Top Tab Navigation -->
+        <div class="top-tab-nav" style="display:flex;gap:.25rem;margin:1.5rem 1.5rem 0 1.5rem;padding:.5rem;background:var(--bg3);border-radius:12px;border:1px solid var(--bd);overflow-x:auto;">
+            <button class="top-tab-btn active" data-tab="gen" onclick="showTab('gen')" style="padding:.5rem 1rem;background:transparent;border:none;border-radius:8px;color:var(--t2);font-size:.85rem;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;">方案生成</button>
+            <button class="top-tab-btn" data-tab="eq" onclick="showTab('eq')" style="padding:.5rem 1rem;background:transparent;border:none;border-radius:8px;color:var(--t2);font-size:.85rem;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;">设备</button>
+            <button class="top-tab-btn" data-tab="venue" onclick="showTab('venue')" style="padding:.5rem 1rem;background:transparent;border:none;border-radius:8px;color:var(--t2);font-size:.85rem;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;">场地</button>
+            <button class="top-tab-btn" data-tab="model" onclick="showTab('model')" style="padding:.5rem 1rem;background:transparent;border:none;border-radius:8px;color:var(--t2);font-size:.85rem;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;">模特</button>
+            <button class="top-tab-btn" data-tab="calendar" onclick="showTab('calendar')" style="padding:.5rem 1rem;background:transparent;border:none;border-radius:8px;color:var(--t2);font-size:.85rem;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;">日程</button>
+            <button class="top-tab-btn" data-tab="dashboard" onclick="showTab('dashboard')" style="padding:.5rem 1rem;background:transparent;border:none;border-radius:8px;color:var(--t2);font-size:.85rem;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;">看板</button>
+            <button class="top-tab-btn" data-tab="tpl" onclick="showTab('tpl')" style="padding:.5rem 1rem;background:transparent;border:none;border-radius:8px;color:var(--t2);font-size:.85rem;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;">模板</button>
+            <button class="top-tab-btn" data-tab="hist" onclick="showTab('hist')" style="padding:.5rem 1rem;background:transparent;border:none;border-radius:8px;color:var(--t2);font-size:.85rem;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;">历史</button>
+        </div>
+        <style>
+            .top-tab-btn:hover { color: var(--t1); background: var(--bg-subtle); }
+            .top-tab-btn.active { color: var(--ac); background: var(--ac-glow); }
+        </style>
+
         <!-- Quick Actions Bar -->
-        <div class="quick-actions" style="display:flex;gap:.5rem;margin:1.5rem 1.5rem 0 1.5rem;padding:.75rem 1rem;background:var(--bg3);border-radius:12px;border:1px solid var(--bd);">
+        <div class="quick-actions" style="display:flex;gap:.5rem;margin:1rem 1.5rem 0 1.5rem;padding:.75rem 1rem;background:var(--bg3);border-radius:12px;border:1px solid var(--bd);">
             <button class="btn btn-s btn-sm" onclick="showTab('gen')" style="display:flex;align-items:center;gap:.4rem;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg>
                 新建方案
@@ -3662,7 +3707,7 @@
                     <div class="panel" style="margin-bottom:1rem;">
                         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;">
                             <div style="display:flex;align-items:center;gap:.75rem;">
-                                <h2 style="margin:0;font-size:1.1rem;">📬 消息看板</h2>
+                                <h2 style="margin:0;font-size:1.1rem;display:flex;align-items:center;gap:.5rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>消息看板</h2>
                                 <span id="msg-total" style="font-size:.75rem;color:var(--t3);padding:.2rem .6rem;background:var(--bg2);border-radius:20px;">0 条消息</span>
                             </div>
                             <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;">
