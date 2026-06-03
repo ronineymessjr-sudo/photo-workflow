@@ -1,0 +1,21 @@
+User-agent: *
+Allow: /
+
+# AI Search Engine Bots
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+# Sitemap
+Sitemap: https://ronineymessjr-sudo.github.io/photo-workflow/sitemap.xml
