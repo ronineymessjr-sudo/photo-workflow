@@ -9366,7 +9366,7 @@ function loadPlan(id){
 }
 
 async function handleSubmit(e){
-    e.preventDefault();
+    if(e && e.preventDefault) e.preventDefault();
     const btn=$('genBtn');
     const btnOrigHTML=btn.innerHTML;
     btn.classList.add('btn-loading');
