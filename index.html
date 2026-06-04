@@ -4096,6 +4096,24 @@
                     <div class="panel">
                         <div class="p-head"><h2>设置</h2></div>
                         <div class="p-body">
+                            <!-- 用户信息 -->
+                            <div class="fg" id="settingsUserInfo">
+                                <label>👤 账户信息</label>
+                                <div style="display:flex;align-items:center;gap:1rem;padding:.75rem;background:var(--bg-subtle);border-radius:var(--radius);margin-top:.25rem;">
+                                    <div style="width:48px;height:48px;background:var(--ac-gradient);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:#fff;font-weight:600;">
+                                        <span id="settingsUserAvatar">P</span>
+                                    </div>
+                                    <div style="flex:1;">
+                                        <div style="font-weight:600;color:var(--t1);" id="settingsUserName">本地用户</div>
+                                        <div style="font-size:.8rem;color:var(--t3);" id="settingsUserEmail">user@local</div>
+                                        <div style="font-size:.7rem;color:var(--ac);margin-top:.15rem;" id="settingsUserRole">摄影师</div>
+                                    </div>
+                                </div>
+                                <div style="display:flex;gap:.5rem;margin-top:.75rem;">
+                                    <button class="btn btn-s btn-sm" onclick="logout()" style="color:var(--er);border-color:var(--er);">退出登录</button>
+                                </div>
+                            </div>
+                            
                             <!-- Pexels API Key -->
                             <div class="fg">
                                 <label>Pexels API Key <span style="font-size:.7rem;color:var(--t3);">（可选，用于自动加载参考图）</span></label>
@@ -11392,8 +11410,29 @@ async function loadAllPlanReferences(planId) {
 
 // ===== Settings Tab =====
 function loadSettingsData() {
+    // Pexels API Key
     const keyInput = document.getElementById('settingsPexelsKey');
     if (keyInput) keyInput.value = getPexelsApiKey();
+    
+    // 用户信息
+    try {
+        const userStr = localStorage.getItem('pw_user');
+        const role = localStorage.getItem('pw_role') || 'photographer';
+        const roleNames = { photographer: '摄影师', assistant: '助理', editor: '编辑', client: '客户' };
+        
+        if (userStr) {
+            const user = JSON.parse(userStr);
+            const avatarEl = document.getElementById('settingsUserAvatar');
+            const nameEl = document.getElementById('settingsUserName');
+            const emailEl = document.getElementById('settingsUserEmail');
+            const roleEl = document.getElementById('settingsUserRole');
+            
+            if (avatarEl) avatarEl.textContent = (user.name || user.email || 'U').charAt(0).toUpperCase();
+            if (nameEl) nameEl.textContent = user.name || '用户';
+            if (emailEl) emailEl.textContent = user.email || '';
+            if (roleEl) roleEl.textContent = roleNames[role] || role;
+        }
+    } catch(e) {}
 }
 function saveSettingsPexelsKey() {
     const keyInput = document.getElementById('settingsPexelsKey');
