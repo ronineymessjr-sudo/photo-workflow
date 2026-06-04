@@ -289,20 +289,72 @@
         .icon-btn { display: inline-flex; align-items: center; gap: .35rem; }
         .icon-btn .lucide { width: 1.1em; height: 1.1em; }
 
-        /* ===== Background Image ===== */
-        body::before {
-            content: '';
+        /* ===== Data Stream Background (replaces silk + orbs) ===== */
+        /* Project-token data row layer — extremely subtle, slow horizontal drift.
+           Inspired by Reflect.app's encryption-hash decoration. */
+        .bg-data-stream {
             position: fixed;
             inset: 0;
             z-index: 0;
             pointer-events: none;
-            background-image: url('./assets/bg-fluid-silk.jpg');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            opacity: 0.3;
+            overflow: hidden;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            letter-spacing: 0.15em;
+            line-height: 1;
+            color: var(--t3);
+            user-select: none;
         }
-        
+        .bg-data-row {
+            position: absolute;
+            left: 0;
+            width: 200%;
+            white-space: nowrap;
+            opacity: 0.07;
+            will-change: transform;
+        }
+        .bg-data-row-1 {
+            top: 16vh;
+            font-size: 13px;
+            letter-spacing: 0.25em;
+            opacity: 0.14;
+            animation: bgDriftLeft 140s linear infinite alternate;
+        }
+        .bg-data-row-2 {
+            top: 48vh;
+            font-size: 15px;
+            letter-spacing: 0.18em;
+            opacity: 0.18;
+            animation: bgDriftRight 110s linear infinite alternate;
+        }
+        .bg-data-row-3 {
+            top: 80vh;
+            font-size: 13px;
+            letter-spacing: 0.22em;
+            opacity: 0.12;
+            animation: bgDriftLeft 160s linear infinite alternate;
+        }
+        @keyframes bgDriftLeft {
+            from { transform: translate3d(0, 0, 0); }
+            to   { transform: translate3d(-25%, 0, 0); }
+        }
+        @keyframes bgDriftRight {
+            from { transform: translate3d(-25%, 0, 0); }
+            to   { transform: translate3d(0, 0, 0); }
+        }
+        /* Honor reduced-motion: stop drift entirely */
+        @media (prefers-reduced-motion: reduce) {
+            .bg-data-row { animation: none !important; }
+        }
+        /* Light mode — keep the same feel, raise opacity slightly (light bg eats contrast) */
+        [data-theme="light"] .bg-data-row-1 { opacity: 0.16; }
+        [data-theme="light"] .bg-data-row-2 { opacity: 0.20; }
+        [data-theme="light"] .bg-data-row-3 { opacity: 0.14; }
+        [data-theme="light"] .bg-data-row { color: var(--t2); }
+        /* Sunset / sunrise — warm the tint slightly */
+        [data-theme="sunset"] .bg-data-row { color: rgba(196, 96, 42, 0.5); }
+        [data-theme="sunrise"] .bg-data-row { color: rgba(212, 132, 10, 0.4); }
+
         /* 暗角遮罩层 - 增强可读性 */
         body .bg-vignette {
             position: fixed;
@@ -355,58 +407,7 @@
             33% { opacity: 0.85; transform: scale(1.02) rotate(1deg); }
             66% { opacity: 0.9; transform: scale(1.01) rotate(-1deg); }
         }
-        /* Floating orbs - Mesh Gradient 光晕效果 */
-        .bg-orb {
-            position: fixed;
-            border-radius: 50%;
-            filter: blur(100px);
-            pointer-events: none;
-            z-index: 0;
-            opacity: 0.3;
-        }
-        .bg-orb-1 {
-            width: 400px;
-            height: 400px;
-            background: radial-gradient(circle at 30% 30%, 
-                rgba(62, 207, 142, 0.12) 0%, 
-                rgba(62, 207, 142, 0.04) 40%, 
-                transparent 70%);
-            top: -100px;
-            right: -100px;
-            animation: float1 20s ease-in-out infinite;
-        }
-        .bg-orb-2 {
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle at 70% 70%, 
-                rgba(62, 207, 142, 0.08) 0%, 
-                rgba(62, 207, 142, 0.02) 50%, 
-                transparent 80%);
-            bottom: -50px;
-            left: -100px;
-            animation: float2 25s ease-in-out infinite;
-        }
-        .bg-orb-3 {
-            width: 250px;
-            height: 250px;
-            background: radial-gradient(circle at 50% 50%, 
-                rgba(62, 207, 142, 0.06) 0%, 
-                transparent 60%);
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            animation: float3 30s ease-in-out infinite;
-        }
-        .bg-orb-4 {
-            width: 200px;
-            height: 200px;
-            background: radial-gradient(circle at 40% 60%, 
-                rgba(62, 207, 142, 0.08) 0%, 
-                transparent 70%);
-            bottom: 20%;
-            right: 10%;
-            animation: float4 22s ease-in-out infinite;
-        }
+        /* (Floating orbs removed — replaced by .bg-data-stream above) */
 
         /* Language Switcher */
         .lang-switcher {
@@ -1030,6 +1031,26 @@
         .btn-s:active {
             transform: translateY(0);
         }
+        /* Theme button — active state (current theme) */
+        .btn-s.is-active {
+            background: var(--ac-gradient);
+            color: #0a0a0a;
+            border-color: transparent;
+            box-shadow: var(--shadow-ac);
+            font-weight: 600;
+        }
+        .btn-s.is-active:hover {
+            background: var(--ac-gradient);
+            color: #0a0a0a;
+            transform: translateY(-1px);
+        }
+        /* Settings block helper — small status text */
+        .settings-meta {
+            font-size: .72rem;
+            color: var(--t3);
+            margin-top: .35rem;
+        }
+        .settings-meta strong { color: var(--t2); font-weight: 500; }
         .btn-d { background: rgba(239,68,68,.08); color: var(--er); border: 1px solid rgba(239,68,68,.15); }
         .btn-d:hover { background: rgba(239,68,68,.15); transform: translateY(-1px); }
         .btn-i { background: rgba(62,207,142,.08); color: var(--ac); border: 1px solid rgba(62,207,142,.15); }
@@ -1541,7 +1562,6 @@
                 backdrop-filter: blur(20px);
                 -webkit-backdrop-filter: blur(20px);
                 padding-top: 60px;
-                animation: none;
             }
             .sidebar.open {
                 transform: translateX(0);
@@ -3060,14 +3080,15 @@
     <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet" />
 </head>
 <body>
+<!-- Background Data Stream — project token layer (subtle, slow drift) -->
+<div class="bg-data-stream" aria-hidden="true">
+  <div class="bg-data-row bg-data-row-1">ATELIER · MÜRREN · MAISON 1924 · SWISS · HAUTE HORLOGERIE · OBSIDIAN 1924 SA · ATELIER · MÜRREN · MAISON 1924 · SWISS · HAUTE HORLOGERIE · OBSIDIAN 1924 SA · ATELIER · MÜRREN · MAISON 1924 · SWISS</div>
+  <div class="bg-data-row bg-data-row-2">287 CMP · 28,800 VPH · ±2 S/DAY · 72H POWER RESERVE · 39MM × 10.8MM · Ti GRADE-5 · BRONZE BRIDGES · 100M WATER RESISTANT · SAPPHIRE · 287 CMP · 28,800 VPH · ±2 S/DAY · 72H</div>
+  <div class="bg-data-row bg-data-row-3">CALIBER M-29 · DESERT EDITION · № 14 / 88 · OBSIDIAN PVD · SANDBLASTED BRONZE · SWISS MADE · CALIBER M-29 · DESERT EDITION · № 14 / 88 · OBSIDIAN PVD · SANDBLASTED BRONZE · SWISS</div>
+</div>
+
 <!-- Background Vignette Overlay -->
 <div class="bg-vignette"></div>
-
-<!-- Floating Background Orbs -->
-<div class="bg-orb bg-orb-1"></div>
-<div class="bg-orb bg-orb-2"></div>
-<div class="bg-orb bg-orb-3"></div>
-<div class="bg-orb bg-orb-4"></div>
 
 <!-- Mobile Header -->
 <div class="mobile-header" style="display:none;">
@@ -3180,11 +3201,7 @@
                 <span class="nav-label" data-i18n="nav.message">消息看板</span>
                 <span class="nav-badge" id="t-msg" style="display:none;">0</span>
             </button>
-            <button class="nav-item" data-tab="hist" data-role="photographer,assistant">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                <span class="nav-label" data-i18n="nav.hist">历史记录</span>
-            </button>
-            <button class="nav-item" data-tab="settings" data-role="photographer,assistant">
+            <button class="nav-item" onclick="openSettingsModal()" title="设置">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
                 <span class="nav-label">设置</span>
             </button>
@@ -3230,6 +3247,14 @@
 
         <!-- Quick Actions Bar -->
         <div class="quick-actions" style="display:flex;gap:.5rem;margin:1rem 1.5rem 0 1.5rem;padding:.75rem 1rem;background:var(--bg3);border-radius:12px;border:1px solid var(--bd);">
+            <button class="btn btn-s btn-sm" onclick="showTab('gen')" style="display:flex;align-items:center;gap:.4rem;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg>
+                新建方案
+            </button>
+            <button class="btn btn-s btn-sm" onclick="showTab('calendar')" style="display:flex;align-items:center;gap:.4rem;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+                添加日程
+            </button>
             <button class="btn btn-s btn-sm" onclick="syncToFeishuBitable()" style="display:flex;align-items:center;gap:.4rem;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                 同步飞书
@@ -3432,57 +3457,8 @@
             </div>
         </div>
 
-        <!-- ============ 资源库（场地+设备+模特） ============ -->
-        <div class="tab-cnt" id="tab-venue">
-            <!-- 资源库内部Tab导航 -->
-            <div class="resource-tabs" style="display:flex;gap:.25rem;margin-bottom:1rem;padding:.25rem;background:var(--bg2);border-radius:var(--radius);border:1px solid var(--bd);">
-                <button class="resource-tab active" data-resource="venue" onclick="showResourceTab('venue')" style="padding:.5rem 1rem;background:var(--ac-glow);border:none;border-radius:var(--radius-sm);color:var(--ac);font-size:.8rem;font-weight:500;cursor:pointer;transition:all .15s;">场地库</button>
-                <button class="resource-tab" data-resource="eq" onclick="showResourceTab('eq')" style="padding:.5rem 1rem;background:transparent;border:none;border-radius:var(--radius-sm);color:var(--t3);font-size:.8rem;font-weight:500;cursor:pointer;transition:all .15s;">设备库</button>
-                <button class="resource-tab" data-resource="model" onclick="showResourceTab('model')" style="padding:.5rem 1rem;background:transparent;border:none;border-radius:var(--radius-sm);color:var(--t3);font-size:.8rem;font-weight:500;cursor:pointer;transition:all .15s;">模特库</button>
-            </div>
-            <style>
-                .resource-tab:hover { background:var(--bg-subtle); color:var(--t2); }
-                .resource-tab.active { background:var(--ac-glow); color:var(--ac); }
-                .resource-content { display:none; }
-                .resource-content.active { display:block; }
-            </style>
-
-            <!-- 场地库内容 -->
-            <div class="resource-content active" id="resource-venue">
-            <div class="grid">
-                <aside>
-                    <div class="panel">
-                        <div class="p-head"><h2>添加场地</h2></div>
-                        <div class="p-body">
-                            <form id="venueForm">
-                                <div class="fg"><label>场地名称</label><input id="v-name" placeholder="如：老洋行酒店公寓"></div>
-                                <div class="fg"><label>地址</label><input id="v-addr" placeholder="详细地址"></div>
-                                <div class="fg"><label>适合风格（逗号分隔）</label><input id="v-styles" placeholder="如：复古、文艺、时尚"></div>
-                                <div class="fg"><label>联系方式</label><input id="v-contact" placeholder="电话或微信"></div>
-                                <div class="fg"><label>备注</label><textarea id="v-note" placeholder="开放时间、收费、注意事项等"></textarea></div>
-                                <button type="submit" class="btn btn-p">+ 添加场地</button>
-                            </form>
-                        </div>
-                    </div>
-                </aside>
-                <section>
-                    <div class="panel">
-                        <div class="p-head">
-                            <h2>场地列表</h2>
-                            <div style="display:flex;gap:.5rem;align-items:center">
-                                <input type="text" id="venue-search" placeholder="🔍 搜索场地..." style="padding:.4rem .8rem;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius-sm);color:var(--t1);font-size:.8rem;width:150px" oninput="renderVenue()">
-                                <span id="venue-total" style="font-size:.72rem;color:var(--t3)"></span>
-                            </div>
-                        </div>
-                        <div class="p-body" id="venue-list"></div>
-                    </div>
-                </section>
-                <aside></aside>
-            </div>
-            </div>
-
-            <!-- 设备库内容 -->
-            <div class="resource-content" id="resource-eq">
+        <!-- ============ 设备库 ============ -->
+        <div class="tab-cnt" id="tab-eq">
             <div class="grid">
                 <aside>
                     <div class="panel">
@@ -3520,22 +3496,22 @@
                 </section>
                 <aside></aside>
             </div>
-            </div>
+        </div>
 
-            <!-- 模特库内容 -->
-            <div class="resource-content" id="resource-model">
+        <!-- ============ 场地库 ============ -->
+        <div class="tab-cnt" id="tab-venue">
             <div class="grid">
                 <aside>
                     <div class="panel">
-                        <div class="p-head"><h2>添加模特</h2></div>
+                        <div class="p-head"><h2>添加场地</h2></div>
                         <div class="p-body">
-                            <form id="modelForm">
-                                <div class="fg"><label>姓名</label><input id="m-name" placeholder="模特姓名"></div>
-                                <div class="fg"><label>联系方式</label><input id="m-contact" placeholder="电话或微信"></div>
-                                <div class="fg"><label>特征标签（逗号分隔）</label><input id="m-tags" placeholder="如：高挑、长发、文艺气质"></div>
-                                <div class="fg"><label>擅长风格（逗号分隔）</label><input id="m-styles" placeholder="如：时尚、复古、日系"></div>
-                                <div class="fg"><label>备注</label><textarea id="m-note" placeholder="档期、收费标准、合作经历等"></textarea></div>
-                                <button type="submit" class="btn btn-p">+ 添加模特</button>
+                            <form id="venueForm">
+                                <div class="fg"><label>场地名称</label><input id="v-name" placeholder="如：老洋行酒店公寓"></div>
+                                <div class="fg"><label>地址</label><input id="v-addr" placeholder="详细地址"></div>
+                                <div class="fg"><label>适合风格（逗号分隔）</label><input id="v-styles" placeholder="如：复古、文艺、时尚"></div>
+                                <div class="fg"><label>联系方式</label><input id="v-contact" placeholder="电话或微信"></div>
+                                <div class="fg"><label>备注</label><textarea id="v-note" placeholder="开放时间、收费、注意事项等"></textarea></div>
+                                <button type="submit" class="btn btn-p">+ 添加场地</button>
                             </form>
                         </div>
                     </div>
@@ -3543,17 +3519,16 @@
                 <section>
                     <div class="panel">
                         <div class="p-head">
-                            <h2>模特列表</h2>
+                            <h2>场地列表</h2>
                             <div style="display:flex;gap:.5rem;align-items:center">
-                                <input type="text" id="model-search" placeholder="🔍 搜索模特..." style="padding:.4rem .8rem;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius-sm);color:var(--t1);font-size:.8rem;width:150px" oninput="renderModel()">
-                                <span id="model-total" style="font-size:.72rem;color:var(--t3)"></span>
+                                <input type="text" id="venue-search" placeholder="🔍 搜索场地..." style="padding:.4rem .8rem;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius-sm);color:var(--t1);font-size:.8rem;width:150px" oninput="renderVenue()">
+                                <span id="venue-total" style="font-size:.72rem;color:var(--t3)"></span>
                             </div>
                         </div>
-                        <div class="p-body" id="model-list"></div>
+                        <div class="p-body" id="venue-list"></div>
                     </div>
                 </section>
                 <aside></aside>
-            </div>
             </div>
         </div>
 
@@ -3957,6 +3932,39 @@
             </div>
         </div>
 
+        <!-- ============ 模特库 ============ -->
+        <div class="tab-cnt" id="tab-model">
+            <div class="grid">
+                <aside>
+                    <div class="panel">
+                        <div class="p-head"><h2>添加模特</h2></div>
+                        <div class="p-body">
+                            <form id="modelForm">
+                                <div class="fg"><label>模特名称/代号</label><input id="m-name" placeholder="如：小美"></div>
+                                <div class="fg"><label>风格标签（逗号分隔）</label><input id="m-styles" placeholder="如：文艺、清冷、性感、复古"></div>
+                                <div class="fg"><label>联系方式</label><input id="m-contact" placeholder="微信或电话"></div>
+                                <div class="fg"><label>档期状态</label>
+                                    <select id="m-avail"><option value="available">可用</option><option value="booked">已预约</option><option value="unavailable">暂不可用</option></select>
+                                </div>
+                                <div class="fg"><label>肖像授权</label>
+                                    <select id="m-auth"><option value="authorized">已授权</option><option value="pending">待确认</option><option value="none">未授权</option></select>
+                                </div>
+                                <div class="fg"><label>备注</label><textarea id="m-note" placeholder="身高体重、外貌特征、偏好等"></textarea></div>
+                                <button type="submit" class="btn btn-p">+ 添加模特</button>
+                            </form>
+                        </div>
+                    </div>
+                </aside>
+                <section>
+                    <div class="panel">
+                        <div class="p-head"><h2>模特列表</h2><span id="model-total" style="font-size:.72rem;color:var(--t3)"></span></div>
+                        <div class="p-body" id="model-list"></div>
+                    </div>
+                </section>
+                <aside></aside>
+            </div>
+        </div>
+
         <!-- ============ 方案模板 ============ -->
         <div class="tab-cnt" id="tab-tpl">
             <div class="grid">
@@ -4079,78 +4087,6 @@
                     </div>
                     <div class="p-body" id="todoList"></div>
                 </div>
-            </div>
-        </div>
-
-        <!-- ============ 设置 ============ -->
-        <div class="tab-cnt" id="tab-settings">
-            <div class="grid">
-                <section style="grid-column: 1 / -1;">
-                    <div class="panel">
-                        <div class="p-head"><h2>设置</h2></div>
-                        <div class="p-body">
-                            <!-- 用户信息 -->
-                            <div class="fg" id="settingsUserInfo">
-                                <label>👤 账户信息</label>
-                                <div style="display:flex;align-items:center;gap:1rem;padding:.75rem;background:var(--bg-subtle);border-radius:var(--radius);margin-top:.25rem;">
-                                    <div style="width:48px;height:48px;background:var(--ac-gradient);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:#fff;font-weight:600;">
-                                        <span id="settingsUserAvatar">P</span>
-                                    </div>
-                                    <div style="flex:1;">
-                                        <div style="font-weight:600;color:var(--t1);" id="settingsUserName">本地用户</div>
-                                        <div style="font-size:.8rem;color:var(--t3);" id="settingsUserEmail">user@local</div>
-                                        <div style="font-size:.7rem;color:var(--ac);margin-top:.15rem;" id="settingsUserRole">摄影师</div>
-                                    </div>
-                                </div>
-                                <div style="display:flex;gap:.5rem;margin-top:.75rem;">
-                                    <button class="btn btn-s btn-sm" onclick="logout()" style="color:var(--er);border-color:var(--er);">退出登录</button>
-                                </div>
-                            </div>
-                            
-                            <!-- Pexels API Key -->
-                            <div class="fg">
-                                <label>Pexels API Key <span style="font-size:.7rem;color:var(--t3);">（可选，用于自动加载参考图）</span></label>
-                                <div style="display:flex;gap:.5rem;">
-                                    <input type="text" id="settingsPexelsKey" placeholder="粘贴你的 Pexels API Key..." style="flex:1;">
-                                    <button class="btn btn-s btn-sm" onclick="saveSettingsPexelsKey()">保存</button>
-                                </div>
-                                <p style="font-size:.72rem;color:var(--t3);margin-top:.35rem;">
-                                    免费申请：<a href="https://www.pexels.com/api/" target="_blank" style="color:var(--ac);">https://www.pexels.com/api/</a> 
-                                    · 不填也能用，只是无法自动加载图片预览
-                                </p>
-                            </div>
-                            
-                            <!-- Theme -->
-                            <div class="fg">
-                                <label>主题</label>
-                                <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
-                                    <button class="btn btn-s btn-sm" onclick="setTheme('auto')">自动</button>
-                                    <button class="btn btn-s btn-sm" onclick="setTheme('dark')">暗色</button>
-                                    <button class="btn btn-s btn-sm" onclick="setTheme('light')">亮色</button>
-                                </div>
-                            </div>
-                            
-                            <!-- Data Management -->
-                            <div class="fg">
-                                <label>💾 数据管理</label>
-                                <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
-                                    <button class="btn btn-s btn-sm" onclick="exportAllData()">📤 导出全部数据</button>
-                                    <button class="btn btn-s btn-sm" onclick="document.getElementById('importFileInput').click()">📥 导入数据</button>
-                                    <input type="file" id="importFileInput" accept=".json" style="display:none;" onchange="importAllData(event)">
-                                    <button class="btn btn-d btn-sm" onclick="clearAllData()">🗑️ 清空数据</button>
-                                </div>
-                                <p style="font-size:.72rem;color:var(--t3);margin-top:.35rem;">导出为 JSON 文件，可用于备份和迁移</p>
-                            </div>
-                            
-                            <!-- About -->
-                            <div style="padding:1rem;background:var(--bg2);border-radius:var(--radius-sm);font-size:.8rem;color:var(--t3);margin-top:1rem;">
-                                <p><strong>PhotoAtelier</strong> v1.0</p>
-                                <p style="margin-top:.25rem;">摄影师工作流管理工具 · 分镜脚本 · 参考图库 · 日程管理</p>
-                                <p style="margin-top:.25rem;">参考图库支持 25+ 免费商用图库平台</p>
-                            </div>
-                        </div>
-                    </div>
-                </section>
             </div>
         </div>
     </main>
@@ -4807,28 +4743,13 @@ function showTab(tabName) {
     if (tabEl) tabEl.classList.add('active');
     // Trigger render
     if(tabName==='eq') renderEq();
-    if(tabName==='venue') { renderVenue(); showResourceTab('venue'); }
+    if(tabName==='venue') renderVenue();
     if(tabName==='model') renderModel();
     if(tabName==='tpl') renderTpl();
     if(tabName==='hist') renderHistFull();
     if(tabName==='backup') updateBackupStats();
     if(tabName==='calendar') { renderCalendar(); renderSchedules(); }
     if(tabName==='message') renderMessages();
-    if(tabName==='settings') loadSettingsData();
-}
-
-// 资源库内部Tab切换
-function showResourceTab(resourceType) {
-    document.querySelectorAll('.resource-tab').forEach(function(x){x.classList.remove('active');});
-    document.querySelectorAll('.resource-content').forEach(function(x){x.classList.remove('active');});
-    var tabBtn = document.querySelector('.resource-tab[data-resource="'+resourceType+'"]');
-    if (tabBtn) tabBtn.classList.add('active');
-    var contentEl = document.getElementById('resource-'+resourceType);
-    if (contentEl) contentEl.classList.add('active');
-    // Trigger render
-    if(resourceType==='venue') renderVenue();
-    if(resourceType==='eq') renderEq();
-    if(resourceType==='model') renderModel();
 }
 
 function initTabs() {
@@ -9419,21 +9340,7 @@ function getColorGradingPlan(style) {
 // ===== Plan Storage =====
 function getPlans(){return sg(SK.P)||[]}
 function savePlans(l){ss(SK.P,l)}
-async function savePlan(plan){
-    const ps=getPlans();
-    plan.id=Date.now().toString();
-    ps.unshift(plan);
-    if(ps.length>50)ps.pop();
-    savePlans(ps);
-    // 同步到数据库API
-    try{
-        await window.api.createPlan(plan);
-        console.log('方案已同步到数据库');
-    }catch(e){
-        console.warn('数据库同步失败，已保存到本地:', e.message);
-    }
-    return plan.id;
-}
+function savePlan(plan){const ps=getPlans();plan.id=Date.now().toString();ps.unshift(plan);if(ps.length>50)ps.pop();savePlans(ps);return plan.id}
 function delPlan(id){let ps=getPlans();ps=ps.filter(p=>p.id!==id);savePlans(ps)}
 
 function loadPlan(id){
@@ -9471,7 +9378,7 @@ async function handleSubmit(e){
     await new Promise(r=>setTimeout(r,900));
     try{
         const plan=genPlan(input);
-        await savePlan(plan);
+        savePlan(plan);
         currentPlanData=plan;
         $('tplSavePanel').style.display='block';
         $('tplSaveHint').style.display='none';
@@ -9977,9 +9884,8 @@ function importCSV() {
 // ===== History =====
 function renderHistMini(){
     const ps=getPlans().slice(0,5);
-    const countEl=$('histMiniCount'), miniEl=$('histMini');
-    if(countEl)countEl.textContent=`${getPlans().length} 条`;
-    if(miniEl)miniEl.innerHTML=ps.length?ps.map(p=>{
+    $('histMiniCount').textContent=`${getPlans().length} 条`;
+    $('histMini').innerHTML=ps.length?ps.map(p=>{
         const d=new Date(p.savedAt);
         return`<div class="hist-item" onclick="loadPlan('${p.id}')"><div class="hist-title">${escHtml(p.title)}</div><div class="hist-meta"><span>${p.input && p.input.style||'待定'}</span><span>${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}</span></div></div>`;
     }).join(''):'<div class="hist-empty">暂无历史</div>';
@@ -10081,14 +9987,7 @@ async function batchExportPdf() {
     }
     toast(`批量导出完成: ${success}/${plans.length}`, success === plans.length ? 'ok' : 'er');
 }
-function updateBadge(){
-    const eq=$('t-eq'),venue=$('t-venue'),model=$('t-model'),tpl=$('t-tpl'),hist=$('t-hist');
-    if(eq)eq.textContent=(sg(SK.EQ)||[]).length;
-    if(venue)venue.textContent=(sg(SK.V)||[]).length;
-    if(model)model.textContent=(sg(SK.M)||[]).length;
-    if(tpl)tpl.textContent=(sg(SK.T)||[]).length;
-    if(hist)hist.textContent=getPlans().length;
-}
+function updateBadge(){$('t-eq').textContent=(sg(SK.EQ)||[]).length;$('t-venue').textContent=(sg(SK.V)||[]).length;$('t-model').textContent=(sg(SK.M)||[]).length;$('t-tpl').textContent=(sg(SK.T)||[]).length;$('t-hist').textContent=getPlans().length;}
 
 // ===== Quick Venue =====
 function renderQuickVenue(){
@@ -11421,41 +11320,109 @@ async function loadAllPlanReferences(planId) {
     toast('完成', 'ok');
 }
 
-// ===== Settings Tab =====
-function loadSettingsData() {
-    // Pexels API Key
+// ===== Settings Modal =====
+function openSettingsModal() {
+    const modal = document.getElementById('settingsModal');
+    if (!modal) return;
+    // Load current values
     const keyInput = document.getElementById('settingsPexelsKey');
     if (keyInput) keyInput.value = getPexelsApiKey();
-    
-    // 用户信息
-    try {
-        const userStr = localStorage.getItem('pw_user');
-        const role = localStorage.getItem('pw_role') || 'photographer';
-        const roleNames = { photographer: '摄影师', assistant: '助理', editor: '编辑', client: '客户' };
-        
-        if (userStr) {
-            const user = JSON.parse(userStr);
-            const avatarEl = document.getElementById('settingsUserAvatar');
-            const nameEl = document.getElementById('settingsUserName');
-            const emailEl = document.getElementById('settingsUserEmail');
-            const roleEl = document.getElementById('settingsUserRole');
-            
-            if (avatarEl) avatarEl.textContent = (user.name || user.email || 'U').charAt(0).toUpperCase();
-            if (nameEl) nameEl.textContent = user.name || '用户';
-            if (emailEl) emailEl.textContent = user.email || '';
-            if (roleEl) roleEl.textContent = roleNames[role] || role;
-        }
-    } catch(e) {}
+    syncThemeButtons();
+    refreshPexelsStatus();
+    refreshBackupMeta();
+    modal.style.display = 'flex';
+}
+function closeSettingsModal() {
+    const modal = document.getElementById('settingsModal');
+    if (modal) modal.style.display = 'none';
 }
 function saveSettingsPexelsKey() {
     const keyInput = document.getElementById('settingsPexelsKey');
     if (!keyInput) return;
     savePexelsApiKey(keyInput.value);
+    refreshPexelsStatus();
+}
+// Mark the active theme button in the settings row.
+function syncThemeButtons() {
+    const current = localStorage.getItem('pa_theme') || 'auto';
+    document.querySelectorAll('#settingsThemeRow [data-theme]').forEach(btn => {
+        btn.classList.toggle('is-active', btn.getAttribute('data-theme') === current);
+    });
+}
+// Show Pexels key status in settings.
+function refreshPexelsStatus() {
+    const el = document.getElementById('settingsPexelsStatus');
+    if (!el) return;
+    const key = getPexelsApiKey();
+    el.innerHTML = key
+        ? '状态：<strong>已设置</strong>（' + key.length + ' 位）· 点"测试"验证有效性'
+        : '状态：<strong>未设置</strong> · 将使用直链到 25+ 免费图库';
+}
+// Verify the saved Pexels key with a lightweight API call.
+async function testPexelsApiKey() {
+    const key = getPexelsApiKey();
+    const btn = document.getElementById('settingsPexelsTestBtn');
+    if (!key) {
+        toast('请先填写并保存 Pexels API Key', 'er');
+        return;
+    }
+    if (btn) { btn.disabled = true; btn.textContent = '测试中…'; }
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+        const resp = await fetch('https://api.pexels.com/v1/search?query=test&per_page=1', {
+            headers: { 'Authorization': key },
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        if (resp.ok) {
+            const data = await resp.json();
+            const remaining = resp.headers.get('X-Ratelimit-Remaining');
+            const limit = resp.headers.get('X-Ratelimit-Limit');
+            const quota = (remaining && limit) ? ` · 剩余 ${remaining}/${limit} 次/小时` : '';
+            const count = (data && typeof data.total_results === 'number') ? ` · 索引 ${data.total_results.toLocaleString()} 张` : '';
+            toast('Pexels Key 有效' + quota + count, 'ok');
+        } else if (resp.status === 401 || resp.status === 403) {
+            toast('Key 无效或被拒绝（HTTP ' + resp.status + '）', 'er');
+        } else {
+            toast('测试失败：HTTP ' + resp.status, 'er');
+        }
+    } catch (e) {
+        if (e.name === 'AbortError') {
+            toast('测试超时（8s），网络可能不通', 'er');
+        } else {
+            toast('测试失败：' + e.message, 'er');
+        }
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = '测试'; }
+    }
 }
 function setTheme(t) {
     localStorage.setItem('pa_theme', t);
     applyTheme(t);
+    syncThemeButtons();
     toast('主题已切换', 'ok');
+}
+// Human-friendly "x ago" formatter (zh-CN).
+function formatTimeAgo(ts) {
+    if (!ts) return '从未';
+    const now = Date.now();
+    const diff = Math.max(0, now - ts);
+    const min = Math.floor(diff / 60000);
+    if (min < 1) return '刚刚';
+    if (min < 60) return min + ' 分钟前';
+    const hr = Math.floor(min / 60);
+    if (hr < 24) return hr + ' 小时前';
+    const day = Math.floor(hr / 24);
+    if (day < 30) return day + ' 天前';
+    const d = new Date(ts);
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function refreshBackupMeta() {
+    const el = document.getElementById('settingsBackupMeta');
+    if (!el) return;
+    const ts = parseInt(localStorage.getItem('pa_last_backup') || '0', 10);
+    el.innerHTML = '最近备份：<strong>' + formatTimeAgo(ts) + '</strong>';
 }
 function exportAllData() {
     const data = {};
@@ -11471,6 +11438,8 @@ function exportAllData() {
     a.download = `photoatelier_backup_${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(a.href);
+    localStorage.setItem('pa_last_backup', String(Date.now()));
+    refreshBackupMeta();
     toast('数据已导出', 'ok');
 }
 function importAllData(e) {
@@ -11652,5 +11621,68 @@ window.addEventListener('online', function() { toast('网络已恢复', 'ok'); }
   </div>
 </div>
 <!-- Settings Modal -->
+<div id="settingsModal" class="modal" style="display:none;">
+    <div class="modal-content" style="max-width:520px;">
+        <div class="modal-header">
+            <h3>设置</h3>
+            <button class="modal-close" onclick="closeSettingsModal()">&times;</button>
+        </div>
+        <div class="modal-body" style="max-height:70vh;overflow-y:auto;">
+            <!-- Pexels API Key -->
+            <div class="animate-fade-in-up delay-1" style="margin-bottom:1.5rem;">
+                <label style="display:block;font-weight:600;margin-bottom:.5rem;color:var(--t1);">
+                    Pexels API Key <span style="font-size:.75rem;color:var(--t3);font-weight:400;">（可选，用于自动加载参考图）</span>
+                </label>
+                <div style="display:flex;gap:.5rem;">
+                    <input type="text" id="settingsPexelsKey" placeholder="粘贴你的 Pexels API Key..."
+                           style="flex:1;padding:.5rem .75rem;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--bg);color:var(--t1);font-size:.85rem;">
+                    <button class="btn btn-s" onclick="saveSettingsPexelsKey()">保存</button>
+                    <button class="btn btn-i" id="settingsPexelsTestBtn" onclick="testPexelsApiKey()" style="font-size:.85rem;">测试</button>
+                </div>
+                <p class="settings-meta" id="settingsPexelsStatus">
+                    状态：<strong>未设置</strong>
+                </p>
+                <p style="font-size:.72rem;color:var(--t3);margin-top:.35rem;">
+                    免费申请：<a href="https://www.pexels.com/api/" target="_blank" style="color:var(--ac);">https://www.pexels.com/api/</a>
+                    · 不填也能用，只是无法自动加载图片预览
+                </p>
+            </div>
+
+            <!-- Theme -->
+            <div class="animate-fade-in-up delay-2" style="margin-bottom:1.5rem;">
+                <label style="display:block;font-weight:600;margin-bottom:.5rem;color:var(--t1);">主题</label>
+                <div id="settingsThemeRow" style="display:flex;gap:.5rem;flex-wrap:wrap;">
+                    <button class="btn btn-s" data-theme="auto" onclick="setTheme('auto')" style="font-size:.8rem;">自动</button>
+                    <button class="btn btn-s" data-theme="dark" onclick="setTheme('dark')" style="font-size:.8rem;">暗色</button>
+                    <button class="btn btn-s" data-theme="light" onclick="setTheme('light')" style="font-size:.8rem;">亮色</button>
+                    <button class="btn btn-s" data-theme="sunrise" onclick="setTheme('sunrise')" style="font-size:.8rem;">日出</button>
+                    <button class="btn btn-s" data-theme="sunset" onclick="setTheme('sunset')" style="font-size:.8rem;">日落</button>
+                </div>
+            </div>
+
+            <!-- Data Management -->
+            <div class="animate-fade-in-up delay-3" style="margin-bottom:1.5rem;">
+                <label style="display:block;font-weight:600;margin-bottom:.5rem;color:var(--t1);">💾 数据管理</label>
+                <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+                    <button class="btn btn-s" onclick="exportAllData()" style="font-size:.8rem;">📤 导出全部数据</button>
+                    <button class="btn btn-s" onclick="document.getElementById('importFileInput').click()" style="font-size:.8rem;">📥 导入数据</button>
+                    <input type="file" id="importFileInput" accept=".json" style="display:none;" onchange="importAllData(event)">
+                    <button class="btn btn-s" onclick="clearAllData()" style="font-size:.8rem;color:var(--er);">🗑️ 清空数据</button>
+                </div>
+                <p class="settings-meta" id="settingsBackupMeta">
+                    最近备份：<strong>从未</strong>
+                </p>
+            </div>
+
+            <!-- About -->
+            <div class="animate-fade-in-up delay-4" style="padding:1rem;background:var(--bg2);border-radius:var(--radius-sm);font-size:.8rem;color:var(--t3);">
+                <p><strong>PhotoAtelier</strong> v1.0</p>
+                <p style="margin-top:.25rem;">摄影师工作流管理工具 · 分镜脚本 · 参考图库 · 日程管理</p>
+                <p style="margin-top:.25rem;">参考图库支持 25+ 免费商用图库平台</p>
+            </div>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>
