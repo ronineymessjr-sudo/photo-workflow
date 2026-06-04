@@ -9963,8 +9963,9 @@ function importCSV() {
 // ===== History =====
 function renderHistMini(){
     const ps=getPlans().slice(0,5);
-    $('histMiniCount').textContent=`${getPlans().length} 条`;
-    $('histMini').innerHTML=ps.length?ps.map(p=>{
+    const countEl=$('histMiniCount'), miniEl=$('histMini');
+    if(countEl)countEl.textContent=`${getPlans().length} 条`;
+    if(miniEl)miniEl.innerHTML=ps.length?ps.map(p=>{
         const d=new Date(p.savedAt);
         return`<div class="hist-item" onclick="loadPlan('${p.id}')"><div class="hist-title">${escHtml(p.title)}</div><div class="hist-meta"><span>${p.input && p.input.style||'待定'}</span><span>${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}</span></div></div>`;
     }).join(''):'<div class="hist-empty">暂无历史</div>';
