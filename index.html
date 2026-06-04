@@ -336,54 +336,50 @@
         .bg-orb {
             position: fixed;
             border-radius: 50%;
-            filter: blur(120px);
+            filter: blur(100px);
             pointer-events: none;
             z-index: 0;
-            mix-blend-mode: screen;
+            opacity: 0.3;
         }
         .bg-orb-1 {
-            width: 600px;
-            height: 600px;
+            width: 400px;
+            height: 400px;
             background: radial-gradient(circle at 30% 30%, 
-                rgba(217, 159, 80, 0.30) 0%, 
-                rgba(217, 159, 80, 0.10) 30%, 
-                rgba(180, 130, 90, 0.05) 60%, 
-                transparent 80%);
-            top: -200px;
-            right: -150px;
+                rgba(62, 207, 142, 0.12) 0%, 
+                rgba(62, 207, 142, 0.04) 40%, 
+                transparent 70%);
+            top: -100px;
+            right: -100px;
             animation: float1 20s ease-in-out infinite;
         }
         .bg-orb-2 {
-            width: 500px;
-            height: 500px;
+            width: 300px;
+            height: 300px;
             background: radial-gradient(circle at 70% 70%, 
-                rgba(160, 130, 100, 0.25) 0%, 
-                rgba(160, 130, 100, 0.08) 35%, 
-                rgba(140, 110, 80, 0.04) 65%, 
-                transparent 85%);
-            bottom: -100px;
-            left: -150px;
+                rgba(62, 207, 142, 0.08) 0%, 
+                rgba(62, 207, 142, 0.02) 50%, 
+                transparent 80%);
+            bottom: -50px;
+            left: -100px;
             animation: float2 25s ease-in-out infinite;
         }
         .bg-orb-3 {
-            width: 450px;
-            height: 450px;
+            width: 250px;
+            height: 250px;
             background: radial-gradient(circle at 50% 50%, 
-                rgba(200, 170, 120, 0.18) 0%, 
-                rgba(180, 140, 100, 0.06) 40%, 
-                transparent 75%);
+                rgba(62, 207, 142, 0.06) 0%, 
+                transparent 60%);
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             animation: float3 30s ease-in-out infinite;
         }
         .bg-orb-4 {
-            width: 350px;
-            height: 350px;
+            width: 200px;
+            height: 200px;
             background: radial-gradient(circle at 40% 60%, 
-                rgba(160, 90, 70, 0.20) 0%, 
-                rgba(140, 100, 80, 0.06) 50%, 
-                transparent 80%);
+                rgba(62, 207, 142, 0.08) 0%, 
+                transparent 70%);
             bottom: 20%;
             right: 10%;
             animation: float4 22s ease-in-out infinite;
@@ -1221,32 +1217,34 @@
         .check-item input[type="checkbox"] { width: 14px; height: 14px; accent-color: var(--ac); }
         .check-item input:checked + span { text-decoration: line-through; color: var(--t3); }
 
-        /* ===== Toast ===== */
+        /* ===== Toast - Modern Style ===== */
         .toast {
             position: fixed;
             bottom: 2rem;
             left: 50%;
             transform: translateX(-50%) translateY(20px);
-            padding: .75rem 1.4rem;
-            background: rgba(34, 34, 37, 0.85);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--bd2);
-            border-radius: 9999px;
+            padding: .6rem 1.2rem;
+            background: var(--bg3);
+            border: 1px solid var(--bd);
+            border-radius: var(--radius);
             color: var(--t1);
-            font-size: .82rem;
+            font-size: .8rem;
+            font-weight: 500;
             opacity: 0;
-            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            transition: all 0.2s ease;
             z-index: 9999;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            box-shadow: var(--shadow);
             white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
         }
         .toast.show {
             transform: translateX(-50%) translateY(0);
             opacity: 1;
         }
-        .toast.ok { border-color: rgba(34,197,94,.4); }
-        .toast.er { border-color: rgba(239,68,68,.4); }
+        .toast.ok { border-color: var(--ac); background: var(--ac-glow); }
+        .toast.er { border-color: var(--er); background: rgba(255,107,107,0.1); }
 
         /* ===== Side Panel ===== */
         .side-panel { margin-top: 1rem; }
@@ -2606,7 +2604,7 @@
             vertical-align: middle;
         }
         
-        /* ===== Empty State ===== */
+        /* ===== Empty State - Modern ===== */
         .empty-state {
             display: flex;
             flex-direction: column;
@@ -2618,19 +2616,23 @@
             min-height: 200px;
         }
         .empty-state .empty-icon {
-            font-size: 3rem;
+            width: 48px;
+            height: 48px;
             margin-bottom: 1rem;
-            opacity: 0.4;
+            color: var(--t3);
+            opacity: 0.5;
         }
         .empty-state h3 {
-            font-size: 1.1rem;
+            font-size: 1rem;
+            font-weight: 600;
             color: var(--t2);
-            margin-bottom: .5rem;
+            margin-bottom: .4rem;
         }
         .empty-state p {
-            font-size: .85rem;
+            font-size: .8rem;
             max-width: 280px;
-            margin-bottom: 1.2rem;
+            margin-bottom: 1rem;
+            line-height: 1.5;
         }
         .empty-state .btn {
             margin-top: .5rem;
