@@ -3168,15 +3168,7 @@
             </button>
             <button class="nav-item" data-tab="venue" data-role="photographer,assistant">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
-                <span class="nav-label" data-i18n="nav.venue">场地库</span>
-            </button>
-            <button class="nav-item" data-tab="eq" data-role="photographer,assistant">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                <span class="nav-label" data-i18n="nav.eq">设备库</span>
-            </button>
-            <button class="nav-item" data-tab="model" data-role="photographer,assistant">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                <span class="nav-label" data-i18n="nav.model">模特库</span>
+                <span class="nav-label" data-i18n="nav.venue">资源库</span>
             </button>
             <button class="nav-item" data-tab="dashboard" data-role="photographer,assistant">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
@@ -3447,8 +3439,57 @@
             </div>
         </div>
 
-        <!-- ============ 设备库 ============ -->
-        <div class="tab-cnt" id="tab-eq">
+        <!-- ============ 资源库（场地+设备+模特） ============ -->
+        <div class="tab-cnt" id="tab-venue">
+            <!-- 资源库内部Tab导航 -->
+            <div class="resource-tabs" style="display:flex;gap:.25rem;margin-bottom:1rem;padding:.25rem;background:var(--bg2);border-radius:var(--radius);border:1px solid var(--bd);">
+                <button class="resource-tab active" data-resource="venue" onclick="showResourceTab('venue')" style="padding:.5rem 1rem;background:var(--ac-glow);border:none;border-radius:var(--radius-sm);color:var(--ac);font-size:.8rem;font-weight:500;cursor:pointer;transition:all .15s;">场地库</button>
+                <button class="resource-tab" data-resource="eq" onclick="showResourceTab('eq')" style="padding:.5rem 1rem;background:transparent;border:none;border-radius:var(--radius-sm);color:var(--t3);font-size:.8rem;font-weight:500;cursor:pointer;transition:all .15s;">设备库</button>
+                <button class="resource-tab" data-resource="model" onclick="showResourceTab('model')" style="padding:.5rem 1rem;background:transparent;border:none;border-radius:var(--radius-sm);color:var(--t3);font-size:.8rem;font-weight:500;cursor:pointer;transition:all .15s;">模特库</button>
+            </div>
+            <style>
+                .resource-tab:hover { background:var(--bg-subtle); color:var(--t2); }
+                .resource-tab.active { background:var(--ac-glow); color:var(--ac); }
+                .resource-content { display:none; }
+                .resource-content.active { display:block; }
+            </style>
+
+            <!-- 场地库内容 -->
+            <div class="resource-content active" id="resource-venue">
+            <div class="grid">
+                <aside>
+                    <div class="panel">
+                        <div class="p-head"><h2>添加场地</h2></div>
+                        <div class="p-body">
+                            <form id="venueForm">
+                                <div class="fg"><label>场地名称</label><input id="v-name" placeholder="如：老洋行酒店公寓"></div>
+                                <div class="fg"><label>地址</label><input id="v-addr" placeholder="详细地址"></div>
+                                <div class="fg"><label>适合风格（逗号分隔）</label><input id="v-styles" placeholder="如：复古、文艺、时尚"></div>
+                                <div class="fg"><label>联系方式</label><input id="v-contact" placeholder="电话或微信"></div>
+                                <div class="fg"><label>备注</label><textarea id="v-note" placeholder="开放时间、收费、注意事项等"></textarea></div>
+                                <button type="submit" class="btn btn-p">+ 添加场地</button>
+                            </form>
+                        </div>
+                    </div>
+                </aside>
+                <section>
+                    <div class="panel">
+                        <div class="p-head">
+                            <h2>场地列表</h2>
+                            <div style="display:flex;gap:.5rem;align-items:center">
+                                <input type="text" id="venue-search" placeholder="🔍 搜索场地..." style="padding:.4rem .8rem;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius-sm);color:var(--t1);font-size:.8rem;width:150px" oninput="renderVenue()">
+                                <span id="venue-total" style="font-size:.72rem;color:var(--t3)"></span>
+                            </div>
+                        </div>
+                        <div class="p-body" id="venue-list"></div>
+                    </div>
+                </section>
+                <aside></aside>
+            </div>
+            </div>
+
+            <!-- 设备库内容 -->
+            <div class="resource-content" id="resource-eq">
             <div class="grid">
                 <aside>
                     <div class="panel">
@@ -3486,22 +3527,22 @@
                 </section>
                 <aside></aside>
             </div>
-        </div>
+            </div>
 
-        <!-- ============ 场地库 ============ -->
-        <div class="tab-cnt" id="tab-venue">
+            <!-- 模特库内容 -->
+            <div class="resource-content" id="resource-model">
             <div class="grid">
                 <aside>
                     <div class="panel">
-                        <div class="p-head"><h2>添加场地</h2></div>
+                        <div class="p-head"><h2>添加模特</h2></div>
                         <div class="p-body">
-                            <form id="venueForm">
-                                <div class="fg"><label>场地名称</label><input id="v-name" placeholder="如：老洋行酒店公寓"></div>
-                                <div class="fg"><label>地址</label><input id="v-addr" placeholder="详细地址"></div>
-                                <div class="fg"><label>适合风格（逗号分隔）</label><input id="v-styles" placeholder="如：复古、文艺、时尚"></div>
-                                <div class="fg"><label>联系方式</label><input id="v-contact" placeholder="电话或微信"></div>
-                                <div class="fg"><label>备注</label><textarea id="v-note" placeholder="开放时间、收费、注意事项等"></textarea></div>
-                                <button type="submit" class="btn btn-p">+ 添加场地</button>
+                            <form id="modelForm">
+                                <div class="fg"><label>姓名</label><input id="m-name" placeholder="模特姓名"></div>
+                                <div class="fg"><label>联系方式</label><input id="m-contact" placeholder="电话或微信"></div>
+                                <div class="fg"><label>特征标签（逗号分隔）</label><input id="m-tags" placeholder="如：高挑、长发、文艺气质"></div>
+                                <div class="fg"><label>擅长风格（逗号分隔）</label><input id="m-styles" placeholder="如：时尚、复古、日系"></div>
+                                <div class="fg"><label>备注</label><textarea id="m-note" placeholder="档期、收费标准、合作经历等"></textarea></div>
+                                <button type="submit" class="btn btn-p">+ 添加模特</button>
                             </form>
                         </div>
                     </div>
@@ -3509,16 +3550,17 @@
                 <section>
                     <div class="panel">
                         <div class="p-head">
-                            <h2>场地列表</h2>
+                            <h2>模特列表</h2>
                             <div style="display:flex;gap:.5rem;align-items:center">
-                                <input type="text" id="venue-search" placeholder="🔍 搜索场地..." style="padding:.4rem .8rem;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius-sm);color:var(--t1);font-size:.8rem;width:150px" oninput="renderVenue()">
-                                <span id="venue-total" style="font-size:.72rem;color:var(--t3)"></span>
+                                <input type="text" id="model-search" placeholder="🔍 搜索模特..." style="padding:.4rem .8rem;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--radius-sm);color:var(--t1);font-size:.8rem;width:150px" oninput="renderModel()">
+                                <span id="model-total" style="font-size:.72rem;color:var(--t3)"></span>
                             </div>
                         </div>
-                        <div class="p-body" id="venue-list"></div>
+                        <div class="p-body" id="model-list"></div>
                     </div>
                 </section>
                 <aside></aside>
+            </div>
             </div>
         </div>
 
@@ -3922,39 +3964,6 @@
             </div>
         </div>
 
-        <!-- ============ 模特库 ============ -->
-        <div class="tab-cnt" id="tab-model">
-            <div class="grid">
-                <aside>
-                    <div class="panel">
-                        <div class="p-head"><h2>添加模特</h2></div>
-                        <div class="p-body">
-                            <form id="modelForm">
-                                <div class="fg"><label>模特名称/代号</label><input id="m-name" placeholder="如：小美"></div>
-                                <div class="fg"><label>风格标签（逗号分隔）</label><input id="m-styles" placeholder="如：文艺、清冷、性感、复古"></div>
-                                <div class="fg"><label>联系方式</label><input id="m-contact" placeholder="微信或电话"></div>
-                                <div class="fg"><label>档期状态</label>
-                                    <select id="m-avail"><option value="available">可用</option><option value="booked">已预约</option><option value="unavailable">暂不可用</option></select>
-                                </div>
-                                <div class="fg"><label>肖像授权</label>
-                                    <select id="m-auth"><option value="authorized">已授权</option><option value="pending">待确认</option><option value="none">未授权</option></select>
-                                </div>
-                                <div class="fg"><label>备注</label><textarea id="m-note" placeholder="身高体重、外貌特征、偏好等"></textarea></div>
-                                <button type="submit" class="btn btn-p">+ 添加模特</button>
-                            </form>
-                        </div>
-                    </div>
-                </aside>
-                <section>
-                    <div class="panel">
-                        <div class="p-head"><h2>模特列表</h2><span id="model-total" style="font-size:.72rem;color:var(--t3)"></span></div>
-                        <div class="p-body" id="model-list"></div>
-                    </div>
-                </section>
-                <aside></aside>
-            </div>
-        </div>
-
         <!-- ============ 方案模板 ============ -->
         <div class="tab-cnt" id="tab-tpl">
             <div class="grid">
@@ -4097,10 +4106,7 @@ const i18n = {
         'nav.gen': '方案生成',
         'nav.tpl': '方案库',
         'nav.calendar': '日程管理',
-        'nav.venue': '场地库',
-        'nav.eq': '设备库',
-        'nav.model': '模特库',
-        'nav.hist': '历史记录',
+        'nav.venue': '资源库',
         'nav.dashboard': '数据看板',
         'login.title': '登录',
         'login.subtitle': '继续使用 PhotoAtelier',
@@ -4131,10 +4137,7 @@ const i18n = {
         'nav.gen': 'Plan Gen',
         'nav.tpl': 'Library',
         'nav.calendar': 'Calendar',
-        'nav.venue': 'Venues',
-        'nav.eq': 'Equipment',
-        'nav.model': 'Models',
-        'nav.hist': 'History',
+        'nav.venue': 'Resources',
         'nav.dashboard': 'Dashboard',
         'login.title': 'Sign In',
         'login.subtitle': 'Continue to PhotoAtelier',
@@ -4739,13 +4742,27 @@ function showTab(tabName) {
     if (tabEl) tabEl.classList.add('active');
     // Trigger render
     if(tabName==='eq') renderEq();
-    if(tabName==='venue') renderVenue();
+    if(tabName==='venue') { renderVenue(); showResourceTab('venue'); }
     if(tabName==='model') renderModel();
     if(tabName==='tpl') renderTpl();
     if(tabName==='hist') renderHistFull();
     if(tabName==='backup') updateBackupStats();
     if(tabName==='calendar') { renderCalendar(); renderSchedules(); }
     if(tabName==='message') renderMessages();
+}
+
+// 资源库内部Tab切换
+function showResourceTab(resourceType) {
+    document.querySelectorAll('.resource-tab').forEach(function(x){x.classList.remove('active');});
+    document.querySelectorAll('.resource-content').forEach(function(x){x.classList.remove('active');});
+    var tabBtn = document.querySelector('.resource-tab[data-resource="'+resourceType+'"]');
+    if (tabBtn) tabBtn.classList.add('active');
+    var contentEl = document.getElementById('resource-'+resourceType);
+    if (contentEl) contentEl.classList.add('active');
+    // Trigger render
+    if(resourceType==='venue') renderVenue();
+    if(resourceType==='eq') renderEq();
+    if(resourceType==='model') renderModel();
 }
 
 function initTabs() {
