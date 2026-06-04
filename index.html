@@ -3168,7 +3168,15 @@
             </button>
             <button class="nav-item" data-tab="venue" data-role="photographer,assistant">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
-                <span class="nav-label" data-i18n="nav.venue">资源库</span>
+                <span class="nav-label" data-i18n="nav.venue">场地库</span>
+            </button>
+            <button class="nav-item" data-tab="eq" data-role="photographer,assistant">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                <span class="nav-label" data-i18n="nav.eq">设备库</span>
+            </button>
+            <button class="nav-item" data-tab="model" data-role="photographer,assistant">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <span class="nav-label" data-i18n="nav.model">模特库</span>
             </button>
             <button class="nav-item" data-tab="dashboard" data-role="photographer,assistant">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
@@ -3178,6 +3186,10 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
                 <span class="nav-label" data-i18n="nav.message">消息看板</span>
                 <span class="nav-badge" id="t-msg" style="display:none;">0</span>
+            </button>
+            <button class="nav-item" data-tab="hist" data-role="photographer,assistant">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span class="nav-label" data-i18n="nav.hist">历史记录</span>
             </button>
             <button class="nav-item" onclick="openSettingsModal()" title="设置">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
@@ -4085,7 +4097,10 @@ const i18n = {
         'nav.gen': '方案生成',
         'nav.tpl': '方案库',
         'nav.calendar': '日程管理',
-        'nav.venue': '资源库',
+        'nav.venue': '场地库',
+        'nav.eq': '设备库',
+        'nav.model': '模特库',
+        'nav.hist': '历史记录',
         'nav.dashboard': '数据看板',
         'login.title': '登录',
         'login.subtitle': '继续使用 PhotoAtelier',
@@ -4116,7 +4131,10 @@ const i18n = {
         'nav.gen': 'Plan Gen',
         'nav.tpl': 'Library',
         'nav.calendar': 'Calendar',
-        'nav.venue': 'Resources',
+        'nav.venue': 'Venues',
+        'nav.eq': 'Equipment',
+        'nav.model': 'Models',
+        'nav.hist': 'History',
         'nav.dashboard': 'Dashboard',
         'login.title': 'Sign In',
         'login.subtitle': 'Continue to PhotoAtelier',
