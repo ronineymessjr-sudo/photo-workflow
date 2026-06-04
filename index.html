@@ -3183,7 +3183,7 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                 <span class="nav-label" data-i18n="nav.hist">历史记录</span>
             </button>
-            <button class="nav-item" onclick="openSettingsModal()" title="设置">
+            <button class="nav-item" data-tab="settings" data-role="photographer,assistant">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
                 <span class="nav-label">设置</span>
             </button>
@@ -4088,6 +4088,62 @@
                 </div>
             </div>
         </div>
+
+        <!-- ============ 设置 ============ -->
+        <div class="tab-cnt" id="tab-settings">
+            <div class="grid">
+                <section style="grid-column: 1 / -1;">
+                    <div class="panel">
+                        <div class="p-head"><h2>设置</h2></div>
+                        <div class="p-body">
+                            <!-- Pexels API Key -->
+                            <div class="fg">
+                                <label>Pexels API Key <span style="font-size:.7rem;color:var(--t3);">（可选，用于自动加载参考图）</span></label>
+                                <div style="display:flex;gap:.5rem;">
+                                    <input type="text" id="settingsPexelsKey" placeholder="粘贴你的 Pexels API Key..." style="flex:1;">
+                                    <button class="btn btn-s btn-sm" onclick="saveSettingsPexelsKey()">保存</button>
+                                </div>
+                                <p style="font-size:.72rem;color:var(--t3);margin-top:.35rem;">
+                                    免费申请：<a href="https://www.pexels.com/api/" target="_blank" style="color:var(--ac);">https://www.pexels.com/api/</a> 
+                                    · 不填也能用，只是无法自动加载图片预览
+                                </p>
+                            </div>
+                            
+                            <!-- Theme -->
+                            <div class="fg">
+                                <label>主题</label>
+                                <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+                                    <button class="btn btn-s btn-sm" onclick="setTheme('auto')">自动</button>
+                                    <button class="btn btn-s btn-sm" onclick="setTheme('dark')">暗色</button>
+                                    <button class="btn btn-s btn-sm" onclick="setTheme('light')">亮色</button>
+                                    <button class="btn btn-s btn-sm" onclick="setTheme('sunrise')">日出</button>
+                                    <button class="btn btn-s btn-sm" onclick="setTheme('sunset')">日落</button>
+                                </div>
+                            </div>
+                            
+                            <!-- Data Management -->
+                            <div class="fg">
+                                <label>💾 数据管理</label>
+                                <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+                                    <button class="btn btn-s btn-sm" onclick="exportAllData()">📤 导出全部数据</button>
+                                    <button class="btn btn-s btn-sm" onclick="document.getElementById('importFileInput').click()">📥 导入数据</button>
+                                    <input type="file" id="importFileInput" accept=".json" style="display:none;" onchange="importAllData(event)">
+                                    <button class="btn btn-d btn-sm" onclick="clearAllData()">🗑️ 清空数据</button>
+                                </div>
+                                <p style="font-size:.72rem;color:var(--t3);margin-top:.35rem;">导出为 JSON 文件，可用于备份和迁移</p>
+                            </div>
+                            
+                            <!-- About -->
+                            <div style="padding:1rem;background:var(--bg2);border-radius:var(--radius-sm);font-size:.8rem;color:var(--t3);margin-top:1rem;">
+                                <p><strong>PhotoAtelier</strong> v1.0</p>
+                                <p style="margin-top:.25rem;">摄影师工作流管理工具 · 分镜脚本 · 参考图库 · 日程管理</p>
+                                <p style="margin-top:.25rem;">参考图库支持 25+ 免费商用图库平台</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
     </main>
 </div>
 
@@ -4749,6 +4805,7 @@ function showTab(tabName) {
     if(tabName==='backup') updateBackupStats();
     if(tabName==='calendar') { renderCalendar(); renderSchedules(); }
     if(tabName==='message') renderMessages();
+    if(tabName==='settings') loadSettingsData();
 }
 
 // 资源库内部Tab切换
@@ -11333,18 +11390,10 @@ async function loadAllPlanReferences(planId) {
     toast('完成', 'ok');
 }
 
-// ===== Settings Modal =====
-function openSettingsModal() {
-    const modal = document.getElementById('settingsModal');
-    if (!modal) return;
-    // Load current values
+// ===== Settings Tab =====
+function loadSettingsData() {
     const keyInput = document.getElementById('settingsPexelsKey');
     if (keyInput) keyInput.value = getPexelsApiKey();
-    modal.style.display = 'flex';
-}
-function closeSettingsModal() {
-    const modal = document.getElementById('settingsModal');
-    if (modal) modal.style.display = 'none';
 }
 function saveSettingsPexelsKey() {
     const keyInput = document.getElementById('settingsPexelsKey');
@@ -11551,62 +11600,5 @@ window.addEventListener('online', function() { toast('网络已恢复', 'ok'); }
   </div>
 </div>
 <!-- Settings Modal -->
-<div id="settingsModal" class="modal" style="display:none;">
-    <div class="modal-content" style="max-width:520px;">
-        <div class="modal-header">
-            <h3>设置</h3>
-            <button class="modal-close" onclick="closeSettingsModal()">&times;</button>
-        </div>
-        <div class="modal-body" style="max-height:70vh;overflow-y:auto;">
-            <!-- Pexels API Key -->
-            <div style="margin-bottom:1.5rem;">
-                <label style="display:block;font-weight:600;margin-bottom:.5rem;color:var(--t1);">
-                    Pexels API Key <span style="font-size:.75rem;color:var(--t3);font-weight:400;">（可选，用于自动加载参考图）</span>
-                </label>
-                <div style="display:flex;gap:.5rem;">
-                    <input type="text" id="settingsPexelsKey" placeholder="粘贴你的 Pexels API Key..." 
-                           style="flex:1;padding:.5rem .75rem;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--bg);color:var(--t1);font-size:.85rem;">
-                    <button class="btn btn-s" onclick="saveSettingsPexelsKey()">保存</button>
-                </div>
-                <p style="font-size:.72rem;color:var(--t3);margin-top:.35rem;">
-                    免费申请：<a href="https://www.pexels.com/api/" target="_blank" style="color:var(--ac);">https://www.pexels.com/api/</a> 
-                    · 不填也能用，只是无法自动加载图片预览
-                </p>
-            </div>
-            
-            <!-- Theme -->
-            <div style="margin-bottom:1.5rem;">
-                <label style="display:block;font-weight:600;margin-bottom:.5rem;color:var(--t1);">主题</label>
-                <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
-                    <button class="btn btn-s" onclick="setTheme('auto')" style="font-size:.8rem;">自动</button>
-                    <button class="btn btn-s" onclick="setTheme('dark')" style="font-size:.8rem;">暗色</button>
-                    <button class="btn btn-s" onclick="setTheme('light')" style="font-size:.8rem;">亮色</button>
-                    <button class="btn btn-s" onclick="setTheme('sunrise')" style="font-size:.8rem;">日出</button>
-                    <button class="btn btn-s" onclick="setTheme('sunset')" style="font-size:.8rem;">日落</button>
-                </div>
-            </div>
-            
-            <!-- Data Management -->
-            <div style="margin-bottom:1.5rem;">
-                <label style="display:block;font-weight:600;margin-bottom:.5rem;color:var(--t1);">💾 数据管理</label>
-                <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
-                    <button class="btn btn-s" onclick="exportAllData()" style="font-size:.8rem;">📤 导出全部数据</button>
-                    <button class="btn btn-s" onclick="document.getElementById('importFileInput').click()" style="font-size:.8rem;">📥 导入数据</button>
-                    <input type="file" id="importFileInput" accept=".json" style="display:none;" onchange="importAllData(event)">
-                    <button class="btn btn-s" onclick="clearAllData()" style="font-size:.8rem;color:var(--er);">🗑️ 清空数据</button>
-                </div>
-                <p style="font-size:.72rem;color:var(--t3);margin-top:.35rem;">导出为 JSON 文件，可用于备份和迁移</p>
-            </div>
-            
-            <!-- About -->
-            <div style="padding:1rem;background:var(--bg2);border-radius:var(--radius-sm);font-size:.8rem;color:var(--t3);">
-                <p><strong>PhotoAtelier</strong> v1.0</p>
-                <p style="margin-top:.25rem;">摄影师工作流管理工具 · 分镜脚本 · 参考图库 · 日程管理</p>
-                <p style="margin-top:.25rem;">参考图库支持 25+ 免费商用图库平台</p>
-            </div>
-        </div>
-    </div>
-</div>
-
 </body>
 </html>
