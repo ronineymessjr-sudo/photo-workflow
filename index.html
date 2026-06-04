@@ -9419,7 +9419,21 @@ function getColorGradingPlan(style) {
 // ===== Plan Storage =====
 function getPlans(){return sg(SK.P)||[]}
 function savePlans(l){ss(SK.P,l)}
-function savePlan(plan){const ps=getPlans();plan.id=Date.now().toString();ps.unshift(plan);if(ps.length>50)ps.pop();savePlans(ps);return plan.id}
+async function savePlan(plan){
+    const ps=getPlans();
+    plan.id=Date.now().toString();
+    ps.unshift(plan);
+    if(ps.length>50)ps.pop();
+    savePlans(ps);
+    // 同步到数据库API
+    try{
+        await API.createPlan(plan);
+        console.log('方案已同步到数据库');
+    }catch(e){
+        console.warn('数据库同步失败，已保存到本地:', e.message);
+    }
+    return plan.id;
+}
 function delPlan(id){let ps=getPlans();ps=ps.filter(p=>p.id!==id);savePlans(ps)}
 
 function loadPlan(id){
@@ -9457,7 +9471,7 @@ async function handleSubmit(e){
     await new Promise(r=>setTimeout(r,900));
     try{
         const plan=genPlan(input);
-        savePlan(plan);
+        await savePlan(plan);
         currentPlanData=plan;
         $('tplSavePanel').style.display='block';
         $('tplSaveHint').style.display='none';
