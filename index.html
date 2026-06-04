@@ -9427,7 +9427,7 @@ async function savePlan(plan){
     savePlans(ps);
     // 同步到数据库API
     try{
-        await API.createPlan(plan);
+        await window.api.createPlan(plan);
         console.log('方案已同步到数据库');
     }catch(e){
         console.warn('数据库同步失败，已保存到本地:', e.message);
