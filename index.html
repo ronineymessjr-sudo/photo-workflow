@@ -1030,6 +1030,26 @@
         .btn-s:active {
             transform: translateY(0);
         }
+        /* Theme button — active state (current theme) */
+        .btn-s.is-active {
+            background: var(--ac-gradient);
+            color: #0a0a0a;
+            border-color: transparent;
+            box-shadow: var(--shadow-ac);
+            font-weight: 600;
+        }
+        .btn-s.is-active:hover {
+            background: var(--ac-gradient);
+            color: #0a0a0a;
+            transform: translateY(-1px);
+        }
+        /* Settings block helper — small status text */
+        .settings-meta {
+            font-size: .72rem;
+            color: var(--t3);
+            margin-top: .35rem;
+        }
+        .settings-meta strong { color: var(--t2); font-weight: 500; }
         .btn-d { background: rgba(239,68,68,.08); color: var(--er); border: 1px solid rgba(239,68,68,.15); }
         .btn-d:hover { background: rgba(239,68,68,.15); transform: translateY(-1px); }
         .btn-i { background: rgba(62,207,142,.08); color: var(--ac); border: 1px solid rgba(62,207,142,.15); }
@@ -11305,6 +11325,9 @@ function openSettingsModal() {
     // Load current values
     const keyInput = document.getElementById('settingsPexelsKey');
     if (keyInput) keyInput.value = getPexelsApiKey();
+    syncThemeButtons();
+    refreshPexelsStatus();
+    refreshBackupMeta();
     modal.style.display = 'flex';
 }
 function closeSettingsModal() {
@@ -11315,11 +11338,89 @@ function saveSettingsPexelsKey() {
     const keyInput = document.getElementById('settingsPexelsKey');
     if (!keyInput) return;
     savePexelsApiKey(keyInput.value);
+    refreshPexelsStatus();
+}
+// Mark the active theme button in the settings row.
+function syncThemeButtons() {
+    const current = localStorage.getItem('pa_theme') || 'auto';
+    document.querySelectorAll('#settingsThemeRow [data-theme]').forEach(btn => {
+        btn.classList.toggle('is-active', btn.getAttribute('data-theme') === current);
+    });
+}
+// Show Pexels key status in settings.
+function refreshPexelsStatus() {
+    const el = document.getElementById('settingsPexelsStatus');
+    if (!el) return;
+    const key = getPexelsApiKey();
+    el.innerHTML = key
+        ? '状态：<strong>已设置</strong>（' + key.length + ' 位）· 点"测试"验证有效性'
+        : '状态：<strong>未设置</strong> · 将使用直链到 25+ 免费图库';
+}
+// Verify the saved Pexels key with a lightweight API call.
+async function testPexelsApiKey() {
+    const key = getPexelsApiKey();
+    const btn = document.getElementById('settingsPexelsTestBtn');
+    if (!key) {
+        toast('请先填写并保存 Pexels API Key', 'er');
+        return;
+    }
+    if (btn) { btn.disabled = true; btn.textContent = '测试中…'; }
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+        const resp = await fetch('https://api.pexels.com/v1/search?query=test&per_page=1', {
+            headers: { 'Authorization': key },
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        if (resp.ok) {
+            const data = await resp.json();
+            const remaining = resp.headers.get('X-Ratelimit-Remaining');
+            const limit = resp.headers.get('X-Ratelimit-Limit');
+            const quota = (remaining && limit) ? ` · 剩余 ${remaining}/${limit} 次/小时` : '';
+            const count = (data && typeof data.total_results === 'number') ? ` · 索引 ${data.total_results.toLocaleString()} 张` : '';
+            toast('Pexels Key 有效' + quota + count, 'ok');
+        } else if (resp.status === 401 || resp.status === 403) {
+            toast('Key 无效或被拒绝（HTTP ' + resp.status + '）', 'er');
+        } else {
+            toast('测试失败：HTTP ' + resp.status, 'er');
+        }
+    } catch (e) {
+        if (e.name === 'AbortError') {
+            toast('测试超时（8s），网络可能不通', 'er');
+        } else {
+            toast('测试失败：' + e.message, 'er');
+        }
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = '测试'; }
+    }
 }
 function setTheme(t) {
     localStorage.setItem('pa_theme', t);
     applyTheme(t);
+    syncThemeButtons();
     toast('主题已切换', 'ok');
+}
+// Human-friendly "x ago" formatter (zh-CN).
+function formatTimeAgo(ts) {
+    if (!ts) return '从未';
+    const now = Date.now();
+    const diff = Math.max(0, now - ts);
+    const min = Math.floor(diff / 60000);
+    if (min < 1) return '刚刚';
+    if (min < 60) return min + ' 分钟前';
+    const hr = Math.floor(min / 60);
+    if (hr < 24) return hr + ' 小时前';
+    const day = Math.floor(hr / 24);
+    if (day < 30) return day + ' 天前';
+    const d = new Date(ts);
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function refreshBackupMeta() {
+    const el = document.getElementById('settingsBackupMeta');
+    if (!el) return;
+    const ts = parseInt(localStorage.getItem('pa_last_backup') || '0', 10);
+    el.innerHTML = '最近备份：<strong>' + formatTimeAgo(ts) + '</strong>';
 }
 function exportAllData() {
     const data = {};
@@ -11335,6 +11436,8 @@ function exportAllData() {
     a.download = `photoatelier_backup_${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(a.href);
+    localStorage.setItem('pa_last_backup', String(Date.now()));
+    refreshBackupMeta();
     toast('数据已导出', 'ok');
 }
 function importAllData(e) {
@@ -11524,35 +11627,39 @@ window.addEventListener('online', function() { toast('网络已恢复', 'ok'); }
         </div>
         <div class="modal-body" style="max-height:70vh;overflow-y:auto;">
             <!-- Pexels API Key -->
-            <div style="margin-bottom:1.5rem;">
+            <div class="animate-fade-in-up delay-1" style="margin-bottom:1.5rem;">
                 <label style="display:block;font-weight:600;margin-bottom:.5rem;color:var(--t1);">
                     Pexels API Key <span style="font-size:.75rem;color:var(--t3);font-weight:400;">（可选，用于自动加载参考图）</span>
                 </label>
                 <div style="display:flex;gap:.5rem;">
-                    <input type="text" id="settingsPexelsKey" placeholder="粘贴你的 Pexels API Key..." 
+                    <input type="text" id="settingsPexelsKey" placeholder="粘贴你的 Pexels API Key..."
                            style="flex:1;padding:.5rem .75rem;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--bg);color:var(--t1);font-size:.85rem;">
                     <button class="btn btn-s" onclick="saveSettingsPexelsKey()">保存</button>
+                    <button class="btn btn-i" id="settingsPexelsTestBtn" onclick="testPexelsApiKey()" style="font-size:.85rem;">测试</button>
                 </div>
+                <p class="settings-meta" id="settingsPexelsStatus">
+                    状态：<strong>未设置</strong>
+                </p>
                 <p style="font-size:.72rem;color:var(--t3);margin-top:.35rem;">
-                    免费申请：<a href="https://www.pexels.com/api/" target="_blank" style="color:var(--ac);">https://www.pexels.com/api/</a> 
+                    免费申请：<a href="https://www.pexels.com/api/" target="_blank" style="color:var(--ac);">https://www.pexels.com/api/</a>
                     · 不填也能用，只是无法自动加载图片预览
                 </p>
             </div>
-            
+
             <!-- Theme -->
-            <div style="margin-bottom:1.5rem;">
+            <div class="animate-fade-in-up delay-2" style="margin-bottom:1.5rem;">
                 <label style="display:block;font-weight:600;margin-bottom:.5rem;color:var(--t1);">主题</label>
-                <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
-                    <button class="btn btn-s" onclick="setTheme('auto')" style="font-size:.8rem;">自动</button>
-                    <button class="btn btn-s" onclick="setTheme('dark')" style="font-size:.8rem;">暗色</button>
-                    <button class="btn btn-s" onclick="setTheme('light')" style="font-size:.8rem;">亮色</button>
-                    <button class="btn btn-s" onclick="setTheme('sunrise')" style="font-size:.8rem;">日出</button>
-                    <button class="btn btn-s" onclick="setTheme('sunset')" style="font-size:.8rem;">日落</button>
+                <div id="settingsThemeRow" style="display:flex;gap:.5rem;flex-wrap:wrap;">
+                    <button class="btn btn-s" data-theme="auto" onclick="setTheme('auto')" style="font-size:.8rem;">自动</button>
+                    <button class="btn btn-s" data-theme="dark" onclick="setTheme('dark')" style="font-size:.8rem;">暗色</button>
+                    <button class="btn btn-s" data-theme="light" onclick="setTheme('light')" style="font-size:.8rem;">亮色</button>
+                    <button class="btn btn-s" data-theme="sunrise" onclick="setTheme('sunrise')" style="font-size:.8rem;">日出</button>
+                    <button class="btn btn-s" data-theme="sunset" onclick="setTheme('sunset')" style="font-size:.8rem;">日落</button>
                 </div>
             </div>
-            
+
             <!-- Data Management -->
-            <div style="margin-bottom:1.5rem;">
+            <div class="animate-fade-in-up delay-3" style="margin-bottom:1.5rem;">
                 <label style="display:block;font-weight:600;margin-bottom:.5rem;color:var(--t1);">💾 数据管理</label>
                 <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
                     <button class="btn btn-s" onclick="exportAllData()" style="font-size:.8rem;">📤 导出全部数据</button>
@@ -11560,11 +11667,13 @@ window.addEventListener('online', function() { toast('网络已恢复', 'ok'); }
                     <input type="file" id="importFileInput" accept=".json" style="display:none;" onchange="importAllData(event)">
                     <button class="btn btn-s" onclick="clearAllData()" style="font-size:.8rem;color:var(--er);">🗑️ 清空数据</button>
                 </div>
-                <p style="font-size:.72rem;color:var(--t3);margin-top:.35rem;">导出为 JSON 文件，可用于备份和迁移</p>
+                <p class="settings-meta" id="settingsBackupMeta">
+                    最近备份：<strong>从未</strong>
+                </p>
             </div>
-            
+
             <!-- About -->
-            <div style="padding:1rem;background:var(--bg2);border-radius:var(--radius-sm);font-size:.8rem;color:var(--t3);">
+            <div class="animate-fade-in-up delay-4" style="padding:1rem;background:var(--bg2);border-radius:var(--radius-sm);font-size:.8rem;color:var(--t3);">
                 <p><strong>PhotoAtelier</strong> v1.0</p>
                 <p style="margin-top:.25rem;">摄影师工作流管理工具 · 分镜脚本 · 参考图库 · 日程管理</p>
                 <p style="margin-top:.25rem;">参考图库支持 25+ 免费商用图库平台</p>
