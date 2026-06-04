@@ -10066,7 +10066,14 @@ async function batchExportPdf() {
     }
     toast(`批量导出完成: ${success}/${plans.length}`, success === plans.length ? 'ok' : 'er');
 }
-function updateBadge(){$('t-eq').textContent=(sg(SK.EQ)||[]).length;$('t-venue').textContent=(sg(SK.V)||[]).length;$('t-model').textContent=(sg(SK.M)||[]).length;$('t-tpl').textContent=(sg(SK.T)||[]).length;$('t-hist').textContent=getPlans().length;}
+function updateBadge(){
+    const eq=$('t-eq'),venue=$('t-venue'),model=$('t-model'),tpl=$('t-tpl'),hist=$('t-hist');
+    if(eq)eq.textContent=(sg(SK.EQ)||[]).length;
+    if(venue)venue.textContent=(sg(SK.V)||[]).length;
+    if(model)model.textContent=(sg(SK.M)||[]).length;
+    if(tpl)tpl.textContent=(sg(SK.T)||[]).length;
+    if(hist)hist.textContent=getPlans().length;
+}
 
 // ===== Quick Venue =====
 function renderQuickVenue(){
