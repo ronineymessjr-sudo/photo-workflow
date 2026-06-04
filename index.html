@@ -544,25 +544,45 @@
             white-space: nowrap;
             text-align: left;
             width: 100%;
+            position: relative;
+        }
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 0;
+            background: var(--ac);
+            border-radius: 0 2px 2px 0;
+            transition: height 0.15s ease;
         }
         .nav-item:hover {
             background: var(--bg-subtle);
             color: var(--t2);
         }
+        .nav-item:hover::before {
+            height: 16px;
+        }
         .nav-item.active {
             background: var(--ac-glow);
             color: var(--ac);
+        }
+        .nav-item.active::before {
+            height: 20px;
         }
         .nav-item svg {
             width: 18px;
             height: 18px;
             flex-shrink: 0;
             opacity: .6;
-            transition: opacity 150ms;
+            transition: all 150ms;
         }
         .nav-item:hover svg,
         .nav-item.active svg {
             opacity: 1;
+            color: var(--ac);
         }
         .nav-label {
             opacity: 0;
@@ -859,24 +879,42 @@
         }
         .loading-overlay.hidden { display: none; }
 
-        /* ===== Form ===== */
-        .fg { margin-bottom: 1rem; }
+        /* ===== Form - Modern Style ===== */
+        .fg { margin-bottom: 1.25rem; position: relative; }
         .fg:last-child { margin-bottom: 0; }
-        label { display: block; font-size: .72rem; font-weight: 600; color: var(--t2); margin-bottom: .35rem; letter-spacing: .03em; }
+        label { 
+            display: block; 
+            font-size: .7rem; 
+            font-weight: 600; 
+            color: var(--t3); 
+            margin-bottom: .4rem; 
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            transition: color 0.2s ease;
+        }
+        .fg:focus-within label { color: var(--ac); }
         input, textarea, select {
             width: 100%;
-            padding: .55rem .8rem;
-            background: var(--bg);
+            padding: .6rem .9rem;
+            background: var(--bg2);
             border: 1px solid var(--bd);
             border-radius: var(--radius-sm);
             color: var(--t1);
             font-size: .85rem;
             font-family: inherit;
-            transition: all 0.2s ease;
+            transition: all 0.15s ease;
+            outline: none;
         }
-        textarea { min-height: 70px; resize: vertical; line-height: 1.5; }
-        /* focus 样式统一在行 672 定义 */
-        input::placeholder, textarea::placeholder { color: var(--t3); }
+        input:hover, textarea:hover, select:hover {
+            border-color: var(--bd2);
+        }
+        input:focus, textarea:focus, select:focus {
+            border-color: var(--ac);
+            box-shadow: 0 0 0 3px var(--ac-glow);
+            background: var(--bg3);
+        }
+        textarea { min-height: 80px; resize: vertical; line-height: 1.5; }
+        input::placeholder, textarea::placeholder { color: var(--t3); opacity: 0.6; }
         select {
             cursor: pointer;
             appearance: none;
@@ -906,34 +944,55 @@
             background: var(--ac); 
             color: #121212; 
             font-weight: 600;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-p::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+            opacity: 0;
+            transition: opacity 0.15s ease;
         }
         .btn-p:hover:not(:disabled) { 
             background: var(--ach);
             transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(62,207,142,0.25);
+        }
+        .btn-p:hover:not(:disabled)::after {
+            opacity: 1;
         }
         .btn-p:active:not(:disabled) {
             transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(62,207,142,0.2);
         }
         .btn-p:disabled { opacity: .5; cursor: not-allowed; transform: none; }
         .btn-s { 
             background: transparent; 
             color: var(--t2); 
             border: 1px solid var(--bd);
+            position: relative;
+            overflow: hidden;
         }
         .btn-s:hover { 
             background: var(--bg-subtle); 
             color: var(--t1); 
             border-color: var(--bd2);
+            transform: translateY(-1px);
         }
-        .btn-d { background: rgba(239,68,68,.1); color: var(--er); border: 1px solid rgba(239,68,68,.2); }
-        .btn-d:hover { background: rgba(239,68,68,.2); transform: translateY(-1px); }
-        .btn-i { background: rgba(78,205,196,.1); color: var(--ac2); border: 1px solid rgba(78,205,196,.2); }
-        .btn-i:hover { background: rgba(78,205,196,.2); transform: translateY(-1px); }
+        .btn-s:active {
+            transform: translateY(0);
+        }
+        .btn-d { background: rgba(239,68,68,.08); color: var(--er); border: 1px solid rgba(239,68,68,.15); }
+        .btn-d:hover { background: rgba(239,68,68,.15); transform: translateY(-1px); }
+        .btn-i { background: rgba(62,207,142,.08); color: var(--ac); border: 1px solid rgba(62,207,142,.15); }
+        .btn-i:hover { background: rgba(62,207,142,.15); transform: translateY(-1px); }
         .btn-sm { padding: .45rem 1rem; font-size: .75rem; }
         .btn-xs { padding: .28rem .6rem; font-size: .7rem; }
-        .btn-i2 { padding: .35rem; background: transparent; border: none; color: var(--t3); cursor: pointer; border-radius: 8px; transition: all 200ms ease; }
+        .btn-i2 { padding: .35rem; background: transparent; border: none; color: var(--t3); cursor: pointer; border-radius: 6px; transition: all 150ms ease; }
         .btn-i2:hover { background: var(--ac-glow); color: var(--ac); }
-        .btn-i2::before { display: none; }
+        .btn-i2:active { transform: scale(0.95); }
         .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; }
 
         /* ===== Output ===== */
@@ -1148,35 +1207,71 @@
             color: var(--t3);
         }
 
-        /* ===== History ===== */
+        /* ===== History - Modern List ===== */
         .hist-list { max-height: 420px; overflow-y: auto; }
-        .hist-item { padding: .7rem .9rem; border-bottom: 1px solid var(--bd); cursor: pointer; transition: background .12s; }
-        .hist-item:hover { background: var(--bg-subtle); }
+        .hist-item { 
+            padding: .75rem 1rem; 
+            border-bottom: 1px solid var(--bd); 
+            cursor: pointer; 
+            transition: all 0.15s ease;
+            border-radius: var(--radius-sm);
+            margin: 0 .25rem;
+        }
+        .hist-item:hover { 
+            background: var(--bg-subtle); 
+            border-color: transparent;
+        }
         .hist-item:last-child { border-bottom: none; }
         .hist-title { font-weight: 600; font-size: .82rem; color: var(--t1); margin-bottom: .15rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .hist-meta { font-size: .68rem; color: var(--t3); display: flex; gap: .6rem; }
         .hist-actions { display: flex; gap: .4rem; margin-top: .45rem; opacity: 0; transition: opacity .12s; }
         .hist-item:hover .hist-actions { opacity: 1; }
         .hist-empty { padding: 1.3rem; text-align: center; color: var(--t3); font-size: .82rem; }
-        .hist-count { font-size: .7rem; color: var(--t3); padding: .55rem .9rem; border-bottom: 1px solid var(--bd); }
+        .hist-count { font-size: .7rem; color: var(--t3); padding: .55rem 1rem; border-bottom: 1px solid var(--bd); }
 
-        /* ===== Equipment ===== */
+        /* ===== Equipment - Modern Cards ===== */
         .eq-cat { margin-bottom: 1.2rem; }
         .eq-cat-hdr { display: flex; align-items: center; gap: .45rem; margin-bottom: .55rem; cursor: pointer; }
         .eq-cat-icon { font-size: .9rem; }
         .eq-cat-name { font-weight: 600; font-size: .84rem; }
         .eq-cat-n { font-size: .68rem; color: var(--t3); margin-left: auto; }
-        .eq-item { display: flex; align-items: center; gap: .45rem; padding: .45rem .6rem; background: var(--bg); border: 1px solid var(--bd); border-radius: var(--radius-sm); margin-bottom: .4rem; font-size: .82rem; transition: border-color .15s; }
-        .eq-item:hover { border-color: var(--ac); }
+        .eq-item { 
+            display: flex; 
+            align-items: center; 
+            gap: .45rem; 
+            padding: .5rem .75rem; 
+            background: var(--bg2); 
+            border: 1px solid var(--bd); 
+            border-radius: var(--radius-sm); 
+            margin-bottom: .4rem; 
+            font-size: .82rem; 
+            transition: all 0.15s ease;
+        }
+        .eq-item:hover { 
+            border-color: var(--ac); 
+            background: var(--bg3);
+            transform: translateX(2px);
+        }
         .eq-item-name { flex: 1; }
         .eq-item-note { font-size: .7rem; color: var(--t3); }
         .eq-item-actions { display: flex; gap: .2rem; opacity: 0; transition: opacity .12s; }
         .eq-item:hover .eq-item-actions { opacity: 1; }
         .eq-empty { color: var(--t3); font-size: .82rem; padding: .4rem 0; }
 
-        /* ===== Venue ===== */
-        .venue-card { padding: .8rem; background: var(--bg); border: 1px solid var(--bd); border-radius: var(--radius); margin-bottom: .65rem; transition: border-color .15s; }
-        .venue-card:hover { border-color: rgba(212,132,10,.4); }
+        /* ===== Venue - Modern Cards ===== */
+        .venue-card { 
+            padding: 1rem; 
+            background: var(--bg2); 
+            border: 1px solid var(--bd); 
+            border-radius: var(--radius); 
+            margin-bottom: .65rem; 
+            transition: all 0.15s ease;
+        }
+        .venue-card:hover { 
+            border-color: var(--ac); 
+            background: var(--bg3);
+            transform: translateX(2px);
+        }
         .venue-card:last-child { margin-bottom: 0; }
         .venue-name { font-weight: 600; font-size: .86rem; margin-bottom: .3rem; display: flex; align-items: center; gap: .45rem; }
         .venue-tags { display: flex; gap: .35rem; flex-wrap: wrap; margin-bottom: .4rem; }
