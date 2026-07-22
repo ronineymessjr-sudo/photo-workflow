@@ -11,6 +11,8 @@ export function validatePlanningContext(value) {
   arrayField(value, 'constraints', issues);
   requiredString(value, 'createdAt', issues);
   requiredString(value, 'contextHash', issues);
+  if (value?.visualDNAId != null && typeof value.visualDNAId !== 'string') issues.push('visualDNAId 必须为字符串或 null');
+  if (value?.shootingScale != null && !['simple', 'standard', 'comprehensive'].includes(value.shootingScale)) issues.push('shootingScale 必须为 simple/standard/comprehensive');
   for (const reference of value?.references || []) {
     if (reference.synthetic !== false) issues.push('PlanningContext 只能包含真实参考素材');
     if (!reference.referenceAssetId) issues.push('参考素材缺少 referenceAssetId');
@@ -44,6 +46,11 @@ export function validatePlanGenerationOutput(value) {
       requiredString(shot, field, issues, `shot.${field}`);
     }
     if (!Number.isInteger(shot.sequence) || shot.sequence < 1) issues.push('镜头 sequence 必须为正整数');
+    if (shot.emotion && typeof shot.emotion !== 'string') issues.push(`镜头 ${shot.sequence} emotion 必须为字符串`);
+    if (shot.learningFocus && typeof shot.learningFocus !== 'string') issues.push(`镜头 ${shot.sequence} learningFocus 必须为字符串`);
+    if (shot.whyThisShot && typeof shot.whyThisShot !== 'string') issues.push(`镜头 ${shot.sequence} whyThisShot 必须为字符串`);
+    if (shot.visualMatchScore != null && (typeof shot.visualMatchScore !== 'number' || shot.visualMatchScore < 0 || shot.visualMatchScore > 100)) issues.push(`镜头 ${shot.sequence} visualMatchScore 必须为 0-100 整数`);
+    if (shot.lighting && typeof shot.lighting === 'object' && !shot.lighting.main) issues.push(`镜头 ${shot.sequence} 结构化光线缺少 main 字段`);
     if (sequences.has(shot.sequence)) issues.push(`镜头 sequence 重复：${shot.sequence}`);
     sequences.add(shot.sequence);
     if (!shot.sourceTrace || !Array.isArray(shot.sourceTrace.referenceAssetIds) || !Array.isArray(shot.sourceTrace.equipmentItemIds)) {

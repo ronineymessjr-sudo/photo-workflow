@@ -2,36 +2,95 @@ import { escapeHtml, toast } from '../core/utils.js';
 
 export function renderPlan(ctx) {
   const workspace = ctx.v5.queries.planningWorkspace.get(ctx.project.id);
+  const analysisWorkspace = ctx.v5.queries.visualAnalysisWorkspace.get(ctx.project.id);
   const referenceModel = ctx.v5.queries.referenceLibrary.getProject(ctx.project.id);
   const knowledgeSources = ctx.storage.get(`resolvedProjectKnowledgeSources:${ctx.project.id}`, ctx.storage.get(`projectKnowledgeSources:${ctx.project.id}`, []));
   const selection = resolveSelection(ctx, workspace);
+  const hasReferences = analysisWorkspace.references.length > 0;
+  const hasVisualDNA = !!analysisWorkspace.latestVisualDNA;
+  const selectedDirection = workspace.creativeDirections.find(d => d.status === 'selected');
+  const hasDirection = !!selectedDirection;
 
   return `
     <section class="page-header">
-      <div><h1>方案中心</h1><p>先冻结项目上下文并生成可审查草稿；人工批准后才建立正式版本与镜头。</p></div>
+      <div><h1>方案中心</h1><p>上传参考图 → AI 分析视觉语言 → 选择创意方向 → 生成镜头列表</p></div>
       <div class="topbar-actions">
         <button id="export-plan-pdf-btn" class="button secondary" ${selection ? '' : 'disabled'}>导出 PDF</button>
-        <button id="generate-plan-btn" class="button primary">生成 Agent 草稿</button>
       </div>
     </section>
+
+    <section class="plan-v3-flow">
+      <div class="flow-steps">
+        <div class="flow-step ${hasReferences ? 'completed' : 'active'}">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h3>上传参考图</h3>
+            ${hasReferences
+              ? `<p class="step-done">已上传 ${analysisWorkspace.references.length} 张参考素材</p>`
+              : `<p class="step-hint">请先到「参考资料」页面上传参考图</p>`
+            }
+          </div>
+        </div>
+
+        <div class="flow-step ${hasVisualDNA ? 'completed' : hasReferences ? 'active' : 'pending'}">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h3>VisualDNA 分析</h3>
+            ${hasVisualDNA
+              ? `<p class="step-done">分析完成 · ${escapeHtml(analysisWorkspace.latestVisualDNA.compositionAnalysis?.description?.slice(0, 30) || '')}…</p>`
+              : hasReferences
+                ? `<button id="analyze-visual-dna-btn" class="button primary small">分析参考图</button>`
+                : `<p class="step-hint">需要先上传参考图</p>`
+            }
+          </div>
+        </div>
+
+        <div class="flow-step ${hasDirection ? 'completed' : hasVisualDNA ? 'active' : 'pending'}">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <h3>选择创意方向</h3>
+            ${hasDirection
+              ? `<p class="step-done">${escapeHtml(selectedDirection.title)}</p>`
+              : hasVisualDNA
+                ? `<button id="generate-directions-btn" class="button primary small">生成创意方向</button>`
+                : `<p class="step-hint">需要先完成视觉分析</p>`
+            }
+            ${!hasDirection && workspace.creativeDirections.length > 0
+              ? `<div class="direction-candidates">${workspace.creativeDirections.filter(d => d.status === 'candidate').map(d => `<button class="direction-option" data-select-direction="${d.id}"><strong>${escapeHtml(d.title)}</strong><span>${d.keywords?.slice(0, 3).join(' · ') || ''}</span></button>`).join('')}</div>`
+              : ''
+            }
+          </div>
+        </div>
+
+        <div class="flow-step ${selection ? 'completed' : hasDirection ? 'active' : 'pending'}">
+          <div class="step-number">4</div>
+          <div class="step-content">
+            <h3>生成 Shot List</h3>
+            ${selection
+              ? `<p class="step-done">已生成 ${selection.type === 'run' ? (selection.record.normalizedOutput?.shots?.length || 0) : workspace.shots.filter(s => s.planRevisionId === selection.record.id).length} 个镜头</p>`
+              : hasDirection
+                ? `<div class="scale-selector"><label>拍摄规模：<select id="shooting-scale-select"><option value="simple">简单 (5-8)</option><option value="standard" selected>标准 (10-15)</option><option value="comprehensive">完整 (15-25)</option></select></label><button id="design-shots-btn" class="button primary small">生成镜头</button></div>`
+                : `<p class="step-hint">需要先选择创意方向</p>`
+            }
+          </div>
+        </div>
+      </div>
+    </section>
+
+    ${hasVisualDNA ? renderVisualDNACard(analysisWorkspace.latestVisualDNA) : ''}
 
     <section class="plan-workspace">
       <aside class="card plan-library">
         <div class="status-row"><h2>方案库</h2><span class="tag">${workspace.generationRuns.length + workspace.revisions.length}</span></div>
-        <div class="plan-tabs-summary">
-          ${statusCount('待批准', workspace.generationRuns.filter(item => item.status === 'awaiting_approval').length)}
-          ${statusCount('预选', workspace.revisions.filter(item => item.status === 'candidate').length)}
-          ${statusCount('正式', workspace.revisions.filter(item => item.status === 'confirmed').length)}
-        </div>
         <div class="list">
           ${workspace.generationRuns.map(run => renderLibraryButton(`run:${run.id}`, run.normalizedOutput?.concept || '生成草稿', runLabel(run), selection?.key)).join('')}
           ${workspace.revisions.map(revision => renderLibraryButton(`revision:${revision.id}`, revision.concept || '方案版本', revisionLabel(revision), selection?.key)).join('')}
-          ${!workspace.generationRuns.length && !workspace.revisions.length ? '<div class="empty">尚未生成方案。</div>' : ''}
+          ${!workspace.generationRuns.length && !workspace.revisions.length ? '<div class="empty">按照上方步骤生成方案。</div>' : ''}
         </div>
       </aside>
 
       <div class="plan-main">
-        ${selection ? renderSelection(selection, { workspace, references: referenceModel.selectedReferences.map(item => item.asset), knowledgeSources, shotLinks: referenceModel.shotBindings, project: ctx.project }) : '<div class="empty">先生成第一份 Agent 草稿。</div>'}
+        ${selection ? renderSelection(selection, { workspace, references: referenceModel.selectedReferences.map(item => item.asset), knowledgeSources, shotLinks: referenceModel.shotBindings, project: ctx.project }) : '<div class="empty">按步骤生成第一份方案。</div>'}
       </div>
     </section>
   `;
@@ -95,12 +154,14 @@ function renderContextSummary(project, referenceCount, knowledgeCount, source) {
 }
 
 function renderDraftShot(shot, index) {
-  return `<article class="shot-row"><div class="shot-index">${shot.sequence || index + 1}</div><div><h3>${escapeHtml(shot.scene || '')}</h3><p>${escapeHtml(shot.shotSize || '')} · ${escapeHtml(shot.focalLength || '')} · ${escapeHtml(shot.composition || '')}</p><p>姿势：${escapeHtml(shot.poseGuidance || '')}</p><p>光线：${escapeHtml(shot.lighting || '')}</p><p>备用：${escapeHtml(shot.fallback || '')}</p></div><span class="tag badge-warn">草稿</span></article>`;
+  const lighting = typeof shot.lighting === 'object' ? `${shot.lighting.main} · ${shot.lighting.direction}` : (shot.lighting || '');
+  return `<article class="shot-row"><div class="shot-index">${shot.sequence || index + 1}</div><div><h3>${escapeHtml(shot.scene || '')}</h3><p>${escapeHtml(shot.shotSize || '')} · ${escapeHtml(shot.focalLength || '')} · ${escapeHtml(shot.composition || '')}</p><p>动作：${escapeHtml(shot.subjectAction || shot.poseGuidance || '')}</p><p>光线：${escapeHtml(lighting)}</p><p>情绪：${escapeHtml(shot.emotion || '')}</p>${shot.whyThisShot ? `<p class="hint">为什么拍：${escapeHtml(shot.whyThisShot)}</p>` : ''}${shot.visualMatchScore ? `<span class="tag">匹配 ${shot.visualMatchScore}%</span>` : ''}</div><span class="tag badge-warn">草稿</span></article>`;
 }
 
 function renderFormalShot(shot, index, references, shotLinks) {
   const selectedReference = shotLinks.find(item => item.link.shotId === shot.id)?.asset?.id || '';
-  return `<article class="shot-row"><div class="shot-index">${shot.sequence || index + 1}</div><div><h3>${escapeHtml(shot.scene || '')}</h3><p>${escapeHtml(shot.shotSize || '')} · ${escapeHtml(shot.focalLength || '')} · ${escapeHtml(shot.composition || '')}</p><p>姿势：${escapeHtml(shot.poseGuidance || '')}</p><p>光线：${escapeHtml(shot.lighting || '')}</p><p>备用：${escapeHtml(shot.fallback || '')}</p><label class="shot-reference-control">镜头参考<select data-reference-select="${escapeHtml(shot.id)}"><option value="">未绑定</option>${references.map(ref => `<option value="${escapeHtml(ref.id)}" ${ref.id === selectedReference ? 'selected' : ''}>${escapeHtml(ref.title)}（真实参考图）</option>`).join('')}</select></label></div><span class="tag">${escapeHtml(shot.captureStatus || 'planned')}</span></article>`;
+  const lighting = typeof shot.lighting === 'object' ? `${shot.lighting.main} · ${shot.lighting.direction}` : (shot.lighting || '');
+  return `<article class="shot-row"><div class="shot-index">${shot.sequence || index + 1}</div><div><h3>${escapeHtml(shot.scene || '')}</h3><p>${escapeHtml(shot.shotSize || '')} · ${escapeHtml(shot.focalLength || '')} · ${escapeHtml(shot.composition || '')}</p><p>动作：${escapeHtml(shot.subjectAction || shot.poseGuidance || '')}</p><p>光线：${escapeHtml(lighting)}</p><p>情绪：${escapeHtml(shot.emotion || '')}</p>${shot.whyThisShot ? `<p class="hint">为什么拍：${escapeHtml(shot.whyThisShot)}</p>` : ''}${shot.visualMatchScore ? `<span class="tag">匹配 ${shot.visualMatchScore}%</span>` : ''}<label class="shot-reference-control">镜头参考<select data-reference-select="${escapeHtml(shot.id)}"><option value="">未绑定</option>${references.map(ref => `<option value="${escapeHtml(ref.id)}" ${ref.id === selectedReference ? 'selected' : ''}>${escapeHtml(ref.title)}（真实参考图）</option>`).join('')}</select></label></div><span class="tag">${escapeHtml(shot.captureStatus || 'planned')}</span></article>`;
 }
 
 function renderExpectedLook(expectedLook, assets) {
@@ -125,6 +186,48 @@ export function bindPlan(ctx) {
       const result = await ctx.v5.planning.createGenerationRun({ projectId: ctx.project.id, contextSnapshotId: snapshot.id });
       ctx.storage.set(`selectedV5Plan:${ctx.project.id}`, `run:${result.run.id}`);
       toast('Agent 草稿已生成，尚未写入正式镜头');
+      ctx.refresh();
+    });
+  });
+
+  document.getElementById('analyze-visual-dna-btn')?.addEventListener('click', async event => {
+    await withBusy(event.currentTarget, '正在分析参考图…', async () => {
+      const result = await ctx.v5.visualAnalysis.analyze({ projectId: ctx.project.id });
+      toast(`VisualDNA 分析完成：${result.visualDNA.compositionAnalysis?.description?.slice(0, 20) || 'ok'}…`);
+      ctx.refresh();
+    });
+  });
+
+  document.getElementById('generate-directions-btn')?.addEventListener('click', async event => {
+    const workspace = ctx.v5.queries.visualAnalysisWorkspace.get(ctx.project.id);
+    if (!workspace.latestVisualDNA) { toast('请先完成参考图分析'); return; }
+    await withBusy(event.currentTarget, '正在生成创意方向…', async () => {
+      const result = await ctx.v5.creativeDirection.generateDirections({ projectId: ctx.project.id, visualDNAId: workspace.latestVisualDNA.id });
+      toast(`已生成 ${result.directions.length} 个创意方向，请选择`);
+      ctx.refresh();
+    });
+  });
+
+  document.querySelectorAll('[data-select-direction]').forEach(btn => btn.addEventListener('click', async () => {
+    await ctx.v5.creativeDirection.selectDirection({ id: btn.dataset.selectDirection, projectId: ctx.project.id });
+    toast('创意方向已选定');
+    ctx.refresh();
+  }));
+
+  document.getElementById('design-shots-btn')?.addEventListener('click', async event => {
+    const workspace = ctx.v5.queries.planningWorkspace.get(ctx.project.id);
+    const analysisWorkspace = ctx.v5.queries.visualAnalysisWorkspace.get(ctx.project.id);
+    const selectedDir = workspace.creativeDirections.find(d => d.status === 'selected');
+    if (!selectedDir || !analysisWorkspace.latestVisualDNA) { toast('请先完成前置步骤'); return; }
+    const scale = document.getElementById('shooting-scale-select')?.value || 'standard';
+    await withBusy(event.currentTarget, '正在设计镜头…', async () => {
+      const result = await ctx.v5.shotDesign.designShots({
+        projectId: ctx.project.id,
+        creativeDirectionId: selectedDir.id,
+        visualDNAId: analysisWorkspace.latestVisualDNA.id,
+        shootingScale: scale,
+      });
+      toast(`已设计 ${result.shots.length} 个镜头`);
       ctx.refresh();
     });
   });
@@ -258,6 +361,17 @@ function renderLibraryButton(key, title, status, selectedKey) {
 function runLabel(run) { return ({ awaiting_approval: '草稿 · 待批准', approved: '草稿 · 已批准', failed: '生成失败', running: '生成中' })[run.status] || run.status; }
 function revisionLabel(revision) { return `${revision.status === 'confirmed' ? '正式' : '预选'} · 版本 ${revision.revisionNumber || 1}`; }
 function statusCount(label, value) { return `<div><strong>${value}</strong><span>${label}</span></div>`; }
+
+function renderVisualDNACard(vd) {
+  if (!vd) return '';
+  return `<section class="card plan-section"><div class="status-row"><h2>VisualDNA 分析</h2><span class="tag badge-ok">不可变快照</span></div>
+    <div class="grid cols-2">
+      <div><strong>构图</strong><p>${escapeHtml(vd.compositionAnalysis?.description || '')}</p></div>
+      <div><strong>镜头</strong><p>${escapeHtml(vd.lensAnalysis?.description || '')}</p></div>
+      <div><strong>光线</strong><p>${escapeHtml(vd.lightingAnalysis?.description || '')}</p></div>
+      <div><strong>色彩</strong><p>${escapeHtml(vd.colorAnalysis?.description || '')}</p></div>
+    </div></section>`;
+}
 
 function exportPlanPdf(project, plan, shots) {
   const win = window.open('', '_blank', 'noopener,noreferrer');

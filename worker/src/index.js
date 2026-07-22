@@ -152,6 +152,7 @@ export default {
           syncProtected: Boolean(env.APP_SYNC_TOKEN),
           feishuConfigured: Boolean(env.FEISHU_APP_ID && env.FEISHU_APP_SECRET && env.FEISHU_APP_TOKEN),
           planningV5: env.AGENT_ENDPOINT_V5 || env.AGENT_ENDPOINT ? 'external-provider' : 'deterministic-context-fallback',
+          visionAgent: env.AGENT_VISION_ENDPOINT ? 'external-provider' : 'deterministic-fallback',
           imageGenerationConfigured: Boolean(env.IMAGE_GENERATION_ENDPOINT),
           publicFeedbackEnabled: env.PUBLIC_FEEDBACK_ENABLED === 'true',
         });
@@ -180,6 +181,24 @@ export default {
       if (url.pathname === '/api/v1/images/expected-look' && request.method === 'POST') {
         const payload = await request.json();
         const result = await generateExpectedLookImages(payload, env);
+        return json(request, env, { ok: true, ...result });
+      }
+
+      if (url.pathname === '/api/v1/visual-dna/analyze' && request.method === 'POST') {
+        const payload = await request.json();
+        const result = await analyzeVisualDNA(payload, env);
+        return json(request, env, { ok: true, ...result });
+      }
+
+      if (url.pathname === '/api/v1/creative-directions/generate' && request.method === 'POST') {
+        const payload = await request.json();
+        const result = await generateCreativeDirections(payload, env);
+        return json(request, env, { ok: true, ...result });
+      }
+
+      if (url.pathname === '/api/v1/shots/design' && request.method === 'POST') {
+        const payload = await request.json();
+        const result = await designShots(payload, env);
         return json(request, env, { ok: true, ...result });
       }
 
@@ -745,4 +764,167 @@ function positiveIntegerFromText(value) {
   const match = String(value || '').match(/\d+/);
   const number = match ? Number(match[0]) : 0;
   return Number.isInteger(number) && number > 0 ? number : 0;
+}
+
+async function analyzeVisualDNA(payload, env) {
+  const { references, snapshot } = payload;
+  if (!Array.isArray(references) || !references.length) {
+    throw new HttpError(400, 'At least one reference is required', 'INVALID_VISUAL_DNA_REQUEST');
+  }
+  const endpoint = env.AGENT_VISION_ENDPOINT;
+  if (endpoint) {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(env.AGENT_VISION_API_KEY ? { Authorization: `Bearer ${env.AGENT_VISION_API_KEY}` } : {}) },
+      body: JSON.stringify(payload),
+    });
+    const data = await response.json().catch(() => null);
+    if (!response.ok) throw new HttpError(502, `Vision Agent failed: ${response.status}`, 'VISION_AGENT_FAILED', { status: response.status });
+    return { requestId: data?.requestId || crypto.randomUUID(), analysis: data?.analysis || data, provider: 'vision-agent', model: data?.model || 'configured-by-provider' };
+  }
+  const analysis = deterministicVisualDNAAnalysis(references, snapshot);
+  return {
+    requestId: crypto.randomUUID(),
+    analysis,
+    provider: 'photoatelier-worker',
+    model: 'deterministic-v3',
+  };
+}
+
+function deterministicVisualDNAAnalysis(references, snapshot) {
+  const brief = snapshot?.brief || {};
+  const allTags = references.flatMap(item => item.tags || []);
+  const tagSet = new Set(allTags);
+  return {
+    compositionAnalysis: tagSet.has('环境') || tagSet.has('environment')
+      ? { description: '环境人像比例较高，人物不占满画面，大量留白，偏非中心构图', patterns: ['环境叙事', '留白', '非中心'] }
+      : { description: '人物与环境兼顾，中等景别为主，构图均衡', patterns: ['均衡', '中等景别'] },
+    lensAnalysis: {
+      description: '标准焦段覆盖，兼顾环境叙事与情绪肖像',
+      focalRecommendations: [{ mm: '35mm', purpose: '环境叙事' }, { mm: '50mm', purpose: '自然人物关系' }, { mm: '85mm', purpose: '情绪肖像' }],
+    },
+    subjectAnalysis: {
+      description: '以自然状态为主，避免刻意摆拍',
+      avoid: ['强摆拍'],
+      recommend: ['自然动作', '低互动', '非直视镜头'],
+    },
+    lightingAnalysis: (brief.mood || '').includes('夜景')
+      ? { description: '主要利用环境光塑造氛围，保持光线方向自然，必要时使用辅助反光，避免明显人工光痕迹', direction: '环境光为主', approach: '弱化人工光痕迹，保留自然光感' }
+      : { description: '柔和自然光为主，避免过硬光比，保持真实光影关系', direction: '自然光', approach: '柔光优先，必要时反光补光' },
+    colorAnalysis: (brief.style || '').includes('胶片')
+      ? { description: '胶片质感，低饱和偏暖，带颗粒感', saturation: '低饱和', temperature: '暖色倾向', texture: '胶片颗粒' }
+      : (brief.style || '').includes('清冷')
+        ? { description: '清冷色调，低饱和偏冷，质感干净', saturation: '低饱和', temperature: '冷色倾向', texture: '胶片颗粒' }
+        : { description: '自然真实色彩，适度饱和，保持肤色准确', saturation: '适中', temperature: '中性', texture: '干净' },
+  };
+}
+
+async function generateCreativeDirections(payload, env) {
+  const { visualDNA, brief } = payload;
+  if (!visualDNA) throw new HttpError(400, 'visualDNA is required', 'INVALID_CREATIVE_DIRECTION_REQUEST');
+  const endpoint = env.AGENT_ENDPOINT_V5 || env.AGENT_ENDPOINT;
+  if (endpoint) {
+    const response = await fetch(`${endpoint}/creative-directions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(env.AGENT_API_KEY ? { Authorization: `Bearer ${env.AGENT_API_KEY}` } : {}) },
+      body: JSON.stringify(payload),
+    });
+    const data = await response.json().catch(() => null);
+    if (!response.ok) throw new HttpError(502, `Agent failed for creative directions: ${response.status}`, 'AGENT_PROVIDER_FAILED', { status: response.status });
+    return { requestId: data?.requestId || crypto.randomUUID(), directions: data?.directions || data, provider: 'external-agent' };
+  }
+  const directions = deterministicCreativeDirections(visualDNA, brief || {});
+  return {
+    requestId: crypto.randomUUID(),
+    directions,
+    provider: 'photoatelier-worker',
+    model: 'deterministic-v3',
+  };
+}
+
+function deterministicCreativeDirections(visualDNA, brief) {
+  const colorTemp = visualDNA.colorAnalysis?.temperature || '中性';
+  const lightApproach = visualDNA.lightingAnalysis?.approach || '自然光';
+  const compPatterns = visualDNA.compositionAnalysis?.patterns || [];
+  const theme = brief.theme || '';
+  return [
+    { title: `${theme || '主题'}·${compPatterns[0] || '视觉'}风格`, keywords: [colorTemp, lightApproach, ...compPatterns.slice(0, 2)], styleTags: [brief.style || '', colorTemp, lightApproach].filter(Boolean), moodDescription: brief.mood || `${colorTemp}色调与${lightApproach}的结合`, referenceAssetIds: [] },
+    { title: `${theme || '纪实'}现场纪实`, keywords: ['抓拍', '自然状态', '街头氛围'], styleTags: [brief.style ? `${brief.style}纪实` : '纪实', 'documentary'], moodDescription: `以纪实手法捕捉${theme || '场景'}中的自然瞬间`, referenceAssetIds: [] },
+    { title: `${colorTemp}情绪人像`, keywords: ['静态', '情绪表达', '浅景深'], styleTags: [brief.style ? `${brief.style}情绪` : '情绪人像', 'intimate'], moodDescription: `聚焦情绪与氛围，以${colorTemp}光影营造内省的空间感`, referenceAssetIds: [] },
+  ];
+}
+
+async function designShots(payload, env) {
+  const { visualDNA, creativeDirection, brief, equipment, shootingScale } = payload;
+  if (!visualDNA || !creativeDirection) throw new HttpError(400, 'visualDNA and creativeDirection are required', 'INVALID_SHOT_DESIGN_REQUEST');
+  const endpoint = env.AGENT_ENDPOINT_V5 || env.AGENT_ENDPOINT;
+  if (endpoint) {
+    const response = await fetch(`${endpoint}/shot-design`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(env.AGENT_API_KEY ? { Authorization: `Bearer ${env.AGENT_API_KEY}` } : {}) },
+      body: JSON.stringify(payload),
+    });
+    const data = await response.json().catch(() => null);
+    if (!response.ok) throw new HttpError(502, `Agent failed for shot design: ${response.status}`, 'AGENT_PROVIDER_FAILED', { status: response.status });
+    return { requestId: data?.requestId || crypto.randomUUID(), shots: data?.shots || data, provider: 'external-agent' };
+  }
+  const shots = deterministicShotDesignWorker(visualDNA, creativeDirection, brief || {}, equipment || [], shootingScale || 'standard');
+  return {
+    requestId: crypto.randomUUID(),
+    shots,
+    provider: 'photoatelier-worker',
+    model: 'deterministic-v3',
+  };
+}
+
+function deterministicShotDesignWorker(visualDNA, creativeDirection, brief, equipment, shootingScale) {
+  const scaleMap = { simple: 6, standard: 12, comprehensive: 20 };
+  const count = scaleMap[shootingScale] || 12;
+  const focalRecd = visualDNA.lensAnalysis?.focalRecommendations || [{ mm: '50mm', purpose: '标准' }];
+  const referenceIds = visualDNA.referenceAssetIds || [];
+  const keywords = creativeDirection.keywords || [];
+  const emotions = keywords.length ? keywords : ['自然、真实'];
+  const templates = [
+    { scene: '环境', shotSize: '远景', cameraAngle: '平视', priority: 'must', category: 'establishing', estimatedMinutes: 15 },
+    { scene: '人物', shotSize: '半身', cameraAngle: '平视', priority: 'must', category: 'portrait', estimatedMinutes: 10 },
+    { scene: '人物', shotSize: '全身', cameraAngle: '低角度', priority: 'must', category: 'portrait', estimatedMinutes: 10 },
+    { scene: '细节', shotSize: '特写', cameraAngle: '俯视', priority: 'recommended', category: 'detail', estimatedMinutes: 8 },
+    { scene: '动作', shotSize: '中景', cameraAngle: '平视', priority: 'recommended', category: 'action', estimatedMinutes: 12 },
+    { scene: '氛围', shotSize: '远景', cameraAngle: '高角度', priority: 'recommended', category: 'mood', estimatedMinutes: 10 },
+  ];
+  const shots = [];
+  for (let i = 0; i < count; i++) {
+    const t = templates[i % templates.length];
+    const focal = focalRecd[i % focalRecd.length];
+    const refId = referenceIds.length ? referenceIds[i % referenceIds.length] : null;
+    shots.push({
+      sequence: i + 1,
+      scene: `${brief.theme || '场景'}${t.scene}`,
+      shotSize: t.shotSize,
+      cameraAngle: t.cameraAngle,
+      composition: visualDNA.compositionAnalysis?.patterns?.[i % (visualDNA.compositionAnalysis?.patterns?.length || 1)] || '均衡构图',
+      focalLength: typeof focal === 'object' ? focal.mm : String(focal),
+      lighting: {
+        main: visualDNA.lightingAnalysis?.approach || '自然光',
+        direction: (visualDNA.lightingAnalysis?.direction || '自然方向').includes('侧') ? '45度侧面' : (visualDNA.lightingAnalysis?.direction || '自然方向').includes('逆') ? '逆光方向' : '正面/顺光方向',
+        auxiliary: (visualDNA.lightingAnalysis?.approach || '').includes('环境') ? '必要时反光板补光' : '可用反光板微补',
+        effect: (visualDNA.lightingAnalysis?.approach || '').includes('环境') ? '保持自然过渡，避免明显人工光痕迹' : '保留光影质感，强化氛围',
+      },
+      poseGuidance: visualDNA.subjectAnalysis?.recommend?.[0] || '自然放松',
+      subjectAction: t.category === 'action' ? '自然移动' : t.category === 'establishing' ? '环境建立' : '静态表现',
+      variationCount: t.priority === 'must' ? 3 : 2,
+      targetSelectCount: t.priority === 'must' ? 2 : 1,
+      priority: t.priority,
+      estimatedMinutes: t.estimatedMinutes,
+      fallback: '',
+      emotion: emotions[i % emotions.length],
+      mood: creativeDirection.moodDescription || '',
+      referenceAssetId: refId,
+      whyThisShot: `${t.category === 'establishing' ? '建立环境氛围' : t.category === 'portrait' ? '核心人物表现' : t.category === 'detail' ? '细节与质感补充' : t.category === 'action' ? '捕捉动态瞬间' : t.category === 'mood' ? '氛围与情绪传递' : '丰富拍摄内容'}，基于${brief.theme || '选定方向'}的风格要求`,
+      visualMatchScore: referenceIds.length ? Math.max(60, 100 - i * 3) : 0,
+      learningFocus: `${visualDNA.compositionAnalysis?.patterns?.[0] || '构图'}、${visualDNA.lightingAnalysis?.direction || '光线'}、${visualDNA.colorAnalysis?.temperature || '色调'}`,
+      sourceTrace: { referenceAssetIds: refId ? [refId] : [], equipmentItemIds: equipment.slice(0, 4).map(e => e.equipmentItemId).filter(Boolean), templateId: null },
+    });
+  }
+  return shots;
 }

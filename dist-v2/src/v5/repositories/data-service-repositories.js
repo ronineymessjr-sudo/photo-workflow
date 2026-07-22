@@ -22,7 +22,7 @@ export function createRepositories(data) {
   const names = [
     'projects', 'projectBriefs', 'equipmentModels', 'equipmentItems', 'venues', 'talentProfiles',
     'resourceAssignments', 'planTemplates', 'referenceAssets', 'projectReferenceLinks',
-    'shotReferenceLinks', 'planningSnapshots', 'generationRuns', 'plans', 'planRevisions',
+    'shotReferenceLinks', 'planningSnapshots', 'generationRuns', 'visualDNAs', 'creativeDirections', 'plans', 'planRevisions',
     'shots', 'expectedLooks', 'imageGenerationRuns', 'generatedAssets', 'calendarEvents',
     'financialEntries', 'participantAssignments', 'shootRecords', 'postProductionJobs',
     'lutPresets', 'sharePackets', 'reviews', 'domainEvents', 'tasks',

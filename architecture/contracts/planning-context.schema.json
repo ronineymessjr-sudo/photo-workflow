@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "photoatelier.planning-context.v2.4",
+  "$id": "photoatelier.planning-context.v3.0",
   "type": "object",
   "required": ["id", "projectId", "brief", "equipment", "references", "constraints", "createdAt", "contextHash"],
   "properties": {
@@ -56,6 +56,8 @@
       "required": ["enabled"],
       "additionalProperties": false
     },
+    "visualDNAId": { "type": ["string", "null"], "description": "Reference to the VisualDNA analysis for this context" },
+    "shootingScale": { "type": "string", "enum": ["simple", "standard", "comprehensive"], "default": "standard" },
     "createdAt": { "type": "string", "format": "date-time" },
     "contextHash": { "type": "string", "minLength": 8 }
   },

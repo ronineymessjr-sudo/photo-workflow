@@ -15,7 +15,7 @@ export const V5_LOCAL_ENTITIES = Object.freeze([
   'projectBriefs',
   'equipmentModels', 'equipmentItems', 'talentProfiles', 'resourceAssignments', 'planTemplates',
   'referenceAssets', 'projectReferenceLinks', 'shotReferenceLinks',
-  'planningSnapshots', 'generationRuns', 'planRevisions', 'expectedLooks',
+  'planningSnapshots', 'generationRuns', 'visualDNAs', 'creativeDirections', 'planRevisions', 'expectedLooks',
   'imageGenerationRuns', 'generatedAssets',
   'calendarEvents', 'financialEntries', 'participantAssignments',
   'postProductionJobs', 'lutPresets', 'sharePackets', 'domainEvents',

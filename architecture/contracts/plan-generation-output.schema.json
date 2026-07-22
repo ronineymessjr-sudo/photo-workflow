@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "photoatelier.plan-generation-output.v2.4",
+  "$id": "photoatelier.plan-generation-output.v3.1",
   "type": "object",
   "required": ["concept", "rationale", "preparationGuide", "expectedDeliverableCount", "shots", "risks"],
   "properties": {
@@ -39,7 +39,22 @@
           "cameraAngle": { "type": "string" },
           "composition": { "type": "string" },
           "focalLength": { "type": "string" },
-          "lighting": { "type": "string" },
+          "lighting": {
+            "oneOf": [
+              { "type": "string" },
+              {
+                "type": "object",
+                "properties": {
+                  "main": { "type": "string" },
+                  "direction": { "type": "string" },
+                  "auxiliary": { "type": "string" },
+                  "effect": { "type": "string" }
+                },
+                "required": ["main"],
+                "additionalProperties": false
+              }
+            ]
+          },
           "poseGuidance": { "type": "string" },
           "subjectAction": { "type": "string" },
           "variationCount": { "type": "integer", "minimum": 1 },
@@ -47,6 +62,12 @@
           "priority": { "enum": ["must", "recommended", "optional"] },
           "estimatedMinutes": { "type": "integer", "minimum": 1 },
           "fallback": { "type": "string" },
+          "emotion": { "type": "string", "description": "Shot emotion keyword" },
+          "mood": { "type": "string", "description": "Shot mood description" },
+          "referenceAssetId": { "type": ["string", "null"], "description": "Primary reference image bound to this shot" },
+          "learningFocus": { "type": "string", "description": "What to learn from the reference image" },
+          "whyThisShot": { "type": "string", "description": "Why this shot was designed" },
+          "visualMatchScore": { "type": "integer", "minimum": 0, "maximum": 100, "description": "Reference image match score 0-100" },
           "sourceTrace": {
             "type": "object",
             "properties": {

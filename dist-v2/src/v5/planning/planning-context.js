@@ -48,6 +48,8 @@ export class PlanningContextBuilder {
       knowledgeValidationStatus: item.knowledgeValidationStatus || 'not-recorded',
     }));
     const lookRequest = normalizeLookRequest(command.lookRequest);
+    const visualDNAId = command.visualDNAId || null;
+    const shootingScale = normalizeShootingScale(command.shootingScale, brief);
     const knowledgeSources = normalizeKnowledgeSources(command.knowledgeSources);
     const knowledgeRetrieval = normalizeKnowledgeRetrieval(command.knowledgeRetrieval, knowledgeSources);
     const knowledgePolicy = {
@@ -71,6 +73,8 @@ export class PlanningContextBuilder {
       historicalReviewSummary,
       constraints: uniqueStrings([...(brief.constraints || []), ...(command.constraints || [])]),
       lookRequest,
+      visualDNAId,
+      shootingScale,
     };
     invariant(references.every(item => item.synthetic === false), 'SYNTHETIC_REFERENCE_IN_CONTEXT', '方案上下文不能混入 AI 生成图');
     const snapshot = createEntity('planning-snapshot', {
@@ -92,6 +96,8 @@ export class PlanningContextBuilder {
       knowledgePolicy: snapshot.knowledgePolicy,
       constraints: snapshot.constraints,
       lookRequest: snapshot.lookRequest,
+      visualDNAId: snapshot.visualDNAId,
+      shootingScale: snapshot.shootingScale,
       createdAt: snapshot.createdAt,
       contextHash: snapshot.contextHash,
     });
@@ -231,6 +237,7 @@ function createBriefFromLegacyProject(project) {
     deliverableTarget: project.deliverables || '',
     constraints: project.constraints || [],
     notes: project.brief || '',
+    shootingScale: 'standard',
   };
 }
 function stripMutableFields(value) {
@@ -238,6 +245,13 @@ function stripMutableFields(value) {
   return rest;
 }
 function uniqueStrings(values) { return [...new Set((values || []).map(value => String(value).trim()).filter(Boolean))]; }
+
+function normalizeShootingScale(value, brief) {
+  const valid = new Set(['simple', 'standard', 'comprehensive']);
+  if (value && valid.has(value)) return value;
+  if (brief?.shootingScale && valid.has(brief.shootingScale)) return brief.shootingScale;
+  return 'standard';
+}
 
 function validateBriefForPlanning(brief) {
   const missing = [];

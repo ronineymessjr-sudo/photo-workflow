@@ -99,6 +99,8 @@ export function createQueryServices(repositories, services = {}) {
         const shots = repositories.shots.list(item => item.projectId === projectId)
           .sort((a, b) => Number(a.sequence || 0) - Number(b.sequence || 0));
         const expectedLooks = repositories.expectedLooks.list(item => item.projectId === projectId);
+        const visualDNAs = newestFirst(repositories.visualDNAs.list(item => item.projectId === projectId));
+        const creativeDirections = repositories.creativeDirections.list(item => item.projectId === projectId);
         return {
           snapshots: newestFirst(repositories.planningSnapshots.list(item => item.projectId === projectId)),
           generationRuns: newestFirst(repositories.generationRuns.list(item => item.projectId === projectId)),
@@ -106,6 +108,8 @@ export function createQueryServices(repositories, services = {}) {
           revisions,
           shots,
           expectedLooks,
+          visualDNAs,
+          creativeDirections,
           generatedAssets: newestFirst(repositories.generatedAssets.list(item => item.projectId === projectId)),
           getPlan(planId) {
             const plan = plans.find(item => item.id === planId) || null;
@@ -117,6 +121,22 @@ export function createQueryServices(repositories, services = {}) {
               shots: shots.filter(item => item.planId === planId),
             };
           },
+        };
+      },
+    },
+    visualAnalysisWorkspace: {
+      get(projectId) {
+        repositories.projects.require(projectId);
+        const references = repositories.projectReferenceLinks.list(item => item.projectId === projectId);
+        const selectedAssetIds = new Set(references.map(item => item.referenceAssetId));
+        const assets = repositories.referenceAssets.list(item => selectedAssetIds.has(item.id));
+        const visualDNAs = repositories.visualDNAs.list(item => item.projectId === projectId)
+          .sort((a, b) => Date.parse(b.createdAt || 0) - Date.parse(a.createdAt || 0));
+        return {
+          references,
+          assets,
+          visualDNAs,
+          latestVisualDNA: visualDNAs[0] || null,
         };
       },
     },

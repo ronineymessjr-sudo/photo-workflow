@@ -26,6 +26,19 @@ export class HttpImageGenerationGateway {
   }
 }
 
+export class HttpVisionGateway {
+  constructor({ apiClient, endpoint = '/api/v1/visual-dna/analyze', provider = 'vision-agent', model = 'configured' }) {
+    this.apiClient = apiClient;
+    this.endpoint = endpoint;
+    this.provider = provider;
+    this.model = model;
+  }
+  async analyzeReferences(payload) {
+    if (!this.apiClient?.request) throw new AppError('VISION_GATEWAY_NOT_CONFIGURED', 'Vision API Client 不支持通用 request');
+    return this.apiClient.request(this.endpoint, { method: 'POST', body: payload });
+  }
+}
+
 export class CompositeReferenceSourceGateway {
   constructor(adapters = {}) { this.adapters = adapters; }
   require(sourceType) {

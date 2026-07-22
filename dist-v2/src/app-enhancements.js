@@ -482,14 +482,87 @@
   function exportPlanPrintView(plan, shots, data) {
     const popup = window.open('', '_blank');
     if (!popup) { notify('浏览器拦截了打印窗口，请允许弹出窗口后重试', 'er'); return; }
-    const references = data.shotReferences.filter(item => item.reference).slice(0, 8);
+    const references = data.shotReferences.filter(item => item.reference);
     const schedule = data.schedule;
-    const absoluteMedia = item => {
-      try { return new URL(referenceThumbnail(item.reference), location.href).href; } catch (_) { return ''; }
+    const referenceThumbnail = item => {
+      const ref = item.reference;
+      return ref.previewUrl || ref.sourceUrl || ref.localPath || '';
     };
-    popup.document.write(`<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>${esc(plan.title || '拍摄方案')}</title><style>
-      @page{size:A4;margin:14mm}*{box-sizing:border-box}body{margin:0;color:#171717;font:12px/1.55 Arial,"Microsoft YaHei",sans-serif}h1{margin:0;font-size:24px}h2{margin:22px 0 8px;padding-bottom:5px;border-bottom:1px solid #bbb;font-size:15px}.meta{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin:14px 0;padding:10px;border:1px solid #bbb}.meta span{overflow-wrap:anywhere}.shots{width:100%;border-collapse:collapse}.shots th,.shots td{padding:6px;border:1px solid #bbb;vertical-align:top;text-align:left}.shots th{background:#f2f2f2}.refs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.refs figure{margin:0}.refs img{width:100%;aspect-ratio:4/3;object-fit:cover;border:1px solid #bbb}.refs figcaption{margin-top:3px;font-size:10px}.foot{margin-top:20px;color:#666;font-size:10px}@media print{button{display:none}}
-    </style></head><body><h1>${esc(plan.title || plan.input?.theme || '拍摄方案')}</h1><div class="meta"><span>状态：${esc(PLAN_LIFECYCLE[planLifecycleStatus(plan)].label)}</span><span>ID：${esc(plan.id)}</span><span>风格：${esc(plan.input?.style || '待确认')}</span><span>场景：${esc(plan.input?.scene || '待确认')}</span><span>时长：${esc(plan.input?.duration || '待确认')}</span><span>日程：${esc(schedule ? `${schedule.date || ''} ${schedule.time || ''} ${schedule.location || ''}` : '尚未安排')}</span></div><h2>镜头执行表</h2><table class="shots"><thead><tr><th>#</th><th>镜头 / 动作</th><th>景别 / 焦段</th><th>光线</th><th>时间</th></tr></thead><tbody>${shots.map((shot, index) => `<tr><td>${index + 1}</td><td><strong>${esc(shot.name || shot.scene || `镜头 ${index + 1}`)}</strong><br>${esc(shot.description || shot.method || '')}</td><td>${esc(shot.shotSize || '')}<br>${esc(shot.focalLength || '')}</td><td>${esc(shot.lighting || '')}</td><td>${esc(shot.duration || 0)} 分钟</td></tr>`).join('')}</tbody></table>${references.length ? `<h2>参考素材</h2><div class="refs">${references.map((item, index) => `<figure><img src="${esc(absoluteMedia(item))}" alt="参考图 ${index + 1}"><figcaption>镜头 ${Number(item.shotId.replace('shot-', '')) + 1} · ${esc(item.reference.title || item.reference.id)}</figcaption></figure>`).join('')}</div>` : ''}<h2>设备与后期交接</h2><p>设备：${esc(data.selectedEquipment.map(item => item.n || item.name).filter(Boolean).join('、') || data.recommendedEquipment.join('；') || '待确认')}</p><p>LUT：${esc(data.lut?.title || '等待专项 Agent / 人工确认')} · ${esc(data.transform?.label || 'sRGB / Rec.709')}</p><p class="foot">PhotoAtelier · ${esc(new Date().toLocaleString())}</p><script>window.addEventListener('load',()=>setTimeout(()=>window.print(),300));<\/script></body></html>`);
+    const esc = root.esc || (s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'));
+
+    popup.document.write(`<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>${esc(plan.title || '拍摄执行稿')}</title><style>
+      @page{size:A4;margin:12mm}*{box-sizing:border-box}body{margin:0;color:#171717;font:11px/1.5 Arial,"Microsoft YaHei",sans-serif}
+      h1{margin:0 0 6px;font-size:22px;letter-spacing:-.02em}
+      .subtitle{color:#666;font-size:12px;margin:0 0 16px}
+      .overview{width:100%;border-collapse:collapse;margin:0 0 20px}
+      .overview th,.overview td{padding:5px 8px;border:1px solid #ccc;vertical-align:middle;text-align:left;font-size:11px}
+      .overview th{background:#f5f5f5;font-weight:600;white-space:nowrap}
+      .overview .ref-thumb{width:40px;height:30px;object-fit:cover;border-radius:2px}
+      .shot-section{page-break-inside:avoid;margin:0 0 24px;padding:12px;border:1px solid #ddd;border-radius:4px}
+      .shot-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;border-bottom:1px solid #eee;padding-bottom:6px}
+      .shot-header h3{margin:0;font-size:15px}
+      .shot-header .shot-priority{font-size:10px;padding:2px 6px;border-radius:3px;font-weight:600}
+      .shot-priority.must{background:#fef2f2;color:#dc2626}
+      .shot-priority.recommended{background:#fffbeb;color:#d97706}
+      .shot-priority.optional{background:#f0fdf4;color:#16a34a}
+      .ref-row{display:flex;gap:10px;margin-bottom:8px;align-items:flex-start}
+      .ref-row img{width:120px;height:90px;object-fit:cover;border-radius:4px;border:1px solid #ddd}
+      .ref-row .ref-info{flex:1}
+      .ref-row .ref-label{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.04em}
+      .ref-row .learning-focus{font-size:12px;margin-top:4px;color:#333;line-height:1.5}
+      .exec-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px 16px}
+      .exec-item{margin-bottom:2px}
+      .exec-item .label{font-size:9px;color:#999;text-transform:uppercase;letter-spacing:.05em;display:block}
+      .exec-item .value{font-size:12px;font-weight:500}
+      .foot{margin-top:24px;padding-top:8px;border-top:1px solid #ddd;color:#999;font-size:9px;text-align:center}
+      @media print{.shot-section{page-break-inside:avoid}}
+    </style></head><body>
+    <h1>${esc(plan.title || plan.input?.theme || '拍摄执行稿')}</h1>
+    <p class="subtitle">${esc(schedule ? `${schedule.date || ''} ${schedule.time || ''} ${schedule.location || ''}` : '拍摄执行稿 · 按镜头逐条执行')}</p>
+
+    <h2 style="font-size:14px;margin:0 0 8px">Shot List 总览</h2>
+    <table class="overview">
+      <thead><tr><th>#</th><th>画面</th><th>场景</th><th>景别</th><th>焦段</th><th>情绪</th><th>参考图</th></tr></thead>
+      <tbody>${shots.map((shot, i) => {
+        const ref = references.find(r => r.shotId === shot.id || r.shotIndex === i);
+        return `<tr><td>${i + 1}</td><td><strong>${esc(shot.name || shot.scene || `Shot${String(i+1).padStart(2,'0')}`)}</strong></td><td>${esc(shot.scene || '')}</td><td>${esc(shot.shotSize || '')}</td><td>${esc(shot.focalLength || '')}</td><td>${esc(shot.emotion || '')}</td><td>${ref ? `<img class="ref-thumb" src="${esc(referenceThumbnail(ref))}" alt="Ref${i+1}">` : '-'}</td></tr>`;
+      }).join('')}</tbody>
+    </table>
+
+    ${shots.map((shot, i) => {
+      const ref = references.find(r => r.shotId === shot.id || r.shotIndex === i);
+      const priority = shot.priority || 'recommended';
+      const priorityLabel = {must:'必拍',recommended:'推荐',optional:'可选',should:'推荐',could:'可选'}[priority] || priority;
+      return `<div class="shot-section">
+        <div class="shot-header">
+          <h3>Shot ${String(i+1).padStart(2,'0')} · ${esc(shot.name || shot.scene || '')}</h3>
+          <span class="shot-priority ${priority}">${esc(priorityLabel)}</span>
+        </div>
+        <div class="ref-row">
+          ${ref ? `<img src="${esc(referenceThumbnail(ref))}" alt="参考图">` : '<div style="width:120px;height:90px;background:#f5f5f5;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#999;font-size:10px">无参考图</div>'}
+          <div class="ref-info">
+            <span class="ref-label">学习重点</span>
+            <div class="learning-focus">${esc(shot.learningFocus || '构图、光线、色调')}</div>
+          </div>
+        </div>
+        <div class="exec-grid">
+          <div class="exec-item"><span class="label">景别</span><span class="value">${esc(shot.shotSize || '')}</span></div>
+          <div class="exec-item"><span class="label">焦段</span><span class="value">${esc(shot.focalLength || '')}</span></div>
+          <div class="exec-item"><span class="label">机位</span><span class="value">${esc(shot.cameraAngle || shot.angle || '')}</span></div>
+          <div class="exec-item"><span class="label">动作</span><span class="value">${esc(shot.subjectAction || shot.description || '')}</span></div>
+          <div class="exec-item"><span class="label">构图</span><span class="value">${esc(shot.composition || '')}</span></div>
+          <div class="exec-item"><span class="label">光线方案</span><span class="value">${typeof shot.lighting === 'object' ? `${esc(shot.lighting.main || '')}<br><small>方向：${esc(shot.lighting.direction || '')}</small><br><small>辅助：${esc(shot.lighting.auxiliary || '')}</small><br><small>效果：${esc(shot.lighting.effect || '')}</small>` : esc(shot.lighting || '')}</span></div>
+          <div class="exec-item"><span class="label">情绪</span><span class="value">${esc(shot.emotion || '')}</span></div>
+          <div class="exec-item"><span class="label">预计</span><span class="value">${esc(shot.estimatedMinutes || shot.duration || 0)} 分钟</span></div>
+          <div class="exec-item"><span class="label">备选</span><span class="value">${esc(shot.fallback || shot.alternative || '')}</span></div>
+          ${shot.whyThisShot ? `<div class="exec-item" style="grid-column:1/-1"><span class="label">为什么拍</span><span class="value">${esc(shot.whyThisShot)}</span></div>` : ''}
+          ${shot.visualMatchScore != null ? `<div class="exec-item"><span class="label">参考匹配</span><span class="value">${shot.visualMatchScore}%</span></div>` : ''}
+        </div>
+      </div>`;
+    }).join('')}
+
+    <div class="foot">PhotoAtelier V3.1 执行稿 · ${esc(new Date().toLocaleString())}</div>
+    <script>window.addEventListener('load',()=>setTimeout(()=>window.print(),300));<\/script></body></html>`);
     popup.document.close();
   }
 

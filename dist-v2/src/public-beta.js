@@ -6,10 +6,10 @@ const BUILD = 'public-beta-2026.07';
 const locale = document.documentElement.lang || 'zh-CN';
 const languageRoutes = { 'zh-CN': '/', en: '/en/', ja: '/ja/', ko: '/ko/' };
 const messages = {
-  'zh-CN': { sending: '正在提交…', received: '已收到。谢谢你把问题说清楚。', queued: '当前网络不可用，反馈已保存在本机，下次打开会自动重试。' },
-  en: { sending: 'Submitting…', received: 'Received. Thank you for explaining the issue clearly.', queued: 'You appear to be offline. The feedback is saved locally and will retry next time.' },
-  ja: { sending: '送信中…', received: '受け付けました。詳しく教えていただきありがとうございます。', queued: 'オフラインのため端末に保存しました。次回の起動時に再送します。' },
-  ko: { sending: '전송 중…', received: '접수했습니다. 문제를 자세히 알려주셔서 감사합니다.', queued: '오프라인 상태입니다. 피드백을 기기에 저장했으며 다음 실행 시 다시 전송합니다.' },
+  'zh-CN': { sending: '正在提交...', received: '已收到。谢谢你把问题说明清楚。', queued: '当前网络不可用，反馈已保存在本机，下次打开会自动重试。' },
+  en: { sending: 'Submitting...', received: 'Received. Thank you for explaining the issue clearly.', queued: 'You appear to be offline. The feedback is saved locally and will retry next time.' },
+  ja: { sending: '送信中...', received: '受け付けました。詳しく教えていただきありがとうございます。', queued: 'オフラインのため端末に保存しました。次回の起動時に再送します。' },
+  ko: { sending: '전송 중...', received: '접수했습니다. 문제를 자세히 알려주셔서 감사합니다.', queued: '오프라인 상태입니다. 기기에 저장했고 다음 실행 때 다시 전송합니다.' },
 };
 
 const consentInput = document.querySelector('#analytics-consent');
