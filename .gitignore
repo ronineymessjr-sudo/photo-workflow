@@ -1,0 +1,8 @@
+assets/local-obsidian-config.json
+node_modules/
+.browser-profile/
+data/platform-captures/
+data/platform-debug/
+data/daily-candidates.json
+data/daily-knowledge/
+config/daily-knowledge-agent.local.json

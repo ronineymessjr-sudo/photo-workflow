@@ -1,0 +1,12 @@
+{
+  "application": "PhotoAtelier",
+  "version": "2.5.0-domain-implementation",
+  "builtAt": "2026-07-18T05:45:12.603Z",
+  "canonicalEntry": "index.html",
+  "distribution": "original-ui-with-v5-engine",
+  "primaryEntry": "legacy/index.html",
+  "v5WorkspaceEntry": "workspace.html",
+  "classicEntry": "legacy/index.html",
+  "optionalAssetPack": true,
+  "referenceDataPack": "bundled starter gallery plus separate full reference add-on"
+}

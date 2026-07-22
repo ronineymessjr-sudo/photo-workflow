@@ -1,0 +1,625 @@
+{
+  "version": 2,
+  "generatedAt": "2026-07-13T00:00:00Z",
+  "itemCount": 12,
+  "policy": {
+    "defaultRecommendationInput": "sRGB display-referred",
+    "rules": [
+      "Never recommend a camera-log LUT for a different input color space.",
+      "For S-Log3, D-Log M, Apple Log and Blackmagic Film, perform the matching technical transform before an sRGB creative LUT.",
+      "DJI D-Log M transforms are model-specific and require an exact camera model match.",
+      "PixelCake is an XMP/preset and processed-image workflow until direct CUBE import is officially documented.",
+      "Show source, license, input color space and warning before installation.",
+      "LUT strength is a creative control; validate skin tone and clipping on the actual image.",
+      "Film and camera names are descriptive references, not claims of official affiliation."
+    ]
+  },
+  "sources": [
+    {
+      "id": "t3mujinpack",
+      "repo": "https://github.com/t3mujinpack/t3mujinpack",
+      "license": "MIT",
+      "starsSnapshot": 992,
+      "forksSnapshot": 56,
+      "auditedAt": "2026-07-13",
+      "adoption": "bundle-converted",
+      "notes": "Active photography preset project; selected Hald CLUTs converted to 33-point cube and parser-tested."
+    },
+    {
+      "id": "v-log-alchemy",
+      "repo": "https://github.com/shenmintao/V-Log-Alchemy",
+      "license": "Apache-2.0",
+      "starsSnapshot": 302,
+      "forksSnapshot": 23,
+      "auditedAt": "2026-07-13",
+      "adoption": "bundle-input-gated",
+      "notes": "Pre-generated 33-point cubes; strictly gated to Panasonic V-Log/V-Gamut input."
+    },
+    {
+      "id": "ocio-aces",
+      "repo": "https://github.com/AcademySoftwareFoundation/OpenColorIO-Config-ACES",
+      "license": "BSD-3-Clause",
+      "starsSnapshot": 419,
+      "forksSnapshot": 45,
+      "auditedAt": "2026-07-13",
+      "adoption": "reference-only",
+      "notes": "Professional ACES color-management reference, not bundled as a creative sRGB LUT pack."
+    }
+  ],
+  "softwareProfiles": [
+    {
+      "id": "davinci-resolve",
+      "name": "DaVinci Resolve",
+      "directCubeImport": true,
+      "formats": [
+        ".cube"
+      ],
+      "supportedCubeSizes": [
+        17,
+        33
+      ],
+      "status": "officially-documented",
+      "sourceUrl": "https://documents.blackmagicdesign.com/cn/UserManuals/DaVinci-Resolve-18-Colorist-Guide.pdf",
+      "workflow": "在项目设置的色彩管理中打开 LUT 文件夹，放入 .cube 后刷新；Log 素材优先用色彩空间转换节点，再叠加创意 LUT。"
+    },
+    {
+      "id": "photoshop",
+      "name": "Adobe Photoshop",
+      "directCubeImport": true,
+      "formats": [
+        ".cube",
+        ".3dl",
+        ".csp"
+      ],
+      "supportedCubeSizes": [
+        33
+      ],
+      "status": "officially-documented",
+      "sourceUrl": "https://helpx.adobe.com/sg/photoshop/using/export-color-lookup-tables.html",
+      "workflow": "使用“颜色查找”调整图层载入 .cube；相机 Log 应先正确转换到工作色彩空间，再应用创意 LUT。"
+    },
+    {
+      "id": "pixelcake",
+      "name": "像素蛋糕",
+      "directCubeImport": false,
+      "formats": [
+        ".xmp",
+        "预设口令",
+        "TIFF/JPEG"
+      ],
+      "supportedCubeSizes": [],
+      "status": "xmp-workflow-only",
+      "sourceUrl": "https://www.pixcakes.com/guide",
+      "workflow": "官方资料确认可导入 XMP 和预设口令，未确认直接导入 .cube。建议在 Photoshop/DaVinci 完成 LUT 调色后导出 16-bit TIFF，再进入像素蛋糕做人像精修。"
+    },
+    {
+      "id": "blackmagic-camera",
+      "name": "Blackmagic Camera",
+      "directCubeImport": true,
+      "formats": [
+        ".cube"
+      ],
+      "supportedCubeSizes": [
+        17,
+        33
+      ],
+      "status": "officially-documented",
+      "sourceUrl": "https://www.blackmagicdesign.com/cn/products/blackmagiccamera/techspecs/W-APP-02",
+      "workflow": "在 LUT 选择中导入 17 或 33 点 .cube。优先只用于监看；确认输入空间无误后再决定是否将 LUT 烘焙进素材。支持设备可直接使用内置 Apple Log to Rec.709。"
+    }
+  ],
+  "inputTransforms": [
+    {
+      "id": "srgb-display",
+      "label": "sRGB / Rec.709 成片",
+      "inputColorSpace": "sRGB display-referred",
+      "outputColorSpace": "sRGB display-referred",
+      "distributionMode": "not-required",
+      "modelRequired": false,
+      "status": "ready",
+      "sourceName": "PhotoAtelier workflow rule",
+      "sourceUrl": "",
+      "instructions": "不需要技术转换，可直接选择创意 LUT 并调整强度。"
+    },
+    {
+      "id": "sony-slog3-sgamut3cine",
+      "label": "Sony S-Log3 / S-Gamut3.Cine",
+      "inputColorSpace": "Sony S-Log3 / S-Gamut3.Cine",
+      "outputColorSpace": "Rec.709",
+      "distributionMode": "external-official-download",
+      "modelRequired": false,
+      "status": "official-source-linked",
+      "sourceName": "Sony Look Profile (3D LUT)",
+      "sourceUrl": "https://www.sony.com/electronics/support/software/00263050",
+      "instructions": "从 Sony 官方下载匹配 S-Gamut3.Cine/S-Log3 的 Look Profile。若素材是 S-Gamut3 而非 S-Gamut3.Cine，必须改选对应版本。"
+    },
+    {
+      "id": "dji-dlogm",
+      "label": "DJI D-Log M",
+      "inputColorSpace": "DJI D-Log M (model-specific)",
+      "outputColorSpace": "Rec.709",
+      "distributionMode": "external-official-download",
+      "modelRequired": true,
+      "status": "official-source-linked",
+      "sourceName": "DJI official model LUT directory",
+      "sourceUrl": "https://repair.dji.com/help/content?customId=01700007105&lang=en&paperDocType=ARTICLE&re=US&spaceId=17",
+      "instructions": "必须先选择具体机型，再下载该机型官方 D-Log M to Rec.709 LUT；Pocket、Action、Mini、Air、Mavic 的 LUT 不应混用。"
+    },
+    {
+      "id": "apple-log",
+      "label": "Apple Log",
+      "inputColorSpace": "Apple Log",
+      "outputColorSpace": "Rec.709",
+      "distributionMode": "built-in-or-external-official-download",
+      "modelRequired": true,
+      "status": "official-source-linked",
+      "sourceName": "Apple Log profile / Blackmagic Camera built-in transform",
+      "sourceUrl": "https://developer.apple.com/download/all/?q=Apple%20Log%20profile",
+      "instructions": "Blackmagic Camera 在受支持 iPhone 上可使用内置 Apple Log to Rec.709。后期也可从 Apple Developer 下载官方 profile；不要把普通 Rec.709 手机视频当作 Apple Log。"
+    },
+    {
+      "id": "panasonic-vlog",
+      "label": "Panasonic V-Log / V-Gamut",
+      "inputColorSpace": "Panasonic V-Log / V-Gamut",
+      "outputColorSpace": "Rec.709 creative output",
+      "distributionMode": "bundled-open-source-looks",
+      "modelRequired": false,
+      "status": "ready",
+      "sourceName": "V-Log-Alchemy (Apache-2.0)",
+      "sourceUrl": "https://github.com/shenmintao/V-Log-Alchemy",
+      "instructions": "可直接使用库内 4 个 V-Log 专用 Look；不要用于 Sony、DJI、Apple Log 或普通 sRGB。"
+    },
+    {
+      "id": "blackmagic-film-gen5",
+      "label": "Blackmagic Film Gen 5",
+      "inputColorSpace": "Blackmagic Design Film Gen 5",
+      "outputColorSpace": "Rec.709",
+      "distributionMode": "use-host-color-management",
+      "modelRequired": true,
+      "status": "host-transform-recommended",
+      "sourceName": "DaVinci Resolve Color Space Transform",
+      "sourceUrl": "https://www.blackmagicdesign.com/products/davinciresolve",
+      "instructions": "优先在 DaVinci Resolve 使用色彩管理或 Color Space Transform 节点转换，再应用 sRGB/Rec.709 创意 LUT。"
+    }
+  ],
+  "items": [
+    {
+      "id": "t3-portra-160",
+      "title": "Portrait 160 Film Emulation",
+      "filename": "t3-portra-160.cube",
+      "fileUrl": "assets/luts/open/t3-portra-160.cube",
+      "size": 33,
+      "category": "portrait-film",
+      "tags": [
+        "portrait",
+        "skin",
+        "soft",
+        "warm",
+        "胶片",
+        "人像"
+      ],
+      "useCase": "柔和肤色和低反差，适合自然光人像。",
+      "warning": "高曝光肤色可能偏暖，建议 40%-75% 强度。",
+      "inputColorSpace": "sRGB display-referred",
+      "outputColorSpace": "sRGB display-referred",
+      "cameraCompatibility": "All cameras after RAW development to sRGB",
+      "skinTone": "review-required",
+      "sourceName": "t3mujinpack Hald CLUT",
+      "sourceRepo": "https://github.com/t3mujinpack/t3mujinpack",
+      "sourceUrl": "https://github.com/t3mujinpack/t3mujinpack/blob/master/haldcluts/t3mujinpack%20-%20Color%20Negative%20-%20Kodak%20Portra%20160.png",
+      "sourceLicense": "MIT",
+      "licenseFile": "assets/luts/licenses/t3mujinpack-MIT.txt",
+      "commercialUse": true,
+      "attributionRequired": true,
+      "validationStatus": "license-and-parser-verified",
+      "trademarkNotice": "Unofficial film-stock emulation; product names identify the simulated reference only.",
+      "compatibility": {
+        "davinci-resolve": "direct-cube",
+        "photoshop": "direct-cube",
+        "pixelcake": "processed-image-only",
+        "blackmagic-camera": "direct-cube-33"
+      }
+    },
+    {
+      "id": "t3-portra-400",
+      "title": "Portrait 400 Film Emulation",
+      "filename": "t3-portra-400.cube",
+      "fileUrl": "assets/luts/open/t3-portra-400.cube",
+      "size": 33,
+      "category": "portrait-film",
+      "tags": [
+        "portrait",
+        "skin",
+        "film",
+        "warm",
+        "胶片",
+        "客片"
+      ],
+      "useCase": "暖肤色和宽容度观感，适合客片与生活方式摄影。",
+      "warning": "先校正白平衡，避免室内暖光叠加过黄。",
+      "inputColorSpace": "sRGB display-referred",
+      "outputColorSpace": "sRGB display-referred",
+      "cameraCompatibility": "All cameras after RAW development to sRGB",
+      "skinTone": "review-required",
+      "sourceName": "t3mujinpack Hald CLUT",
+      "sourceRepo": "https://github.com/t3mujinpack/t3mujinpack",
+      "sourceUrl": "https://github.com/t3mujinpack/t3mujinpack/blob/master/haldcluts/t3mujinpack%20-%20Color%20Negative%20-%20Kodak%20Portra%20400.png",
+      "sourceLicense": "MIT",
+      "licenseFile": "assets/luts/licenses/t3mujinpack-MIT.txt",
+      "commercialUse": true,
+      "attributionRequired": true,
+      "validationStatus": "license-and-parser-verified",
+      "trademarkNotice": "Unofficial film-stock emulation; product names identify the simulated reference only.",
+      "compatibility": {
+        "davinci-resolve": "direct-cube",
+        "photoshop": "direct-cube",
+        "pixelcake": "processed-image-only",
+        "blackmagic-camera": "direct-cube-33"
+      }
+    },
+    {
+      "id": "t3-pro-400h",
+      "title": "Pastel 400H Film Emulation",
+      "filename": "t3-pro-400h.cube",
+      "fileUrl": "assets/luts/open/t3-pro-400h.cube",
+      "size": 33,
+      "category": "pastel-portrait",
+      "tags": [
+        "pastel",
+        "green",
+        "soft",
+        "wedding",
+        "清新",
+        "婚纱"
+      ],
+      "useCase": "柔和粉彩和偏冷绿色，适合清新人像与婚纱。",
+      "warning": "绿色环境可能进一步偏青，注意肤色与植被分离。",
+      "inputColorSpace": "sRGB display-referred",
+      "outputColorSpace": "sRGB display-referred",
+      "cameraCompatibility": "All cameras after RAW development to sRGB",
+      "skinTone": "review-required",
+      "sourceName": "t3mujinpack Hald CLUT",
+      "sourceRepo": "https://github.com/t3mujinpack/t3mujinpack",
+      "sourceUrl": "https://github.com/t3mujinpack/t3mujinpack/blob/master/haldcluts/t3mujinpack%20-%20Color%20Negative%20-%20Fuji%20Pro%20400H.png",
+      "sourceLicense": "MIT",
+      "licenseFile": "assets/luts/licenses/t3mujinpack-MIT.txt",
+      "commercialUse": true,
+      "attributionRequired": true,
+      "validationStatus": "license-and-parser-verified",
+      "trademarkNotice": "Unofficial film-stock emulation; product names identify the simulated reference only.",
+      "compatibility": {
+        "davinci-resolve": "direct-cube",
+        "photoshop": "direct-cube",
+        "pixelcake": "processed-image-only",
+        "blackmagic-camera": "direct-cube-33"
+      }
+    },
+    {
+      "id": "t3-superia-400",
+      "title": "Superia 400 Street Emulation",
+      "filename": "t3-superia-400.cube",
+      "fileUrl": "assets/luts/open/t3-superia-400.cube",
+      "size": 33,
+      "category": "street-film",
+      "tags": [
+        "street",
+        "urban",
+        "contrast",
+        "film",
+        "街拍",
+        "城市"
+      ],
+      "useCase": "中等对比和城市胶片气息，适合街拍。",
+      "warning": "阴影可能偏冷，夜景应降低强度。",
+      "inputColorSpace": "sRGB display-referred",
+      "outputColorSpace": "sRGB display-referred",
+      "cameraCompatibility": "All cameras after RAW development to sRGB",
+      "skinTone": "review-required",
+      "sourceName": "t3mujinpack Hald CLUT",
+      "sourceRepo": "https://github.com/t3mujinpack/t3mujinpack",
+      "sourceUrl": "https://github.com/t3mujinpack/t3mujinpack/blob/master/haldcluts/t3mujinpack%20-%20Color%20Negative%20-%20Fuji%20Superia%20400.png",
+      "sourceLicense": "MIT",
+      "licenseFile": "assets/luts/licenses/t3mujinpack-MIT.txt",
+      "commercialUse": true,
+      "attributionRequired": true,
+      "validationStatus": "license-and-parser-verified",
+      "trademarkNotice": "Unofficial film-stock emulation; product names identify the simulated reference only.",
+      "compatibility": {
+        "davinci-resolve": "direct-cube",
+        "photoshop": "direct-cube",
+        "pixelcake": "processed-image-only",
+        "blackmagic-camera": "direct-cube-33"
+      }
+    },
+    {
+      "id": "t3-astia-100f",
+      "title": "Astia 100F Slide Emulation",
+      "filename": "t3-astia-100f.cube",
+      "fileUrl": "assets/luts/open/t3-astia-100f.cube",
+      "size": 33,
+      "category": "soft-slide",
+      "tags": [
+        "soft",
+        "portrait",
+        "fashion",
+        "skin",
+        "柔和",
+        "时尚"
+      ],
+      "useCase": "相对柔和的反转片观感，适合时尚与人像。",
+      "warning": "高饱和服装需检查红色通道。",
+      "inputColorSpace": "sRGB display-referred",
+      "outputColorSpace": "sRGB display-referred",
+      "cameraCompatibility": "All cameras after RAW development to sRGB",
+      "skinTone": "review-required",
+      "sourceName": "t3mujinpack Hald CLUT",
+      "sourceRepo": "https://github.com/t3mujinpack/t3mujinpack",
+      "sourceUrl": "https://github.com/t3mujinpack/t3mujinpack/blob/master/haldcluts/t3mujinpack%20-%20Color%20Slide%20-%20Fuji%20Astia%20100F.png",
+      "sourceLicense": "MIT",
+      "licenseFile": "assets/luts/licenses/t3mujinpack-MIT.txt",
+      "commercialUse": true,
+      "attributionRequired": true,
+      "validationStatus": "license-and-parser-verified",
+      "trademarkNotice": "Unofficial film-stock emulation; product names identify the simulated reference only.",
+      "compatibility": {
+        "davinci-resolve": "direct-cube",
+        "photoshop": "direct-cube",
+        "pixelcake": "processed-image-only",
+        "blackmagic-camera": "direct-cube-33"
+      }
+    },
+    {
+      "id": "t3-velvia-50",
+      "title": "Velvia 50 Landscape Emulation",
+      "filename": "t3-velvia-50.cube",
+      "fileUrl": "assets/luts/open/t3-velvia-50.cube",
+      "size": 33,
+      "category": "landscape-vivid",
+      "tags": [
+        "landscape",
+        "vivid",
+        "nature",
+        "travel",
+        "风光",
+        "旅行"
+      ],
+      "useCase": "高饱和风光方向，强化蓝天和植被。",
+      "warning": "不建议直接用于近景肤色；人像请低于 35% 强度。",
+      "inputColorSpace": "sRGB display-referred",
+      "outputColorSpace": "sRGB display-referred",
+      "cameraCompatibility": "All cameras after RAW development to sRGB",
+      "skinTone": "review-required",
+      "sourceName": "t3mujinpack Hald CLUT",
+      "sourceRepo": "https://github.com/t3mujinpack/t3mujinpack",
+      "sourceUrl": "https://github.com/t3mujinpack/t3mujinpack/blob/master/haldcluts/t3mujinpack%20-%20Color%20Slide%20-%20Fuji%20Velvia%2050.png",
+      "sourceLicense": "MIT",
+      "licenseFile": "assets/luts/licenses/t3mujinpack-MIT.txt",
+      "commercialUse": true,
+      "attributionRequired": true,
+      "validationStatus": "license-and-parser-verified",
+      "trademarkNotice": "Unofficial film-stock emulation; product names identify the simulated reference only.",
+      "compatibility": {
+        "davinci-resolve": "direct-cube",
+        "photoshop": "direct-cube",
+        "pixelcake": "processed-image-only",
+        "blackmagic-camera": "direct-cube-33"
+      }
+    },
+    {
+      "id": "t3-hp5-400",
+      "title": "HP5 400 Monochrome Emulation",
+      "filename": "t3-hp5-400.cube",
+      "fileUrl": "assets/luts/open/t3-hp5-400.cube",
+      "size": 33,
+      "category": "monochrome",
+      "tags": [
+        "black white",
+        "documentary",
+        "grain",
+        "黑白",
+        "纪实"
+      ],
+      "useCase": "经典中等反差黑白方向，适合纪实和情绪人像。",
+      "warning": "LUT 不生成真实颗粒，颗粒需另行添加。",
+      "inputColorSpace": "sRGB display-referred",
+      "outputColorSpace": "sRGB display-referred",
+      "cameraCompatibility": "All cameras after RAW development to sRGB",
+      "skinTone": "review-required",
+      "sourceName": "t3mujinpack Hald CLUT",
+      "sourceRepo": "https://github.com/t3mujinpack/t3mujinpack",
+      "sourceUrl": "https://github.com/t3mujinpack/t3mujinpack/blob/master/haldcluts/t3mujinpack%20-%20Black%20and%20White%20-%20Ilford%20HP5%20Plus%20400.png",
+      "sourceLicense": "MIT",
+      "licenseFile": "assets/luts/licenses/t3mujinpack-MIT.txt",
+      "commercialUse": true,
+      "attributionRequired": true,
+      "validationStatus": "license-and-parser-verified",
+      "trademarkNotice": "Unofficial film-stock emulation; product names identify the simulated reference only.",
+      "compatibility": {
+        "davinci-resolve": "direct-cube",
+        "photoshop": "direct-cube",
+        "pixelcake": "processed-image-only",
+        "blackmagic-camera": "direct-cube-33"
+      }
+    },
+    {
+      "id": "t3-trix-400",
+      "title": "Tri-X 400 Monochrome Emulation",
+      "filename": "t3-trix-400.cube",
+      "fileUrl": "assets/luts/open/t3-trix-400.cube",
+      "size": 33,
+      "category": "monochrome-contrast",
+      "tags": [
+        "black white",
+        "contrast",
+        "street",
+        "黑白",
+        "街拍"
+      ],
+      "useCase": "更硬朗的黑白对比，适合街拍和舞台。",
+      "warning": "暗部容易压实，先检查直方图。",
+      "inputColorSpace": "sRGB display-referred",
+      "outputColorSpace": "sRGB display-referred",
+      "cameraCompatibility": "All cameras after RAW development to sRGB",
+      "skinTone": "review-required",
+      "sourceName": "t3mujinpack Hald CLUT",
+      "sourceRepo": "https://github.com/t3mujinpack/t3mujinpack",
+      "sourceUrl": "https://github.com/t3mujinpack/t3mujinpack/blob/master/haldcluts/t3mujinpack%20-%20Black%20and%20White%20-%20Kodak%20Tri-X%20400.png",
+      "sourceLicense": "MIT",
+      "licenseFile": "assets/luts/licenses/t3mujinpack-MIT.txt",
+      "commercialUse": true,
+      "attributionRequired": true,
+      "validationStatus": "license-and-parser-verified",
+      "trademarkNotice": "Unofficial film-stock emulation; product names identify the simulated reference only.",
+      "compatibility": {
+        "davinci-resolve": "direct-cube",
+        "photoshop": "direct-cube",
+        "pixelcake": "processed-image-only",
+        "blackmagic-camera": "direct-cube-33"
+      }
+    },
+    {
+      "id": "vlog-astia",
+      "title": "V-Log Astia Soft",
+      "filename": "vlog-astia.cube",
+      "fileUrl": "assets/luts/open/vlog-astia.cube",
+      "size": 33,
+      "category": "vlog-portrait",
+      "tags": [
+        "v-log",
+        "portrait",
+        "soft",
+        "人像",
+        "柔和"
+      ],
+      "useCase": "Panasonic V-Log 人像与柔和肤色。",
+      "warning": "Only for Panasonic V-Log / V-Gamut input. Do not apply directly to normal sRGB photos.",
+      "inputColorSpace": "Panasonic V-Log / V-Gamut",
+      "outputColorSpace": "Rec.709 creative output",
+      "cameraCompatibility": "Panasonic Lumix V-Log cameras",
+      "skinTone": "profile-dependent",
+      "sourceName": "V-Log-Alchemy",
+      "sourceRepo": "https://github.com/shenmintao/V-Log-Alchemy",
+      "sourceUrl": "https://github.com/shenmintao/V-Log-Alchemy/blob/main/Luts/Fujifilm/FLog2C_to_ASTIA_VLog.cube",
+      "sourceLicense": "Apache-2.0",
+      "licenseFile": "assets/luts/licenses/V-Log-Alchemy-Apache-2.0.txt",
+      "commercialUse": true,
+      "attributionRequired": true,
+      "validationStatus": "license-and-parser-verified",
+      "trademarkNotice": "Unofficial camera/film-look transform; not affiliated with the named manufacturers.",
+      "compatibility": {
+        "davinci-resolve": "direct-cube",
+        "photoshop": "direct-cube-after-log-confirmation",
+        "pixelcake": "processed-image-only",
+        "blackmagic-camera": "direct-cube-33-vlog-input-only"
+      }
+    },
+    {
+      "id": "vlog-classic-neg",
+      "title": "V-Log Classic Negative",
+      "filename": "vlog-classic-neg.cube",
+      "fileUrl": "assets/luts/open/vlog-classic-neg.cube",
+      "size": 33,
+      "category": "vlog-street",
+      "tags": [
+        "v-log",
+        "street",
+        "contrast",
+        "街拍",
+        "复古"
+      ],
+      "useCase": "Panasonic V-Log 街拍与高对比暖色。",
+      "warning": "Only for Panasonic V-Log / V-Gamut input. Do not apply directly to normal sRGB photos.",
+      "inputColorSpace": "Panasonic V-Log / V-Gamut",
+      "outputColorSpace": "Rec.709 creative output",
+      "cameraCompatibility": "Panasonic Lumix V-Log cameras",
+      "skinTone": "profile-dependent",
+      "sourceName": "V-Log-Alchemy",
+      "sourceRepo": "https://github.com/shenmintao/V-Log-Alchemy",
+      "sourceUrl": "https://github.com/shenmintao/V-Log-Alchemy/blob/main/Luts/Fujifilm/FLog2C_to_CLASSIC-Neg_VLog.cube",
+      "sourceLicense": "Apache-2.0",
+      "licenseFile": "assets/luts/licenses/V-Log-Alchemy-Apache-2.0.txt",
+      "commercialUse": true,
+      "attributionRequired": true,
+      "validationStatus": "license-and-parser-verified",
+      "trademarkNotice": "Unofficial camera/film-look transform; not affiliated with the named manufacturers.",
+      "compatibility": {
+        "davinci-resolve": "direct-cube",
+        "photoshop": "direct-cube-after-log-confirmation",
+        "pixelcake": "processed-image-only",
+        "blackmagic-camera": "direct-cube-33-vlog-input-only"
+      }
+    },
+    {
+      "id": "vlog-eterna",
+      "title": "V-Log Eterna Cinema",
+      "filename": "vlog-eterna.cube",
+      "fileUrl": "assets/luts/open/vlog-eterna.cube",
+      "size": 33,
+      "category": "vlog-cinema",
+      "tags": [
+        "v-log",
+        "cinematic",
+        "soft highlight",
+        "电影感",
+        "视频"
+      ],
+      "useCase": "Panasonic V-Log 低对比电影基底。",
+      "warning": "Only for Panasonic V-Log / V-Gamut input. Do not apply directly to normal sRGB photos.",
+      "inputColorSpace": "Panasonic V-Log / V-Gamut",
+      "outputColorSpace": "Rec.709 creative output",
+      "cameraCompatibility": "Panasonic Lumix V-Log cameras",
+      "skinTone": "profile-dependent",
+      "sourceName": "V-Log-Alchemy",
+      "sourceRepo": "https://github.com/shenmintao/V-Log-Alchemy",
+      "sourceUrl": "https://github.com/shenmintao/V-Log-Alchemy/blob/main/Luts/Fujifilm/FLog2C_to_ETERNA_VLog.cube",
+      "sourceLicense": "Apache-2.0",
+      "licenseFile": "assets/luts/licenses/V-Log-Alchemy-Apache-2.0.txt",
+      "commercialUse": true,
+      "attributionRequired": true,
+      "validationStatus": "license-and-parser-verified",
+      "trademarkNotice": "Unofficial camera/film-look transform; not affiliated with the named manufacturers.",
+      "compatibility": {
+        "davinci-resolve": "direct-cube",
+        "photoshop": "direct-cube-after-log-confirmation",
+        "pixelcake": "processed-image-only",
+        "blackmagic-camera": "direct-cube-33-vlog-input-only"
+      }
+    },
+    {
+      "id": "vlog-acros",
+      "title": "V-Log Acros Monochrome",
+      "filename": "vlog-acros.cube",
+      "fileUrl": "assets/luts/open/vlog-acros.cube",
+      "size": 33,
+      "category": "vlog-monochrome",
+      "tags": [
+        "v-log",
+        "black white",
+        "documentary",
+        "黑白",
+        "纪实"
+      ],
+      "useCase": "Panasonic V-Log 黑白纪实方向。",
+      "warning": "Only for Panasonic V-Log / V-Gamut input. Do not apply directly to normal sRGB photos.",
+      "inputColorSpace": "Panasonic V-Log / V-Gamut",
+      "outputColorSpace": "Rec.709 creative output",
+      "cameraCompatibility": "Panasonic Lumix V-Log cameras",
+      "skinTone": "profile-dependent",
+      "sourceName": "V-Log-Alchemy",
+      "sourceRepo": "https://github.com/shenmintao/V-Log-Alchemy",
+      "sourceUrl": "https://github.com/shenmintao/V-Log-Alchemy/blob/main/Luts/Fujifilm/FLog2C_to_ACROS_VLog.cube",
+      "sourceLicense": "Apache-2.0",
+      "licenseFile": "assets/luts/licenses/V-Log-Alchemy-Apache-2.0.txt",
+      "commercialUse": true,
+      "attributionRequired": true,
+      "validationStatus": "license-and-parser-verified",
+      "trademarkNotice": "Unofficial camera/film-look transform; not affiliated with the named manufacturers.",
+      "compatibility": {
+        "davinci-resolve": "direct-cube",
+        "photoshop": "direct-cube-after-log-confirmation",
+        "pixelcake": "processed-image-only",
+        "blackmagic-camera": "direct-cube-33-vlog-input-only"
+      }
+    }
+  ]
+}

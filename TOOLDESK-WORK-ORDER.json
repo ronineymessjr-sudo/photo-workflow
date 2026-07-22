@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "project": "PhotoAtelier V2.5",
+  "objective": "Migrate compatibility UI orchestration to V5 use cases while preserving behavior and current visual structure.",
+  "queue": [
+    {"id":"UI-V5-01","title":"Resource selection migration","scope":"catalog","dependsOn":[],"status":"completed","completedAt":"2026-07-15","targetedTest":"npm run test:scope -- catalog"},
+    {"id":"UI-V5-02","title":"Reference library and relation migration","scope":"references","dependsOn":["UI-V5-01"],"status":"completed","completedAt":"2026-07-15","targetedTest":"npm run test:scope -- references"},
+    {"id":"UI-V5-03","title":"Planning generation and approval migration","scope":"planning","dependsOn":["UI-V5-01","UI-V5-02"],"status":"completed","completedAt":"2026-07-15","targetedTest":"npm run test:scope -- planning"},
+    {"id":"UI-V5-04","title":"Calendar, task and financial migration","scope":"schedule","dependsOn":["UI-V5-03"],"status":"completed","completedAt":"2026-07-15","targetedTest":"npm run test:scope -- schedule"},
+    {"id":"UI-V5-05","title":"On-set workflow migration","scope":"schedule","dependsOn":["UI-V5-03","UI-V5-04"],"status":"completed","completedAt":"2026-07-15","targetedTest":"npm run test:scope -- schedule"},
+    {"id":"UI-V5-06","title":"Post-production workflow migration","scope":"post","dependsOn":["UI-V5-05"],"status":"completed","completedAt":"2026-07-15","targetedTest":"npm run test:scope -- post"},
+    {"id":"UI-V5-07","title":"Model and assistant share packet migration","scope":"sharing","dependsOn":["UI-V5-03"],"status":"completed","completedAt":"2026-07-15","targetedTest":"npm run test:scope -- sharing"},
+    {"id":"EXT-01","title":"Real browser E2E","scope":"ui","dependsOn":["UI-V5-01","UI-V5-02","UI-V5-03","UI-V5-04","UI-V5-05","UI-V5-06","UI-V5-07"],"requiresExternalEnvironment":true},
+    {"id":"EXT-02","title":"Real Feishu projection validation","scope":"worker","dependsOn":[],"requiresCredentials":true},
+    {"id":"EXT-03","title":"Real text and image provider validation","scope":"worker","dependsOn":[],"requiresCredentials":true}
+  ]
+}

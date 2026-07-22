@@ -1,0 +1,5 @@
+ToolDesk-ready
+Product: PhotoAtelier
+Product version: 2.5.0-domain-implementation
+Primary entry: 00-TOOLDESK-START-HERE.md
+Agent rules: AGENTS.md

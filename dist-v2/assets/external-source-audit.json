@@ -1,0 +1,247 @@
+{
+  "generatedAt": "2026-07-04",
+  "auditVersion": "2026-07-04.1",
+  "scoring": {
+    "authority": "0-25: standard body, paper, maintained project, or informal repo",
+    "dataSufficiency": "0-25: dataset size, taxonomy completeness, field coverage",
+    "licenseSafety": "0-20: clear license and commercial suitability",
+    "communityFeedback": "0-15: stars/forks/issues/user adoption signals",
+    "integrationFit": "0-15: can be cleanly mapped into PhotoAtelier without heavy dependency"
+  },
+  "adoptionLevels": {
+    "adopt": "Use directly as schema/taxonomy field source.",
+    "adapt": "Use concepts and normalized labels, but keep local heuristics and manual review.",
+    "reference": "Keep as inspiration only; do not import assets or rely on it for production decisions.",
+    "reject": "Do not use until license/data/maintenance concerns are resolved."
+  },
+  "sources": [
+    {
+      "id": "iptc-photo-metadata",
+      "name": "IPTC Photo Metadata Standard 2025.1",
+      "url": "https://www.iptc.org/std/photometadata/specification/IPTC-PhotoMetadata",
+      "type": "professional-standard",
+      "score": 96,
+      "adoptionLevel": "adopt",
+      "professionalCertification": "Formal IPTC standard governed by the IPTC Photo Metadata Working Group and IPTC Standards Committee.",
+      "dataSufficiency": "High. Covers administrative, descriptive and rights-related photo metadata; latest version adds AI prompt metadata.",
+      "communityFeedback": "High industry adoption. IPTC states its fields are widely supported by imaging software and integrate with DAM systems.",
+      "licenseAssessment": "Documentation is public; use as schema guidance, not asset content.",
+      "risks": ["Does not define camera technical metadata; use EXIF/XMP for capture/edit history."],
+      "evidence": [
+        "Specification says IPTC Photo Metadata properties are widely supported by imaging software.",
+        "2025.1 adds AI Prompt Information, AI Prompt Writer Name, AI System Used and AI System Version Used.",
+        "User Guide is for photographers, photo editors and metadata managers."
+      ],
+      "howToCallInProject": {
+        "current": "Map title, description, creator, copyright, keywords, sourceUrl, rightsUsageTerms and aiPromptInfo fields.",
+        "next": "When exporting final images, write IPTC/XMP sidecar or embedded metadata via ExifTool."
+      },
+      "mappedFields": ["title", "summary", "author", "tags", "seoKeywords", "licenseClass", "sourceUrl", "aiPromptInfo"]
+    },
+    {
+      "id": "digikam-dam",
+      "name": "digiKam DAM model",
+      "url": "https://www.digikam.org/about/",
+      "type": "mature-open-source-dam",
+      "score": 88,
+      "adoptionLevel": "adopt",
+      "professionalCertification": "No standards-body certification, but mature KDE-family open-source DAM application.",
+      "dataSufficiency": "High for workflow fields: albums, tags, ratings, labels, dates, locations and EXIF/IPTC/XMP metadata search.",
+      "communityFeedback": "High product maturity signal: long-running open-source project, cross-platform, documented features.",
+      "licenseAssessment": "Use ideas/schema; do not embed code.",
+      "risks": ["digiKam is an application model, not a formal schema standard."],
+      "evidence": [
+        "digiKam describes itself as an advanced open-source digital photo management application.",
+        "It supports organizing with tags, ratings and labels.",
+        "Its advanced search covers tags, labels, ratings, date, location and EXIF/IPTC/XMP metadata."
+      ],
+      "howToCallInProject": {
+        "current": "Use as reference for filters and database facets: tag, rating, label, date, location, metadata.",
+        "next": "Add rating/label filters to PhotoAtelier reference page and final-work import flow."
+      },
+      "mappedFields": ["tags", "rating", "label", "date", "location", "metadataStandard"]
+    },
+    {
+      "id": "alcedo-studio",
+      "name": "Alcedo Studio",
+      "url": "https://github.com/zidage/AlcedoStudio",
+      "type": "active-open-source-dam-raw",
+      "score": 79,
+      "adoptionLevel": "adapt",
+      "professionalCertification": "No formal certification. Active open-source project, not a standard.",
+      "dataSufficiency": "Medium-high for product design patterns: RAW editor, DAM, AI tags, natural language search, ratings, EXIF facets.",
+      "communityFeedback": "Moderate. GitHub page showed 151 stars, 3 forks, 1 issue and 1,025 commits at audit time.",
+      "licenseAssessment": "GPL-3.0. Do not copy code into this project unless compatible; use concepts only.",
+      "risks": ["Project says it is not an alternative to existing commercial/open-source projects.", "Heavy C++/GPU app; too large to integrate directly."],
+      "evidence": [
+        "README describes RAW editor and DAM with AI layer.",
+        "Features include semantic labels, natural-language search and local vector index.",
+        "Library browser includes facets, ratings, import/export and metadata handling."
+      ],
+      "howToCallInProject": {
+        "current": "Borrow UX/data concepts: AI labels, semantic search, keeper score, local-first privacy.",
+        "next": "Implement our own lightweight image embedding/tag cache; do not vendor Alcedo code."
+      },
+      "mappedFields": ["aiTags", "naturalLanguageSearch", "keeperScore", "rating", "label"]
+    },
+    {
+      "id": "shot-type-classifier",
+      "name": "Shot Type Classifier",
+      "url": "https://github.com/rsomani95/shot-type-classifier",
+      "type": "ml-taxonomy-repo",
+      "score": 64,
+      "adoptionLevel": "adapt",
+      "professionalCertification": "No formal certification. Informal applied ML project.",
+      "dataSufficiency": "Medium. Six cinematic shot-size classes are useful; model/data should not be treated as production-grade.",
+      "communityFeedback": "Moderate. GitHub page showed 209 stars and 40 forks at audit time.",
+      "licenseAssessment": "CC BY-NC 4.0. Non-commercial license means do not copy model/data into commercial workflows.",
+      "risks": ["No releases", "Non-commercial license", "Old ML stack", "Useful taxonomy, not enough as a reliable classifier for this app."],
+      "evidence": [
+        "README lists six shot types.",
+        "Usage predicts shot types into CSV.",
+        "Repository license is Creative Commons Attribution-NonCommercial 4.0."
+      ],
+      "howToCallInProject": {
+        "current": "Use the six labels only as normalized values.",
+        "next": "If automatic shot classification is needed, train/choose a commercially safe model separately."
+      },
+      "mappedFields": ["shotSizeNormalized"]
+    },
+    {
+      "id": "movie-shot-classification",
+      "name": "Movie Shot Classification Dataset",
+      "url": "https://github.com/magcil/movie_shot_classification_dataset",
+      "type": "academic-dataset",
+      "score": 78,
+      "adoptionLevel": "adapt",
+      "professionalCertification": "Academic paper citation: Iberian Conference on Pattern Recognition and Image Analysis, Springer, 2022.",
+      "dataSufficiency": "Medium-high. 1,803 classified film-shot instances across 10 camera movement classes.",
+      "communityFeedback": "Low GitHub popularity but academically cited. GitHub page showed 11 stars and 1 fork at audit time.",
+      "licenseAssessment": "MIT license. Safe for taxonomy/data reference subject to citation.",
+      "risks": ["Film-shot data may not transfer perfectly to portrait short-video workflows.", "Small community footprint."],
+      "evidence": [
+        "Dataset lists 10 camera movement classes and counts totaling 1,803.",
+        "README provides a paper citation.",
+        "License shown as MIT."
+      ],
+      "howToCallInProject": {
+        "current": "Use its camera movement classes for video reference metadata.",
+        "next": "Add manual cameraMovement selector in short-video planning UI."
+      },
+      "mappedFields": ["cameraMovement"]
+    },
+    {
+      "id": "cadb-composition",
+      "name": "Image Composition Assessment Dataset CADB",
+      "url": "https://github.com/bcmi/Image-Composition-Assessment-Dataset-CADB",
+      "type": "academic-dataset",
+      "score": 87,
+      "adoptionLevel": "adopt",
+      "professionalCertification": "BMVC 2021 paper-backed dataset.",
+      "dataSufficiency": "High. 9,497 images; each image rated by 5 fine-art-specialized raters; scene categories, composition classes and composition elements released.",
+      "communityFeedback": "Moderate. GitHub page showed 173 stars, 15 forks and 3 issues at audit time.",
+      "licenseAssessment": "MIT license for repository. Dataset use should still follow repo download terms.",
+      "risks": ["Composition score is aesthetic research, not direct client preference.", "Images may not match Chinese social-platform portrait trends."],
+      "evidence": [
+        "README calls it the first image composition assessment dataset.",
+        "Dataset has 9,497 images rated by 5 fine-art-specialized raters.",
+        "2022 update released scene categories, composition classes and composition elements."
+      ],
+      "howToCallInProject": {
+        "current": "Use composition classes/elements and compositionScore as reference fields.",
+        "next": "Add optional composition scoring for imported final works."
+      },
+      "mappedFields": ["compositionNormalized", "compositionScore", "sceneCategory"]
+    },
+    {
+      "id": "film-luts",
+      "name": "G'MIC Film LUTs Collection",
+      "url": "https://github.com/YahiaAngelo/Film-Luts",
+      "type": "lut-resource",
+      "score": 50,
+      "adoptionLevel": "reference",
+      "professionalCertification": "No formal certification.",
+      "dataSufficiency": "Medium. Contains LUT folder, thumbnails and JSON index, useful for structure.",
+      "communityFeedback": "Moderate. GitHub page showed 201 stars and 27 forks at audit time.",
+      "licenseAssessment": "MIT repository, but README disclaimer says LUTs may be subject to third-party copyright/trademarks; do not import LUT files directly.",
+      "risks": ["Rights unclear for individual LUTs", "No releases", "Only 4 commits", "Maintainer disclaims responsibility for LUT use."],
+      "evidence": [
+        "README says LUTs are for creative and educational purposes.",
+        "README warns LUTs may be subject to copyrights and trademarks.",
+        "Repository includes film_luts.json and LUT assets."
+      ],
+      "howToCallInProject": {
+        "current": "Use only the index shape: lutName, thumbnail, compatibleSoftware, rightsReviewRequired.",
+        "next": "Create our own LUT metadata entries; only link external LUTs, never bundle until each license is verified."
+      },
+      "mappedFields": ["lutName", "filmLook", "compatibleSoftware", "rightsReviewRequired"]
+    },
+    {
+      "id": "raw-alchemy",
+      "name": "Raw Alchemy",
+      "url": "https://github.com/shenmintao/raw-alchemy",
+      "type": "color-pipeline-tool",
+      "score": 80,
+      "adoptionLevel": "adapt",
+      "professionalCertification": "No formal certification, but it is a focused color-science tool with documented GUI/CLI workflow.",
+      "dataSufficiency": "High for color-pipeline concepts: RAW decoding, log conversion, LUT expected input space, lens profiles.",
+      "communityFeedback": "Good. GitHub page showed 439 stars, AGPL-3.0 license and 97 commits at audit time.",
+      "licenseAssessment": "AGPL-3.0. Do not copy code into closed/local project without accepting copyleft obligations; use CLI externally or reimplement concepts.",
+      "risks": ["AGPL license", "Heavy processing dependency", "Not a taxonomy dataset."],
+      "evidence": [
+        "README explains RAW photos directly applying video LUTs can fail due to color-space mismatch.",
+        "CLI syntax supports input RAW path and output TIFF path.",
+        "Topics include color-science, LUT, color-grading, raw-processing and log-profile."
+      ],
+      "howToCallInProject": {
+        "current": "Adopt color pipeline fields: inputColorSpace, logProfile, lutExpectedInput, outputSpace.",
+        "next": "Optional external CLI integration only; keep project data-layer independent."
+      },
+      "mappedFields": ["inputColorSpace", "logProfile", "lutExpectedInput", "outputSpace", "colorPipelineRisk"]
+    },
+    {
+      "id": "awesome-stock-resources",
+      "name": "Awesome Stock Resources",
+      "url": "https://github.com/neutraltone/awesome-stock-resources",
+      "type": "curated-link-list",
+      "score": 58,
+      "adoptionLevel": "reference",
+      "professionalCertification": "No certification. Curated list only.",
+      "dataSufficiency": "Medium for discovering source sites; low for verified licensing because each target site has separate terms.",
+      "communityFeedback": "Requires periodic review; not authoritative enough for rights decisions by itself.",
+      "licenseAssessment": "Use as discovery list only; verify each platform license separately.",
+      "risks": ["Links may go stale", "License terms differ per site", "No per-asset rights validation."],
+      "evidence": ["Repository is a collection of links for free stock photography, video and illustration websites."],
+      "howToCallInProject": {
+        "current": "Use to expand external platform list.",
+        "next": "For each platform, add separate license audit before surfacing as commercial-safe."
+      },
+      "mappedFields": ["sourcePlatform", "licenseClass", "commercialUse"]
+    },
+    {
+      "id": "style-reference",
+      "name": "SDXL Style Reference",
+      "url": "https://github.com/roblaughter/style-reference",
+      "type": "prompt-style-list",
+      "score": 42,
+      "adoptionLevel": "reference",
+      "professionalCertification": "No certification.",
+      "dataSufficiency": "Low-medium. Useful prompt phrasing examples, not photography taxonomy or validated data.",
+      "communityFeedback": "Useful but model-specific; not enough for production taxonomy.",
+      "licenseAssessment": "Only use as prompt pattern inspiration; do not treat styles as rights-cleared.",
+      "risks": ["Optimized for a specific SDXL mix", "Not photography-domain validated", "May encode style names with rights/personality concerns."],
+      "evidence": ["Repository describes a list of Stable Diffusion style prompts optimized for RobMix Zenith."],
+      "howToCallInProject": {
+        "current": "Do not directly import; keep AI previsualization prompts local and generic.",
+        "next": "Build our own prompt library from approved styles and user outcomes."
+      },
+      "mappedFields": ["stylePrompt", "subjectPrompt"]
+    }
+  ],
+  "decisions": {
+    "adoptDirectly": ["iptc-photo-metadata", "digikam-dam", "cadb-composition"],
+    "adaptWithReview": ["alcedo-studio", "shot-type-classifier", "movie-shot-classification", "raw-alchemy"],
+    "referenceOnly": ["film-luts", "awesome-stock-resources", "style-reference"],
+    "notUsedYet": ["apply-cube-lut", "natural-language-image-search"]
+  }
+}

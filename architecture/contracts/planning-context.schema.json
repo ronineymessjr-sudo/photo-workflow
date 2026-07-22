@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "photoatelier.planning-context.v2.4",
+  "type": "object",
+  "required": ["id", "projectId", "brief", "equipment", "references", "constraints", "createdAt", "contextHash"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "projectId": { "type": "string", "minLength": 1 },
+    "brief": { "type": "object" },
+    "template": { "type": ["object", "null"] },
+    "equipment": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["assignmentId", "equipmentItemId", "name", "availabilityStatus"],
+        "properties": {
+          "assignmentId": { "type": "string" },
+          "equipmentItemId": { "type": "string" },
+          "equipmentModelId": { "type": ["string", "null"] },
+          "name": { "type": "string" },
+          "category": { "type": "string" },
+          "availabilityStatus": { "type": "string" },
+          "role": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "venue": { "type": ["object", "null"] },
+    "talent": { "type": "array", "items": { "type": "object" } },
+    "references": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["projectReferenceLinkId", "referenceAssetId", "assetKind", "synthetic"],
+        "properties": {
+          "projectReferenceLinkId": { "type": "string" },
+          "referenceAssetId": { "type": "string" },
+          "assetKind": { "type": "string" },
+          "synthetic": { "const": false },
+          "role": { "type": "string" },
+          "previewUrl": { "type": ["string", "null"] }
+        },
+        "additionalProperties": true
+      }
+    },
+    "constraints": { "type": "array", "items": { "type": "string" } },
+    "lookRequest": {
+      "type": ["object", "null"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "generateConceptImages": { "type": "boolean" },
+        "count": { "type": "integer", "minimum": 1, "maximum": 9 },
+        "colorIntent": { "type": "string" },
+        "retouchIntent": { "type": "string" }
+      },
+      "required": ["enabled"],
+      "additionalProperties": false
+    },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "contextHash": { "type": "string", "minLength": 8 }
+  },
+  "additionalProperties": false
+}

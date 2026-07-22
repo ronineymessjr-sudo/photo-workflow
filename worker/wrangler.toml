@@ -1,0 +1,17 @@
+name = "photoatelier-v2-api"
+main = "src/index.js"
+compatibility_date = "2026-07-01"
+
+[vars]
+FEISHU_APP_ID = "cli_aa90021882381bdb"
+FEISHU_APP_TOKEN = "QSI5bYnclanPbKsYT2lcDkTNnxI"
+FEISHU_TABLE_PROJECTS = "tblgeAusDeBNuJ0R"
+FEISHU_TABLE_REFERENCES = "tblByNsF3ONbjJMf"
+FEISHU_TABLE_PLANS = "tblNrQT46I5iwkPZ"
+FEISHU_TABLE_SHOTS = "tblhDRrbBtDpSoe2"
+FEISHU_TABLE_TASKS = "tblzRSGwHgo7BbRQ"
+FEISHU_TABLE_LUTS = "tblMu3ZVPiaLAQqu"
+FEISHU_TABLE_REVIEWS = "tblTMoDpvpbULxeR"
+FEISHU_TABLE_MESSAGES = "tblF36evkJLHBVHf"
+ALLOWED_ORIGINS = "http://127.0.0.1:8123,http://localhost:8123,http://127.0.0.1:8080,http://localhost:8080,https://photoatelier.pages.dev,https://master.photoatelier.pages.dev,https://086a3e2c.photoatelier.pages.dev"
+PUBLIC_FEEDBACK_ENABLED = "true"

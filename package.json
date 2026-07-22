@@ -1,0 +1,53 @@
+{
+  "scripts": {
+    "start": "node tools/start-local-workspace.js",
+    "serve:v2": "python -m http.server 8080 --directory .",
+    "obsidian-proxy": "node tools/local-obsidian-proxy.js",
+    "build:ronin-knowledge": "node tools/build-ronin-knowledge-catalog.mjs",
+    "sync:ronin-obsidian": "node tools/sync-ronin-knowledge-to-obsidian.mjs",
+    "audit:ronin-obsidian": "node tools/audit-ronin-obsidian-knowledge.mjs",
+    "agent:daily": "node tools/daily-research.js",
+    "agent:daily:dry-run": "node tools/daily-research.js --dry-run --skip-model",
+    "agent:daily:scheduled": "node tools/daily-research.js --collect --headless true",
+    "agent:daily:login": "node tools/daily-research.js --bootstrap-login --headless false",
+    "build-reference-db": "node tools/build-reference-database.js",
+    "build-workflow-db": "node tools/build-workflow-database.js",
+    "build-lut-db": "python tools/build-open-lut-library.py",
+    "build-all-db": "npm run build-reference-db && npm run build-workflow-db",
+    "collect:platform": "node tools/collect-platform-references.js",
+    "collect:xhs": "node tools/collect-platform-references.js --platform xiaohongshu",
+    "collect:douyin": "node tools/collect-platform-references.js --platform douyin",
+    "build:i18n": "node tools/build-localized-landing.mjs",
+    "build:v2": "npm run build:i18n && npm run build:v5-real-data && node tools/build-v2-dist.js",
+    "deploy:pages": "npm run build:release && wrangler pages deploy dist-v2 --project-name=photoatelier",
+    "deploy:worker": "wrangler deploy --config worker/wrangler.toml",
+    "test": "npm run test:syntax && npm run test:node && node tests/smoke.mjs",
+    "test:v2": "node tests/smoke.mjs",
+    "test:e2e": "node tests/e2e/app.e2e.js",
+    "test:legacy": "node tests/e2e/legacy-app.e2e.js",
+    "test:visual": "node tests/e2e/workflow-visual.e2e.js",
+    "test:deployed": "node tests/e2e/deployed-smoke.e2e.js",
+    "test:public-beta": "node tests/e2e/public-beta.e2e.js",
+    "test:all": "npm test && npm run test:e2e && npm run test:legacy && npm run test:visual",
+    "test:node": "node --test tests/node/core.test.js tests/node/proxy.test.js tests/node/daily-knowledge-agent.test.js tests/node/v2-data.test.mjs tests/node/v2-handoff.test.mjs tests/node/role-workspace.test.mjs tests/node/project-templates.test.mjs tests/node/feedback-analytics.test.mjs tests/node/persona-workflow.test.mjs tests/node/agent-workflow.test.mjs tests/node/i18n.test.mjs tests/node/v5/contracts-catalog.test.mjs tests/node/v5/catalog-ui-migration.test.mjs tests/node/v5/planning-workflow.test.mjs tests/node/v5/schedule-post-sharing.test.mjs tests/node/v5/migration.test.mjs tests/node/v5/reference-database-import.test.mjs tests/node/v5/application-integrity.test.mjs tests/node/v5/worker-v5-contract.test.mjs tests/node/v5/reference-source-adapters.test.mjs",
+    "test:ci": "npm test && npm run build:v2 && npm run test:dist && npm run test:e2e",
+    "test:syntax": "node tools/check-syntax.js",
+    "test:dist": "node tests/dist-smoke.mjs",
+    "build:release": "npm run build:v2 && npm run test:dist && npm run test:security",
+    "test:security": "node tests/security-smoke.mjs",
+    "test:release": "npm test && npm run build:v2 && npm run test:dist && npm run test:security",
+    "build:v5-reference-data": "node tools/build-v5-reference-import-plan.mjs",
+    "build:v5-real-data": "npm run build:v5-reference-data && node tools/build-v5-real-data-catalog.mjs",
+    "test:scope": "node tools/run-targeted-tests.mjs"
+  },
+  "private": true,
+  "devDependencies": {
+    "playwright-core": "^1.61.1"
+  },
+  "name": "photoatelier",
+  "version": "2.5.0-domain-implementation",
+  "description": "Local-first photographer workflow with schema v5 domain architecture",
+  "engines": {
+    "node": ">=20"
+  }
+}

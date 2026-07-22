@@ -1,0 +1,35 @@
+{
+  "product": "PhotoAtelier",
+  "version": "2.5.0-domain-implementation",
+  "handoffProfile": "ToolDesk-ready",
+  "verifiedAt": "2026-07-15",
+  "baseline": {
+    "nodeAndIntegrationTests": {"passed": 68, "total": 68},
+    "syntax": "passed",
+    "staticSmoke": "passed",
+    "build": "passed",
+    "distributionSmoke": "passed",
+    "securitySmoke": "passed",
+    "npmAudit": "0 known vulnerabilities",
+    "cleanReproduction": "passed from final V2.5 ZIP"
+  },
+  "browserE2E": {
+    "status": "not-passed",
+    "reason": "Original sandbox Chromium was blocked from localhost by administrator policy",
+    "requiredWhen": "after an integrated UI migration batch or before deployment"
+  },
+  "verifiedData": {
+    "equipmentModels": 62,
+    "planTemplates": 4,
+    "loadableReferenceImages": 12,
+    "knowledgeSourceDescriptors": 237,
+    "vaultImagesRequiringRelink": 25
+  },
+  "testingPolicy": {
+    "onImport": "Do not rerun full release suite unless package integrity or lockfile is suspect",
+    "duringWork": "Run only the relevant npm run test:scope command",
+    "beforeHandoff": "Run npm run test:release once",
+    "browser": "Run npm run test:e2e once after integrated UI work"
+  },
+  "nextPrimaryTask": "Migrate existing compatibility pages to context.v5 use cases without redesigning UI"
+}

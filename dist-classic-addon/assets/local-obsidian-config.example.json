@@ -1,0 +1,7 @@
+{
+  "baseUrl": "http://127.0.0.1:27123",
+  "helperBaseUrl": "http://127.0.0.1:8124",
+  "apiKey": "",
+  "libraryFolder": "摄影姿势库",
+  "enabled": true
+}

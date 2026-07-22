@@ -1,0 +1,24 @@
+name = "photoatelier-v2-api"
+main = "src/index.js"
+compatibility_date = "2026-07-01"
+
+[vars]
+# AGENT_ENDPOINT = "https://your-agent-service.example/generate"
+# FEISHU_APP_ID = ""
+# FEISHU_APP_TOKEN = ""
+# FEISHU_TABLE_PROJECTS = ""
+# FEISHU_TABLE_REFERENCES = ""
+# FEISHU_TABLE_PLANS = ""
+# FEISHU_TABLE_SHOTS = ""
+# FEISHU_TABLE_TASKS = ""
+# FEISHU_TABLE_LUTS = ""
+# FEISHU_TABLE_REVIEWS = ""
+
+# Secrets should be configured with Wrangler secret management:
+# AGENT_API_KEY
+# FEISHU_APP_SECRET
+
+# PEXELS_API_KEY should be configured as a secret.
+# OBSIDIAN_BRIDGE_URL = "https://your-private-local-bridge.example"
+# OBSIDIAN_BRIDGE_TOKEN should be configured as a secret.
+# FEISHU_TABLE_MESSAGES = ""

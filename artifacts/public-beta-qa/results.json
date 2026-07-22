@@ -1,0 +1,29 @@
+{
+  "desktop": {
+    "title": "PhotoAtelier | 摄影方案、参考图库与拍摄执行工作台",
+    "h1": "PhotoAtelier",
+    "language": "zh-CN",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "cta": "/legacy/?mode=public-beta",
+    "feedbackForm": true,
+    "visibleNav": [
+      "工作流",
+      "开放素材",
+      "隐私",
+      "反馈"
+    ]
+  },
+  "mobile": {
+    "title": "PhotoAtelier | 摄影方案、参考图库与拍摄执行工作台",
+    "h1": "PhotoAtelier",
+    "language": "zh-CN",
+    "width": 390,
+    "scrollWidth": 390,
+    "cta": "/legacy/?mode=public-beta",
+    "feedbackForm": true,
+    "visibleNav": [
+      "反馈"
+    ]
+  }
+}

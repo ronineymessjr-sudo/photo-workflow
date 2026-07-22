@@ -1,0 +1,178 @@
+{
+  "generatedAt": "2026-07-04",
+  "purpose": "Open-source and public-standard sources used to normalize PhotoAtelier reference taxonomy.",
+  "sources": [
+    {
+      "id": "iptc-photo-metadata",
+      "name": "IPTC Photo Metadata Standard 2025.1",
+      "url": "https://www.iptc.org/std/photometadata/specification/IPTC-PhotoMetadata",
+      "type": "standard",
+      "reuse": "Use IPTC-style descriptive, administrative and rights fields for reference assets.",
+      "mappedFields": ["title", "description", "creator", "copyright", "keywords", "rightsUsageTerms", "aiPromptInfo", "sourceUrl"]
+    },
+    {
+      "id": "digikam-dam",
+      "name": "digiKam advanced search and metadata model",
+      "url": "https://www.digikam.org/about/",
+      "type": "open-source-dam",
+      "reuse": "Use DAM-style facets: tags, labels, ratings, date, location and metadata search.",
+      "mappedFields": ["tags", "rating", "label", "date", "location", "camera", "lens", "metadata"]
+    },
+    {
+      "id": "alcedo-studio",
+      "name": "Alcedo Studio",
+      "url": "https://github.com/zidage/AlcedoStudio",
+      "type": "open-source-dam-raw",
+      "reuse": "Borrow lightweight RAW/DAM workspace ideas: AI tags, natural-language search, keeper curation.",
+      "mappedFields": ["aiTags", "naturalLanguageSearch", "keeperScore", "rating", "importExport"]
+    },
+    {
+      "id": "awesome-stock-resources",
+      "name": "Awesome Stock Resources",
+      "url": "https://github.com/neutraltone/awesome-stock-resources",
+      "type": "resource-list",
+      "reuse": "Use license-based source categories for external photo/video resources.",
+      "mappedFields": ["licenseClass", "resourceType", "attributionRequired", "commercialUse", "sourcePlatform"]
+    },
+    {
+      "id": "awesome-open-source-photography",
+      "name": "Awesome Open Source Photography",
+      "url": "https://github.com/ibaaj/awesome-OpenSourcePhotography",
+      "type": "resource-list",
+      "reuse": "Use photography workflow categories: RAW developers, organizers, EXIF editors, tethering, color correction, video tools.",
+      "mappedFields": ["workflowStage", "toolCategory", "rawProcessing", "metadataEditing", "videoTooling"]
+    },
+    {
+      "id": "shot-type-classifier",
+      "name": "Shot Type Classifier",
+      "url": "https://github.com/rsomani95/shot-type-classifier",
+      "type": "shot-taxonomy",
+      "reuse": "Use the six cinematic shot sizes as normalized shot-size values.",
+      "mappedFields": ["shotSize"]
+    },
+    {
+      "id": "movie-shot-classification",
+      "name": "Movie Shot Classification Dataset",
+      "url": "https://github.com/magcil/movie_shot_classification_dataset",
+      "type": "camera-movement-taxonomy",
+      "reuse": "Use camera movement classes for video and short-form reference notes.",
+      "mappedFields": ["cameraMovement"]
+    },
+    {
+      "id": "cadb-composition",
+      "name": "Image Composition Assessment Dataset CADB",
+      "url": "https://github.com/bcmi/Image-Composition-Assessment-Dataset-CADB",
+      "type": "composition-taxonomy",
+      "reuse": "Use scene category, composition class, composition element and quality score ideas for reference scoring.",
+      "mappedFields": ["compositionClass", "compositionElements", "sceneCategory", "compositionScore"]
+    },
+    {
+      "id": "film-luts",
+      "name": "G'MIC Film LUTs Collection",
+      "url": "https://github.com/YahiaAngelo/Film-Luts",
+      "type": "lut-library",
+      "reuse": "Use film-emulation LUT library categories and .cube asset fields.",
+      "mappedFields": ["lutName", "filmLook", "lutFile", "compatibleSoftware", "license"]
+    },
+    {
+      "id": "raw-alchemy",
+      "name": "Raw Alchemy",
+      "url": "https://github.com/shenmintao/raw-alchemy",
+      "type": "color-pipeline",
+      "reuse": "Use explicit color-space pipeline fields before applying creative LUTs to photos.",
+      "mappedFields": ["inputColorSpace", "logProfile", "intermediateSpace", "lutExpectedInput", "outputSpace"]
+    },
+    {
+      "id": "apply-cube-lut",
+      "name": "apply-cube-lut",
+      "url": "https://github.com/thibauts/apply-cube-lut",
+      "type": "lut-implementation",
+      "reuse": "Use .cube parsing/application concepts for future preview and LUT matching.",
+      "mappedFields": ["cubeParser", "previewImage", "lutApplication"]
+    },
+    {
+      "id": "style-reference",
+      "name": "SDXL Style Reference",
+      "url": "https://github.com/roblaughter/style-reference",
+      "type": "prompt-style-library",
+      "reuse": "Use public-domain photographic style prompt structure for AI previsualization.",
+      "mappedFields": ["stylePrompt", "subjectPrompt", "promptWeight", "previewImage"]
+    }
+  ],
+  "taxonomy": {
+    "assetMetadata": {
+      "identity": ["title", "description", "sourceUrl", "sourcePlatform", "creator", "collectionName"],
+      "rights": ["licenseClass", "copyright", "rightsUsageTerms", "attributionRequired", "commercialUse"],
+      "discovery": ["keywords", "tags", "sceneCategory", "subject", "mood", "style", "rating", "label"],
+      "technical": ["date", "camera", "lens", "focalLength", "exif", "iptc", "xmp"],
+      "ai": ["aiPromptInfo", "aiSystemUsed", "stylePrompt", "subjectPrompt"]
+    },
+    "shotSize": [
+      "extreme-wide-shot",
+      "long-shot",
+      "medium-shot",
+      "medium-close-up",
+      "close-up",
+      "extreme-close-up"
+    ],
+    "cameraMovement": [
+      "static",
+      "handheld",
+      "panoramic",
+      "travelling-in",
+      "travelling-out",
+      "zoom-in",
+      "vertical-static",
+      "vertical-moving",
+      "aerial",
+      "panoramic-lateral"
+    ],
+    "composition": [
+      "center",
+      "rule-of-thirds",
+      "leading-lines",
+      "symmetry",
+      "frame-within-frame",
+      "negative-space",
+      "foreground-background-layering",
+      "dominant-pattern",
+      "saliency-focus"
+    ],
+    "sourceLicenseClass": [
+      "cc0",
+      "public-domain",
+      "custom-license",
+      "attribution-required",
+      "unspecified",
+      "platform-link-only",
+      "local-private-reference"
+    ],
+    "workflowStage": [
+      "inspiration",
+      "topic-selection",
+      "previsualization",
+      "shot-planning",
+      "capture",
+      "culling",
+      "color-grading",
+      "publishing",
+      "review"
+    ],
+    "lutPipeline": [
+      "input-color-space",
+      "camera-profile",
+      "log-transform",
+      "creative-lut",
+      "output-color-space",
+      "preview",
+      "export-preset"
+    ]
+  },
+  "adoptionPlan": [
+    "Keep current Chinese shooting-specific fields, but add open-standard fields for interoperability.",
+    "Normalize shotSize and cameraMovement values to open filmmaking taxonomies.",
+    "Track licenseClass for every external source, especially stock and platform references.",
+    "Prepare future EXIF/IPTC/XMP read-write so final works can carry tags and captions outside the app.",
+    "Treat LUT entries as color pipelines, not just style names."
+  ]
+}

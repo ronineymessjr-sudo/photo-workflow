@@ -1,0 +1,35 @@
+{
+  "xiaohongshu": [
+    {
+      "name": "拍摄专辑",
+      "url": "https://www.xiaohongshu.com/board/69f468d9000000003302dc4c",
+      "expectedCount": 69,
+      "tags": ["拍摄", "姿势", "构图", "人像"]
+    },
+    {
+      "name": "视频拍摄专辑",
+      "url": "https://www.xiaohongshu.com/board/69f81fad000000003302c5b4",
+      "expectedCount": 4,
+      "tags": ["视频", "空镜", "转场", "电影感"]
+    },
+    {
+      "name": "调色专辑",
+      "url": "https://www.xiaohongshu.com/board/6a0452c50000000032021c94",
+      "expectedCount": 1,
+      "tags": ["调色", "LUT", "后期"]
+    },
+    {
+      "name": "设计专辑",
+      "url": "https://www.xiaohongshu.com/board/69fca2af000000003400e8ff",
+      "expectedCount": 9,
+      "tags": ["设计", "配色", "版式"]
+    }
+  ],
+  "douyin": [
+    {
+      "name": "拍摄剪辑收藏",
+      "url": "https://www.douyin.com/user/self?showTab=favorite_collection",
+      "tags": ["拍摄", "视频", "剪辑", "调色"]
+    }
+  ]
+}

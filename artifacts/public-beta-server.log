@@ -1,0 +1,7 @@
+
+> photoatelier@2.5.0-domain-implementation start
+> node tools/start-local-workspace.js
+
+PhotoAtelier public beta: http://127.0.0.1:8123/
+PhotoAtelier workspace: http://127.0.0.1:8123/legacy/
+Obsidian local proxy: http://127.0.0.1:8124/v1/health

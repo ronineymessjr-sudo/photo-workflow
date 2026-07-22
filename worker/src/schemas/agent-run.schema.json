@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "photoatelier.agent-run.v1",
+  "title": "PhotoAtelier Agent Run",
+  "type": "object",
+  "required": ["run_id", "project_id", "status", "prompt_version", "schema_version"],
+  "properties": {
+    "run_id": { "type": "string" },
+    "project_id": { "type": "string" },
+    "plan_id": { "type": ["string", "null"] },
+    "status": { "type": "string", "enum": ["created", "context_building", "retrieving", "generating", "validating", "awaiting_approval", "approved", "writing", "completed", "failed", "fallback"] },
+    "provider": { "type": "string" },
+    "model": { "type": "string" },
+    "prompt_version": { "type": "string" },
+    "schema_version": { "type": "string" },
+    "trace_id": { "type": "string" },
+    "started_at": { "type": "string" },
+    "completed_at": { "type": ["string", "null"] },
+    "error": { "type": ["object", "null"] },
+    "metrics": { "type": "object" }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "timezone": "Asia/Shanghai",
+  "collection": {
+    "enabled": true,
+    "sourcesConfig": "assets/platform-collections.json",
+    "captureDir": "data/platform-captures",
+    "debugDir": "data/platform-debug",
+    "profileDir": ".browser-profile/platform-collector",
+    "limitPerCollection": 120,
+    "scrollRounds": 30,
+    "loginWaitMs": 0,
+    "headless": true,
+    "linkOnly": true
+  },
+  "agent": {
+    "enabled": true,
+    "provider": "ollama",
+    "baseUrl": "http://127.0.0.1:11434/v1",
+    "model": "qwen3:8b",
+    "timeoutMs": 8000,
+    "retries": 1,
+    "batchSize": 20,
+    "fallback": "rules"
+  },
+  "storage": {
+    "ledgerFile": "data/daily-knowledge/ledger.json",
+    "runDir": "data/daily-knowledge/runs",
+    "vaultRoot": "%USERPROFILE%/Documents/Obsidian Vault",
+    "dailyFolder": "摄影知识库/09_每日收集",
+    "profileNote": "摄影知识库/10_个人兴趣画像.md",
+    "statusNote": "摄影知识库/11_每日自动化状态.md"
+  },
+  "profile": {
+    "enabled": true,
+    "sensitiveInference": false,
+    "allowedDimensions": [
+      "topics",
+      "workflowStages",
+      "contentTypes",
+      "platforms",
+      "recency"
+    ]
+  }
+}

@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="PhotoAtelier 项目中心化摄影工作流">
+  <title>PhotoAtelier V2</title>
+  <link rel="stylesheet" href="./assets/app.css">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <meta name="theme-color" content="#0e0f10">
+</head>
+<body>
+  <a class="skip-link" href="#app">跳到主要内容</a>
+  <div id="toast-root" class="toast-root" aria-live="polite" aria-atomic="true"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-dot"></span>
+      <div>
+        <strong>PhotoAtelier</strong>
+        <small>V2 · Canonical workspace</small>
+      </div>
+    </div>
+
+    <div class="project-switcher">
+      <label for="project-select">当前项目</label>
+      <select id="project-select"></select>
+      <button id="new-project-btn" class="button secondary">新建项目</button>
+    </div>
+
+    <div class="topbar-actions">
+      <label class="role-switcher">视角<select id="workspace-role-select" aria-label="工作视角"><option value="photographer">摄影师</option><option value="model">模特</option><option value="assistant">助理</option><option value="client">客户</option></select></label>
+      <span id="network-state" class="status-pill">在线</span>
+      <span id="sync-state" class="status-pill">本地模式</span>
+      <button id="sync-btn" class="button ghost">同步</button>
+      <a class="button ghost classic-link" href="./legacy/index.html" target="_blank" rel="noreferrer">Classic 对照</a>
+      <button id="settings-btn" class="button ghost">设置</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <nav id="nav">
+        <button data-page="dashboard" class="nav-item active">工作台</button>
+        <button data-page="references" class="nav-item">参考数据库</button>
+        <button data-page="plan" class="nav-item">方案中心</button>
+        <button data-page="schedule" class="nav-item">日程与现场执行</button>
+        <button data-page="crew" class="nav-item">团队与拍摄通告</button>
+        <button data-page="post" class="nav-item">LUT 与后期交付</button>
+        <button data-page="review" class="nav-item">复盘与知识回流</button>
+        <button data-page="system" class="nav-item">系统与迁移</button>
+      </nav>
+      <div class="sidebar-footer">
+        <span>V2.3 正式运行 · 角色化现场工作流</span>
+      </div>
+    </aside>
+
+    <main id="app" class="content" tabindex="-1"></main>
+  </div>
+
+  <dialog id="project-dialog">
+    <form method="dialog" id="project-form" class="dialog-form">
+      <header>
+        <h2>新建项目</h2>
+        <button value="cancel" class="icon-button" aria-label="关闭">×</button>
+      </header>
+      <label>启动模板<select name="templateId" id="project-template-select"><option value="blank">空白项目</option><option value="portrait">人像 / 模特拍摄</option><option value="commercial">商业 / 品牌内容</option><option value="event">活动 / 婚礼纪实</option><option value="product">产品 / 静物拍摄</option></select></label>
+      <p id="project-template-hint" class="hint">从零开始，不自动添加任务。</p>
+      <label>项目名称<input name="title" required placeholder="例如：上海复古街拍"></label>
+      <label>拍摄类型<input name="shootingType" placeholder="人像、婚礼、商业等"></label>
+      <div class="two-col">
+        <label>日期<input type="date" name="date"></label>
+        <label>地点<input name="location"></label>
+      </div>
+      <label>风格<input name="style" placeholder="复古、电影感、清冷等"></label>
+      <label>人物与限制<textarea name="brief" rows="4"></textarea></label>
+      <footer>
+        <button value="cancel" class="button ghost">取消</button>
+        <button value="default" class="button primary">创建</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <dialog id="settings-dialog">
+    <form method="dialog" class="dialog-form">
+      <header>
+        <h2>运行设置</h2>
+        <button value="cancel" class="icon-button" aria-label="关闭">×</button>
+      </header>
+      <label>后端 API 地址<input id="api-base-input" placeholder="留空使用本地模式"></label>
+      <label>同步访问令牌<input id="sync-token-input" type="password" autocomplete="off" placeholder="由本地部署配置生成"></label>
+      <label class="checkbox-row"><input type="checkbox" id="remote-enabled-input"> 启用远端 API</label>
+      <p class="hint">飞书与图库密钥只配置在 Worker；浏览器仅保存个人同步令牌。备份、迁移和完整性审计位于“系统与迁移”。</p>
+      <footer>
+        <button value="cancel" class="button ghost">取消</button>
+        <button id="save-settings-btn" value="default" class="button primary">保存</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <script type="module" src="./src/app.js"></script>
+</body>
+</html>

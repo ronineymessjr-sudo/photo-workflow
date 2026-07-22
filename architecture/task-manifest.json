@@ -1,0 +1,19 @@
+{
+  "blueprintVersion": "2.4.0-architecture",
+  "codeBaseline": "2.3.0-iterative",
+  "architectureOwner": "GPT",
+  "uiInScope": false,
+  "tasks": [
+    { "id": "T00", "name": "contracts-and-skeleton", "dependsOn": [], "risk": "high", "parallelGroup": "A" },
+    { "id": "T01", "name": "resource-catalog", "dependsOn": ["T00"], "risk": "medium", "parallelGroup": "B" },
+    { "id": "T02", "name": "reference-library-links", "dependsOn": ["T00"], "risk": "medium", "parallelGroup": "B" },
+    { "id": "T03", "name": "planning-context-builder", "dependsOn": ["T01", "T02"], "risk": "high", "parallelGroup": "C" },
+    { "id": "T04", "name": "generation-run-plan-revisions", "dependsOn": ["T03"], "risk": "critical", "parallelGroup": "D" },
+    { "id": "T05", "name": "expected-look-image-generation", "dependsOn": ["T03", "T04"], "risk": "high", "parallelGroup": "E" },
+    { "id": "T06", "name": "calendar-finance", "dependsOn": ["T00"], "risk": "medium", "parallelGroup": "B" },
+    { "id": "T07", "name": "post-production-aggregate", "dependsOn": ["T04"], "risk": "medium", "parallelGroup": "E" },
+    { "id": "T08", "name": "model-assistant-share-projections", "dependsOn": ["T04", "T06"], "risk": "high", "parallelGroup": "E" },
+    { "id": "T09", "name": "schema-v5-migration", "dependsOn": ["T01", "T02", "T04", "T06", "T07"], "risk": "critical", "parallelGroup": "F" },
+    { "id": "T10", "name": "integration-and-page-adapters", "dependsOn": ["T05", "T08", "T09"], "risk": "critical", "parallelGroup": "G" }
+  ]
+}

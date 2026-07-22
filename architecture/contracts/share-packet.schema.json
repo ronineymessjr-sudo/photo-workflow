@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "photoatelier.share-packet.v2.4",
+  "type": "object",
+  "required": ["id", "projectId", "planRevisionId", "recipientRole", "version", "status", "payloadSnapshot"],
+  "properties": {
+    "id": { "type": "string" },
+    "projectId": { "type": "string" },
+    "planRevisionId": { "type": "string" },
+    "recipientRole": { "enum": ["model", "assistant"] },
+    "recipientAssignmentId": { "type": ["string", "null"] },
+    "version": { "type": "integer", "minimum": 1 },
+    "status": { "enum": ["draft", "published", "revoked", "expired"] },
+    "payloadSnapshot": {
+      "type": "object",
+      "required": ["schedule", "contact", "tasks"],
+      "properties": {
+        "schedule": { "type": "object" },
+        "contact": { "type": "object" },
+        "tasks": { "type": "array", "items": { "type": "object" } },
+        "shotGoals": { "type": "array", "items": { "type": "object" } },
+        "preparation": { "type": "array", "items": { "type": "string" } },
+        "consent": { "type": ["object", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "publishedAt": { "type": ["string", "null"], "format": "date-time" },
+    "expiresAt": { "type": ["string", "null"], "format": "date-time" }
+  },
+  "additionalProperties": false
+}

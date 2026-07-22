@@ -1,0 +1,59 @@
+{
+  "ok": true,
+  "results": [
+    {
+      "id": "1784026335479",
+      "title": "通用单人人像流程测试",
+      "shots": 8,
+      "references": 8,
+      "uniqueReferences": 8,
+      "postProductionStatus": "specialist-required",
+      "equipment": 4,
+      "schedule": true,
+      "packageStatus": "preflight-ready",
+      "lifecycleStatus": "scheduled",
+      "screenshot": "01-generic-portrait-package.png"
+    },
+    {
+      "id": "1784026339310",
+      "title": "通用双人拍摄流程测试",
+      "shots": 8,
+      "references": 8,
+      "uniqueReferences": 8,
+      "postProductionStatus": "specialist-required",
+      "equipment": 4,
+      "schedule": true,
+      "packageStatus": "preflight-ready",
+      "lifecycleStatus": "scheduled",
+      "screenshot": "02-generic-pair-package.png"
+    },
+    {
+      "id": "1784026341697",
+      "title": "通用产品内容流程测试",
+      "shots": 8,
+      "references": 8,
+      "uniqueReferences": 8,
+      "postProductionStatus": "specialist-required",
+      "equipment": 3,
+      "schedule": true,
+      "packageStatus": "preflight-ready",
+      "lifecycleStatus": "scheduled",
+      "screenshot": "03-generic-product-package.png"
+    },
+    {
+      "id": "1784026344979",
+      "title": "通用短片内容流程测试",
+      "shots": 8,
+      "references": 8,
+      "uniqueReferences": 8,
+      "postProductionStatus": "specialist-required",
+      "equipment": 3,
+      "schedule": true,
+      "packageStatus": "preflight-ready",
+      "lifecycleStatus": "scheduled",
+      "screenshot": "04-generic-video-package.png"
+    }
+  ],
+  "mobileOverflow": false,
+  "pageErrors": []
+}

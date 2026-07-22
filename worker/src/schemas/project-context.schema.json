@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "photoatelier.project-context.v1",
+  "title": "PhotoAtelier Project Context",
+  "type": "object",
+  "required": ["project", "references"],
+  "properties": {
+    "project": { "type": "object" },
+    "references": { "type": "array", "items": { "type": "object" } },
+    "latest_plan": { "type": ["object", "null"] },
+    "equipment": { "type": "array" },
+    "constraints": { "type": "array" },
+    "location": { "type": "object" },
+    "weather": { "type": ["object", "null"] },
+    "sunlight": { "type": ["object", "null"] },
+    "uploaded_images": { "type": "array" },
+    "historical_reviews": { "type": "array" },
+    "user_preferences": { "type": "object" }
+  },
+  "additionalProperties": false
+}

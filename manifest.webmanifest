@@ -1,0 +1,13 @@
+{
+  "name": "PhotoAtelier",
+  "short_name": "PhotoAtelier",
+  "description": "本地优先的摄影方案、参考图库与拍摄执行工作台",
+  "start_url": "./legacy/index.html?mode=public-beta",
+  "display": "standalone",
+  "background_color": "#0b0d0c",
+  "theme_color": "#0b0d0c",
+  "lang": "zh-CN",
+  "icons": [
+    { "src": "./favicon.jpg", "sizes": "any", "type": "image/jpeg", "purpose": "any" }
+  ]
+}

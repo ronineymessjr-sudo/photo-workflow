@@ -1,0 +1,49 @@
+{
+  "codeBaseline": "2.3.0-iterative",
+  "releaseTest": "passed",
+  "nodeIntegrationTests": 38,
+  "sourceJsLines": 7192,
+  "canonicalV2ReachableModules": 21,
+  "largestFiles": [
+    {
+      "path": "src/app-enhancements.js",
+      "lines": 2318,
+      "runtime": "classic-only"
+    },
+    {
+      "path": "src/services/data-service.js",
+      "lines": 444,
+      "runtime": "v2"
+    },
+    {
+      "path": "worker/src/agent/workflow.js",
+      "lines": 435,
+      "runtime": "worker"
+    },
+    {
+      "path": "worker/src/index.js",
+      "lines": 413,
+      "runtime": "worker"
+    },
+    {
+      "path": "src/feishu-sync.js",
+      "lines": 366,
+      "runtime": "classic-only"
+    },
+    {
+      "path": "src/services/role-workspace.js",
+      "lines": 319,
+      "runtime": "v2"
+    }
+  ],
+  "confirmedArchitectureGaps": [
+    "project-scoped resources instead of reusable catalogs",
+    "project-scoped references instead of global asset plus links",
+    "generation runs stored in plans",
+    "local resource records omitted from remote planning context",
+    "tasks overloaded as calendar events and post tasks",
+    "post-production state stored on plans",
+    "v2 lacks formal synthetic expected-look asset model",
+    "page modules orchestrate cross-entity writes"
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "id": "photoatelier-local-orchestrator-v1",
+  "pattern": "orchestrator",
+  "dependencyMode": "dag",
+  "localFirst": true,
+  "steps": [
+    {
+      "id": "brief",
+      "label": "Brief 标准化",
+      "dependsOn": [],
+      "timeoutSeconds": 10,
+      "budgetTokens": 800,
+      "output": ["theme", "subject", "scene", "mood", "purpose", "platforms", "constraints", "keywords"]
+    },
+    {
+      "id": "retrieve",
+      "label": "素材并行检索",
+      "dependsOn": ["brief"],
+      "timeoutSeconds": 20,
+      "budgetTokens": 1200,
+      "fanOut": ["local-obsidian", "reference-database", "external-search"],
+      "fallback": ["reference-database", "cached-results"]
+    },
+    {
+      "id": "compose",
+      "label": "方案与镜头编排",
+      "dependsOn": ["brief", "retrieve"],
+      "timeoutSeconds": 20,
+      "budgetTokens": 1600
+    },
+    {
+      "id": "lut",
+      "label": "LUT 与色彩匹配",
+      "dependsOn": ["brief", "retrieve"],
+      "timeoutSeconds": 15,
+      "budgetTokens": 600
+    },
+    {
+      "id": "publish",
+      "label": "国内外发布包",
+      "dependsOn": ["brief", "compose"],
+      "timeoutSeconds": 15,
+      "budgetTokens": 900
+    },
+    {
+      "id": "evaluate",
+      "label": "质量门",
+      "dependsOn": ["retrieve", "compose", "lut", "publish"],
+      "maxIterations": 2,
+      "passThreshold": 70
+    }
+  ],
+  "handoffContract": {
+    "required": ["workflowId", "stepId", "task", "constraints", "upstreamArtifacts", "budgetTokens", "timeoutSeconds"],
+    "provenanceRequiredForRecommendations": true,
+    "fullVaultContentAllowed": false
+  },
+  "qualityGates": [
+    "brief-theme-present",
+    "shot-list-actionable",
+    "recommendation-provenance-present",
+    "license-status-visible",
+    "duplicate-assets-isolated",
+    "publishing-spec-valid"
+  ]
+}

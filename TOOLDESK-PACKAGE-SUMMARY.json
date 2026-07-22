@@ -1,0 +1,30 @@
+{
+  "product": "PhotoAtelier",
+  "productVersion": "2.5.0-domain-implementation",
+  "handoffProfile": "ToolDesk-ready",
+  "generatedAt": "2026-07-15",
+  "fileCount": 431,
+  "totalBytes": 49654097,
+  "primaryEntry": "00-TOOLDESK-START-HERE.md",
+  "agentInstructions": "AGENTS.md",
+  "baseline": "BASELINE-VERIFIED.json",
+  "workQueue": "TOOLDESK-WORK-ORDER.json",
+  "releaseGate": {
+    "targetedPlanning": "11 passed",
+    "targetedUI": "passed",
+    "nodeAndIntegration": "68/68",
+    "syntax": "passed",
+    "smoke": "passed",
+    "build": "passed",
+    "dist": "passed",
+    "security": "passed",
+    "npmAudit": "0 known vulnerabilities"
+  },
+  "testingPolicy": "Targeted scopes during work; full test:release once before next handoff",
+  "excluded": [
+    "node_modules",
+    ".git",
+    ".env",
+    "local secrets and caches"
+  ]
+}
