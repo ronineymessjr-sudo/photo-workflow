@@ -18,3 +18,10 @@ tmp-check.txt
 # Playwright / node:test runtime artifacts (regenerated each run)
 test-results/
 .last-run.json
+
+# Agent scratch files that must never become product source
+src/_build-*.ps1
+src/_patch-*.js
+src/test-quote.js
+src/test.txt
+*.js-bak

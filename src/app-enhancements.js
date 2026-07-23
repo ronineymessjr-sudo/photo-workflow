@@ -797,17 +797,9 @@
           <div class="workflow-phase-toggle__body">
           <div class="workflow-grid">
             <div class="workflow-block">
-              <h5>关联依据</h5>
-              <div class="workflow-recommendations">${relations.length ? relations.map(rel => renderRecommendation(plan, rel)).join('') : '<p>当前方案尚无可操作的素材关系。</p>'}</div>
-            </div>
-            <div class="workflow-block">
               <h5>日程与状态</h5>
               ${renderScheduleLink(plan)}
               <div class="workflow-loop__actions" style="margin-top:.6rem;"><button class="btn btn-s btn-sm" onclick="createScheduleDraftFromCurrentPlan()">创建/打开日程</button><button class="btn btn-s btn-sm" onclick="openPlanVersions('${esc(plan.id)}')">查看版本</button></div>
-            </div>
-            <div class="workflow-block workflow-block--wide">
-              <h5>镜头参考板</h5>
-              ${renderShotReferenceBoard(plan, shots)}
             </div>
             <div class="workflow-block workflow-block--wide">
               <h5>场地、模特与设备</h5>
@@ -856,6 +848,7 @@
         </details>
           </div>
         </details>
+        ${root.renderPlanResources ? root.renderPlanResources(plan) : ''}
         </div>
       </details>`;
   }

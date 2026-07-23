@@ -29,7 +29,9 @@
         "licenseCheckedAt": "2026-07-13",
         "provenanceIncomplete": false,
         "attributionNote": "Exact Pexels photo page preserved."
-      }
+      },
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "bundled-pose-02",
@@ -58,7 +60,9 @@
         "licenseCheckedAt": "2026-07-13",
         "provenanceIncomplete": false,
         "attributionNote": "Exact Pexels photo page preserved."
-      }
+      },
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "bundled-pose-03",
@@ -87,7 +91,9 @@
         "licenseCheckedAt": "2026-07-13",
         "provenanceIncomplete": false,
         "attributionNote": "Exact Pexels photo page preserved."
-      }
+      },
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "bundled-pose-04",
@@ -116,7 +122,9 @@
         "licenseCheckedAt": "2026-07-13",
         "provenanceIncomplete": false,
         "attributionNote": "Exact Pexels photo page preserved."
-      }
+      },
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "bundled-pose-05",
@@ -145,7 +153,9 @@
         "licenseCheckedAt": "2026-07-13",
         "provenanceIncomplete": false,
         "attributionNote": "Exact Pexels photo page preserved."
-      }
+      },
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "bundled-pose-06",
@@ -174,7 +184,9 @@
         "licenseCheckedAt": "2026-07-13",
         "provenanceIncomplete": false,
         "attributionNote": "Exact Pexels photo page preserved."
-      }
+      },
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "bundled-pose-07",
@@ -203,7 +215,9 @@
         "licenseCheckedAt": "2026-07-13",
         "provenanceIncomplete": true,
         "attributionNote": "Local Pexels reference file; original photo page was not preserved in source metadata."
-      }
+      },
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "bundled-pose-08",
@@ -232,7 +246,9 @@
         "licenseCheckedAt": "2026-07-13",
         "provenanceIncomplete": true,
         "attributionNote": "Local Pexels reference file; original photo page was not preserved in source metadata."
-      }
+      },
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "bundled-pose-09",
@@ -261,7 +277,9 @@
         "licenseCheckedAt": "2026-07-13",
         "provenanceIncomplete": true,
         "attributionNote": "Local Pexels reference file; original photo page was not preserved in source metadata."
-      }
+      },
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "bundled-pose-10",
@@ -290,7 +308,9 @@
         "licenseCheckedAt": "2026-07-13",
         "provenanceIncomplete": true,
         "attributionNote": "Local Pexels reference file; original photo page was not preserved in source metadata."
-      }
+      },
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "bundled-pose-11",
@@ -319,7 +339,9 @@
         "licenseCheckedAt": "2026-07-13",
         "provenanceIncomplete": true,
         "attributionNote": "Local Pexels reference file; original photo page was not preserved in source metadata."
-      }
+      },
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "bundled-pose-12",
@@ -348,7 +370,9 @@
         "licenseCheckedAt": "2026-07-13",
         "provenanceIncomplete": true,
         "attributionNote": "Local Pexels reference file; original photo page was not preserved in source metadata."
-      }
+      },
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     }
   ],
   "sourceDescriptors": [
@@ -380,7 +404,9 @@
       "usageNote": "适合补充人像、场景、姿势视觉参考；可用 Pexels API 自动拉图。",
       "sourceAuditScore": 83,
       "importPolicy": "search-source-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "query_template",
+      "recommendable": false
     },
     {
       "id": "pixabay",
@@ -409,7 +435,9 @@
       "usageNote": "适合找通用素材、视频空镜和商业安全素材。",
       "sourceAuditScore": 83,
       "importPolicy": "search-source-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "query_template",
+      "recommendable": false
     },
     {
       "id": "xiaohongshu",
@@ -439,7 +467,9 @@
       "usageNote": "适合看真实案例、拍摄过程、中文标题和用户偏好；只保存链接和摘要。",
       "sourceAuditScore": 83,
       "importPolicy": "search-source-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "query_template",
+      "recommendable": false
     },
     {
       "id": "huaban",
@@ -468,7 +498,9 @@
       "usageNote": "适合做 moodboard 和视觉方向，不作为版权素材直接使用。",
       "sourceAuditScore": 83,
       "importPolicy": "search-source-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "query_template",
+      "recommendable": false
     },
     {
       "id": "zcool",
@@ -497,7 +529,9 @@
       "usageNote": "适合看成片表达、排版和商业项目包装。",
       "sourceAuditScore": 83,
       "importPolicy": "search-source-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "query_template",
+      "recommendable": false
     },
     {
       "id": "behance",
@@ -526,7 +560,9 @@
       "usageNote": "适合找高质量项目结构、系列叙事和商业展示方式。",
       "sourceAuditScore": 83,
       "importPolicy": "search-source-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "query_template",
+      "recommendable": false
     },
     {
       "id": "flickr-cc",
@@ -555,7 +591,9 @@
       "usageNote": "适合需要明确授权来源的参考图，使用前仍需核对具体 license。",
       "sourceAuditScore": 83,
       "importPolicy": "search-source-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "query_template",
+      "recommendable": false
     },
     {
       "id": "wikimedia",
@@ -585,7 +623,9 @@
       "usageNote": "适合查历史服饰、建筑、道具和公开资料图。",
       "sourceAuditScore": 83,
       "importPolicy": "search-source-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "query_template",
+      "recommendable": false
     },
     {
       "id": "doc-摄影姿势库-00-姿势库总览-md",
@@ -612,7 +652,9 @@
       "usageNote": "从 Obsidian 笔记抽取，可作为拍摄方案和参考检索的源材料。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-姿势库总览-条目-1-1",
@@ -638,7 +680,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-姿势库总览-条目-2-2",
@@ -664,7 +708,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-姿势库总览-条目-3-3",
@@ -690,7 +736,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "doc-摄影姿势库-00-小红书收藏-拍摄专辑-md",
@@ -727,7 +775,9 @@
       "usageNote": "从 Obsidian 笔记抽取，可作为拍摄方案和参考检索的源材料。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-存一些生命力溢出屏幕的拍照姿势-1",
@@ -757,7 +807,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-学到了-海边拍照氛围感万能出片技巧-2",
@@ -787,7 +839,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-青春胶片感单人毕业照-i人拍照姿势合集-3",
@@ -818,7 +872,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-新中式拍照姿势大全-4",
@@ -848,7 +904,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-存一组五一出行氛围感拍照姿势-5",
@@ -877,7 +935,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-存一些浪漫生命力拍照姿势-明媚而自由-6",
@@ -907,7 +967,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-存一些适合春夏的捧花拍照姿势-7",
@@ -936,7 +998,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-超全的花海拍照姿势-自存-8",
@@ -966,7 +1030,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-存一组毕业拍照姿势-谁拍谁好看-9",
@@ -996,7 +1062,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-毕业照这样拍太好看了吧-10",
@@ -1026,7 +1094,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-存一些梧桐树拍照姿势-11",
@@ -1055,7 +1125,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-存一些拍花技巧-9个万能构图技巧-姿势-12",
@@ -1085,7 +1157,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-蔷薇花拍照姿势大合集-13",
@@ -1114,7 +1188,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-蔷薇花墙拍照太绝了-电影感写真这样拍-14",
@@ -1144,7 +1220,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-来学-存6-个i人生命力拍照姿势-15",
@@ -1174,7 +1252,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-存一些青苹果拍照姿势-引导过程记录-16",
@@ -1203,7 +1283,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-8个咖啡店-下午茶拍照姿势-氛围感拉满-17",
@@ -1232,7 +1314,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-i人也能拍出生命力-5个氧气感汉服拍照动作-18",
@@ -1263,7 +1347,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-第一个姿势学会-谁都能拍照显瘦个20斤-19",
@@ -1292,7 +1378,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-人像摄影16种构图及拍摄思路-20",
@@ -1322,7 +1410,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-如何在光影下拍出动感大片-21",
@@ -1352,7 +1442,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-阳光下的活人感大片-22",
@@ -1381,7 +1473,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-别再只会晒太阳了-23",
@@ -1411,7 +1505,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-存一些拍蓝花楹技巧-9个万能构图-姿势-24",
@@ -1441,7 +1537,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-学到了-旅游爬山氛围感万能出片技巧-25",
@@ -1470,7 +1568,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-学到了-旅游氛围感拍照万能出片技巧-26",
@@ -1499,7 +1599,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-拍花学会这7-个万能技巧和构图就够了-27",
@@ -1529,7 +1631,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-拍花海学会这个5-个万能构图技巧就够了-28",
@@ -1560,7 +1664,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-拍出春日生命力-解锁这6-招就够了-29",
@@ -1591,7 +1697,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-当我学会用电影视角拍照片-30",
@@ -1621,7 +1729,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-快来学-我终于找到了麦田拍照技巧啦-31",
@@ -1650,7 +1760,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-蔷薇花墙拍照太绝了-电影感写真这样拍-32",
@@ -1680,7 +1792,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-当我通过colorwalk去拍照-就会得到-33",
@@ -1709,7 +1823,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-五一在南京这么出片-34",
@@ -1738,7 +1854,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-大疆稳定器使用技巧-35",
@@ -1768,7 +1886,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-武汉电玩城鱼眼人像-甜酷氛围感实拍-36",
@@ -1798,7 +1918,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-从0开始学摄影-第四期-37",
@@ -1827,7 +1949,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-尼康镜头下的浪漫春日-拍摄引导-38",
@@ -1857,7 +1981,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-春天是浪漫本身-39",
@@ -1887,7 +2013,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-夏天就要拍草地和蓝天呀-文艺胶片风-40",
@@ -1919,7 +2047,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-这组国风旗袍夯爆了-41",
@@ -1949,7 +2079,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-35mm下的绿意-42",
@@ -1979,7 +2111,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-5月的蓝花楹是春天写给昆明的诗-43",
@@ -2008,7 +2142,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-月见草写真全攻略-月色如梦-花香如诗-44",
@@ -2037,7 +2173,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-5-9-一不小心-误闯现实版的印象派油画-45",
@@ -2066,7 +2204,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-用全屏-live-走进我的夏日阳光农场-46",
@@ -2095,7 +2235,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-和摄影老师一起拍出了夏天的味道-47",
@@ -2125,7 +2267,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-用colorfit给夏天点颜色瞧瞧-48",
@@ -2155,7 +2299,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-朋友圈吃不了的细糠-小红书也吃不了-49",
@@ -2184,7 +2330,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-是闪闪发光的青春呀-50",
@@ -2213,7 +2361,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-这个能拍吗-拍摄过程思路分享-51",
@@ -2242,7 +2392,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-拍了30多场校园写真-我复盘出11条翻车真相-52",
@@ -2271,7 +2423,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-朋友说我拍的特写有氛围感-但大景有种神性-53",
@@ -2300,7 +2454,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-拍成这样可以收1-9-9-吗-54",
@@ -2329,7 +2485,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-拍摄专辑-三亚-不倒闭我会一直去的店-纯分享-55",
@@ -2358,7 +2516,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "doc-摄影姿势库-00-小红书收藏-视频拍摄专辑-md",
@@ -2390,7 +2550,9 @@
       "usageNote": "从 Obsidian 笔记抽取，可作为拍摄方案和参考检索的源材料。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-视频拍摄专辑-网球大片怎么拍-1",
@@ -2419,7 +2581,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-视频拍摄专辑-终于轮到我拍这个毕业转场啦-2",
@@ -2448,7 +2612,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-视频拍摄专辑-vlog没有电影感-90-新手缺这3个细节-3",
@@ -2479,7 +2645,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-视频拍摄专辑-别再乱拍空镜-这才是电影感正确拍法-4",
@@ -2510,7 +2678,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "doc-摄影姿势库-00-小红书收藏-设计专辑-md",
@@ -2540,7 +2710,9 @@
       "usageNote": "从 Obsidian 笔记抽取，可作为拍摄方案和参考检索的源材料。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-设计专辑-一套很有层次的配色方案-1",
@@ -2570,7 +2742,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-设计专辑-配色美学-被这组蓝硬控了-2",
@@ -2600,7 +2774,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-设计专辑-深紫与金-配色美学的高级表达-3",
@@ -2630,7 +2806,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-设计专辑-华为设计师都在用的渐变配色分享-4",
@@ -2660,7 +2838,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-设计专辑-7-个-vibecoder-都应该知道的网站-5",
@@ -2690,7 +2870,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-设计专辑-赶紧用agenui做出你的第一个小猫补光灯-6",
@@ -2720,7 +2902,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-设计专辑-故事板skill-mmhub一句出片-无需提示词-7",
@@ -2750,7 +2934,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-设计专辑-vibecoding必装的6个设计类claude-skills-8",
@@ -2780,7 +2966,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-设计专辑-基础干货-让ui界面更高级的小技巧15-9",
@@ -2810,7 +2998,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "doc-摄影姿势库-00-小红书收藏-调色专辑-md",
@@ -2839,7 +3029,9 @@
       "usageNote": "从 Obsidian 笔记抽取，可作为拍摄方案和参考检索的源材料。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-小红书收藏-调色专辑-私藏干货-日系漫画调色参数分享-1",
@@ -2868,7 +3060,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "doc-摄影姿势库-姿势示意图-readme-真实参考-md",
@@ -2897,7 +3091,9 @@
       "usageNote": "从 Obsidian 笔记抽取，可作为拍摄方案和参考检索的源材料。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "doc-摄影姿势库-小红书笔记-00-笔记索引-md",
@@ -2934,7 +3130,9 @@
       "usageNote": "从 Obsidian 笔记抽取，可作为拍摄方案和参考检索的源材料。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-笔记索引-生命力和漂亮我都要-1",
@@ -2960,7 +3158,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-赵小糯-常驻大理-2",
@@ -2984,7 +3184,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-小雏菊花海九个实用小幅度拍照姿势-3",
@@ -3010,7 +3212,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-奶黄包-4",
@@ -3034,7 +3238,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-存一些好看的拍照姿势-5",
@@ -3058,7 +3264,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-存一些动漫感出片构图素材-6",
@@ -3084,7 +3292,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-肖奈tshy-7",
@@ -3108,7 +3318,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-南京-张若昀同款-小众-宪法公园-你值得拥有-8",
@@ -3132,7 +3344,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-拾光的十一-9",
@@ -3156,7 +3370,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-假装在国外度假丨锦创书城打卡-10",
@@ -3180,7 +3396,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-闫谨清-热爱摄影-11",
@@ -3204,7 +3422,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-生锈的感情又逢落雨天-12",
@@ -3228,7 +3448,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-武汉电玩城鱼眼人像-甜酷氛围感实拍-13",
@@ -3254,7 +3476,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-叫我阿荣-14",
@@ -3278,7 +3502,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-大疆稳定器使用技巧-15",
@@ -3304,7 +3530,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-铁手摄影-16",
@@ -3328,7 +3556,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-我们都是青春的导演-17",
@@ -3352,7 +3582,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-小意川-五月底北京-18",
@@ -3376,7 +3608,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-学到了-海边拍照氛围感-万能出片技巧-19",
@@ -3402,7 +3636,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-啡啡爱拍照-20",
@@ -3426,7 +3662,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-存一些生命力溢出屏幕的拍照姿势-21",
@@ -3452,7 +3690,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-如何在光影下拍出动感大片-22",
@@ -3478,7 +3718,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-一米九的摄影君-23",
@@ -3502,7 +3744,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-阳光下的活人感大片-24",
@@ -3526,7 +3770,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-来咯-新中式拍照姿势大全-25",
@@ -3552,7 +3798,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-夏天就要拍草地和蓝天呀-文艺胶片风-26",
@@ -3580,7 +3828,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-用全屏-live-走进我的夏日阳光农场-27",
@@ -3604,7 +3854,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-一场live-28",
@@ -3628,7 +3880,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-春日出游这样拍-不露脸拍出森系电影氛围感-29",
@@ -3654,7 +3908,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-5-9-一不小心-误闯现实版的印象派油画-30",
@@ -3678,7 +3934,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-菲雨丹青-31",
@@ -3702,7 +3960,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-用colorfit给夏天点颜色瞧瞧-32",
@@ -3728,7 +3988,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-存一组五一出行氛围感的拍照姿势-33",
@@ -3752,7 +4014,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-我们的约定-34",
@@ -3776,7 +4040,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-笑笑不乖w-35",
@@ -3800,7 +4066,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-人像摄影16种构图及拍摄思路-36",
@@ -3826,7 +4094,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-云汇艺术设计培训-37",
@@ -3850,7 +4120,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-35mm下的绿意-38",
@@ -3876,7 +4148,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-samaritan-39",
@@ -3900,7 +4174,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-连廊听风-40",
@@ -3924,7 +4200,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-5月的蓝花楹是春天写给昆明的诗-41",
@@ -3948,7 +4226,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-朋友圈吃不了的细糠-小红书也吃不了-42",
@@ -3972,7 +4252,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-刘知著-六月新疆面授招生中-43",
@@ -3996,7 +4278,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-和摄影老师一起拍出了夏天的味道-44",
@@ -4022,7 +4306,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-我是火大熊-45",
@@ -4046,7 +4332,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-ning粒粒-46",
@@ -4070,7 +4358,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "00-笔记索引-多肉爱吃三文鱼-面授报名中-47",
@@ -4094,7 +4384,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "doc-摄影姿势库-小红书笔记-6a100805-生命力和漂亮我都要-md",
@@ -4122,7 +4414,9 @@
       "usageNote": "从 Obsidian 笔记抽取，可作为拍摄方案和参考检索的源材料。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "concrete_asset",
+      "recommendable": true
     },
     {
       "id": "doc-摄影姿势库-拍摄指南-小清新少女风拍摄手册-md",
@@ -4149,7 +4443,9 @@
       "usageNote": "从 Obsidian 笔记抽取，可作为拍摄方案和参考检索的源材料。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-条目-1-1",
@@ -4171,7 +4467,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-条目-2-2",
@@ -4193,7 +4491,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-条目-3-3",
@@ -4215,7 +4515,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-条目-4-4",
@@ -4237,7 +4539,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-条目-5-5",
@@ -4259,7 +4563,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-条目-6-6",
@@ -4281,7 +4587,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-条目-7-7",
@@ -4303,7 +4611,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-条目-8-8",
@@ -4325,7 +4635,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-条目-9-9",
@@ -4347,7 +4659,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-单手托腮-10",
@@ -4369,7 +4683,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-双手托腮-11",
@@ -4391,7 +4707,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-捏下巴-12",
@@ -4413,7 +4731,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-摸额头-13",
@@ -4435,7 +4755,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-撩头发-14",
@@ -4457,7 +4779,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-摸后脑勺-15",
@@ -4479,7 +4803,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-编发-玩头发-16",
@@ -4501,7 +4827,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-拿花-17",
@@ -4523,7 +4851,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-拿书-18",
@@ -4545,7 +4875,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-拿咖啡-19",
@@ -4567,7 +4899,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-拿气球-20",
@@ -4589,7 +4923,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-拿耳机-21",
@@ -4611,7 +4947,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-插兜-22",
@@ -4633,7 +4971,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-叉腰-23",
@@ -4655,7 +4995,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-抱胳膊-24",
@@ -4677,7 +5019,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-摸脖子-25",
@@ -4699,7 +5043,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-条目-26-26",
@@ -4721,7 +5067,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-条目-27-27",
@@ -4743,7 +5091,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-条目-28-28",
@@ -4765,7 +5115,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-条目-29-29",
@@ -4787,7 +5139,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-条目-30-30",
@@ -4809,7 +5163,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-条目-31-31",
@@ -4831,7 +5187,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-条目-32-32",
@@ -4853,7 +5211,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-条目-33-33",
@@ -4875,7 +5235,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-条目-34-34",
@@ -4897,7 +5259,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-条目-35-35",
@@ -4919,7 +5283,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-条目-36-36",
@@ -4941,7 +5307,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-条目-37-37",
@@ -4963,7 +5331,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-重心放后脚-38",
@@ -4985,7 +5355,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-重心放前脚-39",
@@ -5007,7 +5379,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-重心居中-40",
@@ -5029,7 +5403,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-靠墙-41",
@@ -5051,7 +5427,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-靠栏杆-42",
@@ -5073,7 +5451,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-靠树-43",
@@ -5095,7 +5475,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-蹲着靠-44",
@@ -5117,7 +5499,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-自然走-45",
@@ -5139,7 +5523,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-走楼梯-46",
@@ -5161,7 +5547,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-边走边回头-47",
@@ -5183,7 +5571,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-坐台阶正面-48",
@@ -5205,7 +5595,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-坐台阶侧身-49",
@@ -5227,7 +5619,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-坐椅子靠背-50",
@@ -5249,7 +5643,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-坐椅子往前-51",
@@ -5271,7 +5667,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-盘腿坐-52",
@@ -5293,7 +5691,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-抱膝坐-53",
@@ -5315,7 +5715,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-侧坐地上-54",
@@ -5337,7 +5739,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-一腿伸直一腿曲-55",
@@ -5359,7 +5763,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-大字躺-56",
@@ -5381,7 +5787,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-侧躺-57",
@@ -5403,7 +5811,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-趴着-58",
@@ -5425,7 +5835,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-仰头躺-59",
@@ -5447,7 +5859,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-躺靠物体-60",
@@ -5471,7 +5885,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-自然走路-61",
@@ -5493,7 +5909,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-提裙摆走-62",
@@ -5515,7 +5933,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-转圈-63",
@@ -5537,7 +5957,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-跳跃-64",
@@ -5559,7 +5981,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-甩头发-65",
@@ -5581,7 +6005,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-奔跑-66",
@@ -5603,7 +6029,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-牵手走-67",
@@ -5625,7 +6053,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-背靠背-68",
@@ -5647,7 +6077,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-抱一下-69",
@@ -5669,7 +6101,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-坐在旁边-70",
@@ -5691,7 +6125,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "小清新少女风拍摄手册-牵手看镜头-71",
@@ -5713,7 +6149,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "doc-摄影姿势库-汉服-园林汉服-00-园林汉服姿势库-md",
@@ -5740,7 +6178,9 @@
       "usageNote": "从 Obsidian 笔记抽取，可作为拍摄方案和参考检索的源材料。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-园林汉服姿势库-站立持花-1",
@@ -5767,7 +6207,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-园林汉服姿势库-回眸侧身-2",
@@ -5794,7 +6236,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-园林汉服姿势库-侧坐倚栏-3",
@@ -5821,7 +6265,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-园林汉服姿势库-抚琴姿态-4",
@@ -5848,7 +6294,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-园林汉服姿势库-持扇遮面-5",
@@ -5875,7 +6323,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "doc-摄影姿势库-汉服-园林汉服-pose-回眸侧身-md",
@@ -5904,7 +6354,9 @@
       "usageNote": "从 Obsidian 笔记抽取，可作为拍摄方案和参考检索的源材料。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "pose-回眸侧身-条目-1-1",
@@ -5932,7 +6384,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "pose-回眸侧身-条目-2-2",
@@ -5959,7 +6413,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "pose-回眸侧身-条目-3-3",
@@ -5986,7 +6442,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "pose-回眸侧身-条目-4-4",
@@ -6013,7 +6471,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "pose-回眸侧身-条目-5-5",
@@ -6041,7 +6501,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "doc-摄影姿势库-汉服-园林汉服-pose-站立持花-md",
@@ -6071,7 +6533,9 @@
       "usageNote": "从 Obsidian 笔记抽取，可作为拍摄方案和参考检索的源材料。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "pose-站立持花-条目-1-1",
@@ -6099,7 +6563,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "pose-站立持花-条目-2-2",
@@ -6126,7 +6592,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "pose-站立持花-条目-3-3",
@@ -6153,7 +6621,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "pose-站立持花-条目-4-4",
@@ -6180,7 +6650,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "pose-站立持花-条目-5-5",
@@ -6208,7 +6680,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "doc-摄影姿势库-汉服-室内汉服-00-室内汉服姿势库-md",
@@ -6235,7 +6709,9 @@
       "usageNote": "从 Obsidian 笔记抽取，可作为拍摄方案和参考检索的源材料。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-室内汉服姿势库-侧坐案前-1",
@@ -6262,7 +6738,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-室内汉服姿势库-倚栏远眺-2",
@@ -6289,7 +6767,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-室内汉服姿势库-抚琴弹唱-3",
@@ -6316,7 +6796,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-室内汉服姿势库-持扇半遮-4",
@@ -6343,7 +6825,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "00-室内汉服姿势库-捧书阅读-5",
@@ -6370,7 +6854,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "doc-摄影姿势库-汉服-室内汉服-pose-侧坐案前-md",
@@ -6398,7 +6884,9 @@
       "usageNote": "从 Obsidian 笔记抽取，可作为拍摄方案和参考检索的源材料。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "pose-侧坐案前-条目-1-1",
@@ -6425,7 +6913,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "pose-侧坐案前-条目-2-2",
@@ -6452,7 +6942,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "pose-侧坐案前-条目-3-3",
@@ -6479,7 +6971,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "pose-侧坐案前-条目-4-4",
@@ -6506,7 +7000,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     },
     {
       "id": "pose-侧坐案前-条目-5-5",
@@ -6534,7 +7030,9 @@
       "usageNote": "从 Obsidian 表格抽取；建议复核原链接后补充作品截图、视频链接和授权备注。",
       "sourceAuditScore": 83,
       "importPolicy": "knowledge-only",
-      "createsReferenceAsset": false
+      "createsReferenceAsset": false,
+      "seedType": "local_private_placeholder",
+      "recommendable": false
     }
   ],
   "unavailableAssets": [
@@ -7172,5 +7670,108 @@
     "unavailableLocalAssets": 25,
     "sourceDescriptors": 237,
     "ignored": 0
+  },
+  "contextHandoffContract": {
+    "version": "1.0.0",
+    "description": "Describes how plan/shot context is handed off to an external reference destination.",
+    "allowedFields": [
+      {
+        "name": "planId",
+        "required": true,
+        "type": "string"
+      },
+      {
+        "name": "shotId",
+        "required": false,
+        "type": "string|null"
+      },
+      {
+        "name": "theme",
+        "required": false,
+        "type": "string"
+      },
+      {
+        "name": "style",
+        "required": false,
+        "type": "string"
+      },
+      {
+        "name": "scene",
+        "required": false,
+        "type": "string"
+      },
+      {
+        "name": "mood",
+        "required": false,
+        "type": "string"
+      },
+      {
+        "name": "orientation",
+        "required": false,
+        "type": "string"
+      },
+      {
+        "name": "focalLength",
+        "required": false,
+        "type": "string"
+      },
+      {
+        "name": "referenceIds",
+        "required": false,
+        "type": "string[]"
+      }
+    ],
+    "queryBuilder": {
+      "strategy": "omit-empty",
+      "joiner": " ",
+      "maxLength": 120,
+      "note": "Build query by joining only non-empty allowed fields. Never invent missing values."
+    },
+    "destinations": [
+      {
+        "id": "pexels",
+        "label": "Pexels",
+        "kind": "query_template",
+        "urlTemplate": "https://www.pexels.com/search/{query}/",
+        "requiresPersonalLibrary": false
+      },
+      {
+        "id": "unsplash",
+        "label": "Unsplash",
+        "kind": "query_template",
+        "urlTemplate": "https://unsplash.com/s/photos/{query}",
+        "requiresPersonalLibrary": false
+      },
+      {
+        "id": "pixabay",
+        "label": "Pixabay",
+        "kind": "query_template",
+        "urlTemplate": "https://pixabay.com/images/search/{query}/",
+        "requiresPersonalLibrary": false
+      },
+      {
+        "id": "personal-library",
+        "label": "个人素材库",
+        "kind": "local_private_placeholder",
+        "urlTemplate": "obsidian://search?query={query}",
+        "requiresPersonalLibrary": true
+      }
+    ]
+  },
+  "seedContractStats": {
+    "assets": {
+      "concrete_asset": 6,
+      "query_template": 0,
+      "local_private_placeholder": 6,
+      "synthetic_concept": 0
+    },
+    "sources": {
+      "concrete_asset": 49,
+      "query_template": 8,
+      "local_private_placeholder": 180,
+      "synthetic_concept": 0
+    },
+    "totalRecommendable": 55,
+    "totalNonRecommendable": 194
   }
 }

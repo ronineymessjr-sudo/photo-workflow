@@ -15,17 +15,38 @@ function legacySearch(query, options = {}) {
 
 export async function checkPersonalLibraryHealth() {
   const settings = readObsidianSettings();
-  if (!settings?.helperBaseUrl) return { available: false, reason: '未配置个人图库服务' };
+  if (!settings?.helperBaseUrl) return { available: false, reason: '未配置个人图库服务', healthResult: 'not_configured' };
   const helper = settings.helperBaseUrl.replace(/\/$/, '');
   try {
     const response = await fetch(`${helper}/v1/health?libraryFolder=${encodeURIComponent(settings.libraryFolder || '.')}`, { cache: 'no-store' });
-    if (!response.ok) return { available: false, reason: '个人图库服务无响应' };
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        return { available: false, reason: '个人图库服务未授权', helper, libraryFolder: settings.libraryFolder || '.', healthResult: 'unauthorized' };
+      }
+      if (response.status === 404) {
+        return { available: false, reason: '个人图库路径缺失', helper, libraryFolder: settings.libraryFolder || '.', healthResult: 'path_missing' };
+      }
+      return { available: false, reason: '个人图库服务无响应', helper, libraryFolder: settings.libraryFolder || '.', healthResult: 'service_unavailable' };
+    }
     const data = await response.json();
-    if (!data.ok) return { available: false, reason: '个人图库服务未就绪' };
-    return { available: true, helper, libraryFolder: settings.libraryFolder || '.', count: data.count || 0 };
+    if (!data.ok) return { available: false, reason: '个人图库服务未就绪', helper, libraryFolder: settings.libraryFolder || '.', healthResult: 'service_unavailable' };
+    return { available: true, helper, libraryFolder: settings.libraryFolder || '.', count: data.count || 0, healthResult: 'reachable' };
   } catch {
-    return { available: false, reason: '个人图库连接失败' };
+    return { available: false, reason: '个人图库连接失败', helper, libraryFolder: settings.libraryFolder || '.', healthResult: 'service_unavailable' };
   }
+}
+
+export function getPersonalLibraryHealth() {
+  return checkPersonalLibraryHealth();
+}
+
+export async function preparePersonalLibrary() {
+  return {
+    prepared: false,
+    state: 'needs_repair',
+    reason: '当前本地桥接未暴露安全的文件夹创建端点',
+    architectureDecision: 'ARCHITECTURE DECISION REQUIRED: local-obsidian-proxy 缺少显式的 POST /v1/library/prepare 可写端点，以安全创建 PhotoAtelier / Reference Inbox / Shoot Notes / Reviews 目录。在增加该端点前，请手动建立上述目录结构并点击“再次测试”。',
+  };
 }
 
 export function searchPersonalLibrary(query, options = {}) {
@@ -85,6 +106,8 @@ if (typeof globalThis.window !== 'undefined') {
     enrichLegacyPlan,
     getLegacyImageDirection,
     checkPersonalLibraryHealth,
+    getPersonalLibraryHealth,
+    preparePersonalLibrary,
     searchPersonalLibrary,
   };
 }

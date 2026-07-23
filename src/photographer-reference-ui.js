@@ -24,13 +24,6 @@ const POSE_DETAILS = {
   'bundled-pose-12': { title: '台阶侧坐姿势', tags: ['台阶', '坐姿', '侧身'] },
 };
 
-const OPEN_SOURCES = [
-  { name: 'Pexels', note: '免费实拍图片，适合找人物、场景和光线参考。', url: query => `https://www.pexels.com/zh-cn/search/${encodeURIComponent(query)}/` },
-  { name: 'Unsplash', note: '高质量摄影作品，适合寻找氛围、构图和场景。', url: query => `https://unsplash.com/s/photos/${encodeURIComponent(query)}` },
-  { name: 'Pixabay', note: '免费图片范围较广，适合补充道具与地点参考。', url: query => `https://pixabay.com/images/search/${encodeURIComponent(query)}/` },
-  { name: 'Wikimedia Commons', note: '开放授权素材，使用前请查看每张图片的许可说明。', url: query => `https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=${encodeURIComponent(query)}` },
-];
-
 function app() {
   return root.PhotoAtelierV5?.ready ? root.PhotoAtelierV5.application : null;
 }
@@ -167,9 +160,7 @@ function renderCard(asset, model) {
   const action = selected
     ? `<button class="btn btn-s btn-sm" type="button" onclick="removeEasyReference('${escapeHtml(link.id)}')">移出方案</button>`
     : `<button class="btn btn-p btn-sm" type="button" onclick="addEasyReference('${escapeHtml(asset.id)}')">${model.plan ? '加入当前方案' : '先创建方案'}</button>`;
-  const source = asset.sourceUrl
-    ? `<a class="btn btn-s btn-sm" href="${escapeHtml(asset.sourceUrl)}" target="_blank" rel="noreferrer" title="查看图片来源">来源</a>`
-    : '<span></span>';
+  const source = typeof root.renderSourceButton === 'function' ? root.renderSourceButton(asset) : '';
   const badgeLabel = asset.synthetic === true ? 'AI 概念图' : '真实参考图';
   return `<article class="reference-photo-card">
     <div class="reference-photo-card__media">
@@ -186,14 +177,12 @@ function renderCard(asset, model) {
 }
 
 function renderOpenSources() {
-  const query = state.query || state.filter || 'portrait photography';
   const target = document.getElementById('easyReferenceOpenSources');
   if (!target) return;
-  target.innerHTML = OPEN_SOURCES.map(source => `<article class="reference-open-source">
-    <strong>${escapeHtml(source.name)}</strong>
-    <span>${escapeHtml(source.note)}</span>
-    <a class="btn btn-p btn-sm" href="${escapeHtml(source.url(query))}" target="_blank" rel="noreferrer">搜索“${escapeHtml(query)}”</a>
-  </article>`).join('');
+  const html = typeof root.renderContextualReferenceHandoff === 'function'
+    ? root.renderContextualReferenceHandoff()
+    : '';
+  target.innerHTML = html || '<div class="reference-easy-empty">当前没有可携带的方案上下文，先创建或打开一个拍摄方案。</div>';
 }
 
 function personalLibraryBridge() {
@@ -300,7 +289,7 @@ function render() {
   openSources.hidden = !isOpen;
   if (planButton) planButton.textContent = model.plan ? `当前方案：${model.plan.title || model.plan.name || '未命名方案'}` : '先创建拍摄方案';
   if (isOpen) {
-    meta.textContent = '在开放图库继续搜索；打开后可下载，再回到这里上传。';
+    meta.textContent = '携带当前方案上下文，在选定的目标图库继续搜索。';
     renderOpenSources();
     return;
   }

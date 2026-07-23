@@ -110,9 +110,13 @@ async function waitFor(target) {
   const relationVisible = await page.locator('text=智能关联工作台').count() > 0;
   const lifecycleVisible = await page.locator('text=执行与交付').isVisible();
   const optionalAgentVisible = await page.locator('text=通用方案 Agent（可选）').isVisible();
-  if (!relationVisible || !lifecycleVisible || !optionalAgentVisible) throw new Error('relation, lifecycle, or optional Agent panel missing');
+  const planResourcesAvailable = await page.locator('.plan-resources').count() > 0;
+  if (relationVisible) throw new Error('legacy relation workspace should be removed from the main plan path');
+  if (!lifecycleVisible || !optionalAgentVisible || !planResourcesAvailable) {
+    throw new Error('lifecycle, optional Agent, or archived plan resources missing');
+  }
   if (!await page.locator('.production-map').count()) throw new Error('photography production workflow map missing');
-  if (!await page.locator('.shot-reference-board').count()) throw new Error('shot reference board missing');
+  if (await page.locator('.shot-reference-board').count()) throw new Error('legacy repeated shot reference board should be removed');
   await page.locator('.production-map').getByRole('button', { name: '匹配镜头参考' }).click();
   const referenceAssignments = await page.evaluate(() => JSON.parse(localStorage.getItem('pw_plans') || '[]')[0]?.shotReferenceAssignments || {});
   const assignedReferences = Object.keys(referenceAssignments).length;
@@ -123,9 +127,13 @@ async function waitFor(target) {
   await page.locator('.workflow-loop').evaluate(element => { element.open = true; });
   await page.locator('.workflow-extended-details').evaluate(element => { element.open = true; });
   await page.locator('.workflow-phase-toggle[id^="workflow-references-"]').evaluate(element => { element.open = true; });
-  await page.waitForFunction(() => Array.from(document.querySelectorAll('.shot-reference-card img')).some(image => image.complete && image.naturalWidth > 0));
-  const loadedReferenceImages = await page.locator('.shot-reference-card img').evaluateAll(images => images.filter(image => image.complete && image.naturalWidth > 0).length);
-  if (!loadedReferenceImages) throw new Error('shot reference board did not load local Obsidian images');
+  await page.locator('.plan-resources').evaluate(element => { element.open = true; });
+  const loadedReferenceImages = await page.locator('.plan-resource-thumb img').evaluateAll(images => images.filter(image => image.complete && image.naturalWidth > 0).length);
+  const planResourcesEmpty = await page.locator('.plan-resources__empty').count() > 0;
+  const archivedResourceSections = await page.locator('.plan-resource-section').count();
+  if (!loadedReferenceImages && !planResourcesEmpty && !archivedResourceSections) {
+    throw new Error('archived plan resources rendered neither content nor an empty state');
+  }
   await page.waitForSelector('.workflow-resource-drawer');
   await page.click('.workflow-resource-options button:has-text("Sony A7M4")');
   const resourcePlan = await page.evaluate(() => JSON.parse(localStorage.getItem('pw_plans') || '[]')[0]);
