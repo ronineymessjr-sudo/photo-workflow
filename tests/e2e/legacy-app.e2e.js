@@ -46,6 +46,8 @@ async function waitFor(target) {
     ]));
     localStorage.setItem('pw_venues', JSON.stringify([{ id: 'venue-night', name: '霓虹街区', styles: '夜景,街拍,电影感', addr: '本地测试场地' }]));
     localStorage.setItem('pw_models', JSON.stringify([{ id: 'model-one', name: '测试模特', tags: '冷感,街拍', styles: '电影感,时尚' }]));
+    localStorage.setItem('pa_obsidian_enabled', 'true');
+    localStorage.setItem('pa_obsidian_url', 'http://127.0.0.1:8124');
   });
   await page.goto(url, { waitUntil: 'domcontentloaded' });
   await page.waitForSelector('#tab-gen.active');
@@ -173,6 +175,7 @@ async function waitFor(target) {
   await page.waitForFunction(() => document.querySelector('#lut-pipeline')?.textContent.includes('成片/XMP'));
   if (!await page.locator('#lut-transform-list').getByText('未确认直接导入 .cube', { exact: false }).count()) throw new Error('PixelCake delivery boundary missing');
   await page.click('.nav-item[data-tab="reference"]');
+  await page.locator('.reference-advanced-tools').evaluate(el => { el.open = true; });
   await page.waitForSelector('#tab-reference.active #liveLocalLibrary');
   await page.waitForFunction(() => document.querySelectorAll('#liveLocalResults img').length > 0, null, { timeout: 15000 });
   const referenceImageCount = await page.locator('#liveLocalResults img').count();

@@ -6,6 +6,7 @@ const state = {
   query: '',
   filter: '',
   view: 'recommended',
+  personalLibrary: { available: false, checked: false, helper: '', libraryFolder: '.', loading: false, results: [], query: '' },
 };
 
 const POSE_DETAILS = {
@@ -69,7 +70,7 @@ function currentPlan() {
 function projectModel() {
   const application = app();
   const plan = currentPlan();
-  if (!application || !plan?.projectId) return { plan, selected: [], selectedIds: new Set(), links: new Map() };
+  if (!application || !plan?.projectId) return { plan, selected: [], selectedIds: new Set(), links: new Map(), shotBindings: [] };
   try {
     const model = application.queries.referenceLibrary.getProject(plan.projectId);
     return {
@@ -77,10 +78,19 @@ function projectModel() {
       selected: model.selectedReferences,
       selectedIds: new Set(model.selectedReferences.map(item => item.asset.id)),
       links: new Map(model.selectedReferences.map(item => [item.asset.id, item.link])),
+      shotBindings: model.shotBindings || [],
     };
   } catch {
-    return { plan, selected: [], selectedIds: new Set(), links: new Map() };
+    return { plan, selected: [], selectedIds: new Set(), links: new Map(), shotBindings: [] };
   }
+}
+
+function currentShots() {
+  const application = app();
+  const plan = currentPlan();
+  if (!application || !plan?.projectId) return [];
+  return application.repositories.shots.list(item => item.projectId === plan.projectId)
+    .sort((a, b) => Number(a.sequence || 0) - Number(b.sequence || 0));
 }
 
 function enrichAsset(asset) {
@@ -124,29 +134,52 @@ function searchableText(asset) {
 
 function visibleAssets() {
   const model = projectModel();
-  const source = state.view === 'selected' ? model.selected.map(item => item.asset) : state.assets;
+  let source;
+  if (state.view === 'selected') source = model.selected.map(item => item.asset);
+  else if (state.view === 'personal') source = state.personalLibrary.results;
+  else source = state.assets;
   const query = [state.query, state.filter].filter(Boolean).join(' ').trim().toLowerCase();
   return source.map(enrichAsset).filter(asset => !query || query.split(/\s+/).every(term => searchableText(asset).includes(term)));
+}
+
+function renderShotBindings(asset, model) {
+  if (state.view !== 'selected' || !model.plan) return '';
+  const shots = currentShots();
+  if (!shots.length) return '';
+  const bindingsByShotId = new Map((model.shotBindings || [])
+    .filter(item => item.asset.id === asset.id)
+    .map(item => [item.link.shotId, item.link]));
+  const buttons = shots.map(shot => {
+    const bound = bindingsByShotId.get(shot.id);
+    const label = escapeHtml(shot.scene || `镜头 ${shot.sequence}`);
+    if (bound) {
+      return `<button class="btn btn-s btn-xs" type="button" onclick="unbindEasyReferenceFromShot('${escapeHtml(bound.id)}')">${label} · 已绑定</button>`;
+    }
+    return `<button class="btn btn-p btn-xs" type="button" onclick="bindEasyReferenceToShot('${escapeHtml(asset.id)}', '${escapeHtml(shot.id)}')">${label}</button>`;
+  }).join('');
+  return `<div class="reference-shot-bindings">${buttons}</div>`;
 }
 
 function renderCard(asset, model) {
   const selected = model.selectedIds.has(asset.id);
   const link = model.links.get(asset.id);
-  const sourceLabel = asset.sourceType === 'browser-upload' ? '我的图片' : '开放实拍参考';
+  const sourceLabel = asset.sourceType === 'browser-upload' ? '我的图片' : asset.sourceType === 'obsidian-local' ? '个人图库' : '开放实拍参考';
   const action = selected
     ? `<button class="btn btn-s btn-sm" type="button" onclick="removeEasyReference('${escapeHtml(link.id)}')">移出方案</button>`
     : `<button class="btn btn-p btn-sm" type="button" onclick="addEasyReference('${escapeHtml(asset.id)}')">${model.plan ? '加入当前方案' : '先创建方案'}</button>`;
   const source = asset.sourceUrl
     ? `<a class="btn btn-s btn-sm" href="${escapeHtml(asset.sourceUrl)}" target="_blank" rel="noreferrer" title="查看图片来源">来源</a>`
     : '<span></span>';
+  const badgeLabel = asset.synthetic === true ? 'AI 概念图' : '真实参考图';
   return `<article class="reference-photo-card">
     <div class="reference-photo-card__media">
       <img src="${escapeHtml(displayUrl(asset.previewUrl))}" alt="${escapeHtml(asset.title)}" loading="eager">
-      <span class="reference-photo-card__badge">真实参考图</span>
+      <span class="reference-photo-card__badge">${escapeHtml(badgeLabel)}</span>
     </div>
     <div class="reference-photo-card__body">
       <strong class="reference-photo-card__title">${escapeHtml(asset.title)}</strong>
       <div class="reference-photo-card__meta">${escapeHtml((asset.tags || []).slice(0, 3).join(' · ') || sourceLabel)}<br>${escapeHtml(sourceLabel)}</div>
+      ${renderShotBindings(asset, model)}
       <div class="reference-photo-card__actions">${action}${source}</div>
     </div>
   </article>`;
@@ -163,6 +196,97 @@ function renderOpenSources() {
   </article>`).join('');
 }
 
+function personalLibraryBridge() {
+  return globalThis.window?.PhotoAtelierKnowledge;
+}
+
+async function checkPersonalLibrary() {
+  const bridge = personalLibraryBridge();
+  if (!bridge || typeof bridge.checkPersonalLibraryHealth !== 'function') {
+    state.personalLibrary.checked = true;
+    state.personalLibrary.available = false;
+    ensurePersonalLibraryUi();
+    render();
+    return;
+  }
+  try {
+    const health = await bridge.checkPersonalLibraryHealth();
+    state.personalLibrary.available = health.available === true;
+    state.personalLibrary.checked = true;
+    state.personalLibrary.helper = health.helper || '';
+    state.personalLibrary.libraryFolder = health.libraryFolder || '.';
+    if (!health.available && state.view === 'personal') state.view = 'recommended';
+  } catch {
+    state.personalLibrary.available = false;
+    state.personalLibrary.checked = true;
+    if (state.view === 'personal') state.view = 'recommended';
+  }
+  ensurePersonalLibraryUi();
+  render();
+}
+
+function ensurePersonalLibraryUi() {
+  const container = document.querySelector('.reference-easy-tabs');
+  if (!container) return;
+  let button = container.querySelector('[data-easy-reference-view="personal"]');
+  if (!state.personalLibrary.available) {
+    if (button) button.remove();
+    return;
+  }
+  if (!button) {
+    button = document.createElement('button');
+    button.className = 'reference-easy-tab';
+    button.type = 'button';
+    button.dataset.easyReferenceView = 'personal';
+    button.textContent = '个人图库';
+    button.onclick = () => setEasyReferenceView('personal');
+    container.appendChild(button);
+  }
+  button.classList.toggle('is-active', state.view === 'personal');
+}
+
+async function loadPersonalResults(query = '') {
+  if (!state.personalLibrary.available) return;
+  const bridge = personalLibraryBridge();
+  if (!bridge || typeof bridge.searchPersonalLibrary !== 'function') return;
+  state.personalLibrary.loading = true;
+  state.personalLibrary.query = query;
+  render();
+  try {
+    const results = await bridge.searchPersonalLibrary(query, { limit: 20 });
+    const assets = (results || []).filter(item => item.type === 'asset' && item.synthetic !== true);
+    const helper = state.personalLibrary.helper;
+    const ingested = [];
+    for (const item of assets) {
+      try {
+        const application = app();
+        if (!application) break;
+        const input = {
+          title: item.title || String(item.filename || '个人参考').replace(/\.[^.]+$/, ''),
+          assetKind: 'real_photo',
+          sourceType: 'obsidian-local',
+          sourceId: item.id,
+          previewUrl: helper ? `${helper.replace(/\/$/, '')}/v1/assets/${encodeURIComponent(item.id)}/thumbnail` : '',
+          localPath: item.filename || null,
+          tags: [...new Set([...(item.tags || []), '个人图库'])],
+          licenseStatus: item.licenseClass || 'local-private-reference',
+          verificationStatus: item.validationStatus || 'private',
+          synthetic: false,
+          sourceMetadata: { filename: item.filename, size: item.size, id: item.id },
+        };
+        ingested.push(application.references.ingestAsset(input).asset);
+      } catch { /* 单张失败不影响其余 */ }
+    }
+    state.assets = uniqueAssets([...state.assets, ...ingested]).map(enrichAsset);
+    state.personalLibrary.results = ingested.map(enrichAsset);
+  } catch {
+    state.personalLibrary.results = [];
+  } finally {
+    state.personalLibrary.loading = false;
+  }
+  render();
+}
+
 function render() {
   const gallery = document.getElementById('easyReferenceGallery');
   const openSources = document.getElementById('easyReferenceOpenSources');
@@ -171,6 +295,7 @@ function render() {
   if (!gallery || !openSources || !meta) return;
   const model = projectModel();
   const isOpen = state.view === 'open';
+  const isPersonal = state.view === 'personal';
   gallery.hidden = isOpen;
   openSources.hidden = !isOpen;
   if (planButton) planButton.textContent = model.plan ? `当前方案：${model.plan.title || model.plan.name || '未命名方案'}` : '先创建拍摄方案';
@@ -180,19 +305,24 @@ function render() {
     return;
   }
   const assets = visibleAssets();
-  meta.textContent = state.view === 'selected'
-    ? `${model.plan ? `当前方案已加入 ${assets.length} 张` : '请先创建或打开一个方案'}`
-    : `找到 ${assets.length} 张可直接使用的真实参考图`;
-  gallery.innerHTML = assets.map(asset => renderCard(asset, model)).join('') || `<div class="reference-easy-empty">${state.view === 'selected' ? '当前方案还没有参考图。回到“推荐图片”挑选即可。' : '没有匹配图片，换个简单关键词，或到“开放图库”继续找。'}</div>`;
+  if (isPersonal) {
+    meta.textContent = state.personalLibrary.loading ? '正在搜索个人图库...' : `个人图库 ${assets.length} 张`;
+  } else if (state.view === 'selected') {
+    meta.textContent = `${model.plan ? `当前方案已加入 ${assets.length} 张` : '请先创建或打开一个方案'}`;
+  } else {
+    meta.textContent = `找到 ${assets.length} 张可直接使用的真实参考图`;
+  }
+  gallery.innerHTML = assets.map(asset => renderCard(asset, model)).join('') || `<div class="reference-easy-empty">${isPersonal ? '个人图库没有匹配图片。' : state.view === 'selected' ? '当前方案还没有参考图。回到“推荐图片”挑选即可。' : '没有匹配图片，换个简单关键词，或到“开放图库”继续找。'}</div>`;
 }
 
 root.loadEasyReferenceGallery = async function () {
   const meta = document.getElementById('easyReferenceMeta');
   try {
     if (!app()) throw new Error('数据引擎尚未就绪');
-    if (state.assets.length) { render(); return; }
+    if (state.assets.length) { render(); checkPersonalLibrary().catch(() => {}); return; }
     await loadCatalog();
     render();
+    checkPersonalLibrary().catch(() => {});
   } catch (error) {
     if (meta) meta.textContent = '内置参考图暂时没有载入，可以先上传自己的图片或刷新页面。';
     const gallery = document.getElementById('easyReferenceGallery');
@@ -202,9 +332,11 @@ root.loadEasyReferenceGallery = async function () {
 };
 
 root.setEasyReferenceView = function (view) {
-  state.view = ['recommended', 'selected', 'open'].includes(view) ? view : 'recommended';
+  state.view = ['recommended', 'selected', 'open', 'personal'].includes(view) ? view : 'recommended';
   document.querySelectorAll('[data-easy-reference-view]').forEach(button => button.classList.toggle('is-active', button.dataset.easyReferenceView === state.view));
-  render();
+  ensurePersonalLibraryUi();
+  if (state.view === 'personal') loadPersonalResults(state.query);
+  else render();
 };
 
 root.setEasyReferenceFilter = function (filter) {
@@ -215,7 +347,8 @@ root.setEasyReferenceFilter = function (filter) {
 
 root.searchEasyReferences = function () {
   state.query = document.getElementById('easyReferenceSearch')?.value.trim() || '';
-  render();
+  if (state.view === 'personal') loadPersonalResults(state.query);
+  else render();
 };
 
 root.addEasyReference = function (assetId) {
@@ -244,6 +377,29 @@ root.openEasyReferencePlan = function () {
   const plan = currentPlan();
   root.showTab?.('gen');
   if (plan?.id && typeof root.loadPlan === 'function') root.loadPlan(plan.id);
+};
+
+root.bindEasyReferenceToShot = function (assetId, shotId) {
+  const application = app();
+  if (!application) return;
+  try {
+    application.references.bindToShot({ shotId, referenceAssetId: assetId, role: 'shotGuide' });
+    notify('已绑定到镜头', 'ok');
+    render();
+  } catch (error) {
+    notify(error.message || '绑定失败', 'er');
+  }
+};
+
+root.unbindEasyReferenceFromShot = function (linkId) {
+  if (!linkId || !app()) return;
+  try {
+    app().references.removeShotLink(linkId);
+    notify('已取消镜头绑定', 'ok');
+    render();
+  } catch (error) {
+    notify(error.message || '取消绑定失败', 'er');
+  }
 };
 
 root.handleEasyReferenceUpload = async function (event) {

@@ -1,11 +1,35 @@
 import { PhotographyKnowledgeService, buildKnowledgeShotList, knowledgeImageDirection } from './services/photography-knowledge-service.js';
 
+function readObsidianSettings() {
+  if (typeof globalThis.window === 'undefined') return null;
+  return typeof globalThis.window.getObsidianSettings === 'function' ? globalThis.window.getObsidianSettings() : null;
+}
+
 function legacySearch(query, options = {}) {
-  return Promise.resolve(window.bootstrapObsidianSettings?.()).then(() => {
-    const settings = window.getObsidianSettings?.();
-    if (!settings?.helperBaseUrl || typeof window.searchObsidianProxy !== 'function') return [];
-    return window.searchObsidianProxy(query, settings, options.limit || 8);
-  });
+  return Promise.resolve(globalThis.window?.bootstrapObsidianSettings?.()).then(() => {
+    const settings = readObsidianSettings();
+    if (!settings?.helperBaseUrl || typeof globalThis.window?.searchObsidianProxy !== 'function') return [];
+    return globalThis.window.searchObsidianProxy(query, settings, options.limit || 8);
+  }).catch(() => []);
+}
+
+export async function checkPersonalLibraryHealth() {
+  const settings = readObsidianSettings();
+  if (!settings?.helperBaseUrl) return { available: false, reason: '未配置个人图库服务' };
+  const helper = settings.helperBaseUrl.replace(/\/$/, '');
+  try {
+    const response = await fetch(`${helper}/v1/health?libraryFolder=${encodeURIComponent(settings.libraryFolder || '.')}`, { cache: 'no-store' });
+    if (!response.ok) return { available: false, reason: '个人图库服务无响应' };
+    const data = await response.json();
+    if (!data.ok) return { available: false, reason: '个人图库服务未就绪' };
+    return { available: true, helper, libraryFolder: settings.libraryFolder || '.', count: data.count || 0 };
+  } catch {
+    return { available: false, reason: '个人图库连接失败' };
+  }
+}
+
+export function searchPersonalLibrary(query, options = {}) {
+  return legacySearch(query, options).catch(() => []);
 }
 
 function replaceSection(sections, marker, content) {
@@ -56,4 +80,11 @@ export function getLegacyImageDirection(plan, shotIndex) {
   return knowledgeImageDirection(plan, shotIndex);
 }
 
-window.PhotoAtelierKnowledge = { enrichLegacyPlan, getLegacyImageDirection };
+if (typeof globalThis.window !== 'undefined') {
+  globalThis.window.PhotoAtelierKnowledge = {
+    enrichLegacyPlan,
+    getLegacyImageDirection,
+    checkPersonalLibraryHealth,
+    searchPersonalLibrary,
+  };
+}

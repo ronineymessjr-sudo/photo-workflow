@@ -1,0 +1,108 @@
+{
+  "date": "2026-07-23T03:02:15.914Z",
+  "appUrl": "http://127.0.0.1:8123/legacy/",
+  "proxyUrl": "http://127.0.0.1:8124",
+  "results": [
+    {
+      "item": 1,
+      "status": "PASS",
+      "evidence": "brief填充=true, 分镜/清单可见=true, 确认可见=true, 排期可见=true",
+      "issues": [],
+      "screenshots": [
+        "item1-01-initial-load.png",
+        "item1-02-planning-tab.png",
+        "item1-03-after-generate.png",
+        "item1-04-storyboard-confirm.png"
+      ]
+    },
+    {
+      "item": 2,
+      "status": "PASS",
+      "evidence": "错误占主导=false, 有离线提示=true, 页面错误=none",
+      "issues": [],
+      "screenshots": [
+        "item2-01-initial-no-obsidian.png",
+        "item2-02-reference-tab.png",
+        "item2-03-offline-state.png"
+      ]
+    },
+    {
+      "item": 3,
+      "status": "PASS",
+      "evidence": "V3流可见=true, 草稿标签=true, 折叠区域=true, 已确认标签=true",
+      "issues": [
+        "同时存在草稿和已确认标签，可能有逻辑问题"
+      ],
+      "screenshots": [
+        "item3-01-planning-with-proxy.png",
+        "item3-02-v3-flow-section.png"
+      ]
+    },
+    {
+      "item": 4,
+      "status": "PASS",
+      "evidence": "检查了4个标签页",
+      "issues": [],
+      "screenshots": [
+        "item4-00-initial.png",
+        "item4-tab-LUT-调色.png",
+        "item4-tab-设备库.png",
+        "item4-tab-参考图库.png",
+        "item4-tab-拍摄日程.png"
+      ]
+    },
+    {
+      "item": 5,
+      "status": "PASS",
+      "evidence": "报价控件=true, AI控件=true",
+      "issues": [],
+      "screenshots": [
+        "item5-01-plan-area.png",
+        "item5-02-quote-ai-controls.png"
+      ]
+    },
+    {
+      "item": 6,
+      "status": "PASS",
+      "evidence": "desktop 1440x900: scrollWidth=1440, clientWidth=1440, 溢出=无",
+      "issues": [],
+      "screenshots": [
+        "item6-desktop-viewport.png",
+        "item6-desktop-overflow-check.png"
+      ]
+    },
+    {
+      "item": 6,
+      "status": "PASS",
+      "evidence": "mobile 390x844: scrollWidth=390, clientWidth=390, 溢出=无",
+      "issues": [],
+      "screenshots": [
+        "item6-mobile-viewport.png",
+        "item6-mobile-overflow-check.png"
+      ]
+    },
+    {
+      "item": 7,
+      "status": "PARTIAL",
+      "evidence": "乱码=false, 空白面板=0, 重复标题=1",
+      "issues": [
+        "发现1个重复标题"
+      ],
+      "screenshots": [
+        "item7-00-initial.png",
+        "item7-tab-首页.png",
+        "item7-tab-规划.png",
+        "item7-tab-调色.png",
+        "item7-tab-设备.png",
+        "item7-tab-参考.png",
+        "item7-tab-日程.png"
+      ]
+    }
+  ],
+  "summary": {
+    "pass": 7,
+    "partial": 1,
+    "fail": 0,
+    "total": 8
+  }
+}

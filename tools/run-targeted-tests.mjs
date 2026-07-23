@@ -18,6 +18,7 @@ const scopes = {
     ['--test',
       'tests/node/v5/planning-workflow.test.mjs',
       'tests/node/v5/planning-ui-migration.test.mjs',
+      'tests/node/v5/legacy-v3-planning-integration.test.mjs',
       'tests/node/v5/worker-v5-contract.test.mjs',
       'tests/node/v5/application-integrity.test.mjs'],
   ],

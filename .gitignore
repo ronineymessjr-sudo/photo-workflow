@@ -1,4 +1,4 @@
-assets/local-obsidian-config.json
+﻿assets/local-obsidian-config.json
 node_modules/
 .browser-profile/
 data/platform-captures/
@@ -6,3 +6,15 @@ data/platform-debug/
 data/daily-candidates.json
 data/daily-knowledge/
 config/daily-knowledge-agent.local.json
+
+# V3 integration-closure: throwaway scratch / probe files (not product source, not QA evidence)
+tmp-*.js
+tmp-*.txt
+test-write*.tmp
+test-p0-write.txt
+__p0_test_write.txt
+tmp-check.txt
+
+# Playwright / node:test runtime artifacts (regenerated each run)
+test-results/
+.last-run.json

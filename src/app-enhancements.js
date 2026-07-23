@@ -328,7 +328,7 @@
         ? `<button class="btn btn-p btn-sm" onclick="openPlanScheduleDialog('${esc(plan.id)}')">安排拍摄</button>`
         : `<button class="btn btn-p btn-sm" onclick="openPlanSchedule('${esc(plan.id)}')">查看日程</button>`;
     return `<section class="plan-package-summary" id="plan-package-${esc(plan.id)}">
-      <div class="plan-package-summary__head"><div><span>SHOOTING HANDOFF · ${esc(lifecycleMeta.label)}</span><h4>拍摄执行总表</h4><p>${esc(lifecycleMeta.hint)}。参考图、镜头、设备、日程和导出文件都沿用同一个方案 ID。</p></div><div class="plan-package-summary__actions">${lifecycleAction}<button class="btn btn-s btn-sm" onclick="completePlanPackage('${esc(plan.id)}')">补齐拍前资料</button><select class="plan-export-select" aria-label="导出方案" onchange="if(this.value){exportPlanDocument('${esc(plan.id)}',this.value);this.value='';}"><option value="">导出…</option><option value="pdf">PDF / 打印</option><option value="csv">拍摄表格 CSV</option><option value="txt">文字版 TXT</option><option value="json">完整数据包 JSON</option></select><button class="btn btn-s btn-sm" onclick="openPlanLibrary()">方案工作台</button></div></div>
+      <div class="plan-package-summary__head"><div><span class="plan-package-state plan-package-state--${lifecycle}">${esc(lifecycleMeta.label)}</span><span>方案 ID ${esc(plan.id)}</span><h4>方案下一步</h4><p>${esc(lifecycleMeta.hint)}。当前状态下可执行的动作如下，所有操作沿用同一个方案 ID。</p></div><div class="plan-package-summary__actions">${lifecycleAction}<button class="btn btn-s btn-sm" onclick="loadPlan('${esc(plan.id)}')">${lifecycle === 'candidate' ? '继续编辑' : '打开分镜'}</button><button class="btn btn-s btn-sm" onclick="completePlanPackage('${esc(plan.id)}')">补齐拍前资料</button>${lifecycle !== 'candidate' ? `<button class="btn btn-s btn-sm" onclick="openPlanReview('${esc(plan.id)}')">查看复盘</button>` : ''}<select class="plan-export-select" aria-label="导出方案" onchange="if(this.value){exportPlanDocument('${esc(plan.id)}',this.value);this.value='';}"><option value="">导出…</option><option value="pdf">PDF / 打印</option><option value="csv">拍摄表格 CSV</option><option value="txt">文字版 TXT</option><option value="json">完整数据包 JSON</option></select><button class="btn btn-s btn-sm" onclick="openPlanLibrary()">返回方案库</button></div></div>
       <div class="plan-package-grid">
         <article class="plan-package-card plan-package-card--references"><div class="plan-package-card__label">镜头参考</div><strong>${matchedReferences.length}/${shots.length} 个镜头已有可用参考</strong><div class="plan-package-thumbnails">${thumbnails.map((item, index) => `<figure><img src="${esc(referenceThumbnail(item.reference))}" alt="${esc(item.reference.title || `镜头 ${index + 1} 参考`)}"><figcaption>${index + 1}</figcaption></figure>`).join('')}</div></article>
         <article class="plan-package-card"><div class="plan-package-card__label">镜头执行</div><strong>${shots.length} 个镜头 · ${shots.reduce((sum, shot) => sum + Number(shot.duration || 0), 0)} 分钟</strong><p>${shots.slice(0, 3).map(shot => shot.name || shot.scene || shot.description).filter(Boolean).join(' / ')}</p></article>
@@ -520,7 +520,7 @@
     <h1>${esc(plan.title || plan.input?.theme || '拍摄执行稿')}</h1>
     <p class="subtitle">${esc(schedule ? `${schedule.date || ''} ${schedule.time || ''} ${schedule.location || ''}` : '拍摄执行稿 · 按镜头逐条执行')}</p>
 
-    <h2 style="font-size:14px;margin:0 0 8px">Shot List 总览</h2>
+    <h2 style="font-size:14px;margin:0 0 8px">镜头执行表</h2>
     <table class="overview">
       <thead><tr><th>#</th><th>画面</th><th>场景</th><th>景别</th><th>焦段</th><th>情绪</th><th>参考图</th></tr></thead>
       <tbody>${shots.map((shot, i) => {
@@ -668,6 +668,15 @@
     setTimeout(() => root.selectCalendarDate?.(schedule.date), 0);
   };
 
+  root.openPlanReview = function (planId) {
+    if (typeof root.loadPlan !== 'function') return;
+    root.loadPlan(planId);
+    setTimeout(() => {
+      const publish = document.getElementById('workflow-publish-' + planId);
+      if (publish) { publish.open = true; publish.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    }, 300);
+  };
+
   root.openPlanLibrary = function () {
     const panel = document.getElementById('planLibraryPanel');
     if (!panel) return;
@@ -714,15 +723,19 @@
       const lutName = data.lut ? (LUT_FRIENDLY_NAMES[data.lut.id]?.[0] || data.lut.title) : '未选 LUT';
       const equipmentCount = data.selectedEquipment.length;
       const date = plan.updatedAt || plan.createdAt || plan.at || Number(plan.id);
-      const packageLabel = plan.packageStatus === 'preflight-ready' ? '拍前资料已齐' : PLAN_LIFECYCLE[lifecycle].label;
-      const postLabel = data.lut ? `通用预览：${lutName}` : '后期待确认';
+      const meta = PLAN_LIFECYCLE[lifecycle];
+      const needsCompletion = plan.packageStatus !== 'preflight-ready';
+      const openLabel = lifecycle === 'candidate' ? '继续编辑' : '打开分镜';
+      const reviewAction = lifecycle !== 'candidate' ? `<button class="btn btn-s btn-sm" onclick="openPlanReview('${esc(plan.id)}')">查看复盘</button>` : '';
+      const completeAction = needsCompletion ? `<button class="btn btn-s btn-sm" onclick="completePlanPackage('${esc(plan.id)}')">补齐拍前资料</button>` : '';
       const primaryAction = lifecycle === 'candidate'
         ? `<button class="btn btn-p btn-sm" onclick="confirmCandidatePlan('${esc(plan.id)}')">确认采用</button>`
         : lifecycle === 'confirmed'
           ? `<button class="btn btn-p btn-sm" onclick="openPlanScheduleDialog('${esc(plan.id)}')">安排拍摄</button>`
           : `<button class="btn btn-p btn-sm" onclick="openPlanSchedule('${esc(plan.id)}')">查看日程</button>`;
+      const postLabel = data.lut ? `通用预览：${lutName}` : '后期待确认';
       const scheduleLabel = data.schedule ? `${data.schedule.date || ''} ${data.schedule.time || ''}` : '待排日程';
-      return `<article class="plan-library-card" data-plan-id="${esc(plan.id)}"><div class="plan-library-card__media">${previews.length ? previews.map(item => `<img src="${esc(referenceThumbnail(item.reference))}" alt="${esc(item.reference.title || '方案参考图')}" loading="lazy">`).join('') : '<div>暂无参考图</div>'}</div><div class="plan-library-card__body"><div class="plan-library-card__top"><span class="eq-tag">${esc(packageLabel)}</span><time>${date ? esc(new Date(date).toLocaleDateString()) : '日期待定'}</time></div><strong>${esc(plan.title || plan.input?.theme || '未命名方案')}</strong><p>${esc(plan.input?.style || '风格待定')} · ${esc(plan.input?.scene || '场景待定')}</p><div class="plan-library-metrics"><span>镜头 ${shots.length}</span><span>参考 ${referenceCount}/${shots.length}</span><span>${esc(postLabel)}</span><span>设备 ${equipmentCount || '待选'}</span><span>${esc(scheduleLabel)}</span></div><div class="plan-library-card__actions"><button class="btn btn-s btn-sm" onclick="loadPlan('${esc(plan.id)}')">打开</button>${primaryAction}<button class="btn btn-s btn-sm" onclick="duplicatePlanPackage('${esc(plan.id)}')">复制为预选</button><select class="plan-export-select" aria-label="导出方案" onchange="if(this.value){exportPlanDocument('${esc(plan.id)}',this.value);this.value='';}"><option value="">导出…</option><option value="pdf">PDF / 打印</option><option value="csv">表格 CSV</option><option value="txt">文字版 TXT</option></select></div></div></article>`;
+      return `<article class="plan-library-card" data-plan-id="${esc(plan.id)}"><div class="plan-library-card__media">${previews.length ? previews.map(item => `<img src="${esc(referenceThumbnail(item.reference))}" alt="${esc(item.reference.title || '方案参考图')}" loading="lazy">`).join('') : '<div>暂无参考图</div>'}</div><div class="plan-library-card__body"><div class="plan-library-card__top"><span class="eq-tag plan-library-state plan-library-state--${lifecycle}" title="${esc(meta.hint)}">${esc(meta.label)}</span><time>${date ? esc(new Date(date).toLocaleDateString()) : '日期待定'}</time></div><strong>${esc(plan.title || plan.input?.theme || '未命名方案')}</strong><p>${esc(plan.input?.style || '风格待定')} · ${esc(plan.input?.scene || '场景待定')}</p><div class="plan-library-metrics"><span>镜头 ${shots.length}</span><span>参考 ${referenceCount}/${shots.length}</span><span>${esc(postLabel)}</span><span>设备 ${equipmentCount || '待选'}</span><span>${esc(scheduleLabel)}</span></div><div class="plan-library-card__actions"><button class="btn btn-s btn-sm" onclick="loadPlan('${esc(plan.id)}')">${openLabel}</button>${primaryAction}${completeAction}${reviewAction}<select class="plan-export-select" aria-label="导出方案" onchange="if(this.value){exportPlanDocument('${esc(plan.id)}',this.value);this.value='';}"><option value="">导出…</option><option value="pdf">PDF / 打印</option><option value="csv">表格 CSV</option><option value="txt">文字版 TXT</option></select></div></div></article>`;
     }).join('')}</div>` : `<p class="workflow-resource-empty">${query ? '当前状态下没有匹配的方案。' : activePlanLibraryView === 'candidate' ? '暂无预选方案。新生成的提案会先放在这里。' : activePlanLibraryView === 'confirmed' ? '暂无待排期的正式方案。先从预选方案中确认采用。' : '暂无已排期方案。正式方案确认日期后会出现在这里。'}</p>`;
   };
 
@@ -765,6 +778,7 @@
     relationGraph.forEach(item => { if (relations.length < 8 && !relations.includes(item)) relations.push(item); });
     const publishing = Domain.buildPublishingPackage(plan.input || {}, (plan.relations || {}).seo || {});
     const evaluation = Domain.evaluateWorkflow({ plan, relations: relationGraph, shots });
+    const lifecycle = planLifecycleStatus(plan);
     return `
       <details class="workflow-loop" id="plan-execution-${esc(plan.id)}">
         <summary class="workflow-loop__head">
@@ -772,6 +786,7 @@
           <div class="workflow-loop__score"><span>结构完整度</span><strong>${evaluation.score}</strong><small>/ 100</small><em>点击查看</em></div>
         </summary>
         <div class="workflow-loop__body">
+        <div class="plan-execution-rhythm" style="display:grid;grid-template-columns:repeat(6,1fr);gap:.5rem;margin:0 0 1rem;"><div class="plan-execution-rhythm__step ${lifecycle === 'candidate' ? 'is-active' : ''}"><span>01</span><strong>准备</strong><small>确认方案与参考</small></div><div class="plan-execution-rhythm__step ${records.length ? 'is-active' : ''}"><span>02</span><strong>拍摄</strong><small>现场执行</small></div><div class="plan-execution-rhythm__step ${review.keepRate ? 'is-active' : ''}"><span>03</span><strong>选片</strong><small>备份与初选</small></div><div class="plan-execution-rhythm__step ${plan.lutProfileId ? 'is-active' : ''}"><span>04</span><strong>精修</strong><small>调色与后期</small></div><div class="plan-execution-rhythm__step ${publishing.platforms.length ? 'is-active' : ''}"><span>05</span><strong>交付</strong><small>输出与发布</small></div><div class="plan-execution-rhythm__step ${review.id ? 'is-active' : ''}"><span>06</span><strong>复盘</strong><small>经验回流</small></div></div>
         ${renderProductionMap(plan, shots, relationGraph)}
         ${renderPlanPackageSummary(plan, shots)}
         <details class="workflow-extended-details">
