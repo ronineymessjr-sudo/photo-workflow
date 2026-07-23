@@ -260,7 +260,7 @@
         h1 { font-weight: 800; letter-spacing: -0.02em; font-size: 1.4rem; line-height: 1.2; }
         h2 { font-weight: 700; letter-spacing: -0.01em; font-size: 1.1rem; line-height: 1.25; }
         h3 { font-weight: 600; font-size: .95rem; line-height: 1.35; }
-        
+
         /* 统一字体层级系统 */
         .text-xs { font-size: 0.7rem; letter-spacing: 0.02em; }
         .text-sm { font-size: 0.8rem; }
@@ -269,7 +269,7 @@
         .text-xl { font-size: 1.1rem; }
         .text-2xl { font-size: 1.25rem; }
         .text-3xl { font-size: 1.5rem; }
-        
+
         /* 字重层级 */
         .font-normal { font-weight: 400; }
         .font-medium { font-weight: 500; }
@@ -2061,6 +2061,10 @@
                 position: static;
                 max-height: none;
             }
+        }
+        @media (max-width: 480px) {
+            .plan-shell { overflow-x: hidden; }
+            .shot-reference-gallery, .r3b-context-mount, .r3d-plan-resources-mount { max-width: 100%; }
         }
         @media (max-width: 680px) {
             .plan-shell {
@@ -4081,6 +4085,9 @@
             border-color: var(--ac);
         }
     </style>
+    <link rel="stylesheet" href="../src/r4-design-system.css">
+    <link rel="stylesheet" href="../src/r4-shell.css">
+    <link rel="stylesheet" href="../src/r4-mobile-field-mode.css">
     <!-- AOS Animation Library -->
     <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet" media="print" onload="this.media='all'" />
 </head>
@@ -4172,30 +4179,30 @@
             <span class="brand-dot"></span>
             <span class="brand-text">Photo<span>Atelier</span></span>
         </div>
-        <nav class="sidebar-nav">
-            <button class="nav-item active" data-tab="gen" data-role="photographer,model,assistant" aria-label="方案生成" data-i18n-aria="nav.gen" aria-current="page">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-                <span class="nav-label" data-i18n="nav.gen">方案生成</span>
+                <nav class="sidebar-nav">
+            <button class="nav-item active" data-tab="plans" data-role="photographer,model,assistant" aria-label="方案库" data-i18n-aria="nav.plans" aria-current="page">
+                <i data-lucide="clipboard-list"></i>
+                <span class="nav-label" data-i18n="nav.plans">方案库</span>
+            </button>
+            <button class="nav-item" data-tab="gen" data-role="photographer,model,assistant" aria-label="新建方案" data-i18n-aria="nav.newPlan">
+                <i data-lucide="plus"></i>
+                <span class="nav-label" data-i18n="nav.newPlan">新建方案</span>
             </button>
             <button class="nav-item" data-tab="reference" data-role="photographer,assistant" aria-label="参考图库" data-i18n-aria="nav.reference">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/><path d="M8 11h6"/><path d="M11 8v6"/></svg>
+                <i data-lucide="images"></i>
                 <span class="nav-label" data-i18n="nav.reference">参考图库</span>
             </button>
-            <button class="nav-item" data-tab="calendar" data-role="photographer" aria-label="拍摄日程" data-i18n-aria="nav.calendar">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                <span class="nav-label" data-i18n="nav.calendar">拍摄日程</span>
+            <button class="nav-item" data-tab="calendar" data-role="photographer" aria-label="日程" data-i18n-aria="nav.calendar">
+                <i data-lucide="calendar-days"></i>
+                <span class="nav-label" data-i18n="nav.calendar">日程</span>
             </button>
-            <button class="nav-item" data-tab="venue" data-role="photographer,assistant" aria-label="设备库" data-i18n-aria="nav.equipment">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4l1.4 2H20a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h4.1l1.4-2h5z"/><circle cx="12" cy="13" r="4"/></svg>
-                <span class="nav-label" data-i18n="nav.equipment">设备库</span>
+            <button class="nav-item" data-tab="venue" data-role="photographer,assistant" aria-label="设备与 LUT" data-i18n-aria="nav.equipmentLut">
+                <i data-lucide="camera"></i>
+                <span class="nav-label" data-i18n="nav.equipmentLut">设备与 LUT</span>
                 <span class="nav-badge" id="t-eq">0</span>
             </button>
-            <button class="nav-item" data-tab="lut" data-role="photographer,assistant" aria-label="LUT 调色" data-i18n-aria="nav.lut">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="12.5" r="2.5"/><path d="M12 22a10 10 0 110-20c5.5 0 10 3.6 10 8 0 2.2-1.8 4-4 4h-2.2a2 2 0 00-1.8 2.9l.4.8A3 3 0 0111.7 22H12z"/></svg>
-                <span class="nav-label" data-i18n="nav.lut">LUT/调色</span>
-            </button>
             <button class="nav-item" data-tab="settings" data-role="photographer,assistant" aria-label="设置" data-i18n-aria="nav.settings">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+                <i data-lucide="settings"></i>
                 <span class="nav-label" data-i18n="nav.settings">设置</span>
             </button>
         </nav>
@@ -4233,37 +4240,51 @@
             </div>
         </header>
 
-        <!-- ============ 方案生成 ============ -->
-        <div class="tab-cnt active" id="tab-gen">
-            <div class="plan-shell plan-type-tone">
-                <section class="panel plan-output-panel">
-                    <div class="p-head plan-output-header">
-                        <div class="plan-output-heading">
-                            <span>02 / WORKING PLAN</span>
-                            <h2 data-i18n="output.title">拍摄执行稿</h2>
-                            <span style="font-size:.7rem;color:var(--t3)" id="planSavedAt"></span>
-                        </div>
-<button class="btn btn-s btn-sm" onclick="openLatestPlanVersions()" data-i18n="output.versions">方案版本</button>
+        <!-- ============ 方案库 ============ -->
+        <div class="tab-cnt active" id="tab-plans">
+            <div class="r4-plan-library-shell">
+                <header class="r4-page-header">
+                    <div>
+                        <h1><span data-i18n="plans.title">方案库</span> <small id="r4PlanLibraryCount"></small></h1>
+                        <p data-i18n="plans.subtitle">所有拍摄方案与下一场日程</p>
                     </div>
-                    <div class="p-body">
-                        <div class="template-save-inline" id="tplSavePanel" style="display:none;">
-                            <input id="tpl-name" placeholder="模板名称">
-                            <input id="tpl-desc" placeholder="适用场景说明">
-                            <button class="btn btn-s btn-sm" onclick="saveAsTemplate()">存为模板</button>
-                        </div>
-                        <div id="tplSaveHint" style="display:none;"></div>
-                        <div class="output-empty active" id="outEmpty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg><p id="outEmptyCopy" data-i18n="output.empty">选择通用模板或填写 Brief，生成第一版可编辑工作稿</p><div class="output-empty__template" id="outEmptyTemplate"></div></div>
-                        <div class="output-load" id="outLoad"><div class="spinner"></div><p data-i18n="output.loading">正在生成...</p></div>
-                        <div class="output-cnt" id="outCnt"></div>
+                    <button class="btn btn-p" onclick="startNewPlan()"><i data-lucide="plus"></i><span data-i18n="plans.new">新建方案</span></button>
+                </header>
+                <div class="r4-plan-library-toolbar">
+                    <label class="r4-plan-library-search">
+                        <i data-lucide="search" aria-hidden="true"></i>
+                        <input id="r4PlanLibrarySearch" type="search" placeholder="搜索方案、场景或风格" oninput="renderPlanLibrary()">
+                    </label>
+                    <label class="r4-plan-library-filter">
+                        <span>状态</span>
+                        <select id="r4PlanLibraryStatus" onchange="renderPlanLibrary()">
+                            <option value="">全部</option>
+                            <option value="candidate">预选方案</option>
+                            <option value="confirmed">正式方案</option>
+                            <option value="scheduled">已排期</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="r4-plan-library-grid" id="planLibraryGrid" aria-live="polite">
+                    <div class="r4-empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>
+                        <h3 data-i18n="plans.emptyTitle">还没有方案</h3>
+                        <p data-i18n="plans.emptyHint">从新建方案开始，或选择一个通用模板快速起稿。</p>
+                        <button class="btn btn-p" onclick="showTab('gen')" data-i18n="plans.new">新建方案</button>
                     </div>
-                </section>
+                </div>
+            </div>
+        </div>
 
+        <!-- ============ 方案生成 ============ -->
+        <div class="tab-cnt" id="tab-gen">
+            <div class="plan-shell plan-type-tone">
                 <section class="panel plan-brief-panel">
                     <div class="plan-hero">
                         <div>
                             <p class="plan-eyebrow">01 / SHOOT BRIEF</p>
                             <h2 data-i18n="gen.title">快速建立拍摄提案</h2>
-                            <p data-i18n="gen.intro">先写最少必要信息生成预选方案，确认采用后再补资源并安排拍摄。</p>
+                            <p data-i18n="gen.intro">填写 5 项必要信息，生成可编辑预选方案。</p>
                         </div>
                     </div>
                     <div class="plan-quick-templates" aria-label="通用方案模板">
@@ -4354,7 +4375,28 @@
                         <button type="submit" class="btn btn-p" id="genBtn" style="width:100%;margin-top:.75rem;" data-i18n="gen.button">生成预选方案</button>
                         <p class="brief-submit-note" data-i18n="gen.submitHint">生成后先进入“预选方案”，确认采用后才进入正式方案库。</p>
                     </form>
+                </section><section class="panel plan-output-panel">
+                    <div class="p-head plan-output-header">
+                        <div class="plan-output-heading">
+                            <span>02 / WORKING PLAN</span>
+                            <h2 data-i18n="output.title">拍摄执行稿</h2>
+                            <span style="font-size:.7rem;color:var(--t3)" id="planSavedAt"></span>
+                        </div>
+<button class="btn btn-s btn-sm" onclick="openLatestPlanVersions()" data-i18n="output.versions">方案版本</button>
+                    </div>
+                    <div class="p-body">
+                        <div class="template-save-inline" id="tplSavePanel" style="display:none;">
+                            <input id="tpl-name" placeholder="模板名称">
+                            <input id="tpl-desc" placeholder="适用场景说明">
+                            <button class="btn btn-s btn-sm" onclick="saveAsTemplate()">存为模板</button>
+                        </div>
+                        <div id="tplSaveHint" style="display:none;"></div>
+                        <div class="output-empty active" id="outEmpty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg><p id="outEmptyCopy" data-i18n="output.empty">选择通用模板或填写 Brief，生成第一版可编辑工作稿</p><div class="output-empty__template" id="outEmptyTemplate"></div></div>
+                        <div class="output-load" id="outLoad"><div class="spinner"></div><p data-i18n="output.loading">正在生成...</p></div>
+                        <div class="output-cnt" id="outCnt"></div>
+                    </div>
                 </section>
+
             </div>
         </div>
 
@@ -5157,7 +5199,7 @@
                             </div>
                             <!-- 用户信息 -->
                             <div class="fg" id="settingsUserInfo">
-                                <label>👤 账户信息</label>
+                                <label><i data-lucide="user-round" aria-hidden="true"></i>账户信息</label>
                                 <div style="display:flex;align-items:center;gap:1rem;padding:.75rem;background:var(--bg-subtle);border-radius:var(--radius);margin-top:.25rem;">
                                     <div style="width:48px;height:48px;background:var(--ac-gradient);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:#fff;font-weight:600;">
                                         <span id="settingsUserAvatar">P</span>
@@ -5233,12 +5275,12 @@
                             
                             <!-- Data Management -->
                             <div class="fg">
-                                <label>💾 数据管理</label>
+                                <label><i data-lucide="database" aria-hidden="true"></i>数据管理</label>
                                 <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
-                                    <button class="btn btn-s btn-sm" onclick="exportAllData()">📤 导出全部数据</button>
-                                    <button class="btn btn-s btn-sm" onclick="document.getElementById('importFileInput').click()">📥 导入数据</button>
+                                    <button class="btn btn-s btn-sm" onclick="exportAllData()"><i data-lucide="download" aria-hidden="true"></i>导出全部数据</button>
+                                    <button class="btn btn-s btn-sm" onclick="document.getElementById('importFileInput').click()"><i data-lucide="upload" aria-hidden="true"></i>导入数据</button>
                                     <input type="file" id="importFileInput" accept=".json" style="display:none;" onchange="importAllData(event)">
-                                    <button class="btn btn-d btn-sm" onclick="clearAllData()">🗑️ 清空数据</button>
+                                    <button class="btn btn-d btn-sm" onclick="clearAllData()"><i data-lucide="trash-2" aria-hidden="true"></i>清空数据</button>
                                 </div>
                                 <p style="font-size:.72rem;color:var(--t3);margin-top:.35rem;">导出为 JSON 文件，可用于备份和迁移</p>
                             </div>
@@ -5285,7 +5327,7 @@ const i18n = {
         'login.password': '密码',
         'login.button': '登录',
         'login.hint': '首次登录将自动创建账号',
-        'gen.title': '快速建立拍摄提案', 'gen.intro': '先写最少必要信息生成预选方案，确认采用后再补资源并安排拍摄。',
+        'gen.title': '快速建立拍摄提案', 'gen.intro': '填写 5 项必要信息，生成可编辑预选方案。',
         'gen.quickStart': '快速起稿', 'gen.templatePortrait': '单人人像', 'gen.templatePair': '双人拍摄', 'gen.templateProduct': '产品内容', 'gen.templateVideo': '短片内容',
         'gen.theme': '拍摄任务', 'gen.themePlaceholder': '如：品牌人物短片、双人纪实或产品内容',
         'gen.style': '风格定位', 'gen.chooseStyle': '选择风格',
@@ -5317,7 +5359,7 @@ const i18n = {
         'login.password': 'Password',
         'login.button': 'Sign In',
         'login.hint': 'First login will auto-create account',
-        'gen.title': 'Build a shoot proposal', 'gen.intro': 'Enter the minimum brief first. Generate a candidate plan, then add resources and schedule it after approval.',
+        'gen.title': 'Build a shoot proposal', 'gen.intro': 'Fill in the 5 required fields to generate an editable candidate plan.',
         'gen.quickStart': 'Quick start', 'gen.templatePortrait': 'Solo portrait', 'gen.templatePair': 'Two-person shoot', 'gen.templateProduct': 'Product content', 'gen.templateVideo': 'Short video',
         'gen.theme': 'Shoot objective', 'gen.themePlaceholder': 'Example: brand portrait film, documentary pair, or product content', 'gen.style': 'Visual direction', 'gen.chooseStyle': 'Choose a style', 'gen.mood': 'Intended mood', 'gen.model': 'Subject / model', 'gen.scene': 'Scene / location', 'gen.duration': 'Shoot duration', 'gen.people': 'People', 'gen.extra': 'Additional requirements', 'gen.button': 'Generate candidate plan', 'gen.import': 'Import', 'gen.importVenue': 'Import from locations', 'gen.importModel': 'Import from models', 'gen.scenePlaceholder': 'Example: indoor daylight, city street, or a specific address', 'gen.modelPlaceholder': 'Example: one short-haired woman, a couple, or a product and its user',
         'gen.importTemplate': 'Import from templates', 'gen.moreConditions': 'More shoot conditions', 'gen.moreConditionsHint': 'Mood, wardrobe, references, and delivery', 'gen.moodPlaceholder': 'Example: restrained, natural, trustworthy', 'gen.templateRequirements': 'Template and additional requirements', 'gen.extraPlaceholder': 'Wardrobe, props, restrictions, delivery platform', 'gen.referenceAssets': 'Reference assets', 'gen.uploadReference': 'Upload references', 'gen.referenceUrl': 'Or paste a reference image URL', 'gen.submitHint': 'The result starts as a candidate plan and enters the formal plan library only after approval.', 'gen.readinessMissing': 'Complete before generating: ', 'gen.readinessReady': 'The brief is complete. You can generate a candidate plan.', 'gen.listSeparator': ', ', 'gen.importTemplateOption': '-- Import from templates --', 'gen.importVenueOption': '-- Import from locations --', 'gen.importModelOption': '-- Import from models --',
@@ -5894,7 +5936,7 @@ function showTab(tabName) {
     if (tabEl) tabEl.classList.add('active');
     // Trigger render
     if(tabName==='eq') renderEq();
-    if(tabName==='venue') { renderEq(); showResourceTab('eq'); }
+    if(tabName==='venue') showEquipmentLutMode(window.r4EquipmentLutMode || 'equipment');
     if(tabName==='model') renderModel();
     if(tabName==='tpl') renderTpl();
     if(tabName==='hist') renderHistFull();
@@ -5907,10 +5949,74 @@ function showTab(tabName) {
         if(getObsidianSettings().enabled && typeof searchLiveLocalAssets === 'function') searchLiveLocalAssets();
     }
     if(tabName==='settings') loadSettingsData();
-    if(tabName==='lut' && typeof renderLutWorkspace === 'function') renderLutWorkspace();
+    if(tabName==='lut') showEquipmentLutMode('lut');
+    if(tabName==='plans') renderPlanLibrary();
     var main = document.querySelector('.main-content');
     if (main) main.scrollTo({top:0,left:0,behavior:'auto'});
     window.scrollTo({top:0,left:0,behavior:'auto'});
+}
+
+function startNewPlan() {
+    currentPlanData = null;
+    window.currentPlanId = null;
+    const form = $('briefForm');
+    if (form) form.reset();
+    const shell = document.querySelector('#tab-gen .plan-shell');
+    if (shell) shell.classList.remove('is-editing-brief');
+    const output = $('outCnt');
+    if (output) { output.innerHTML = ''; output.classList.remove('active'); }
+    $('outLoad')?.classList.remove('active');
+    $('outEmpty')?.classList.add('active');
+    const savePanel = $('tplSavePanel');
+    if (savePanel) savePanel.style.display = 'none';
+    const preview = $('planTemplatePreview');
+    if (preview) { preview.classList.remove('active'); preview.innerHTML = ''; }
+    showTab('gen');
+    if (typeof updatePlanReadiness === 'function') updatePlanReadiness();
+    $('f-theme')?.focus();
+}
+
+function ensureEquipmentLutModeControls() {
+    var markup = '<div class="r4-equipment-mode-bar" role="tablist" aria-label="设备与 LUT 模式">'
+        + '<button type="button" role="tab" data-r4-equipment-mode="equipment" onclick="showEquipmentLutMode(\'equipment\')"><i data-lucide="camera"></i><span>设备</span></button>'
+        + '<button type="button" role="tab" data-r4-equipment-mode="lut" onclick="showEquipmentLutMode(\'lut\')"><i data-lucide="palette"></i><span>LUT</span></button>'
+        + '<button type="button" role="tab" data-r4-equipment-mode="preview" onclick="showEquipmentLutMode(\'preview\')"><i data-lucide="columns-3"></i><span>仿色预览</span></button>'
+        + '</div>';
+    ['tab-venue', 'tab-lut'].forEach(function(id) {
+        var tab = document.getElementById(id);
+        if (!tab || tab.querySelector('.r4-equipment-mode-bar')) return;
+        tab.insertAdjacentHTML('afterbegin', markup);
+    });
+    document.getElementById('tab-venue')?.classList.add('r4-equipment-only');
+    window.PhotoAtelierR4IconSystem?.refreshIcons(document);
+}
+
+function showEquipmentLutMode(mode) {
+    mode = ['equipment', 'lut', 'preview'].includes(mode) ? mode : 'equipment';
+    window.r4EquipmentLutMode = mode;
+    ensureEquipmentLutModeControls();
+    document.querySelectorAll('.tab-cnt').forEach(function(x){x.classList.remove('active');});
+    document.querySelectorAll('.nav-item').forEach(function(x){x.classList.remove('active');x.removeAttribute('aria-current');});
+    var nav = document.querySelector('.nav-item[data-tab="venue"]');
+    if (nav) { nav.classList.add('active'); nav.setAttribute('aria-current', 'page'); }
+    var target = document.getElementById(mode === 'equipment' ? 'tab-venue' : 'tab-lut');
+    if (target) target.classList.add('active');
+    if (mode === 'equipment') {
+        showResourceTab('eq');
+        renderEq();
+    } else if (typeof renderLutWorkspace === 'function') {
+        renderLutWorkspace();
+        if (mode === 'preview') {
+            requestAnimationFrame(function(){
+                document.querySelector('#tab-lut .workflow-lut-canvases')?.scrollIntoView({block:'start',behavior:'smooth'});
+            });
+        }
+    }
+    document.querySelectorAll('[data-r4-equipment-mode]').forEach(function(button) {
+        var active = button.dataset.r4EquipmentMode === mode;
+        button.classList.toggle('is-active', active);
+        button.setAttribute('aria-selected', String(active));
+    });
 }
 
 // 资源库内部Tab切换
@@ -5927,6 +6033,65 @@ function showResourceTab(resourceType) {
     if(resourceType==='model') renderModel();
 }
 
+function renderPlanLibrary() {
+    const plans = getPlans();
+    const schedules = sg('pw_schedule') || [];
+    const grid = $('planLibraryGrid');
+    if (!grid) return;
+    const query = ($('r4PlanLibrarySearch')?.value || '').trim().toLowerCase();
+    const statusFilter = $('r4PlanLibraryStatus')?.value || '';
+    const visiblePlans = plans.filter(function(plan) {
+        const lifecycle = plan.lifecycleStatus || 'confirmed';
+        const text = [plan.title, plan.input?.theme, plan.input?.style, plan.input?.scene].filter(Boolean).join(' ').toLowerCase();
+        return (!statusFilter || lifecycle === statusFilter) && (!query || text.includes(query));
+    });
+    const count = $('r4PlanLibraryCount');
+    if (count) count.textContent = `${visiblePlans.length} / ${plans.length}`;
+    if (!plans.length) {
+        grid.innerHTML = `<div class="r4-empty-state">
+            <i data-lucide="clipboard-list" aria-hidden="true"></i>
+            <h3 data-i18n="plans.emptyTitle">还没有方案</h3>
+            <p data-i18n="plans.emptyHint">从新建方案开始，或选择一个通用模板快速起稿。</p>
+            <button class="btn btn-p" onclick="startNewPlan()" data-i18n="plans.new">新建方案</button>
+        </div>`;
+        if (window.lucide && lucide.createIcons) lucide.createIcons();
+        return;
+    }
+    if (!visiblePlans.length) {
+        grid.innerHTML = `<div class="r4-empty-state"><i data-lucide="search-x" aria-hidden="true"></i><h3>没有匹配的方案</h3><p>调整关键词或状态筛选。</p></div>`;
+        window.PhotoAtelierR4IconSystem?.refreshIcons(grid);
+        return;
+    }
+    const today = new Date().toISOString().slice(0, 10);
+    grid.innerHTML = visiblePlans.map(plan => {
+        const lifecycle = plan.lifecycleStatus || 'confirmed';
+        const lifecycleLabels = { candidate: '预选方案', confirmed: '正式方案', scheduled: '已排期' };
+        const label = lifecycleLabels[lifecycle] || lifecycle;
+        const planSchedules = schedules.filter(s => s.planId === plan.id || (s.title && plan.input && plan.input.theme && s.title.includes(plan.input.theme)));
+        const nextShoot = planSchedules.filter(s => !s.date || s.date >= today).sort((a, b) => (a.date || '9999').localeCompare(b.date || '9999'))[0]
+            || planSchedules.sort((a, b) => (a.date || '9999').localeCompare(b.date || '9999'))[0];
+        const nextText = nextShoot ? nextShoot.date + (nextShoot.time ? ' ' + nextShoot.time : '') : '未排期';
+        const cover = plan.images && plan.images[0] && (plan.images[0].data || plan.images[0].url || plan.images[0].src);
+        const placeholderSvg = `<i data-lucide="image" aria-hidden="true"></i>`;
+        const shots = typeof generateShotList === 'function' ? generateShotList(plan) : [];
+        const completed = shots.filter(function(_, index) { return typeof isShotComplete === 'function' && isShotComplete(plan.id, index); }).length;
+        const progress = shots.length ? Math.round(completed / shots.length * 100) : 0;
+        return `<article class="r4-plan-card">
+            <div class="r4-plan-card__visual">${cover ? `<img src="${escHtml(cover)}" alt="" loading="lazy">` : `<div class="r4-plan-card__placeholder">${placeholderSvg}</div>`}</div>
+            <div class="r4-plan-card__content">
+                <div class="r4-plan-card__top"><span class="r4-status r4-status--${escHtml(lifecycle)}">${escHtml(label)}</span><span class="r4-meta">${escHtml(nextText)}</span></div>
+                <h3 class="r4-plan-card__title">${escHtml((plan.input && plan.input.theme) || plan.title || '未命名方案')}</h3>
+                <p class="r4-plan-card__detail">${escHtml([(plan.input && plan.input.style), (plan.input && plan.input.scene)].filter(Boolean).join(' · '))}</p>
+            </div>
+            <div class="r4-plan-card__metric"><span>拍摄</span><strong>${escHtml(nextText)}</strong></div>
+            <div class="r4-plan-card__metric"><span>分镜</span><strong>${shots.length || '—'} 个</strong></div>
+            <div class="r4-plan-card__progress"><span>${progress}%</span><div><i style="width:${progress}%"></i></div></div>
+            <div class="r4-plan-card__action"><button class="btn btn-p btn-sm" onclick="loadPlan('${escHtml(plan.id)}')" aria-label="打开方案" title="打开方案"><i data-lucide="arrow-up-right"></i></button></div>
+        </article>`;
+    }).join('');
+    window.PhotoAtelierR4IconSystem?.refreshIcons(grid);
+}
+
 function initTabs() {
     document.querySelectorAll('.nav-item').forEach(function(b) {
         // Remove old listeners by cloning
@@ -5935,19 +6100,12 @@ function initTabs() {
         clone.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            showTab(clone.dataset.tab);
+            if (clone.dataset.tab === 'gen') startNewPlan();
+            else showTab(clone.dataset.tab);
         });
     });
 }
 
-// Auto-init tabs if role already saved (skip overlay)
-(function() {
-    var savedRole;
-    try { savedRole = localStorage.getItem('pw_role'); } catch(e) {}
-    if (savedRole) {
-        initTabs();
-    }
-})();
 
 // ===== Message Board (消息看板) =====
 var _msgCache = [];
@@ -6525,7 +6683,7 @@ function renderVenue() {
     if (searchTerm) {
         list = list.filter(v => v.name.toLowerCase().includes(searchTerm) || (v.addr && v.addr.toLowerCase().includes(searchTerm)) || (v.styles && v.styles.toLowerCase().includes(searchTerm)));
     }
-    $('t-venue').textContent=list.length;
+    if($('t-venue')) $('t-venue').textContent=list.length;
     $('venue-total').textContent=`共 ${list.length} 个场地`;
     if(!list.length){ $('venue-list').innerHTML='<div class="eq-empty">' + (searchTerm ? '未找到匹配的场地' : '场地库为空') + '</div>'; return; }
     $('venue-list').innerHTML=list.map(v=>`
@@ -6553,7 +6711,7 @@ $('venueForm').addEventListener('submit',e=>{
 // ===== Model =====
 function renderModel() {
     const list=sg(SK.M)||[];
-    $('t-model').textContent=list.length;
+    if($('t-model')) $('t-model').textContent=list.length;
     $('model-total').textContent=`共 ${list.length} 位模特`;
     if(!list.length){ $('model-list').innerHTML='<div class="eq-empty">模特库为空</div>'; return; }
     $('model-list').innerHTML=list.map(m=>`
@@ -7877,13 +8035,11 @@ function renderPlanContent(plan) {
                     </table>
                 </div>
                 
-                <!-- 详细执行步骤 + 参考图库 -->
+                <!-- 详细执行步骤 -->
                 <div class="shot-list-secondary" style="margin-top:1.5rem;padding:1rem;background:var(--bg2);border-radius:var(--radius-sm);">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;">
-                        <h4 style="color:var(--ac);margin:0;font-size:.9rem;">📋 详细执行步骤 & 参考图库</h4>
-                        <button class="btn btn-s btn-sm" onclick="loadAllPlanReferences('${plan.id}')">
-                            🔍 批量加载所有参考图
-                        </button>
+                        <h4 style="color:var(--ac);margin:0;font-size:.9rem;">📋 详细执行步骤</h4>
+
                     </div>
                     ${shotList.map((shot, i) => `
                         <div style="margin-bottom:1.5rem;padding:.75rem;background:var(--bg);border-radius:var(--radius-sm);border-left:3px solid var(--ac);${isShotComplete(plan.id, i) ? 'opacity:0.6;background:var(--bg2);' : ''}">
@@ -7912,55 +8068,13 @@ function renderPlanContent(plan) {
                                 <span style="padding:.15rem .4rem;background:rgba(245,158,11,0.15);color:var(--warn);border-radius:4px;font-size:.7rem;">${shot.mood}</span>
                                 ${shot.priority ? `<span style="padding:.15rem .4rem;background:${shot.priority === '必拍' ? 'rgba(239,68,68,0.15)' : shot.priority === '推荐' ? 'rgba(212,149,106,0.15)' : 'rgba(156,163,175,0.15)'};color:${shot.priority === '必拍' ? '#ef4444' : shot.priority === '推荐' ? '#d4956a' : '#9ca3af'};border-radius:4px;font-size:.7rem;">${shot.priority === '必拍' ? '★ ' : ''}${shot.priority}</span>` : ''}
                             </div>
-                            <!-- 参考图库 -->
+                            <!-- R3-B context mount -->
                             ${renderShotReferenceGallery(shot, plan.input && plan.input.style || '复古', i, plan.id)}
                         </div>
                     `).join('')}
                 </div>
                 
-                <!-- 例图参考来源 -->
-                <div style="margin-top:1.5rem;padding:1rem;background:linear-gradient(135deg,rgba(212,149,106,0.1),rgba(160,128,96,0.1));border-radius:var(--radius-sm);">
-                    <h4 style="color:var(--ac);margin-bottom:.75rem;font-size:.9rem;">📸 例图参考来源</h4>
-                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;font-size:.78rem;">
-                        <div>
-                            <strong style="color:#e8e8e8;">花瓣网(huaban.com)</strong>
-                            <ul style="margin:.25rem 0;padding-left:1rem;color:var(--t2);">
-                                <li>搜索关键词：<a href="https://huaban.com/search?q=${encodeURIComponent(plan.input && plan.input.style || '人像')}" target="_blank" style="color:var(--ac);">${plan.input && plan.input.style || '人像'} 摄影</a></li>
-                                <li>国内最大灵感采集平台</li>
-                                <li>点击上方链接直达搜索</li>
-                            </ul>
-                        </div>
-                        <div>
-                            <strong style="color:#f5c918;">站酷(zcool.com.cn)</strong>
-                            <ul style="margin:.25rem 0;padding-left:1rem;color:var(--t2);">
-                                <li>搜索关键词：<a href="https://www.zcool.com.cn/search/content?word=${encodeURIComponent(plan.input && plan.input.style || '人像摄影')}" target="_blank" style="color:var(--ac);">${plan.input && plan.input.style || '人像'} 摄影</a></li>
-                                <li>国内专业设计师社区</li>
-                                <li>点击上方链接直达搜索</li>
-                            </ul>
-                        </div>
-                        <div>
-                            <strong style="color:#ff2442;">小红书</strong>
-                            <ul style="margin:.25rem 0;padding-left:1rem;color:var(--t2);">
-                                <li>搜索："${plan.input && plan.input.style || '人像'}写真姿势"</li>
-                                <li>搜索："${plan.input && plan.input.focalLength || '85mm'}镜头人像"</li>
-                                <li>收藏喜欢的笔记</li>
-                            </ul>
-                        </div>
-                        <div>
-                            <strong style="color:#4285f4;">500px</strong>
-                            <ul style="margin:.25rem 0;padding-left:1rem;color:var(--t2);">
-                                <li>分类：Portrait</li>
-                                <li>筛选：${plan.input && plan.input.focalLength || '85mm'}</li>
-                                <li>高质量专业作品</li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div style="margin-top:.75rem;padding:.5rem;background:var(--bg);border-radius:var(--radius-sm);font-size:.75rem;color:var(--t3);">
-                        💡 <strong>提示：</strong>拍摄前将参考图保存到手机，现场给模特看，沟通更直观
-                    </div>
-                </div>
-                
-                <div style="margin-top:1rem;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;">
+                                <div style="margin-top:1rem;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;">
                     <button class="btn btn-s btn-sm" onclick="addCustomShot()">➕ 添加镜头</button>
                     <button class="btn btn-s btn-sm" onclick="reorderShots()">🔄 调整顺序</button>
                     <button class="btn btn-s btn-sm" onclick="toggleShotView()">📋 简洁视图</button>
@@ -8089,20 +8203,12 @@ function renderPlanContent(plan) {
                 </div>
             </details>
             <details class="plan-detail-toggle" open>
-                <summary>完整分镜表、参考图库和现场模式</summary>
+                <summary>完整分镜表和现场模式</summary>
                 ${shotListHtml}
             </details>
             ${renderPlanSectionToggle(`plan-blueprint-${plan.id}`, '01', '拍摄总控', '主题、镜头组、时间与设备准备。', blueprintHtml)}
             ${renderPlanSectionToggle(`plan-execution-${plan.id}`, '02', '执行顺序', `${planShotList.length} 个镜头，按阶段逐组拍摄。`, executionHtml)}
             ${renderPlanSectionToggle(`plan-ready-${plan.id}`, '03', '现场准备', '沟通、物料、备份与后期交接。', readyHtml)}
-            <details class="plan-detail-toggle">
-                <summary>创意方向、妆造与道具细节</summary>
-                ${sectionsHtml}
-            </details>
-            <details class="plan-detail-toggle">
-                <summary>参考关系、检索词与发布线索</summary>
-                ${relationsHtml}
-            </details>
             <details class="plan-detail-toggle">
                 <summary>报价与高级推荐</summary>
                 ${quoteHtml + aiHtml}
@@ -14487,64 +14593,8 @@ function renderShotReferenceGallery(shot, style, shotIndex, planId) {
     const shotDataEncoded = encodeURIComponent(JSON.stringify(shot).replace(/'/g, '&#39;'));
 
     return `
-        <div class="shot-reference-gallery" id="ref-gallery-${shotIndex}" style="margin-top:1rem;padding:1rem;background:var(--bg2);border-radius:var(--radius-sm);">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;">
-                <h5 style="color:var(--ac);font-size:.85rem;margin:0;">📸 参考图库</h5>
-                <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
-                    <button class="btn btn-s btn-sm" onclick="refreshLocalReference('${planId}', ${shotIndex}, '${style}', '${shotDataEncoded}')">连接 Obsidian</button>
-                    ${hasApiKey ? `<button class="btn btn-s btn-sm" onclick="loadShotReferencesApi(${shotIndex}, '${style}', '${shotDataEncoded}')">🔍 API搜索</button>` : ''}
-                </div>
-            </div>
-            <div style="margin-bottom:.75rem;padding:.75rem;background:rgba(78,205,196,0.08);border:1px solid rgba(78,205,196,0.18);border-radius:8px;">
-                <div style="display:flex;justify-content:space-between;gap:.5rem;align-items:center;">
-                    <strong style="font-size:.78rem;color:var(--teal);">本地 Obsidian 命中</strong>
-                    <span style="font-size:.68rem;color:var(--t3);">摄影姿势库 / 实时检索</span>
-                </div>
-                <div id="obsidian-ref-${planId}-${shotIndex}" style="margin-top:.5rem;font-size:.75rem;color:var(--t3);">点击“连接 Obsidian”后，会按当前镜头的风格、场景、情绪、构图去搜你本地摄影库。</div>
-            </div>
-            <div id="ref-images-${shotIndex}" style="margin-bottom:.75rem;"></div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:.75rem;">
-                ${queries.map((q, i) => {
-                    const urls = buildSearchUrls(q.query);
-                    // Group platforms by category
-                    const majorPlatforms = ['pexels', 'unsplash', 'pixabay'];
-                    const chinesePlatforms = ['xiaohongshu', 'huaban', 'zcool'];
-                    const morePlatforms = ['freepik', 'burst', 'stocksnap', 'kaboompics'];
-                    const artisticPlatforms = ['morguefile', 'lifeofpix', 'gratisography', 'magdeleine', 'picjumbo'];
-                    const nichePlatforms = ['newoldstock', 'splitshire', 'jaymantri', 'isorepublic', 'styledstock'];
-                    const extraPlatforms = ['flickr_cc', 'wikimedia', 'everypixel'];
-                    
-                    return `
-                    <div style="background:var(--bg);border-radius:8px;padding:.75rem;border-left:3px solid ${q.color};">
-                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">
-                            <span style="font-size:.78rem;font-weight:600;color:${q.color};">${q.category}</span>
-                            <span style="font-size:.7rem;color:var(--t3);">${q.description}</span>
-                        </div>
-                        <div style="font-size:.68rem;color:var(--t3);margin-bottom:.5rem;word-break:break-all;">
-                            🔑 ${q.query}
-                        </div>
-                        <!-- Major platforms (always show) -->
-                        <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.35rem;">
-                            ${majorPlatforms.map(k => `<a href="${urls[k].url}" target="_blank" rel="noopener" title="${urls[k].tip}" style="padding:.2rem .5rem;background:${urls[k].color}15;border-radius:4px;font-size:.7rem;color:${urls[k].color};text-decoration:none;transition:all .2s;border:1px solid ${urls[k].color}30;" onmouseover="this.style.background='${urls[k].color}30'" onmouseout="this.style.background='${urls[k].color}15'">${urls[k].name}</a>`).join('')}
-                        </div>
-                        <!-- Chinese platforms -->
-                        <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.35rem;">
-                            ${chinesePlatforms.map(k => `<a href="${urls[k].url}" target="_blank" rel="noopener" title="${urls[k].tip}" style="padding:.2rem .5rem;background:${urls[k].color}15;border-radius:4px;font-size:.7rem;color:${urls[k].color};text-decoration:none;transition:all .2s;border:1px solid ${urls[k].color}30;" onmouseover="this.style.background='${urls[k].color}30'" onmouseout="this.style.background='${urls[k].color}15'">${urls[k].name}</a>`).join('')}
-                        </div>
-                        <!-- More platforms (collapsible) -->
-                        <details style="margin-top:.35rem;">
-                            <summary style="cursor:pointer;font-size:.7rem;color:var(--t3);padding:.25rem 0;">📂 更多免费图库 (${morePlatforms.length + artisticPlatforms.length + nichePlatforms.length + extraPlatforms.length}个)</summary>
-                            <div style="display:flex;flex-wrap:wrap;gap:.25rem;margin-top:.35rem;">
-                                ${[...morePlatforms, ...artisticPlatforms, ...nichePlatforms, ...extraPlatforms].map(k => `<a href="${urls[k].url}" target="_blank" rel="noopener" title="${urls[k].tip}" style="padding:.15rem .4rem;background:${urls[k].color}10;border-radius:3px;font-size:.65rem;color:${urls[k].color};text-decoration:none;transition:all .2s;" onmouseover="this.style.background='${urls[k].color}20'" onmouseout="this.style.background='${urls[k].color}10'">${urls[k].name}</a>`).join('')}
-                            </div>
-                        </details>
-                    </div>`;
-                }).join('')}
-            </div>
-            <div style="margin-top:.75rem;padding:.5rem;background:var(--bg);border-radius:6px;font-size:.72rem;color:var(--t3);display:flex;align-items:center;gap:.5rem;">
-                <span>💡</span>
-                <span>本地 Obsidian 负责检索你自己的姿势/拍摄知识库；外部平台负责补充视觉参考。如需 API 自动加载图片，请在设置中填入 Pexels API Key（<a href="https://www.pexels.com/api/" target="_blank" style="color:var(--ac);">免费申请</a>）</span>
-            </div>
+        <div class="shot-reference-gallery" id="ref-gallery-${shotIndex}" style="margin-top:1rem;">
+            <div id="r3b-shot-context-mount-${shotIndex}" class="r3b-context-mount" data-shot-index="${shotIndex}" data-plan-id="${planId}"></div>
         </div>
     `;
 }
@@ -14804,22 +14854,32 @@ function clearAllData() {
 
 // ===== Init =====
 updateBadge();renderHistMini();renderQuickVenue();renderCalendar();renderSchedules();
+initTabs(); showTab('plans');
 window.addEventListener('offline', function() { toast('网络已断开，当前为离线模式', 'er'); });
 window.addEventListener('online', function() { toast('网络已恢复', 'ok'); });
 </script>
 <script src="../src/feishu-sync.js"></script>
+<script src="../src/legacy-plan-resources.js"></script>
+<script src="../src/r4-icon-system.js"></script>
 <script src="../src/app-enhancements.js"></script>
 <script type="module">
   document.documentElement.dataset.v5Engine = 'loading';
+  window.PhotoAtelierPersonalLibraryReady = import('../src/obsidian-library-onboarding.js').catch(error => {
+    console.warn('[PhotoAtelier library] Optional personal library setup unavailable.', error);
+    return null;
+  });
   window.PhotoAtelierKnowledgeReady = import('../src/legacy-knowledge-bridge.js').catch(error => {
     console.warn('[PhotoAtelier knowledge] Local knowledge bridge unavailable.', error);
     return null;
   });
   import('../src/legacy-v5-bridge.js')
+    .then(() => import('../src/legacy-reference-context-launcher.js')
+      .catch(error => { console.warn('[PhotoAtelier V5] Optional reference handoff unavailable.', error); return null; }))
     .then(() => Promise.all([
       import('../src/photographer-reference-ui.js').catch(error => { console.warn('[PhotoAtelier V5] Optional reference UI unavailable.', error); return null; }),
       import('../src/legacy-v3-planning-flow.js').catch(error => { console.warn('[PhotoAtelier V5] Optional V3 planning bridge unavailable.', error); return null; }),
       import('../src/legacy-commercial-tools.js').catch(error => { console.warn('[PhotoAtelier V5] Optional commercial tools unavailable.', error); return null; }),
+      import('../src/r4-workspace-integration.js').catch(error => { console.warn('[PhotoAtelier R4] Mobile field integration unavailable.', error); return null; }),
     ]))
     .catch(error => {
       document.documentElement.dataset.v5Engine = 'error';

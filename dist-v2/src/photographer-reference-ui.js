@@ -7,6 +7,7 @@ const state = {
   filter: '',
   view: 'recommended',
   personalLibrary: { available: false, checked: false, helper: '', libraryFolder: '.', loading: false, results: [], query: '' },
+  detail: { assetId: null, fit: 'contain' },
 };
 
 const POSE_DETAILS = {
@@ -23,13 +24,6 @@ const POSE_DETAILS = {
   'bundled-pose-11': { title: '彩色墙面站姿', tags: ['街拍', '站姿', '色彩'] },
   'bundled-pose-12': { title: '台阶侧坐姿势', tags: ['台阶', '坐姿', '侧身'] },
 };
-
-const OPEN_SOURCES = [
-  { name: 'Pexels', note: '免费实拍图片，适合找人物、场景和光线参考。', url: query => `https://www.pexels.com/zh-cn/search/${encodeURIComponent(query)}/` },
-  { name: 'Unsplash', note: '高质量摄影作品，适合寻找氛围、构图和场景。', url: query => `https://unsplash.com/s/photos/${encodeURIComponent(query)}` },
-  { name: 'Pixabay', note: '免费图片范围较广，适合补充道具与地点参考。', url: query => `https://pixabay.com/images/search/${encodeURIComponent(query)}/` },
-  { name: 'Wikimedia Commons', note: '开放授权素材，使用前请查看每张图片的许可说明。', url: query => `https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=${encodeURIComponent(query)}` },
-];
 
 function app() {
   return root.PhotoAtelierV5?.ready ? root.PhotoAtelierV5.application : null;
@@ -142,6 +136,60 @@ function visibleAssets() {
   return source.map(enrichAsset).filter(asset => !query || query.split(/\s+/).every(term => searchableText(asset).includes(term)));
 }
 
+function assetKindLabel(asset) {
+  if (asset.synthetic === true) return 'AI 概念图';
+  const map = {
+    real_photo: '实拍参考',
+    pose_reference: '姿势参考',
+    lighting_reference: '光线参考',
+    composition_reference: '构图参考',
+    color_reference: '色彩参考',
+    location_reference: '场景参考',
+  };
+  return map[asset.assetKind] || '真实参考图';
+}
+
+function sourceTypeLabel(asset) {
+  if (asset.synthetic === true) return 'AI 生成';
+  if (asset.sourceType === 'browser-upload') return '我的图片';
+  if (asset.sourceType === 'obsidian-local') return '个人图库';
+  if (asset.sourceType?.includes('pexels')) return 'Pexels';
+  if (asset.sourceType?.includes('unsplash')) return 'Unsplash';
+  if (asset.sourceType?.includes('pixabay')) return 'Pixabay';
+  return '开放实拍参考';
+}
+
+function usefulFact(asset) {
+  if (asset.photographer) return asset.photographer;
+  const firstTag = (asset.tags || []).find(tag => !['实拍参考', '我的图片', '个人图库'].includes(tag));
+  if (firstTag) return firstTag;
+  if (asset.licenseStatus && asset.licenseStatus !== 'unknown') return asset.licenseStatus;
+  return sourceTypeLabel(asset);
+}
+
+function renderR4Card(asset, model) {
+  const selected = model.selectedIds.has(asset.id);
+  const isConcept = asset.synthetic === true;
+  const kindLabel = assetKindLabel(asset);
+  const fact = usefulFact(asset);
+  return `<article class="r4-reference-card" tabindex="0" role="button" aria-label="打开 ${escapeHtml(asset.title)} 详情" onclick="openEasyReferenceDetail('${escapeHtml(asset.id)}')">
+    <div class="r4-reference-card__media">
+      <img src="${escapeHtml(displayUrl(asset.previewUrl))}" alt="${escapeHtml(asset.title)}" loading="eager">
+      <span class="r4-reference-card__kind ${isConcept ? 'is-concept' : ''}">${escapeHtml(kindLabel)}</span>
+    </div>
+    <div class="r4-reference-card__body">
+      <div>
+        <strong class="r4-reference-card__title">${escapeHtml(asset.title)}</strong>
+        <div class="r4-reference-card__fact">${escapeHtml(fact)}</div>
+      </div>
+      <div class="r4-reference-card__state">
+        <span class="r4-reference-card__dot ${isConcept ? 'is-concept' : ''}"></span>
+        <span class="r4-reference-card__fact">${selected ? '已加入当前方案' : isConcept ? '概念图，不作为实拍依据' : '真实参考图'}</span>
+      </div>
+    </div>
+  </article>`;
+}
+
 function renderShotBindings(asset, model) {
   if (state.view !== 'selected' || !model.plan) return '';
   const shots = currentShots();
@@ -153,47 +201,20 @@ function renderShotBindings(asset, model) {
     const bound = bindingsByShotId.get(shot.id);
     const label = escapeHtml(shot.scene || `镜头 ${shot.sequence}`);
     if (bound) {
-      return `<button class="btn btn-s btn-xs" type="button" onclick="unbindEasyReferenceFromShot('${escapeHtml(bound.id)}')">${label} · 已绑定</button>`;
+      return `<button class="btn btn-s btn-xs" type="button" onclick="event.stopPropagation(); unbindEasyReferenceFromShot('${escapeHtml(bound.id)}')">${label} · 已绑定</button>`;
     }
-    return `<button class="btn btn-p btn-xs" type="button" onclick="bindEasyReferenceToShot('${escapeHtml(asset.id)}', '${escapeHtml(shot.id)}')">${label}</button>`;
+    return `<button class="btn btn-p btn-xs" type="button" onclick="event.stopPropagation(); bindEasyReferenceToShot('${escapeHtml(asset.id)}', '${escapeHtml(shot.id)}')">${label}</button>`;
   }).join('');
   return `<div class="reference-shot-bindings">${buttons}</div>`;
 }
 
-function renderCard(asset, model) {
-  const selected = model.selectedIds.has(asset.id);
-  const link = model.links.get(asset.id);
-  const sourceLabel = asset.sourceType === 'browser-upload' ? '我的图片' : asset.sourceType === 'obsidian-local' ? '个人图库' : '开放实拍参考';
-  const action = selected
-    ? `<button class="btn btn-s btn-sm" type="button" onclick="removeEasyReference('${escapeHtml(link.id)}')">移出方案</button>`
-    : `<button class="btn btn-p btn-sm" type="button" onclick="addEasyReference('${escapeHtml(asset.id)}')">${model.plan ? '加入当前方案' : '先创建方案'}</button>`;
-  const source = asset.sourceUrl
-    ? `<a class="btn btn-s btn-sm" href="${escapeHtml(asset.sourceUrl)}" target="_blank" rel="noreferrer" title="查看图片来源">来源</a>`
-    : '<span></span>';
-  const badgeLabel = asset.synthetic === true ? 'AI 概念图' : '真实参考图';
-  return `<article class="reference-photo-card">
-    <div class="reference-photo-card__media">
-      <img src="${escapeHtml(displayUrl(asset.previewUrl))}" alt="${escapeHtml(asset.title)}" loading="eager">
-      <span class="reference-photo-card__badge">${escapeHtml(badgeLabel)}</span>
-    </div>
-    <div class="reference-photo-card__body">
-      <strong class="reference-photo-card__title">${escapeHtml(asset.title)}</strong>
-      <div class="reference-photo-card__meta">${escapeHtml((asset.tags || []).slice(0, 3).join(' · ') || sourceLabel)}<br>${escapeHtml(sourceLabel)}</div>
-      ${renderShotBindings(asset, model)}
-      <div class="reference-photo-card__actions">${action}${source}</div>
-    </div>
-  </article>`;
-}
-
 function renderOpenSources() {
-  const query = state.query || state.filter || 'portrait photography';
   const target = document.getElementById('easyReferenceOpenSources');
   if (!target) return;
-  target.innerHTML = OPEN_SOURCES.map(source => `<article class="reference-open-source">
-    <strong>${escapeHtml(source.name)}</strong>
-    <span>${escapeHtml(source.note)}</span>
-    <a class="btn btn-p btn-sm" href="${escapeHtml(source.url(query))}" target="_blank" rel="noreferrer">搜索“${escapeHtml(query)}”</a>
-  </article>`).join('');
+  const html = typeof root.renderContextualReferenceHandoff === 'function'
+    ? root.renderContextualReferenceHandoff()
+    : '';
+  target.innerHTML = html || '<div class="reference-easy-empty">当前没有可携带的方案上下文，先创建或打开一个拍摄方案。</div>';
 }
 
 function personalLibraryBridge() {
@@ -295,16 +316,17 @@ function render() {
   if (!gallery || !openSources || !meta) return;
   const model = projectModel();
   const isOpen = state.view === 'open';
-  const isPersonal = state.view === 'personal';
   gallery.hidden = isOpen;
   openSources.hidden = !isOpen;
+  gallery.classList.add('r4-reference-grid');
   if (planButton) planButton.textContent = model.plan ? `当前方案：${model.plan.title || model.plan.name || '未命名方案'}` : '先创建拍摄方案';
   if (isOpen) {
-    meta.textContent = '在开放图库继续搜索；打开后可下载，再回到这里上传。';
+    meta.textContent = '携带当前方案上下文，在选定的目标图库继续搜索。';
     renderOpenSources();
     return;
   }
   const assets = visibleAssets();
+  const isPersonal = state.view === 'personal';
   if (isPersonal) {
     meta.textContent = state.personalLibrary.loading ? '正在搜索个人图库...' : `个人图库 ${assets.length} 张`;
   } else if (state.view === 'selected') {
@@ -312,10 +334,11 @@ function render() {
   } else {
     meta.textContent = `找到 ${assets.length} 张可直接使用的真实参考图`;
   }
-  gallery.innerHTML = assets.map(asset => renderCard(asset, model)).join('') || `<div class="reference-easy-empty">${isPersonal ? '个人图库没有匹配图片。' : state.view === 'selected' ? '当前方案还没有参考图。回到“推荐图片”挑选即可。' : '没有匹配图片，换个简单关键词，或到“开放图库”继续找。'}</div>`;
+  gallery.innerHTML = assets.map(asset => renderR4Card(asset, model)).join('') || `<div class="reference-easy-empty">${isPersonal ? '个人图库没有匹配图片。' : state.view === 'selected' ? '当前方案还没有参考图。回到“推荐图片”挑选即可。' : '没有匹配图片，换个简单关键词，或到“开放图库”继续找。'}</div>`;
 }
 
 root.loadEasyReferenceGallery = async function () {
+  injectR4Stylesheet();
   const meta = document.getElementById('easyReferenceMeta');
   try {
     if (!app()) throw new Error('数据引擎尚未就绪');
@@ -364,13 +387,16 @@ root.addEasyReference = function (assetId) {
   application.references.selectForProject({ projectId: model.plan.projectId, referenceAssetId: asset.id, role: 'general' });
   notify('参考图已加入当前方案', 'ok');
   render();
+  if (state.detail.assetId === assetId) renderR4Detail(assetId);
 };
 
 root.removeEasyReference = function (linkId) {
   if (!linkId || !app()) return;
+  const asset = findAssetByLinkId(linkId);
   app().references.removeProjectLink(linkId);
   notify('已移出当前方案，图片仍保留在参考库', 'ok');
   render();
+  if (asset && state.detail.assetId === asset.id) renderR4Detail(asset.id);
 };
 
 root.openEasyReferencePlan = function () {
@@ -386,6 +412,7 @@ root.bindEasyReferenceToShot = function (assetId, shotId) {
     application.references.bindToShot({ shotId, referenceAssetId: assetId, role: 'shotGuide' });
     notify('已绑定到镜头', 'ok');
     render();
+    if (state.detail.assetId === assetId) renderR4Detail(assetId);
   } catch (error) {
     notify(error.message || '绑定失败', 'er');
   }
@@ -394,13 +421,31 @@ root.bindEasyReferenceToShot = function (assetId, shotId) {
 root.unbindEasyReferenceFromShot = function (linkId) {
   if (!linkId || !app()) return;
   try {
+    const asset = findAssetByShotLinkId(linkId);
     app().references.removeShotLink(linkId);
     notify('已取消镜头绑定', 'ok');
     render();
+    if (asset && state.detail.assetId === asset.id) renderR4Detail(asset.id);
   } catch (error) {
     notify(error.message || '取消绑定失败', 'er');
   }
 };
+
+function findAssetByLinkId(linkId) {
+  const application = app();
+  if (!application) return null;
+  const link = application.repositories.projectReferenceLinks.get(linkId);
+  if (!link) return null;
+  return application.repositories.referenceAssets.get(link.referenceAssetId);
+}
+
+function findAssetByShotLinkId(linkId) {
+  const application = app();
+  if (!application) return null;
+  const link = application.repositories.shotReferenceLinks.get(linkId);
+  if (!link) return null;
+  return application.repositories.referenceAssets.get(link.referenceAssetId);
+}
 
 root.handleEasyReferenceUpload = async function (event) {
   const files = [...(event.target.files || [])].filter(file => file.type.startsWith('image/')).slice(0, 6);
@@ -451,6 +496,216 @@ function createPreview(file) {
     image.src = objectUrl;
   });
 }
+
+/* R4-D detail view */
+
+function injectR4Stylesheet() {
+  if (document.getElementById('r4-reference-workspace-styles')) return;
+  const link = document.createElement('link');
+  link.id = 'r4-reference-workspace-styles';
+  link.rel = 'stylesheet';
+  link.href = '../src/r4-reference-workspace.css';
+  document.head.appendChild(link);
+}
+
+function getAssetById(assetId) {
+  const application = app();
+  const fromRepo = application?.repositories.referenceAssets.get(assetId);
+  if (fromRepo) return enrichAsset(fromRepo);
+  return state.assets.find(asset => asset.id === assetId) || state.catalogById.get(assetId) || null;
+}
+
+function getProjectLinksForAsset(assetId) {
+  const application = app();
+  if (!application) return [];
+  return application.repositories.projectReferenceLinks.list(item => item.referenceAssetId === assetId)
+    .map(link => {
+      const project = application.repositories.projects.get(link.projectId);
+      return { link, project };
+    });
+}
+
+function getShotLinksForAsset(assetId) {
+  const application = app();
+  if (!application) return [];
+  return application.repositories.shotReferenceLinks.list(item => item.referenceAssetId === assetId)
+    .map(link => {
+      const shot = application.repositories.shots.get(link.shotId);
+      const plan = shot ? application.repositories.plans.get(shot.planId) : null;
+      const project = plan ? application.repositories.projects.get(plan.projectId) : null;
+      return { link, shot, project };
+    });
+}
+
+function formatSourceUrl(asset) {
+  if (!asset.sourceUrl && asset.localPath) {
+    return { href: displayUrl(asset.localPath), label: '打开本地文件' };
+  }
+  if (!asset.sourceUrl) return null;
+  try {
+    const url = new URL(asset.sourceUrl);
+    if (['pexels.com', 'unsplash.com', 'pixabay.com'].some(host => url.hostname.includes(host))) {
+      return { href: asset.sourceUrl, label: `在 ${url.hostname.replace(/^www\./, '')} 打开` };
+    }
+    return { href: asset.sourceUrl, label: '打开来源' };
+  } catch {
+    if (asset.localPath) return { href: displayUrl(asset.localPath), label: '打开本地文件' };
+    return null;
+  }
+}
+
+function ensureDetailModal() {
+  let modal = document.getElementById('r4ReferenceDetailModal');
+  if (modal) return modal;
+  modal = document.createElement('div');
+  modal.id = 'r4ReferenceDetailModal';
+  modal.className = 'r4-reference-detail';
+  modal.hidden = true;
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.setAttribute('aria-labelledby', 'r4ReferenceDetailTitle');
+  modal.innerHTML = `
+    <div class="r4-reference-detail__sheet" onclick="if(event.target===this)closeEasyReferenceDetail()">
+      <div class="r4-reference-detail__image-zone">
+        <div class="r4-reference-detail__image-frame" id="r4ReferenceDetailImageFrame">
+          <img id="r4ReferenceDetailImage" src="" alt="">
+        </div>
+        <div class="r4-reference-detail__floating-toolbar" role="toolbar" aria-label="图片工具">
+          <button type="button" aria-label="完整显示" title="完整显示" onclick="setEasyReferenceImageFit('contain')" aria-pressed="true" id="r4ReferenceFitContain"><i data-lucide="scan"></i></button>
+          <button type="button" aria-label="铺满画面" title="铺满画面" onclick="setEasyReferenceImageFit('cover')" aria-pressed="false" id="r4ReferenceFitCover"><i data-lucide="maximize-2"></i></button>
+          <button type="button" aria-label="返回网格" title="返回网格" onclick="closeEasyReferenceDetail(); setEasyReferenceView('recommended')"><i data-lucide="layout-grid"></i></button>
+          <button type="button" aria-label="查看拍摄信息" title="查看拍摄信息" onclick="focusEasyReferenceInfo()"><i data-lucide="info"></i></button>
+        </div>
+      </div>
+      <div class="r4-reference-detail__panel r4-reference-detail__panel--analysis">
+        <header class="r4-reference-detail__header">
+          <div>
+            <p class="r4-reference-detail__eyebrow" id="r4ReferenceDetailEyebrow">参考素材</p>
+            <h2 class="r4-reference-detail__title" id="r4ReferenceDetailTitle">参考素材</h2>
+          </div>
+          <button class="r4-reference-detail__close" type="button" aria-label="关闭详情" title="关闭" onclick="closeEasyReferenceDetail()"><i data-lucide="x"></i></button>
+        </header>
+        <div class="r4-reference-detail__scroll" id="r4ReferenceDetailAnalysis"></div>
+      </div>
+      <div class="r4-reference-detail__panel r4-reference-detail__panel--links">
+        <div class="r4-reference-detail__scroll" id="r4ReferenceDetailLinks"></div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  return modal;
+}
+
+function renderR4DetailFact(label, value, isHtml = false) {
+  const content = isHtml ? value : escapeHtml(value ?? '未记录');
+  return `<div class="r4-reference-detail__fact"><dt>${escapeHtml(label)}</dt><dd>${content}</dd></div>`;
+}
+
+function renderR4Detail(assetId) {
+  const asset = getAssetById(assetId);
+  if (!asset) return;
+  const modal = ensureDetailModal();
+  const model = projectModel();
+  const selected = model.selectedIds.has(asset.id);
+  const link = model.links.get(asset.id);
+  const isConcept = asset.synthetic === true;
+  const source = formatSourceUrl(asset);
+
+  document.getElementById('r4ReferenceDetailTitle').textContent = asset.title || '参考素材';
+  document.getElementById('r4ReferenceDetailEyebrow').textContent = isConcept ? 'AI 概念图' : assetKindLabel(asset);
+
+  const image = document.getElementById('r4ReferenceDetailImage');
+  image.src = displayUrl(asset.previewUrl);
+  image.alt = asset.title || '参考素材';
+  updateEasyReferenceImageFit();
+
+  const tags = (asset.tags || []).filter(tag => !['实拍参考', '我的图片', '个人图库'].includes(tag)).join(' · ') || '未标注';
+  const analysisHtml = `
+    <div class="r4-reference-detail__section">
+      <h3>素材与来源</h3>
+      <div class="r4-reference-detail__kind-pill ${isConcept ? 'is-concept' : ''}">${isConcept ? 'AI 概念图' : '真实参考图'}</div>
+      ${renderR4DetailFact('来源', source ? `<a href="${escapeHtml(source.href)}" target="_blank" rel="noreferrer">${escapeHtml(source.label)}</a>` : (asset.localPath ? '本地文件' : '未记录'), true)}
+      ${renderR4DetailFact('作者', asset.photographer || '未知')}
+      ${renderR4DetailFact('授权', asset.licenseStatus || '未知')}
+      ${renderR4DetailFact('标签', tags)}
+    </div>
+    <div class="r4-reference-detail__section" id="r4ReferenceDetailInfo">
+      <h3>分析与拍摄</h3>
+      ${renderR4DetailFact('构图', asset.composition || asset.sourceMetadata?.composition || '未记录')}
+      ${renderR4DetailFact('镜头 / 焦段', asset.lens || asset.sourceMetadata?.lens || asset.focalLength || '未记录')}
+      ${renderR4DetailFact('光线', asset.lighting || asset.sourceMetadata?.lighting || '未记录')}
+      ${renderR4DetailFact('色彩 / LUT', asset.colorDirection || asset.sourceMetadata?.colorDirection || '未记录')}
+      ${renderR4DetailFact('验证状态', asset.verificationStatus || '待核验')}
+    </div>
+  `;
+  document.getElementById('r4ReferenceDetailAnalysis').innerHTML = analysisHtml;
+
+  const projectLinks = getProjectLinksForAsset(asset.id);
+  const shotLinks = getShotLinksForAsset(asset.id);
+  const projectList = projectLinks.length
+    ? projectLinks.map(({ project }) => `<div class="r4-reference-detail__linked-plan"><span>${escapeHtml(project?.title || project?.name || '未命名方案')}</span></div>`).join('')
+    : '<div class="r4-reference-detail__empty">尚未加入任何方案</div>';
+  const shotList = shotLinks.length
+    ? shotLinks.map(({ shot, project }) => `<div class="r4-reference-detail__linked-shot"><span>${escapeHtml(project?.title || project?.name || '方案')} · ${escapeHtml(shot?.scene || `镜头 ${shot?.sequence}`)}</span></div>`).join('')
+    : '<div class="r4-reference-detail__empty">未绑定到镜头</div>';
+
+  const primaryAction = selected
+    ? `<button class="r4-reference-detail__primary-action is-remove" type="button" onclick="removeEasyReference('${escapeHtml(link.id)}')">移出当前方案</button>`
+    : `<button class="r4-reference-detail__primary-action" type="button" onclick="addEasyReference('${escapeHtml(asset.id)}')">加入当前方案</button>`;
+
+  document.getElementById('r4ReferenceDetailLinks').innerHTML = `
+    <div class="r4-reference-detail__section">
+      <h3>关联方案</h3>
+      ${projectList}
+    </div>
+    <div class="r4-reference-detail__section">
+      <h3>关联镜头</h3>
+      ${shotList}
+      ${state.view === 'selected' && model.plan ? renderShotBindings(asset, model) : ''}
+    </div>
+    <div class="r4-reference-detail__section">
+      ${primaryAction}
+    </div>
+  `;
+  root.PhotoAtelierR4IconSystem?.refreshIcons(modal);
+}
+
+root.openEasyReferenceDetail = function (assetId) {
+  state.detail.assetId = assetId;
+  renderR4Detail(assetId);
+  const modal = ensureDetailModal();
+  modal.hidden = false;
+  document.body.style.overflow = 'hidden';
+};
+
+root.closeEasyReferenceDetail = function () {
+  const modal = document.getElementById('r4ReferenceDetailModal');
+  if (modal) modal.hidden = true;
+  document.body.style.overflow = '';
+};
+
+root.setEasyReferenceImageFit = function (fit) {
+  state.detail.fit = fit === 'cover' ? 'cover' : 'contain';
+  updateEasyReferenceImageFit();
+};
+
+function updateEasyReferenceImageFit() {
+  const frame = document.getElementById('r4ReferenceDetailImageFrame');
+  const containBtn = document.getElementById('r4ReferenceFitContain');
+  const coverBtn = document.getElementById('r4ReferenceFitCover');
+  if (!frame) return;
+  frame.classList.toggle('is-cover', state.detail.fit === 'cover');
+  if (containBtn) containBtn.setAttribute('aria-pressed', String(state.detail.fit === 'contain'));
+  if (coverBtn) coverBtn.setAttribute('aria-pressed', String(state.detail.fit === 'cover'));
+}
+
+root.focusEasyReferenceInfo = function () {
+  document.getElementById('r4ReferenceDetailInfo')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+/* Initialization */
+
+injectR4Stylesheet();
 
 document.getElementById('easyReferenceSearch')?.addEventListener('keydown', event => {
   if (event.key === 'Enter') root.searchEasyReferences();
