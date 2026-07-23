@@ -4236,6 +4236,28 @@
         <!-- ============ 方案生成 ============ -->
         <div class="tab-cnt active" id="tab-gen">
             <div class="plan-shell plan-type-tone">
+                <section class="panel plan-output-panel">
+                    <div class="p-head plan-output-header">
+                        <div class="plan-output-heading">
+                            <span>02 / WORKING PLAN</span>
+                            <h2 data-i18n="output.title">拍摄执行稿</h2>
+                            <span style="font-size:.7rem;color:var(--t3)" id="planSavedAt"></span>
+                        </div>
+<button class="btn btn-s btn-sm" onclick="openLatestPlanVersions()" data-i18n="output.versions">方案版本</button>
+                    </div>
+                    <div class="p-body">
+                        <div class="template-save-inline" id="tplSavePanel" style="display:none;">
+                            <input id="tpl-name" placeholder="模板名称">
+                            <input id="tpl-desc" placeholder="适用场景说明">
+                            <button class="btn btn-s btn-sm" onclick="saveAsTemplate()">存为模板</button>
+                        </div>
+                        <div id="tplSaveHint" style="display:none;"></div>
+                        <div class="output-empty active" id="outEmpty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg><p id="outEmptyCopy" data-i18n="output.empty">选择通用模板或填写 Brief，生成第一版可编辑工作稿</p><div class="output-empty__template" id="outEmptyTemplate"></div></div>
+                        <div class="output-load" id="outLoad"><div class="spinner"></div><p data-i18n="output.loading">正在生成...</p></div>
+                        <div class="output-cnt" id="outCnt"></div>
+                    </div>
+                </section>
+
                 <section class="panel plan-brief-panel">
                     <div class="plan-hero">
                         <div>
@@ -4327,32 +4349,11 @@
                                 </div>
                             </div>
                         </details>
+                        <div id="v3PlanningFlow" aria-live="polite"></div>
                         <div class="plan-readiness" id="planReadiness" aria-live="polite"></div>
                         <button type="submit" class="btn btn-p" id="genBtn" style="width:100%;margin-top:.75rem;" data-i18n="gen.button">生成预选方案</button>
                         <p class="brief-submit-note" data-i18n="gen.submitHint">生成后先进入“预选方案”，确认采用后才进入正式方案库。</p>
                     </form>
-                </section>
-
-                <section class="panel plan-output-panel">
-                    <div class="p-head plan-output-header">
-                        <div class="plan-output-heading">
-                            <span>02 / WORKING PLAN</span>
-                            <h2 data-i18n="output.title">拍摄执行稿</h2>
-                            <span style="font-size:.7rem;color:var(--t3)" id="planSavedAt"></span>
-                        </div>
-<button class="btn btn-s btn-sm" onclick="openLatestPlanVersions()" data-i18n="output.versions">方案版本</button>
-                    </div>
-                    <div class="p-body">
-                        <div class="template-save-inline" id="tplSavePanel" style="display:none;">
-                            <input id="tpl-name" placeholder="模板名称">
-                            <input id="tpl-desc" placeholder="适用场景说明">
-                            <button class="btn btn-s btn-sm" onclick="saveAsTemplate()">存为模板</button>
-                        </div>
-                        <div id="tplSaveHint" style="display:none;"></div>
-                        <div class="output-empty active" id="outEmpty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg><p id="outEmptyCopy" data-i18n="output.empty">选择通用模板或填写 Brief，生成第一版可编辑工作稿</p><div class="output-empty__template" id="outEmptyTemplate"></div></div>
-                        <div class="output-load" id="outLoad"><div class="spinner"></div><p data-i18n="output.loading">正在生成...</p></div>
-                        <div class="output-cnt" id="outCnt"></div>
-                    </div>
                 </section>
             </div>
         </div>
@@ -7668,12 +7669,12 @@ function renderPlanContent(plan) {
     const blueprintHtml = renderShootBlueprint(plan, planShotList);
 
     const displaySections = (plan.sections || []).filter(function(s) {
-        return !/(方案概览|地点|场地推荐|地图|勘景|后期|调色|LUT)/.test(s.ti || '');
+        return !/(方案概览|地点|场地推荐|地图|勘景|后期|调色|LUT|摆姿)/.test(s.ti || '');
     });
     const sectionsHtml = `<section class="plan-document-section"><div class="plan-document-section__head"><span>+</span><div><h3>创意与准备细节</h3><p>妆造、道具、沟通与其他补充建议。</p></div></div><div class="plan-section-grid">${displaySections.slice(0, 8).map((s, index)=>`
         <article class="plan-section-card"><span>${String(index + 1).padStart(2, '0')}</span><h4>${escHtml(String(s.ti || '').replace(/^[^\u4e00-\u9fa5A-Za-z0-9]+\s*/, ''))}</h4><ul>${s.c.filter(Boolean).slice(0, 4).map(c=>`<li>${escHtml(c)}</li>`).join('')}</ul></article>`).join('')}</div></section>`;
 
-    const imgGallery = renderImageGallery(plan);
+    // P0: 隐藏 standalone 方案预演图区域
 
     // 添加模特沟通话术
     const communicationTips = getCommunicationTips(plan.input && plan.input.style);
@@ -7877,7 +7878,7 @@ function renderPlanContent(plan) {
                 </div>
                 
                 <!-- 详细执行步骤 + 参考图库 -->
-                <div style="margin-top:1.5rem;padding:1rem;background:var(--bg2);border-radius:var(--radius-sm);">
+                <div class="shot-list-secondary" style="margin-top:1.5rem;padding:1rem;background:var(--bg2);border-radius:var(--radius-sm);">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;">
                         <h4 style="color:var(--ac);margin:0;font-size:.9rem;">📋 详细执行步骤 & 参考图库</h4>
                         <button class="btn btn-s btn-sm" onclick="loadAllPlanReferences('${plan.id}')">
@@ -8087,6 +8088,10 @@ function renderPlanContent(plan) {
                     </nav>
                 </div>
             </details>
+            <details class="plan-detail-toggle" open>
+                <summary>完整分镜表、参考图库和现场模式</summary>
+                ${shotListHtml}
+            </details>
             ${renderPlanSectionToggle(`plan-blueprint-${plan.id}`, '01', '拍摄总控', '主题、镜头组、时间与设备准备。', blueprintHtml)}
             ${renderPlanSectionToggle(`plan-execution-${plan.id}`, '02', '执行顺序', `${planShotList.length} 个镜头，按阶段逐组拍摄。`, executionHtml)}
             ${renderPlanSectionToggle(`plan-ready-${plan.id}`, '03', '现场准备', '沟通、物料、备份与后期交接。', readyHtml)}
@@ -8099,12 +8104,8 @@ function renderPlanContent(plan) {
                 ${relationsHtml}
             </details>
             <details class="plan-detail-toggle">
-                <summary>完整分镜表、参考图库和现场模式</summary>
-                ${shotListHtml}
-            </details>
-            <details class="plan-detail-toggle">
-                <summary>报价、批量图片和高级推荐</summary>
-                ${quoteHtml + imgGallery + aiHtml}
+                <summary>报价与高级推荐</summary>
+                ${quoteHtml + aiHtml}
             </details>
             </article>
         </div>
@@ -9423,7 +9424,9 @@ function printShotList(planId) {
                     </tbody>
                 </table>
             </div>
-        </body>
+        
+
+</body>
         </html>
     `;
     
@@ -10234,44 +10237,6 @@ function generateServiceSheet(planId) {
     toast('服务确认单已生成', 'ok');
 }
 
-// 添加自定义镜头
-function addCustomShot() {
-    const scene = prompt('场景名称（如：窗边、沙发区）:');
-    if (!scene) return;
-    const desc = prompt('画面描述（如：模特倚靠窗边，自然光侧照）:');
-    if (!desc) return;
-    const focal = prompt('焦距（如：85mm f/1.4）:') || '50mm f/1.4';
-    const mood = prompt('情绪（如：慵懒、自信）:') || '自然';
-    const newShot = {
-        scene: scene, description: desc, shotSize: '中景', method: '定点拍摄',
-        focalLength: focal, composition: '三分法', lighting: '自然光',
-        props: '无', angle: '平视', mood: mood, duration: 5,
-        notes: '自定义镜头 - ' + desc
-    };
-    // Save to current plan's custom shots
-    const customShots = JSON.parse(localStorage.getItem('pa_custom_shots') || '[]');
-    customShots.push(newShot);
-    localStorage.setItem('pa_custom_shots', JSON.stringify(customShots));
-    toast('镜头已添加，重新生成方案后生效', 'ok');
-}
-
-// Toggle between detailed and compact shot list view
-function toggleShotView() {
-    const detailSection = document.getElementById('shot-detail-section');
-    const tableSection = document.getElementById('shot-table-section');
-    if (!detailSection || !tableSection) { toast('视图切换失败', 'er'); return; }
-    const isCompact = detailSection.style.display === 'none';
-    detailSection.style.display = isCompact ? 'block' : 'none';
-    tableSection.style.display = isCompact ? 'none' : 'block';
-    toast(isCompact ? '已切换到详细视图' : '已切换到简洁视图', 'ok');
-}
-
-// 调整镜头顺序
-function reorderShots() {
-    toast('提示：可在简洁视图中拖拽调整镜头顺序', 'i');
-    toggleShotView();
-}
-
 // 生成分镜引导话术
 function getShotDirection(shot) {
     if (!shot) return '自然放松，看镜头';
@@ -11036,6 +11001,7 @@ function handleImageUpload(input) {
             };
             uploadedImages.push(imageData);
             renderImagePreviews();
+            window.dispatchEvent(new CustomEvent('photoatelier:legacy-reference-images', { detail: { images: uploadedImages } }));
         };
         reader.readAsDataURL(file);
     });
@@ -11056,6 +11022,7 @@ function renderImagePreviews() {
 function removeImage(id) {
     uploadedImages = uploadedImages.filter(img => img.id !== id);
     renderImagePreviews();
+    window.dispatchEvent(new CustomEvent('photoatelier:legacy-reference-images', { detail: { images: uploadedImages } }));
 }
 
 // Drag and drop for image upload
@@ -11778,7 +11745,7 @@ function getActionsHtml() {
         <button class="btn btn-s btn-sm" onclick="copyCurrentPlan()">📋 复制</button>
         <button class="btn btn-s btn-sm" onclick="exportPlanPdfCurrent()">📄 PDF</button>
         <button class="btn btn-i btn-sm" onclick="exportModelPdfCurrent()">👤 模特版PDF</button>
-        ${currentPlanId ? `<button class="btn btn-i btn-sm" onclick="genImgForPlan('${currentPlanId}')" id="action-gen-img-btn">🎨 批量生成9张</button>` : ''}
+        <!-- P0: standalone main visual generation hidden -->
         <button class="btn btn-d btn-sm" onclick="delCurrentPlan()">🗑️ 删除</button>
     </div>`;
 }
@@ -14849,7 +14816,11 @@ window.addEventListener('online', function() { toast('网络已恢复', 'ok'); }
     return null;
   });
   import('../src/legacy-v5-bridge.js')
-    .then(() => import('../src/photographer-reference-ui.js'))
+    .then(() => Promise.all([
+      import('../src/photographer-reference-ui.js').catch(error => { console.warn('[PhotoAtelier V5] Optional reference UI unavailable.', error); return null; }),
+      import('../src/legacy-v3-planning-flow.js').catch(error => { console.warn('[PhotoAtelier V5] Optional V3 planning bridge unavailable.', error); return null; }),
+      import('../src/legacy-commercial-tools.js').catch(error => { console.warn('[PhotoAtelier V5] Optional commercial tools unavailable.', error); return null; }),
+    ]))
     .catch(error => {
       document.documentElement.dataset.v5Engine = 'error';
       document.documentElement.dataset.v5Error = error?.message || String(error);
@@ -14936,5 +14907,6 @@ window.addEventListener('online', function() { toast('网络已恢复', 'ok'); }
 </div>
 <script type="module" src="../src/beta-feedback.js"></script>
 <!-- Settings Modal -->
+<script src="../src/legacy-shot-editor.js"></script>
 </body>
 </html>

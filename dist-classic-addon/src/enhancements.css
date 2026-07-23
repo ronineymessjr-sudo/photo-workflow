@@ -660,3 +660,28 @@
   .workflow-loop__head { align-items: flex-start; }
   .workflow-loop__score span { text-align: left; }
 }
+
+
+/* P0: reduce plan-area color noise to neutral palette + one accent */
+.plan-document-nav { background: var(--bg); }
+.plan-post-handoff-card { border-top-color: var(--bd) !important; }
+.plan-post-handoff-card__status { color: var(--t3); }
+.plan-post-handoff-card__status > span { background: var(--t3); }
+.post-agent-boundary { border-left-color: var(--bd); background: var(--bg); }
+.post-agent-boundary > span { color: var(--t3); }
+.plan-output-wrapper span[style*="background:rgba("] { background: var(--bg2) !important; color: var(--t2) !important; border: 1px solid var(--bd) !important; }
+.plan-output-wrapper span[style*="color:#ec4899"] { color: var(--t2) !important; }
+
+/* P0: concise shot list view hides secondary copy */
+.plan-output-wrapper.is-concise .shot-list-secondary { display: none; }
+.plan-output-wrapper.is-concise .ps-cnt > p:first-of-type { display: none; }
+.plan-output-wrapper.is-concise table th:nth-child(n+7),
+.plan-output-wrapper.is-concise table td:nth-child(n+7) { display: none; }
+
+/* P0: neutralize plan table header colors */
+.plan-output-wrapper table th { color: var(--t2) !important; }
+.plan-output-wrapper table td[style*="color:var(--teal)"],
+.plan-output-wrapper table td[style*="color:var(--warn)"],
+.plan-output-wrapper table td[style*="color:#8b5cf6"],
+.plan-output-wrapper table td[style*="color:#ec4899"] { color: var(--t2) !important; }
+.plan-output-wrapper table td span[style*="color:#ec4899"] { color: var(--t2) !important; }
