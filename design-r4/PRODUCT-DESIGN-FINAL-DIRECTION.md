@@ -10,6 +10,10 @@ The visual direction is now fixed. The three generated concepts are not three co
 
 Do not combine their different navigation structures verbatim. The navigation, typography, iconography, tokens, and component rules in this document override incidental differences in the concept images.
 
+The complete page map and additional source visuals are defined in
+`PRODUCT-DESIGN-COMPLETE-SCREEN-MAP.md`. That document extends this direction
+without changing the current R4 implementation-agent assignments.
+
 ## Product character
 
 PhotoAtelier is a quiet personal photography workbench. Photography supplies the color and emotion; the interface supplies order.
@@ -290,4 +294,3 @@ No implementation agent may redesign product behavior while applying this visual
 - Cards and text do not overlap at 1440 px or 390 px.
 - Keyboard focus and mobile touch targets are visible and usable.
 - Generated concept images are used as direction references, not copied as literal product requirements.
-

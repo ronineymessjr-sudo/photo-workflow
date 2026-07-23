@@ -8,6 +8,31 @@ const referenceOutput = safeOutput('dist-reference-addon');
 const packageJson = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
 const schemaSource = fs.readFileSync(path.join(root, 'src', 'core', 'schema.js'), 'utf8');
 const appVersion = schemaSource.match(/APP_VERSION\s*=\s*['"]([^'"]+)/)?.[1] || packageJson.version || 'unknown';
+const legacyRuntimeFiles = [
+  'src/domain.js',
+  'src/storage.js',
+  'src/feishu-sync.js',
+  'src/app-enhancements.js',
+  'src/beta-feedback.js',
+  'src/legacy-v5-bridge.js',
+  'src/legacy-knowledge-bridge.js',
+  'src/legacy-commercial-tools.js',
+  'src/legacy-plan-resources.js',
+  'src/legacy-reference-context-launcher.js',
+  'src/legacy-shot-editor.js',
+  'src/legacy-v3-planning-flow.js',
+  'src/obsidian-library-onboarding.js',
+  'src/photographer-reference-ui.js',
+  'src/enhancements.css',
+  'src/r4-design-system.css',
+  'src/r4-shell.css',
+  'src/r4-active-plan.css',
+  'src/r4-reference-workspace.css',
+  'src/r4-mobile-field-mode.css',
+  'src/r4-icon-system.js',
+  'src/r4-mobile-field-mode.js',
+  'src/r4-workspace-integration.js',
+];
 
 reset(output);
 copy('index.html', output);
@@ -25,7 +50,7 @@ for (const locale of ['en', 'ja', 'ko']) copyTree(locale, output);
 for (const optional of ['favicon.jpg', 'robots.txt', 'sitemap.xml', 'manifest.webmanifest', 'sw.js']) copyOptional(optional, output);
 
 copy('legacy/index.html', output);
-for (const file of ['src/domain.js', 'src/storage.js', 'src/feishu-sync.js', 'src/app-enhancements.js', 'src/legacy-v5-bridge.js', 'src/legacy-knowledge-bridge.js', 'src/photographer-reference-ui.js', 'src/enhancements.css']) copy(file, output);
+for (const file of legacyRuntimeFiles) copy(file, output);
 copyTree('assets', output);
 copyOptional('data/ronin-photography-knowledge.json', output);
 copyOptional('data/v5-real-data-catalog.json', output);
@@ -60,7 +85,7 @@ fs.writeFileSync(path.join(referenceOutput, 'README-OVERLAY.md'), [
 
 reset(classicOutput);
 copy('legacy/index.html', classicOutput);
-for (const file of ['src/domain.js', 'src/storage.js', 'src/feishu-sync.js', 'src/app-enhancements.js', 'src/legacy-v5-bridge.js', 'src/legacy-knowledge-bridge.js', 'src/photographer-reference-ui.js', 'src/enhancements.css']) copy(file, classicOutput);
+for (const file of legacyRuntimeFiles) copy(file, classicOutput);
 copyTree('assets', classicOutput);
 copyOptional('data/ronin-photography-knowledge.json', classicOutput);
 copyOptional('data/v5-real-data-catalog.json', classicOutput);

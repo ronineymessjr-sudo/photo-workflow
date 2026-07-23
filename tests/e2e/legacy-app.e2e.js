@@ -50,11 +50,12 @@ async function waitFor(target) {
     localStorage.setItem('pa_obsidian_url', 'http://127.0.0.1:8124');
   });
   await page.goto(url, { waitUntil: 'domcontentloaded' });
+  await page.locator('.nav-item[data-tab="gen"]').click();
   await page.waitForSelector('#tab-gen.active');
   const navCount = await page.locator('.sidebar .nav-item').count();
   if (navCount !== 6) throw new Error(`expected 6 primary nav items, got ${navCount}`);
   const navLabels = await page.locator('.sidebar .nav-label').allTextContents();
-  for (const label of ['方案生成', '参考图库', '拍摄日程', '设备库', 'LUT/调色', '设置']) {
+  for (const label of ['方案库', '新建方案', '参考图库', '拍摄日程', '设备与 LUT', '设置']) {
     if (!navLabels.includes(label)) throw new Error(`missing primary nav: ${label}`);
   }
   if (navLabels.includes('消息看板') || navLabels.includes('历史记录')) throw new Error('message/history should not remain primary navigation');
@@ -79,6 +80,7 @@ async function waitFor(target) {
   if (candidatePlan.lifecycleStatus !== 'candidate') throw new Error('new plan did not enter candidate state');
   if (await page.locator('#planLibraryTabs [aria-selected="true"] span').textContent() !== '预选方案') throw new Error('candidate library tab was not selected');
   if (await page.locator('.plan-primary-toggle[open], .workflow-loop[open]').count()) throw new Error('new plan should keep execution sections collapsed initially');
+  await page.locator('.r4-legacy-document').evaluate(element => { element.open = true; });
   await page.locator('.plan-primary-toggle[id^="plan-blueprint-"] > summary').click();
   const planOutputText = await page.locator('#outCnt').innerText();
   for (const label of ['拍摄总控', '建议携带', '设备库核对', '执行顺序']) {
@@ -153,8 +155,8 @@ async function waitFor(target) {
   if (!await page.locator('.workflow-lut-recommendation').count()) throw new Error('explainable LUT recommendation missing');
   await page.click('.nav-item[data-tab="venue"]');
   await page.waitForSelector('#tab-venue.active #resource-eq.active');
-  if (await page.locator('#resource-venue, #resource-model').count()) throw new Error('legacy venue/model panes still shown in equipment library');
-  await page.click('.nav-item[data-tab="lut"]');
+  if (await page.locator('#resource-venue:visible, #resource-model:visible').count()) throw new Error('legacy venue/model panes still shown in equipment library');
+  await page.locator('[data-r4-equipment-mode="lut"]').first().click();
   await page.waitForSelector('#tab-lut.active #lut-library-list');
   if (!await page.locator('#lut-library-select option').count()) throw new Error('LUT library workspace missing');
   await page.waitForFunction(() => document.querySelectorAll('#open-lut-list .open-lut-card').length === 8);
@@ -201,7 +203,10 @@ await page.locator('#referenceDetailContent').getByRole('tab', { name: '项目�
   if (!assetDecisionCount) throw new Error('reference verification decision was not persisted');
   await page.locator('#referenceDetailModal').getByRole('button', { name: '返回条目列表', exact: true }).click();
   if (await page.locator('#referenceDetailModal').evaluate(element => !element.hidden) !== false) throw new Error('reference detail did not close back to the browse list');
-  await page.click('.nav-item[data-tab="gen"]');
+  await page.evaluate(() => {
+    const plan = JSON.parse(localStorage.getItem('pw_plans') || '[]')[0];
+    if (plan) window.loadPlan(plan.id);
+  });
   await page.locator('.workflow-loop').evaluate(element => { element.open = true; });
   await page.locator('.workflow-extended-details').evaluate(element => { element.open = true; });
   await page.locator('.workflow-phase-toggle[id^="workflow-references-"]').evaluate(element => { element.open = true; });
@@ -236,6 +241,7 @@ await page.locator('#referenceDetailContent').getByRole('tab', { name: '项目�
     localStorage.setItem('pw_user', JSON.stringify({ name: '本地用户', email: 'user@local' }));
   });
   await starterPage.goto(url, { waitUntil: 'domcontentloaded' });
+  await starterPage.locator('.nav-item[data-tab="gen"]').click();
   await starterPage.waitForFunction(() => document.querySelectorAll('#importVenueSelect option').length >= 5 && document.querySelectorAll('#importModelSelect option').length >= 5);
   await starterPage.locator('.plan-quick-template', { hasText: '单人人像' }).click();
   if (await starterPage.locator('#genBtn').isEnabled()) throw new Error('starter template should still require real brief details');
