@@ -4236,7 +4236,7 @@
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg>
                     <span data-i18n="top.newPlan">新建方案</span>
                 </button>
-                <div id="userAvatar" style="width:28px;height:28px;border-radius:50%;background:var(--ac);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:600;color:#121212;cursor:pointer;">P</div>
+                <button id="userAvatar" class="user-avatar-button" type="button" onclick="openPersonalSettings()" aria-controls="tab-settings" aria-label="个人设置" data-i18n-aria="top.profile">P</button>
             </div>
         </header>
 
@@ -5319,7 +5319,7 @@ const i18n = {
         'nav.equipment': '设备库',
         'nav.lut': 'LUT/调色',
         'nav.settings': '设置',
-        'top.workflow': '摄影工作流', 'top.language': '语言', 'top.search': '全局搜索', 'top.searchPlaceholder': '搜索方案、日程...', 'top.newPlan': '新建方案',
+        'top.workflow': '摄影工作流', 'top.language': '语言', 'top.search': '全局搜索', 'top.searchPlaceholder': '搜索方案、日程...', 'top.newPlan': '新建方案', 'top.profile': '个人设置',
         'role.welcome': '欢迎回来', 'role.intro': '选择你的身份，开始创作', 'role.photographer': '摄影师', 'role.model': '模特', 'role.assistant': '助理', 'role.logout': '退出登录',
         'login.title': '登录',
         'login.subtitle': '继续使用 PhotoAtelier',
@@ -5351,7 +5351,7 @@ const i18n = {
     },
     en: {
         'nav.gen': 'Plan', 'nav.reference': 'References', 'nav.calendar': 'Schedule', 'nav.equipment': 'Gear', 'nav.lut': 'LUT / Color', 'nav.settings': 'Settings',
-        'top.workflow': 'Photography workflow', 'top.language': 'Language', 'top.search': 'Global search', 'top.searchPlaceholder': 'Search plans and schedules...', 'top.newPlan': 'New plan',
+        'top.workflow': 'Photography workflow', 'top.language': 'Language', 'top.search': 'Global search', 'top.searchPlaceholder': 'Search plans and schedules...', 'top.newPlan': 'New plan', 'top.profile': 'Personal settings',
         'role.welcome': 'Welcome back', 'role.intro': 'Choose your role to start creating', 'role.photographer': 'Photographer', 'role.model': 'Model', 'role.assistant': 'Assistant', 'role.logout': 'Sign out',
         'login.title': 'Sign In',
         'login.subtitle': 'Continue to PhotoAtelier',
@@ -5376,7 +5376,7 @@ const i18n = {
     },
     ja: {
         'nav.gen': 'プラン', 'nav.reference': 'リファレンス', 'nav.calendar': '日程', 'nav.equipment': '機材', 'nav.lut': 'LUT / カラー', 'nav.settings': '設定',
-        'top.workflow': '写真制作ワークフロー', 'top.language': '言語', 'top.search': '全体検索', 'top.searchPlaceholder': 'プランや日程を検索...', 'top.newPlan': '新規プラン',
+        'top.workflow': '写真制作ワークフロー', 'top.language': '言語', 'top.search': '全体検索', 'top.searchPlaceholder': 'プランや日程を検索...', 'top.newPlan': '新規プラン', 'top.profile': '個人設定',
         'role.welcome': 'おかえりなさい', 'role.intro': '役割を選んで制作を始めましょう', 'role.photographer': '写真家', 'role.model': 'モデル', 'role.assistant': 'アシスタント', 'role.logout': 'ログアウト',
         'login.title': 'ログイン', 'login.subtitle': 'PhotoAtelier を続ける', 'login.email': 'メールアドレス', 'login.password': 'パスワード', 'login.button': 'ログイン', 'login.hint': '初回ログイン時にアカウントを作成します',
         'gen.title': '撮影提案を作成', 'gen.intro': '最小限のブリーフから候補プランを作り、採用後にリソースと日程を追加します。', 'gen.quickStart': 'クイックスタート', 'gen.templatePortrait': '一人ポートレート', 'gen.templatePair': '二人撮影', 'gen.templateProduct': '商品コンテンツ', 'gen.templateVideo': 'ショート動画',
@@ -5391,7 +5391,7 @@ const i18n = {
     },
     ko: {
         'nav.gen': '플랜', 'nav.reference': '레퍼런스', 'nav.calendar': '일정', 'nav.equipment': '장비', 'nav.lut': 'LUT / 컬러', 'nav.settings': '설정',
-        'top.workflow': '사진 제작 워크플로', 'top.language': '언어', 'top.search': '전체 검색', 'top.searchPlaceholder': '플랜과 일정 검색...', 'top.newPlan': '새 플랜',
+        'top.workflow': '사진 제작 워크플로', 'top.language': '언어', 'top.search': '전체 검색', 'top.searchPlaceholder': '플랜과 일정 검색...', 'top.newPlan': '새 플랜', 'top.profile': '개인 설정',
         'role.welcome': '다시 오신 것을 환영합니다', 'role.intro': '역할을 선택하고 제작을 시작하세요', 'role.photographer': '사진가', 'role.model': '모델', 'role.assistant': '어시스턴트', 'role.logout': '로그아웃',
         'login.title': '로그인', 'login.subtitle': 'PhotoAtelier 계속 사용', 'login.email': '이메일', 'login.password': '비밀번호', 'login.button': '로그인', 'login.hint': '첫 로그인 시 계정이 자동 생성됩니다',
         'gen.title': '촬영 제안서 만들기', 'gen.intro': '최소 브리프로 후보 플랜을 만든 뒤 승인 후 리소스와 일정을 추가합니다.', 'gen.quickStart': '빠른 시작', 'gen.templatePortrait': '1인 인물', 'gen.templatePair': '2인 촬영', 'gen.templateProduct': '제품 콘텐츠', 'gen.templateVideo': '숏폼 영상',
@@ -5454,6 +5454,7 @@ function setLanguage(lang) {
     if (document.readyState !== 'loading') {
         if (typeof refreshImportSelects === 'function') refreshImportSelects();
         if (typeof updatePlanReadiness === 'function') updatePlanReadiness();
+        if (typeof syncHeaderUserAvatar === 'function') syncHeaderUserAvatar();
     }
 
     window.dispatchEvent(new CustomEvent('photoatelier:languagechange', { detail: { language: lang } }));
@@ -5955,6 +5956,27 @@ function showTab(tabName) {
     if (main) main.scrollTo({top:0,left:0,behavior:'auto'});
     window.scrollTo({top:0,left:0,behavior:'auto'});
 }
+
+function syncHeaderUserAvatar() {
+    const avatar = document.getElementById('userAvatar');
+    if (!avatar) return;
+    let label = 'P';
+    try {
+        const user = JSON.parse(localStorage.getItem('pw_user') || 'null');
+        const identity = String(user?.name || user?.email || '').trim();
+        if (identity) label = identity.charAt(0).toUpperCase();
+    } catch(e) {}
+    avatar.textContent = label;
+    avatar.setAttribute('aria-label', tr('top.profile'));
+    avatar.title = tr('top.profile');
+}
+
+function openPersonalSettings() {
+    syncHeaderUserAvatar();
+    showTab('settings');
+}
+
+syncHeaderUserAvatar();
 
 function startNewPlan() {
     currentPlanData = null;

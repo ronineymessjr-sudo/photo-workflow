@@ -34,6 +34,11 @@ for (const marker of ['<h1 id="hero-title">PhotoAtelier</h1>', '/legacy/?mode=pu
 }
 const legacyHtml = fs.readFileSync('legacy/index.html', 'utf8');
 if (!legacyHtml.includes('src/legacy-v5-bridge.js')) throw new Error('Original application must load the V5 data bridge');
+for (const marker of ['<button id="userAvatar"', 'onclick="openPersonalSettings()"', 'aria-controls="tab-settings"', 'function openPersonalSettings()']) {
+  if (!legacyHtml.includes(marker)) throw new Error(`Personal settings entry is missing ${marker}`);
+}
+const r4ShellCss = fs.readFileSync('src/r4-shell.css', 'utf8');
+if (!r4ShellCss.includes('.user-avatar-button:focus-visible')) throw new Error('Personal settings entry must expose a keyboard focus style');
 const bridgeSource = fs.readFileSync('src/legacy-v5-bridge.js', 'utf8');
 for (const marker of ['createV5Application', 'migration.migrate', 'PhotoAtelierV5', 'dataset.v5Engine', 'photoatelier:v5-ready']) {
   if (!bridgeSource.includes(marker)) throw new Error(`Missing original-to-V5 bridge capability ${marker}`);

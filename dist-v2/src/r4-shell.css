@@ -149,6 +149,34 @@ body::after {
   background: var(--r4-canvas);
 }
 
+.user-avatar-button {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: var(--r4-action);
+  color: #121412;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.user-avatar-button:hover {
+  background: var(--r4-action-pressed);
+}
+
+.user-avatar-button:focus-visible {
+  outline: 2px solid var(--r4-text-primary);
+  outline-offset: 2px;
+}
+
 /* Main content surface */
 .tab-cnt {
   padding: var(--r4-space-24);
