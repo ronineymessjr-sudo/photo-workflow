@@ -19,6 +19,7 @@ const legacyRuntimeFiles = [
   'src/legacy-commercial-tools.js',
   'src/legacy-plan-resources.js',
   'src/legacy-reference-context-launcher.js',
+  'src/legacy-resource-workspace.js',
   'src/legacy-shot-editor.js',
   'src/legacy-v3-planning-flow.js',
   'src/obsidian-library-onboarding.js',
