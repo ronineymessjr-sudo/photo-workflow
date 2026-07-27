@@ -7,7 +7,7 @@
   <base href="../">
   <title>PhotoAtelier | 촬영 기획, 레퍼런스 및 제작 워크스페이스</title>
   <meta name="description" content="PhotoAtelier는 촬영 브리프, 레퍼런스 이미지, 샷 플랜, 장비, LUT, 일정, 현장 진행과 리뷰를 하나로 연결하는 로컬 우선 사진 제작 워크스페이스입니다.">
-  <meta name="theme-color" content="#0b0d0c">
+  <meta name="theme-color" content="#080A09">
   <meta name="robots" content="index,follow,max-image-preview:large">
   <link rel="canonical" href="https://photoatelier.pages.dev/ko/">
   <link rel="alternate" hreflang="zh-CN" href="https://photoatelier.pages.dev/">
@@ -23,7 +23,7 @@
   <meta property="og:title" content="PhotoAtelier | 아이디어를 실제 촬영 가능한 플랜으로">
   <meta property="og:description" content="레퍼런스부터 샷, 일정, LUT, 리뷰까지 연결하는 사진 제작 워크플로.">
   <meta property="og:url" content="https://photoatelier.pages.dev/ko/">
-  <meta property="og:image" content="https://photoatelier.pages.dev/assets/marketing/photoatelier-hero-v1.png">
+  <meta property="og:image" content="https://photoatelier.pages.dev/assets/landing-ai/hero-urban-dawn.webp">
   <meta name="twitter:card" content="summary_large_image">
   <script type="application/ld+json">
   {
@@ -43,10 +43,9 @@
   <header class="site-header" data-header>
     <a class="brand" href="#top" aria-label="PhotoAtelier 홈">PhotoAtelier <span>Public Beta</span></a>
     <nav aria-label="주요 내비게이션">
-      <a href="#workflow">워크플로</a>
-      <a href="#sources">오픈 에셋</a>
+      <a href="#shoot-journey">体验</a>
+      <a href="#shoot-journey">工作方式</a>
       <a href="#privacy">개인정보</a>
-      <a class="nav-feedback" href="#feedback">피드백</a>
       <label class="language-control">
         <span class="sr-only">언어</span>
         <select id="landing-language" aria-label="语言">
@@ -62,41 +61,152 @@
   <main id="main">
     <section class="hero" id="top" aria-labelledby="hero-title">
       <div class="hero-shade" aria-hidden="true"></div>
+      <img class="hero-image" src="./assets/landing-ai/hero-urban-dawn.webp" alt="摄影师在黎明建筑外廊为模特拍摄" width="2400" height="1500" fetchpriority="high">
       <div class="hero-content">
         <p class="eyebrow">사진 제작 워크스페이스</p>
         <h1 id="hero-title">PhotoAtelier</h1>
-        <p class="hero-copy">아이디어를 실제 촬영 가능한 플랜으로.</p>
+        <p class="hero-copy">把参考图变成能直接开拍的方案。</p>
         <div class="hero-actions">
-          <a class="button button-primary" href="/legacy/?mode=public-beta&lang=ko" data-track="open_public_beta">공개 베타 시작</a>
-          <a class="text-link" href="#privacy">개인정보 모드 보기 <span aria-hidden="true">↓</span></a>
+          <a class="button button-primary" href="/legacy/?mode=public-beta&lang=ko" data-track="landing_cta_open_workspace">免费开始</a>
+          <a class="text-link" href="#shoot-journey">查看一次真实拍摄流程 <span aria-hidden="true">↓</span></a>
         </div>
-        <p class="privacy-note"><span aria-hidden="true">▣</span> 기본적으로 브라우저에 저장되며 개인 라이브러리는 업로드되지 않습니다.</p>
+        <p class="privacy-note"><span aria-hidden="true">▣</span> 无需登录 · 免费体验 · 个人图库由你控制</p>
       </div>
     </section>
 
-    <nav class="workflow-strip" id="workflow" aria-label="사진 제작 워크플로">
-      <span>Brief</span><b aria-hidden="true">→</b><span>레퍼런스</span><b aria-hidden="true">→</b><span>플랜</span><b aria-hidden="true">→</b><span>일정</span><b aria-hidden="true">→</b><span>촬영</span><b aria-hidden="true">→</b><span>리뷰</span>
-    </nav>
-
-    <section class="product-section section-shell" aria-labelledby="product-title">
-      <div class="section-copy">
-        <p class="eyebrow accent-green">실제 촬영 워크플로</p>
-        <h2 id="product-title">아이디어부터 리뷰까지,<br>하나의 워크스페이스에서</h2>
-        <p>사진가의 실제 작업 순서에 따라 요구 사항과 레퍼런스를 정하고 샷, 장비, 일정, 현장 실행으로 연결합니다.</p>
-        <ol class="workflow-list">
-          <li><strong>Brief</strong><span>목표, 대상, 납품물 정의</span></li>
-          <li><strong>레퍼런스</strong><span>출처와 라이선스를 유지하며 영감 수집</span></li>
-          <li><strong>플랜</strong><span>샷, 장비, 디렉팅, 조명 구성</span></li>
-          <li><strong>일정</strong><span>시간, 카메라 위치, 리소스 배정</span></li>
-          <li><strong>촬영</strong><span>현장에서 체크, 메모, 추가 촬영 관리</span></li>
-          <li><strong>리뷰</strong><span>검증된 경험을 다음 제작에 반영</span></li>
-        </ol>
-        <a class="text-link dark-link" href="/legacy/?mode=public-beta&lang=ko">전체 워크스페이스 열기 <span aria-hidden="true">→</span></a>
+    <section class="journey-intro" id="shoot-journey" aria-labelledby="journey-title">
+      <div class="journey-intro__inner">
+        <p class="eyebrow accent-green">一次真实拍摄</p>
+        <h2 id="journey-title">从一张参考图，到一份完整拍摄安排。</h2>
+        <p class="journey-intro__body">沿着同一条拍摄线，查看参考、分镜、资源和日程如何逐步确定。</p>
       </div>
-      <figure class="product-visual">
-        <img src="./assets/marketing/photoatelier-workflow-v1.png" alt="실제 레퍼런스를 샷에 연결하는 PhotoAtelier 화면" loading="lazy">
-        <figcaption>실제 제품 화면: 레퍼런스를 샷 관계로 정리하고 출처를 유지합니다.</figcaption>
-      </figure>
+    </section>
+
+    <section class="timeline" aria-label="拍摄流程时间线">
+      <div class="journey-line" aria-hidden="true">
+        <div class="journey-line__progress"></div>
+      </div>
+
+      <article class="stage stage--left" data-stage="01" data-stage-index="1">
+        <div class="stage__grid">
+          <div class="stage__content">
+            <p class="stage__number">01</p>
+            <p class="eyebrow accent-green">REFERENCE</p>
+            <h3 class="stage__heading">先确定真正要靠近的画面。</h3>
+            <p class="stage__body">上传一张原创概念图，明确人物、场景、光线、构图和情绪。</p>
+            <figure class="stage__media">
+              <img src="./assets/landing-ai/reference-portrait.webp" alt="黎明建筑场景中的原创人物概念图" width="1280" height="1600" loading="lazy">
+              <figcaption><span class="media-tag">AI 概念图</span> GPT Image 原创概念图 · 城市建筑 · 黎明侧光 · 安静克制</figcaption>
+            </figure>
+          </div>
+          <div class="stage__node" aria-hidden="true"><span>01</span></div>
+          <div class="stage__empty" aria-hidden="true"></div>
+        </div>
+      </article>
+
+      <article class="stage stage--right" data-stage="02" data-stage-index="2">
+        <div class="stage__grid">
+          <div class="stage__empty" aria-hidden="true"></div>
+          <div class="stage__node" aria-hidden="true"><span>02</span></div>
+          <div class="stage__content">
+            <p class="stage__number">02</p>
+            <p class="eyebrow accent-green">SHOT LIST</p>
+            <h3 class="stage__heading">把方向拆成五个能执行的镜头。</h3>
+            <p class="stage__body">每个镜头给出景别、焦段、机位、动作提示和光线目标。</p>
+            <ol class="shot-list">
+              <li class="shot-row">
+                <img src="./assets/landing-ai/shot-01-environment.webp" alt="镜头一，建筑环境中的人物全景" width="1000" height="1250" loading="lazy">
+                <div class="shot-row__info"><span class="shot-row__no">01</span><span class="shot-row__name">环境建立</span><span class="shot-row__lens">35mm</span></div>
+                <p class="shot-row__cue">低机位，人物进入建筑线条</p>
+              </li>
+              <li class="shot-row">
+                <img src="./assets/landing-ai/shot-02-full-body.webp" alt="镜头二，建筑外廊中的人物全身照" width="1000" height="1250" loading="lazy">
+                <div class="shot-row__info"><span class="shot-row__no">02</span><span class="shot-row__name">全身停步</span><span class="shot-row__lens">50mm</span></div>
+                <p class="shot-row__cue">正面站定，保留负空间</p>
+              </li>
+              <li class="shot-row">
+                <img src="./assets/landing-ai/shot-03-turn.webp" alt="镜头三，侧身回望的中景人像" width="1000" height="1250" loading="lazy">
+                <div class="shot-row__info"><span class="shot-row__no">03</span><span class="shot-row__name">中景回望</span><span class="shot-row__lens">85mm</span></div>
+                <p class="shot-row__cue">肩线转动，视线越过镜头</p>
+              </li>
+              <li class="shot-row">
+                <img src="./assets/landing-ai/shot-04-close.webp" alt="镜头四，侧逆光情绪特写" width="1000" height="1250" loading="lazy">
+                <div class="shot-row__info"><span class="shot-row__no">04</span><span class="shot-row__name">情绪特写</span><span class="shot-row__lens">100mm</span></div>
+                <p class="shot-row__cue">侧逆光，降低动作幅度</p>
+              </li>
+              <li class="shot-row">
+                <img src="./assets/landing-ai/shot-05-exit.webp" alt="镜头五，黎明建筑中的离场背影" width="1000" height="1250" loading="lazy">
+                <div class="shot-row__info"><span class="shot-row__no">05</span><span class="shot-row__name">收束背影</span><span class="shot-row__lens">135mm</span></div>
+                <p class="shot-row__cue">人物离场，保留日出轮廓</p>
+              </li>
+            </ol>
+          </div>
+        </div>
+      </article>
+
+      <article class="stage stage--left" data-stage="03" data-stage-index="3">
+        <div class="stage__grid">
+          <div class="stage__content">
+            <p class="stage__number">03</p>
+            <p class="eyebrow accent-green">RESOURCES</p>
+            <h3 class="stage__heading">确认场地、人员、设备和画面感觉。</h3>
+            <p class="stage__body">资源只在方案层统一选择，不为每个镜头重复寻找。</p>
+            <div class="resource-fragment">
+              <div class="resource-row"><span class="resource-row__label">场地</span><span class="resource-row__value">城市文化中心外廊</span></div>
+              <div class="resource-row"><span class="resource-row__label">人员</span><span class="resource-row__value">模特 1 · 摄影师 1 · 造型协助 1</span></div>
+              <div class="resource-row"><span class="resource-row__label">设备</span><span class="resource-row__value">Sony A7 IV · 35 / 50 / 85 / 100 / 135mm · 反光板</span></div>
+              <div class="resource-row resource-row--lut"><span class="resource-row__label">LUT</span><span class="resource-row__value">柔和自然 · 35%</span></div>
+              <div class="lut-preview">
+                <figure><img src="./assets/landing-ai/lut-before.webp" alt="调色前的原创概念图" width="1000" height="1250" loading="lazy"><figcaption>原图</figcaption></figure>
+                <figure><img src="./assets/landing-ai/lut-after.webp" alt="套用柔和自然调色后的原创概念图" width="1000" height="1250" loading="lazy"><figcaption>套用后</figcaption></figure>
+                <p class="lut-caption">预览不会修改原图</p>
+              </div>
+            </div>
+          </div>
+          <div class="stage__node" aria-hidden="true"><span>03</span></div>
+          <div class="stage__empty" aria-hidden="true"></div>
+        </div>
+      </article>
+
+      <article class="stage stage--right" data-stage="04" data-stage-index="4">
+        <div class="stage__grid">
+          <div class="stage__empty" aria-hidden="true"></div>
+          <div class="stage__node" aria-hidden="true"><span>04</span></div>
+          <div class="stage__content">
+            <p class="stage__number">04</p>
+            <p class="eyebrow accent-green">SCHEDULE</p>
+            <h3 class="stage__heading">最后把方案变成当天能照着走的日程。</h3>
+            <p class="stage__body">确认日期、集合时间和地点后，方案才进入正式拍摄日程。</p>
+            <div class="schedule-fragment">
+              <ol class="schedule-list">
+                <li><span class="schedule-time">05:50</span><span class="schedule-item">集合与场地确认</span></li>
+                <li><span class="schedule-time">06:10</span><span class="schedule-item">妆发检查与设备准备</span></li>
+                <li><span class="schedule-time">06:30</span><span class="schedule-item">镜头 01–02</span></li>
+                <li><span class="schedule-time">07:10</span><span class="schedule-item">镜头 03–04</span></li>
+                <li><span class="schedule-time">07:45</span><span class="schedule-item">镜头 05 与补拍</span></li>
+                <li><span class="schedule-time">08:10</span><span class="schedule-item">收工与素材核对</span></li>
+              </ol>
+              <dl class="call-sheet">
+                <div><dt>地点</dt><dd>城市文化中心外廊</dd></div>
+                <div><dt>日出</dt><dd>06:18</dd></div>
+                <div><dt>时长</dt><dd>2小时20分</dd></div>
+                <div><dt>备用</dt><dd>室内灰墙走廊</dd></div>
+              </dl>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="final-cta" aria-labelledby="final-cta-title">
+      <div class="final-cta__inner">
+        <h2 id="final-cta-title">现在把灵感变成能直接开拍的方案。</h2>
+        <p>无需登录。先完成一份方案，再决定是否连接自己的图库。</p>
+        <div class="final-cta__actions">
+          <a class="button button-primary" href="/legacy/?mode=public-beta&lang=ko" data-track="landing_cta_open_workspace">免费开始</a>
+          <a class="text-link" href="#privacy">查看隐私说明 <span aria-hidden="true">↓</span></a>
+        </div>
+      </div>
     </section>
 
     <section class="privacy-section" id="privacy" aria-labelledby="privacy-title">
@@ -125,12 +235,6 @@
             <p>높은 개인정보 보호가 필요한 작업용으로, 로컬 실행과 오프라인 사용을 지원하며 사용자가 완전히 제어합니다.</p>
             <ul><li>라이브러리나 노트를 공유하지 않음</li><li>동기화 인증 정보를 공개하지 않음</li><li>독립적으로 가져오기 및 내보내기</li></ul>
           </article>
-        </div>
-        <div class="source-bar" id="sources">
-          <strong>오픈 에셋 출처</strong>
-          <a href="https://www.pexels.com/" target="_blank" rel="noreferrer">Pexels</a>
-          <a href="https://commons.wikimedia.org/" target="_blank" rel="noreferrer">Wikimedia Commons</a>
-          <span>라이선스와 저작자 표시 요구 사항은 원본 페이지에서 확인하세요</span>
         </div>
         <label class="analytics-control">
           <span><strong>익명 사용 통계</strong><small>버튼과 페이지 이벤트만 기록하며 프로젝트 콘텐츠, 이미지, 노트는 수집하지 않습니다</small></span>
@@ -185,8 +289,8 @@
 
   <footer>
     <div><strong>PhotoAtelier</strong><span>Public Beta</span></div>
-    <p>사진가와 크리에이터를 위한 로컬 우선 워크스페이스.</p>
-    <nav aria-label="푸터 내비게이션"><a href="#privacy">개인정보 안내</a><a href="#sources">오픈 에셋 출처</a><a href="/legacy/?mode=public-beta&lang=ko">앱 열기</a></nav>
+    <p>本页摄影素材均为 GPT Image 原创概念图，不作为真实拍摄参考来源。</p>
+    <nav aria-label="푸터 내비게이션"><a href="#privacy">개인정보</a><a href="#feedback">피드백</a><a href="#top">언어</a><a href="/legacy/?mode=public-beta&lang=ko">앱 열기</a></nav>
   </footer>
   <script type="module" src="./src/public-beta.js"></script>
 </body>

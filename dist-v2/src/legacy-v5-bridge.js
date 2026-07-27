@@ -7,10 +7,16 @@ const data = new DataService(storage);
 const application = createV5Application({ data, storage });
 
 let migrationReport = null;
+let legacyMigrationReport = null;
 let startupError = null;
 
 try {
-  migrationReport = application.migration.migrate({ commit: true });
+  const hadLegacyMigration = storage.get('legacyMigrationReport', null)?.completed === true;
+  legacyMigrationReport = data.migrateLegacy({ commit: true, returnReport: true });
+  migrationReport = application.migration.migrate({
+    commit: true,
+    force: !hadLegacyMigration && Object.values(legacyMigrationReport.inserted || {}).some(Number),
+  });
   application.catalog.importEquipmentModels();
   application.catalog.importPlanTemplates();
 } catch (error) {
@@ -27,6 +33,7 @@ const bridge = Object.freeze({
   application,
   data,
   storage,
+  legacyMigrationReport,
   migrationReport,
   startupError,
 });

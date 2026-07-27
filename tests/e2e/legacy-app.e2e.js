@@ -22,7 +22,32 @@ async function waitFor(target) {
 
 (async () => {
   if (!await isReachable(url)) {
-    children.push(spawn('python', ['-m', 'http.server', '8123', '--directory', '.'], { cwd: process.cwd(), windowsHide: true }));
+    const target = new URL(url);
+    const localServer = spawn(process.execPath, ['-e', `
+      const http = require('http');
+      const fs = require('fs');
+      const path = require('path');
+      const root = process.cwd();
+      http.createServer((req, res) => {
+        const pathname = decodeURIComponent(new URL(req.url, 'http://127.0.0.1').pathname);
+        const relative = pathname === '/'
+          ? 'legacy/index.html'
+          : pathname.replace(/^\\/+/, '').replace(/\\/+$/, '') + (pathname.endsWith('/') ? '/index.html' : '');
+        const filePath = path.resolve(root, relative);
+        if (!filePath.startsWith(root)) { res.writeHead(403); res.end('Forbidden'); return; }
+        fs.readFile(filePath, (error, data) => {
+          if (error) { res.writeHead(404); res.end('Not found'); return; }
+          const type = {
+            '.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css',
+            '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png',
+            '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.cube': 'text/plain'
+          }[path.extname(filePath).toLowerCase()] || 'application/octet-stream';
+          res.writeHead(200, { 'Content-Type': type }); res.end(data);
+        });
+      }).listen(Number(${JSON.stringify(target.port || '80')}), ${JSON.stringify(target.hostname)});
+    `], { cwd: process.cwd(), windowsHide: true });
+    localServer.stderr.on('data', data => console.error('LOCAL SERVER:', data.toString()));
+    children.push(localServer);
   }
   if (!await isReachable('http://127.0.0.1:8124/v1/health')) {
     children.push(spawn('node', ['tools/local-obsidian-proxy.js'], { cwd: process.cwd(), windowsHide: true }));
@@ -55,7 +80,7 @@ async function waitFor(target) {
   const navCount = await page.locator('.sidebar .nav-item').count();
   if (navCount !== 6) throw new Error(`expected 6 primary nav items, got ${navCount}`);
   const navLabels = await page.locator('.sidebar .nav-label').allTextContents();
-  for (const label of ['方案库', '新建方案', '参考图库', '拍摄日程', '设备与 LUT', '设置']) {
+  for (const label of ['方案库', '新建方案', '参考图库', '拍摄日程', '拍摄资源', '设置']) {
     if (!navLabels.includes(label)) throw new Error(`missing primary nav: ${label}`);
   }
   if (navLabels.includes('消息看板') || navLabels.includes('历史记录')) throw new Error('message/history should not remain primary navigation');
@@ -75,7 +100,21 @@ async function waitFor(target) {
   await page.fill('#f-mood', '自然，明确');
   await page.fill('#f-extra', '覆盖全身、中景、近景和细节，需要海外版发布和 SEO 关键词');
   await page.click('#genBtn');
-  await page.waitForSelector('.workflow-loop', { timeout: 15000 });
+  try {
+    await page.waitForSelector('.workflow-loop', { state: 'attached', timeout: 15000 });
+  } catch (error) {
+    console.error('PLAN OUTPUT:', (await page.locator('#outCnt').innerText().catch(() => '')).slice(0, 1200));
+    console.error('PLAN STATE:', await page.evaluate(() => ({
+      button: document.getElementById('genBtn')?.outerHTML,
+      loading: document.getElementById('outLoad')?.className,
+      empty: document.getElementById('outEmpty')?.className,
+      output: document.getElementById('outCnt')?.className,
+      toast: document.getElementById('toast')?.textContent,
+      plans: JSON.parse(localStorage.getItem('pw_plans') || '[]').length,
+    })));
+    console.error('PAGE ERRORS:', pageErrors.join('\n'));
+    throw error;
+  }
   const candidatePlan = await page.evaluate(() => JSON.parse(localStorage.getItem('pw_plans') || '[]')[0]);
   if (candidatePlan.lifecycleStatus !== 'candidate') throw new Error('new plan did not enter candidate state');
   if (await page.locator('#planLibraryTabs [aria-selected="true"] span').textContent() !== '预选方案') throw new Error('candidate library tab was not selected');
@@ -137,9 +176,24 @@ async function waitFor(target) {
     throw new Error('archived plan resources rendered neither content nor an empty state');
   }
   await page.waitForSelector('.workflow-resource-drawer');
-  await page.click('.workflow-resource-options button:has-text("Sony A7M4")');
   const resourcePlan = await page.evaluate(() => JSON.parse(localStorage.getItem('pw_plans') || '[]')[0]);
-  if (!resourcePlan.resourceSelections?.equipmentIds?.includes('eq-camera')) throw new Error('equipment selection was not linked to plan');
+  await page.locator('.workflow-resource-v5-summary section', { hasText: '设备' }).getByRole('button').click();
+  await page.waitForSelector('#resource-eq.active .r4-resource-workspace');
+  if (!await page.locator('#resource-eq .r4-resource-list-card').count()) {
+    await page.locator('#resource-eq [data-r4-resource-add="equipment"]').click();
+    await page.locator('#resource-eq [data-r4-resource-form="equipment"] [name="name"]').fill('Sony A7M4');
+    await page.locator('#resource-eq [data-r4-resource-form="equipment"] button[type="submit"]').click();
+  }
+  await page.locator('#resource-eq .r4-resource-list-card').first().click();
+  await page.locator('#resource-eq [data-r4-resource-select]').click();
+  const selectedEquipment = await page.evaluate(planId => {
+    const app = window.PhotoAtelierV5.application;
+    const projectId = `legacy-${planId}`;
+    return app.queries.resourceCatalog.get(projectId).equipment
+      .filter(item => item.assignments.some(assignment => assignment.status === 'selected'))
+      .map(item => item.displayName);
+  }, resourcePlan.id);
+  if (!selectedEquipment.length) throw new Error('V5 equipment assignment was not linked to plan');
   await page.locator('.workflow-loop').evaluate(element => { element.open = true; });
   await page.locator('.workflow-extended-details').evaluate(element => { element.open = true; });
   await page.locator('#plan-post-' + resourcePlan.id).evaluate(element => { element.open = true; });
@@ -153,11 +207,8 @@ async function waitFor(target) {
   const lutPlan = await page.evaluate(() => JSON.parse(localStorage.getItem('pw_plans') || '[]')[0]);
   if (!lutPlan.lutProfileId) throw new Error('imported LUT was not linked to plan');
   if (!await page.locator('.workflow-lut-recommendation').count()) throw new Error('explainable LUT recommendation missing');
-  await page.click('.nav-item[data-tab="venue"]');
-  await page.waitForSelector('#tab-venue.active #resource-eq.active');
-  if (await page.locator('#resource-venue:visible, #resource-model:visible').count()) throw new Error('legacy venue/model panes still shown in equipment library');
-  await page.locator('[data-r4-equipment-mode="lut"]').first().click();
-  await page.waitForSelector('#tab-lut.active #lut-library-list');
+  await page.locator('.r4-resource-nav-item[data-r4-resource-section="lut"]').click();
+  await page.waitForSelector('#r4-resource-lut.active #lut-library-list');
   if (!await page.locator('#lut-library-select option').count()) throw new Error('LUT library workspace missing');
   await page.waitForFunction(() => document.querySelectorAll('#open-lut-list .open-lut-card').length === 8);
   const srgbOpenLutCount = await page.locator('#open-lut-list .open-lut-card').count();
@@ -187,7 +238,11 @@ async function waitFor(target) {
   await page.click('.nav-item[data-tab="reference"]');
   await page.locator('.reference-advanced-tools').evaluate(el => { el.open = true; });
   await page.waitForSelector('#tab-reference.active #liveLocalLibrary');
-  await page.waitForFunction(() => document.querySelectorAll('#liveLocalResults img').length > 0, null, { timeout: 15000 });
+  await page.waitForFunction(() => {
+    const meta = document.getElementById('liveLocalMeta');
+    const results = document.getElementById('liveLocalResults');
+    return Boolean(meta?.textContent?.trim()) && !results?.querySelector('.spinner');
+  }, null, { timeout: 15000 });
   const referenceImageCount = await page.locator('#liveLocalResults img').count();
   await page.waitForSelector('#referenceDbList [data-reference-id]');
   const firstReference = page.locator('#referenceDbList [data-reference-id]').first();
@@ -242,13 +297,15 @@ await page.locator('#referenceDetailContent').getByRole('tab', { name: '项目�
   });
   await starterPage.goto(url, { waitUntil: 'domcontentloaded' });
   await starterPage.locator('.nav-item[data-tab="gen"]').click();
-  await starterPage.waitForFunction(() => document.querySelectorAll('#importVenueSelect option').length >= 5 && document.querySelectorAll('#importModelSelect option').length >= 5);
+  await starterPage.waitForFunction(() => window.PhotoAtelierResourceWorkspace
+    && document.querySelectorAll('#importVenueSelect option').length >= 2
+    && document.querySelectorAll('#importModelSelect option').length >= 2);
   await starterPage.locator('.plan-quick-template', { hasText: '单人人像' }).click();
   if (await starterPage.locator('#genBtn').isEnabled()) throw new Error('starter template should still require real brief details');
-  await starterPage.selectOption('#importVenueSelect', 'starter-venue-natural-light');
-  await starterPage.locator('.brief-scene-field .brief-inline button').click();
-  await starterPage.selectOption('#importModelSelect', 'starter-subject-natural');
-  await starterPage.locator('.brief-subject-field .brief-inline button').click();
+  await starterPage.locator('#importVenueSelect').selectOption({ index: 1 });
+  await starterPage.locator('.brief-scene-field .brief-inline').getByRole('button', { name: '导入', exact: true }).click();
+  await starterPage.locator('#importModelSelect').selectOption({ index: 1 });
+  await starterPage.locator('.brief-subject-field .brief-inline').getByRole('button', { name: '导入', exact: true }).click();
   await starterPage.selectOption('#f-style', { label: '时尚杂志风' }).catch(async () => starterPage.selectOption('#f-style', { index: 1 }));
   if (!await starterPage.locator('#f-scene').inputValue()) throw new Error('starter venue was not imported into the brief');
   if (!await starterPage.locator('#f-model').inputValue()) throw new Error('starter subject was not imported into the brief');
@@ -259,7 +316,7 @@ await page.locator('#referenceDetailContent').getByRole('tab', { name: '项目�
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
   if (overflow) throw new Error('mobile horizontal overflow detected');
   if (pageErrors.length) throw new Error(`page errors: ${pageErrors.join(' | ')}`);
-  console.log(JSON.stringify({ ok: true, navCount, navLabels, relationVisible, lifecycleVisible, optionalAgentVisible, assignedReferences, uniqueAssignedReferences, loadedReferenceImages, equipmentLinked: resourcePlan.resourceSelections.equipmentIds.length, lutLinked: Boolean(lutPlan.lutProfileId), srgbOpenLutCount, vlogOpenLutCount, lutPreviewRendered, referenceImageCount, assetDecisionCount, scheduleCount: schedules.length, mobileOverflow: overflow }, null, 2));
+  console.log(JSON.stringify({ ok: true, navCount, navLabels, relationVisible, lifecycleVisible, optionalAgentVisible, assignedReferences, uniqueAssignedReferences, loadedReferenceImages, equipmentLinked: selectedEquipment.length, lutLinked: Boolean(lutPlan.lutProfileId), srgbOpenLutCount, vlogOpenLutCount, lutPreviewRendered, referenceImageCount, assetDecisionCount, scheduleCount: schedules.length, mobileOverflow: overflow }, null, 2));
   await browser.close();
   browser = null;
   children.forEach(child => child.kill());

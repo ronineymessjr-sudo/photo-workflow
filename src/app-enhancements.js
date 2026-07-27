@@ -30,6 +30,13 @@
     'vlog-eterna': ['V-Log 电影基底', '只用于 Panasonic V-Log / V-Gamut'],
     'vlog-acros': ['V-Log 黑白纪实', '只用于 Panasonic V-Log / V-Gamut']
   };
+  const CURATED_LUT_PRESETS = [
+    { id: 't3-portra-160', icon: 'sun-medium', label: '自然人像', note: '柔和肤色，适合窗边和自然光' },
+    { id: 't3-portra-400', icon: 'heart', label: '日常客片', note: '暖肤色，适合生活方式和客片' },
+    { id: 't3-pro-400h', icon: 'flower-2', label: '清新婚纱', note: '轻柔粉彩，适合婚纱和校园写真' },
+    { id: 't3-superia-400', icon: 'building-2', label: '城市街拍', note: '中等对比，适合城市和夜间街景' },
+    { id: 't3-hp5-400', icon: 'circle-half', label: '黑白纪实', note: '克制黑白，适合情绪和纪实画面' },
+  ];
   const proxyBase = () => ((root.getObsidianSettings && root.getObsidianSettings().helperBaseUrl) || 'http://127.0.0.1:8124').replace(/\/$/, '');
   let activeLut = null;
   let originalImage = null;
@@ -110,10 +117,6 @@
   function esc(value) {
     return root.escHtml ? root.escHtml(String(value == null ? '' : value)) : String(value == null ? '' : value).replace(/[&<>"']/g, '');
   }
-  function safeMediaUrl(value, fallback = '') {
-    const url = String(value || '').trim();
-    return /^(?:https?:\/\/|assets\/)/i.test(url) ? url : fallback;
-  }
   function notify(message, type) {
     if (typeof root.toast === 'function') { root.toast(message, type); return; }
     const element = document.getElementById('toast');
@@ -125,6 +128,11 @@
   }
   function currentPlan(planId) {
     return (root.getPlans ? root.getPlans() : read('pw_plans', [])).find(plan => String(plan.id) === String(planId));
+  }
+  function latestPlan() {
+    const plans = root.getPlans ? root.getPlans() : read('pw_plans', []);
+    const active = root.currentPlanId && currentPlan(root.currentPlanId);
+    return active || [...plans].sort((a, b) => Date.parse(b.updatedAt || b.createdAt || 0) - Date.parse(a.updatedAt || a.createdAt || 0))[0] || null;
   }
   function updatePlan(plan) {
     plan.createdAt = plan.createdAt || Domain.nowIso();
@@ -333,7 +341,7 @@
         <article class="plan-package-card plan-package-card--references"><div class="plan-package-card__label">镜头参考</div><strong>${matchedReferences.length}/${shots.length} 个镜头已有可用参考</strong><div class="plan-package-thumbnails">${thumbnails.map((item, index) => `<figure><img src="${esc(referenceThumbnail(item.reference))}" alt="${esc(item.reference.title || `镜头 ${index + 1} 参考`)}"><figcaption>${index + 1}</figcaption></figure>`).join('')}</div></article>
         <article class="plan-package-card"><div class="plan-package-card__label">镜头执行</div><strong>${shots.length} 个镜头 · ${shots.reduce((sum, shot) => sum + Number(shot.duration || 0), 0)} 分钟</strong><p>${shots.slice(0, 3).map(shot => shot.name || shot.scene || shot.description).filter(Boolean).join(' / ')}</p></article>
         <article class="plan-package-card plan-package-card--lut"><div class="plan-package-card__label">后期交接</div>${data.lut ? `<div class="plan-package-lut-preview"><canvas id="plan-package-lut-${esc(plan.id)}" width="240" height="135"></canvas></div>` : '<div class="plan-package-post-placeholder"><span>POST</span><small>等待专项确认</small></div>'}<strong>${esc(lutName)}</strong><p>${esc(data.transform?.label || 'sRGB / Rec.709')} · ${esc(postStatus)}</p></article>
-        <article class="plan-package-card plan-package-card--equipment"><img src="assets/demo/equipment-kit.jpg" alt="摄影器材参考"><div><div class="plan-package-card__label">设备包</div><strong>${selectedNames.length ? `${selectedNames.length} 件已确认` : '推荐清单待确认'}</strong><p>${esc(equipmentText || '请在设备库录入你的实际器材')}</p></div></article>
+        <article class="plan-package-card plan-package-card--equipment"><span class="plan-package-equipment-icon"><i data-lucide="camera"></i></span><div><div class="plan-package-card__label">设备包</div><strong>${selectedNames.length ? `${selectedNames.length} 件已确认` : '推荐清单待确认'}</strong><p>${esc(equipmentText || '请在设备库录入你的实际器材')}</p></div></article>
         <article class="plan-package-card"><div class="plan-package-card__label">拍摄日程</div><strong>${data.schedule ? '已关联日程' : '待创建'}</strong><p>${esc(scheduleText)}</p></article>
       </div>
     </section>`;
@@ -938,7 +946,7 @@
     const text = `${plan.input?.theme || ''} ${plan.input?.style || ''} ${plan.input?.scene || ''} ${plan.input?.extra || ''} ${shots.map(shot => `${shot.focalLength || ''} ${shot.lighting || ''} ${shot.method || ''}`).join(' ')}`;
     const requirements = [
       { category: 'camera', label: '相机机身', reason: '方案执行的基础机身' },
-      { category: 'lens', label: '镜头', reason: /135mm|85mm/.test(text) ? '镜头表以中长焦人像为主' : /35mm|广角|环境/.test(text) ? '需要环境人像或广角镜头' : '覆盖方案中的主要景别' }
+      { category: 'lens', label: '镜头', reason: /135mm|85mm/.test(text) ? '镜头表以中长焦人像为主' : /35mm|广角|环境/.test(text) ? '需要环境人像或广角镜头' : '覆盖方案中的主要景别' },
     ];
     if (!/纯自然光|自然光为主/.test(text) || /夜景|室内|补光|闪光|灯/.test(text)) requirements.push({ category: 'light', label: '灯光', reason: '场景存在补光或控光需求' });
     if (/视频|跟拍|运动|动态|长曝光/.test(text)) requirements.push({ category: 'tripod', label: '稳定器/脚架', reason: '动态或低速快门需要稳定支持' });
@@ -946,79 +954,56 @@
     return requirements;
   }
 
-  function matchEquipment(plan, shots) {
-    const inventory = read(KEYS.equipment, []);
-    const text = `${plan.input?.theme || ''} ${plan.input?.style || ''} ${plan.input?.scene || ''} ${shots.map(shot => `${shot.focalLength || ''} ${shot.lighting || ''}`).join(' ')}`.toLowerCase();
-    return equipmentRequirements(plan, shots).map(requirement => {
-      const matches = inventory.filter(item => item.c === requirement.category).map(item => {
-        let score = 60;
-        const name = `${item.n || ''} ${item.note || ''}`.toLowerCase();
-        ['35mm', '50mm', '85mm', '105mm', '135mm', '24-70', '70-200', 'nd', 'cpl', 'ad600', 'ad200', 'v1', 'rs3'].forEach(token => { if (text.includes(token) && name.includes(token)) score += 18; });
-        if (/夜景|室内/.test(text) && /ad600|ad200|v1|补光|闪光/.test(name)) score += 12;
-        if (/复古|文艺/.test(text) && /fuji|35mm|50mm/.test(name)) score += 8;
-        return { ...item, score: Math.min(score, 98) };
-      }).sort((a, b) => b.score - a.score).slice(0, 3);
-      return { ...requirement, matches };
-    });
+  function v5ResourceCatalog(plan) {
+    const bridge = root.PhotoAtelierV5;
+    if (!bridge?.ready || !plan?.id) return null;
+    const projectId = `legacy-${plan.id}`;
+    let project = bridge.application.repositories.projects.get(projectId);
+    if (!project) {
+      project = bridge.data.create('projects', {
+        id: projectId,
+        title: plan.input?.theme || plan.title || '当前摄影方案',
+        status: 'active',
+        defaultCurrency: 'CNY',
+        timezone: 'Asia/Shanghai',
+      });
+    }
+    return {
+      project,
+      catalog: bridge.application.queries.resourceCatalog.get(project.id),
+    };
   }
 
-  function scoreResource(item, plan, fields) {
-    const brief = `${plan.input?.theme || ''} ${plan.input?.style || ''} ${plan.input?.scene || ''}`.toLowerCase();
-    const value = fields.map(field => item[field] || '').join(' ').toLowerCase();
-    const tokens = brief.split(/[\s,，、]+/).filter(token => token.length > 1);
-    return 45 + Math.min(45, tokens.filter(token => value.includes(token)).length * 12);
+  function selectedCatalogEntries(entries) {
+    return (entries || []).filter(item => (item.assignments || []).some(assignment => assignment.status === 'selected'));
   }
 
-  function renderResourceDrawer(plan, shots) {
-    const selected = plan.resourceSelections || { equipmentIds: [], venueId: '', modelId: '' };
-    const equipment = matchEquipment(plan, shots);
-    const venues = read(KEYS.venues, []).map(item => ({ ...item, score: scoreResource(item, plan, ['name', 'styles', 'addr', 'note']) })).sort((a, b) => b.score - a.score);
-    const models = read(KEYS.models, []).map(item => ({ ...item, score: scoreResource(item, plan, ['name', 'tags', 'styles', 'note']) })).sort((a, b) => b.score - a.score);
-    const equipmentHtml = equipment.map(group => `<div class="workflow-resource-group"><div><strong>${esc(group.label)}</strong><span>${esc(group.reason)}</span></div><div class="workflow-resource-options workflow-equipment-options">${group.matches.length ? group.matches.map(item => `<button class="workflow-equipment-option ${selected.equipmentIds?.includes(item.id) ? 'is-selected' : ''}" onclick="togglePlanEquipment('${esc(plan.id)}','${esc(item.id)}')"><img src="${esc(safeMediaUrl(item.imageUrl, 'assets/demo/equipment-kit.jpg'))}" alt="${esc(item.n)}"><span><strong>${esc(item.n)}</strong><small>匹配 ${item.score} · ${selected.equipmentIds?.includes(item.id) ? '已选' : '点击选用'}</small></span></button>`).join('') : '<span class="workflow-resource-empty">库存中没有匹配设备；下方推荐仍会写进拍摄包。</span>'}</div></div>`).join('');
+  function renderResourceDrawer(plan) {
+    const context = v5ResourceCatalog(plan);
+    if (!context) {
+      return '<div class="workflow-resource-drawer"><p class="workflow-resource-empty">拍摄资源正在载入，请稍后重试。</p></div>';
+    }
+    const groups = [
+      ['venue', '场地', selectedCatalogEntries(context.catalog.venues)],
+      ['talent', '人员', selectedCatalogEntries(context.catalog.talent)],
+      ['equipment', '设备', selectedCatalogEntries(context.catalog.equipment)],
+    ];
     return `<div class="workflow-resource-drawer">
-      <div class="workflow-resource-selects">
-        <label>场地<select onchange="setPlanResourceSelection('${esc(plan.id)}','venueId',this.value)"><option value="">暂不指定</option>${venues.map(item => `<option value="${esc(item.id)}" ${item.id === selected.venueId ? 'selected' : ''}>${esc(item.name)} · 匹配 ${item.score}</option>`).join('')}</select></label>
-        <label>模特<select onchange="setPlanResourceSelection('${esc(plan.id)}','modelId',this.value)"><option value="">暂不指定</option>${models.map(item => `<option value="${esc(item.id)}" ${item.id === selected.modelId ? 'selected' : ''}>${esc(item.name)} · 匹配 ${item.score}</option>`).join('')}</select></label>
-        <div style="display:flex;gap:.35rem;flex-wrap:wrap;"><button class="btn btn-s btn-sm" onclick="quickAddPlanResource('${esc(plan.id)}','venue')">+ 场地</button><button class="btn btn-s btn-sm" onclick="quickAddPlanResource('${esc(plan.id)}','model')">+ 模特</button><button class="btn btn-s btn-sm" onclick="showTab('venue')">设备库存</button></div>
+      <div class="workflow-resource-v5-summary">
+        ${groups.map(([section, label, entries]) => `<section>
+          <header><strong>${label}</strong><span>${entries.length}</span></header>
+          <p>${entries.length ? entries.map(item => esc(item.displayName)).join(' · ') : `尚未选择${label}`}</p>
+          <button class="btn btn-s btn-sm" type="button" onclick="openResourceWorkspace({section:'${section}',mode:'select',planId:'${esc(plan.id)}',projectId:'${esc(context.project.id)}',returnTo:'plan-detail',returnLabel:'返回当前方案'})">${entries.length ? `调整${label}` : `选择${label}`}</button>
+        </section>`).join('')}
+        <section>
+          <header><strong>LUT</strong><span>${plan.lutProfileId ? 1 : 0}</span></header>
+          <p>${esc(plan.lutProfileId || '尚未选择 LUT')}</p>
+          <button class="btn btn-s btn-sm" type="button" onclick="openResourceWorkspace({section:'lut',mode:'select',planId:'${esc(plan.id)}',projectId:'${esc(context.project.id)}',returnTo:'plan-detail',returnLabel:'返回当前方案'})">${plan.lutProfileId ? '调整 LUT' : '选择 LUT'}</button>
+        </section>
       </div>
-      <div class="workflow-resource-groups">${equipmentHtml}</div>
-      <p class="workflow-resource-note">匹配分数来自方案主题、镜头焦段、光线和库存备注；只有你主动选中的资源会写入方案。</p>
+      <p class="workflow-resource-note">这里显示的是当前方案真实采用的 V5 资源。新增和移出均在拍摄资源中完成，移出方案不会删除全局资源。</p>
     </div>`;
   }
-
-  root.setPlanResourceSelection = function (planId, field, value) {
-    const plan = currentPlan(planId);
-    if (!plan) return;
-    plan.resourceSelections = { equipmentIds: [], venueId: '', modelId: '', ...(plan.resourceSelections || {}), [field]: value };
-    updatePlan(plan); refreshCurrentPlan(plan);
-  };
-
-  root.togglePlanEquipment = function (planId, equipmentId) {
-    const plan = currentPlan(planId);
-    if (!plan) return;
-    const selections = { equipmentIds: [], venueId: '', modelId: '', ...(plan.resourceSelections || {}) };
-    selections.equipmentIds = selections.equipmentIds.includes(equipmentId) ? selections.equipmentIds.filter(id => id !== equipmentId) : [...selections.equipmentIds, equipmentId];
-    plan.resourceSelections = selections;
-    updatePlan(plan); refreshCurrentPlan(plan);
-  };
-
-  root.quickAddPlanResource = function (planId, type) {
-    const isVenue = type === 'venue';
-    const name = prompt(isVenue ? '场地名称' : '模特姓名');
-    if (!name?.trim()) return;
-    const detail = prompt(isVenue ? '地址、风格或注意事项' : '标签、擅长风格或联系方式') || '';
-    const key = isVenue ? KEYS.venues : KEYS.models;
-    const list = read(key, []);
-    const item = isVenue
-      ? { id: `venue-${Date.now()}`, name: name.trim(), addr: detail, styles: detail, note: '', at: Domain.nowIso() }
-      : { id: `model-${Date.now()}`, name: name.trim(), tags: detail, styles: detail, contact: '', note: '', at: Domain.nowIso() };
-    list.push(item); write(key, list);
-    const plan = currentPlan(planId);
-    if (plan) {
-      plan.resourceSelections = { equipmentIds: [], venueId: '', modelId: '', ...(plan.resourceSelections || {}), [isVenue ? 'venueId' : 'modelId']: item.id };
-      updatePlan(plan); refreshCurrentPlan(plan);
-    }
-  };
 
   function renderScheduleLink(plan) {
     const schedule = read(KEYS.schedules, []).find(item => String(item.planId) === String(plan.id));
@@ -1136,23 +1121,35 @@
     tab.className = 'tab-cnt';
     tab.id = 'tab-lut';
     const preferences = workflowPreferences();
-    tab.innerHTML = `<div style="max-width:1200px;margin:0 auto;display:grid;gap:1rem;">
-      <section class="panel"><div class="p-head"><div><h2>LUT 效果对比</h2><p style="margin:.25rem 0 0;color:var(--t3);font-size:.72rem;">打开即显示真实样片与 .cube 计算结果；上传自己的图片后会替换示例图，不覆盖原文件。</p></div></div><div class="p-body">
-        <div class="workflow-lut-controls" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.5rem;">
-          <label>导入 LUT<input type="file" accept=".cube" onchange="importCubeLut(event,'')"></label>
-          <label>已导入 LUT<select id="lut-library-select" onchange="selectLibraryLutProfile(this.value)"><option value="">选择 LUT</option></select></label>
-          <label>替换源图<input type="file" accept="image/*" onchange="loadLibraryLutImage(event,'original')"></label>
-          <label>替换参考色<input type="file" accept="image/*" onchange="loadLibraryLutImage(event,'reference')"></label>
-          <label>强度 <span id="lut-library-strength-label">${esc(preferences.lutStrength)}%</span><input id="lut-library-strength" type="range" min="0" max="100" value="${esc(preferences.lutStrength)}" oninput="updateLibraryLutPreview(this.value)"></label>
+    tab.innerHTML = `<div class="lut-beginner-workspace">
+      <section class="panel lut-curated-panel"><div class="p-head"><div><h2>选择想要的画面感觉</h2><p>先选一个常用效果，工作台会直接用于当前方案。以后仍可随时更换。</p></div></div><div class="p-body"><div id="curated-lut-list" class="curated-lut-grid"><p class="workflow-resource-empty">正在准备常用效果…</p></div></div></section>
+      <details class="lut-simple-details">
+        <summary><span><i data-lucide="image"></i> 用自己的照片看效果</span><small>可选</small></summary>
+        <div class="lut-simple-details__body">
+          <div class="workflow-lut-controls lut-preview-controls">
+            <label>选择照片<input type="file" accept="image/*" onchange="loadLibraryLutImage(event,'original')"></label>
+            <label>当前效果<select id="lut-library-select" onchange="selectLibraryLutProfile(this.value)"><option value="">选择效果</option></select></label>
+            <label>效果强度 <span id="lut-library-strength-label">${esc(preferences.lutStrength)}%</span><input id="lut-library-strength" type="range" min="0" max="100" value="${esc(preferences.lutStrength)}" oninput="updateLibraryLutPreview(this.value)"></label>
+          </div>
+          <div class="workflow-lut-canvases workflow-lut-canvases--simple"><figure><figcaption>原图</figcaption><canvas id="lut-library-original" width="360" height="225"></canvas></figure><figure><figcaption>套用后</figcaption><canvas id="lut-library-output" width="360" height="225"></canvas></figure><canvas id="lut-library-reference" width="1" height="1" hidden></canvas></div>
+          <p id="lut-library-analysis">选择照片后再显示效果，不会覆盖原文件。</p>
         </div>
-        <div class="workflow-lut-canvases"><figure><figcaption>源图（未套 LUT）</figcaption><canvas id="lut-library-original" width="360" height="225"></canvas></figure><figure><figcaption>当前 LUT 效果</figcaption><canvas id="lut-library-output" width="360" height="225"></canvas></figure><figure><figcaption>参考色彩目标</figcaption><canvas id="lut-library-reference" width="360" height="225"></canvas></figure></div>
-        <p id="lut-library-analysis" style="margin-top:.5rem;">正在载入示例源图、真实 LUT 和参考色彩。</p>
-        <div class="lut-tool-actions"><button class="btn btn-p btn-sm" onclick="applyDemoLutEffect()">试用暖胶片效果</button><button class="btn btn-s btn-sm" onclick="exportLibraryLutImage('image/jpeg')">导出效果 JPG</button><button class="btn btn-s btn-sm" onclick="exportLibraryLutImage('image/png')">导出效果 PNG</button><label>CUBE 尺寸<select id="lut-convert-size"><option value="17">17 点 · Blackmagic</option><option value="33" selected>33 点 · 通用</option></select></label><button class="btn btn-s btn-sm" onclick="exportActiveCube()">转换并下载 CUBE</button><a class="btn btn-s btn-sm" href="https://github.com/AcademySoftwareFoundation/OpenColorIO" target="_blank" rel="noopener">OpenColorIO</a></div>
-        <p class="lut-export-note">效果图最长边限制为 1920px，适合预览、选片和像素蛋糕前置样片；不会覆盖原图，也不会保留原文件 EXIF。正式 RAW/Log 批处理仍应交给 DaVinci、Adobe Camera Raw 或 OpenColorIO。</p>
-      </div></section>
-      <section class="panel"><div class="p-head"><div><h2>LUT 怎么用</h2><p style="margin:.25rem 0 0;color:var(--t3);font-size:.72rem;">选择素材拍摄格式和最后处理软件，下面会明确告诉你是否必须先把 Log 还原为正常颜色。</p></div></div><div class="p-body"><div class="lut-delivery-controls"><label>素材拍摄格式<select id="open-lut-input" onchange="renderLutPipeline();renderOpenLutCatalog()"><option value="srgb-display">普通照片 / Rec.709</option><option value="sony-slog3-sgamut3cine">Sony S-Log3</option><option value="dji-dlogm">DJI D-Log M</option><option value="apple-log">Apple Log</option><option value="panasonic-vlog">Panasonic V-Log</option><option value="blackmagic-film-gen5">Blackmagic Film Gen 5</option></select></label><label>最后处理软件<select id="lut-software" onchange="renderLutPipeline();renderOpenLutCatalog()"><option value="davinci-resolve">DaVinci Resolve</option><option value="photoshop">Adobe Photoshop</option><option value="pixelcake">像素蛋糕</option><option value="blackmagic-camera">Blackmagic Camera</option></select></label></div><div id="lut-pipeline" class="lut-pipeline"></div><div id="lut-transform-list" class="lut-transform-list"></div></div></section>
-      <section class="panel"><div class="p-head" style="justify-content:space-between;gap:.6rem;flex-wrap:wrap;"><div><h2>开源 LUT 目录</h2><p style="margin:.2rem 0 0;color:var(--t3);font-size:.7rem;">只收录许可证和输入色彩空间已核验的文件。</p></div><input id="open-lut-search" placeholder="搜索人像、街拍、黑白..." oninput="renderOpenLutCatalog()"></div><div class="p-body"><div id="open-lut-audit" class="workflow-health" style="margin-bottom:.65rem;"></div><details class="open-lut-source-audit"><summary>查看来源专业性、社区反馈和采用决策</summary><div id="open-lut-source-list"></div></details><div id="open-lut-list" class="open-lut-grid"></div></div></section>
-      <section class="panel"><div class="p-head"><h2>已安装 LUT</h2><span id="lut-library-count" style="font-size:.72rem;color:var(--t3);"></span></div><div class="p-body" id="lut-library-list"></div></section>
+      </details>
+      <details class="lut-simple-details lut-advanced-details">
+        <summary><span><i data-lucide="sliders-horizontal"></i> 专业设置与自定义 LUT</span><small>Log、导入、下载与转换</small></summary>
+        <div class="lut-simple-details__body lut-advanced-stack">
+          <div class="workflow-lut-controls">
+            <label>导入自己的 LUT<input type="file" accept=".cube" onchange="importCubeLut(event,'')"></label>
+            <label>参考色图片<input type="file" accept="image/*" onchange="loadLibraryLutImage(event,'reference')"></label>
+          </div>
+          <div class="lut-delivery-controls"><label>素材拍摄格式<select id="open-lut-input" onchange="renderLutPipeline();renderOpenLutCatalog()"><option value="srgb-display">普通照片 / Rec.709</option><option value="sony-slog3-sgamut3cine">Sony S-Log3</option><option value="dji-dlogm">DJI D-Log M</option><option value="apple-log">Apple Log</option><option value="panasonic-vlog">Panasonic V-Log</option><option value="blackmagic-film-gen5">Blackmagic Film Gen 5</option></select></label><label>最后处理软件<select id="lut-software" onchange="renderLutPipeline();renderOpenLutCatalog()"><option value="davinci-resolve">DaVinci Resolve</option><option value="photoshop">Adobe Photoshop</option><option value="pixelcake">像素蛋糕</option><option value="blackmagic-camera">Blackmagic Camera</option></select></label></div>
+          <div id="lut-pipeline" class="lut-pipeline"></div><div id="lut-transform-list" class="lut-transform-list"></div>
+          <div class="lut-tool-actions"><button class="btn btn-s btn-sm" onclick="exportLibraryLutImage('image/jpeg')">导出效果 JPG</button><button class="btn btn-s btn-sm" onclick="exportLibraryLutImage('image/png')">导出效果 PNG</button><label>CUBE 尺寸<select id="lut-convert-size"><option value="17">17 点 · Blackmagic</option><option value="33" selected>33 点 · 通用</option></select></label><button class="btn btn-s btn-sm" onclick="exportActiveCube()">转换并下载 CUBE</button></div>
+          <div class="lut-catalog-heading"><div><h3>全部已核验 LUT</h3><p>需要更多选择时再打开这里。</p></div><input id="open-lut-search" placeholder="搜索人像、街拍、黑白…" oninput="renderOpenLutCatalog()"></div>
+          <div id="open-lut-audit" class="workflow-health"></div><details class="open-lut-source-audit"><summary>来源与许可证</summary><div id="open-lut-source-list"></div></details><div id="open-lut-list" class="open-lut-grid"></div>
+          <div class="lut-installed-heading"><h3>已安装 LUT</h3><span id="lut-library-count"></span></div><div id="lut-library-list"></div>
+        </div>
+      </details>
     </div>`;
     settings.parentNode.insertBefore(tab, settings);
   }
@@ -1168,9 +1165,39 @@
     const count = document.getElementById('lut-library-count');
     if (count) count.textContent = `${profiles.length} 个已导入文件`;
     const list = document.getElementById('lut-library-list');
-    if (!list) return;
-    list.innerHTML = profiles.length ? `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:.65rem;">${profiles.map(item => `<article style="padding:.75rem;border:1px solid var(--bd);border-radius:8px;background:var(--bg2);"><strong style="display:block;color:var(--t1);">${esc(item.title)}</strong><div style="margin-top:.3rem;font-size:.68rem;color:var(--t3);">${esc(item.filename)} · ${esc(item.size)}³ · ${esc(item.licenseClass || 'user-imported')}</div><button class="btn btn-s btn-sm" style="margin-top:.55rem;" onclick="applyLibraryLutToLatestPlan('${esc(item.id)}')">应用到最近方案</button></article>`).join('')}</div>` : '<p style="color:var(--t3);font-size:.75rem;">还没有 LUT。可直接导入标准 .cube 文件。</p>';
+    if (list) list.innerHTML = profiles.length ? `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:.65rem;">${profiles.map(item => `<article style="padding:.75rem;border:1px solid var(--bd);border-radius:8px;background:var(--bg2);"><strong style="display:block;color:var(--t1);">${esc(item.title)}</strong><div style="margin-top:.3rem;font-size:.68rem;color:var(--t3);">${esc(item.filename)} · ${esc(item.size)}³ · ${esc(item.licenseClass || 'user-imported')}</div><button class="btn btn-s btn-sm" style="margin-top:.55rem;" onclick="applyLibraryLutToLatestPlan('${esc(item.id)}')">应用到最近方案</button></article>`).join('')}</div>` : '<p style="color:var(--t3);font-size:.75rem;">还没有导入自定义 LUT。</p>';
+    root.renderCuratedLutPresets();
     root.renderOpenLutCatalog();
+  };
+
+  root.renderCuratedLutPresets = function () {
+    const target = document.getElementById('curated-lut-list');
+    if (!target) return;
+    const plan = latestPlan();
+    target.innerHTML = CURATED_LUT_PRESETS.map(preset => {
+      const item = openLutCatalog.find(candidate => candidate.id === preset.id);
+      const selected = plan?.lutProfileId === preset.id;
+      return `<article class="curated-lut-card${selected ? ' is-selected' : ''}">
+        <span class="curated-lut-card__icon"><i data-lucide="${esc(preset.icon)}"></i></span>
+        <div><strong>${esc(preset.label)}</strong><p>${esc(preset.note)}</p></div>
+        <button type="button" class="btn ${selected ? 'btn-s' : 'btn-p'} btn-sm" onclick="applyCuratedLut('${esc(preset.id)}')" ${item ? '' : 'disabled'}>${selected ? '当前使用' : '一键使用'}</button>
+      </article>`;
+    }).join('');
+    root.PhotoAtelierR4IconSystem?.refreshIcons(target);
+  };
+
+  root.applyCuratedLut = async function (lutId) {
+    const plan = latestPlan();
+    const installed = read(KEYS.lutMeta, []).some(item => item.id === lutId);
+    if (installed) {
+      if (plan) root.applyLutRecommendation(plan.id, lutId);
+    } else {
+      const profile = await root.installOpenLut(lutId, plan?.id);
+      if (!profile) return;
+    }
+    activeLut = await loadCatalogLutProfile(lutId);
+    root.renderLutWorkspace();
+    notify(plan ? '已用于当前方案，可在拍摄前随时更换' : '已加入 LUT 库，新建方案后可直接使用', 'ok');
   };
 
   async function loadOpenLutCatalog() {
@@ -1193,7 +1220,6 @@
       if (software) software.value = preferences.software;
       root.renderLutWorkspace();
       root.renderLutPipeline();
-      await initializeLutDemo();
     } catch (error) { addSystemMessage('开源 LUT 目录读取失败', error.message, 'LUT'); }
   }
 
@@ -1213,9 +1239,8 @@
     const requiresTransform = input !== 'srgb-display' && input !== 'panasonic-vlog';
     target.innerHTML = filtered.map(item => {
       const friendly = LUT_FRIENDLY_NAMES[item.id] || [item.title, item.useCase];
-      return `<article class="open-lut-card"><canvas class="open-lut-preview" data-lut-preview="${esc(item.id)}" width="320" height="180" aria-label="${esc(friendly[0])}效果预览"></canvas><div class="open-lut-card__head"><div><strong>${esc(friendly[0])}</strong><small>${esc(item.title)}</small></div><span class="eq-tag">${esc(item.sourceLicense)}</span></div><p>${esc(friendly[1])}</p><dl><div><dt>输入</dt><dd>${esc(item.inputColorSpace)}</dd></div><div><dt>输出</dt><dd>${esc(item.outputColorSpace)}</dd></div><div><dt>${esc(software?.name || '目标')}</dt><dd>${software?.directCubeImport ? '可导入 CUBE' : '不直接导入 CUBE'}</dd></div><div><dt>许可</dt><dd>${item.commercialUse ? '允许商业使用，保留许可声明' : '限制使用'}</dd></div></dl><div class="open-lut-warning">${requiresTransform ? '先用对应相机的官方技术 LUT 还原正常颜色，再套这个创意 LUT。' : esc(item.warning)}</div><div class="open-lut-card__actions"><button class="btn ${installed.has(item.id) ? 'btn-p' : 'btn-s'} btn-sm" ${installed.has(item.id) ? 'disabled' : `onclick="installOpenLut('${esc(item.id)}')"`}>${installed.has(item.id) ? '已安装' : '安装到工作台'}</button><button class="btn btn-s btn-sm" onclick="previewCatalogLut('${esc(item.id)}')">放到上方对比</button><a class="btn btn-s btn-sm" href="${esc(item.fileUrl)}" download="${esc(item.filename)}">下载 .cube</a></div></article>`;
+      return `<article class="open-lut-card"><div class="open-lut-card__head"><div><strong>${esc(friendly[0])}</strong><small>${esc(item.title)}</small></div><span class="eq-tag">${esc(item.sourceLicense)}</span></div><p>${esc(friendly[1])}</p><dl><div><dt>输入</dt><dd>${esc(item.inputColorSpace)}</dd></div><div><dt>输出</dt><dd>${esc(item.outputColorSpace)}</dd></div><div><dt>${esc(software?.name || '目标')}</dt><dd>${software?.directCubeImport ? '可导入 CUBE' : '不直接导入 CUBE'}</dd></div><div><dt>许可</dt><dd>${item.commercialUse ? '允许商业使用，保留许可声明' : '限制使用'}</dd></div></dl><div class="open-lut-warning">${requiresTransform ? '先用对应相机的官方技术 LUT 还原正常颜色，再套这个创意 LUT。' : esc(item.warning)}</div><div class="open-lut-card__actions"><button class="btn ${installed.has(item.id) ? 'btn-p' : 'btn-s'} btn-sm" ${installed.has(item.id) ? 'disabled' : `onclick="installOpenLut('${esc(item.id)}')"`}>${installed.has(item.id) ? '已安装' : '安装到工作台'}</button><button class="btn btn-s btn-sm" onclick="previewCatalogLut('${esc(item.id)}')">在上方按需预览</button><a class="btn btn-s btn-sm" href="${esc(item.fileUrl)}" download="${esc(item.filename)}">下载 .cube</a></div></article>`;
     }).join('') || '<p class="workflow-resource-empty">没有匹配的开源 LUT。</p>';
-    renderOpenLutPreviews(filtered).catch(error => addSystemMessage('LUT 效果预览失败', error.message, 'LUT'));
   };
 
   root.renderLutPipeline = function () {
@@ -1236,49 +1261,8 @@
       : transform.distributionMode === 'not-required'
         ? '普通照片或 Rec.709 视频颜色已经正常，可以直接选择下方创意 LUT。'
         : transform.instructions;
-    transforms.innerHTML = `<article class="lut-transform-card"><div><strong>${esc(transform.label)} → ${esc(transform.outputColorSpace)}</strong><span class="eq-tag">${esc(statusLabels[transform.status] || transform.status)}</span></div><p>${esc(explanation)}</p>${action}</article><article class="lut-transform-card"><div><strong>${esc(software.name)} 中怎么用</strong><span class="eq-tag">${direct ? '.cube' : '效果图'}</span></div><p>${esc(software.workflow)}</p><a class="btn btn-s btn-sm" href="${esc(software.sourceUrl)}" target="_blank">查看官方说明</a></article><div class="lut-transform-visual"><figure class="is-log"><img src="assets/demo/references/pose-01.jpg" alt="Log 素材示意"><figcaption>${inputId === 'srgb-display' ? '正常源图' : 'Log 原片示意，非官方色彩模拟'}</figcaption></figure><figure><img src="assets/demo/references/pose-01.jpg" alt="还原正常颜色示意"><figcaption>技术还原后</figcaption></figure><figure><canvas id="lut-pipeline-creative" width="320" height="180"></canvas><figcaption>再套创意 LUT 的真实计算</figcaption></figure></div>`;
-    renderPipelineCreativePreview().catch(() => {});
+    transforms.innerHTML = `<article class="lut-transform-card"><div><strong>${esc(transform.label)} → ${esc(transform.outputColorSpace)}</strong><span class="eq-tag">${esc(statusLabels[transform.status] || transform.status)}</span></div><p>${esc(explanation)}</p>${action}</article><article class="lut-transform-card"><div><strong>${esc(software.name)} 中怎么用</strong><span class="eq-tag">${direct ? '.cube' : '效果图'}</span></div><p>${esc(software.workflow)}</p><a class="btn btn-s btn-sm" href="${esc(software.sourceUrl)}" target="_blank">查看官方说明</a></article><div class="lut-transform-visual lut-transform-visual--steps"><div><strong>1. 提供真实源图</strong><span>${inputId === 'srgb-display' ? '普通照片或 Rec.709' : esc(transform.label)}</span></div><div><strong>2. 完成技术还原</strong><span>${transform.distributionMode === 'not-required' ? '当前素材无需额外还原' : '使用与机型匹配的官方技术 LUT'}</span></div><div><strong>3. 按需预览创意 LUT</strong><span>上传图片或点击目录中的预览按钮后才计算</span></div></div>`;
   };
-
-  async function renderOpenLutPreviews(items) {
-    await ensureDemoImages();
-    await Promise.all(items.map(async item => {
-      const canvas = document.querySelector(`[data-lut-preview="${CSS.escape(item.id)}"]`);
-      if (!canvas) return;
-      drawImageToCanvas(originalImage, canvas);
-      if (item.inputColorSpace !== 'sRGB display-referred') {
-        const context = canvas.getContext('2d');
-        context.fillStyle = 'rgba(12,16,20,.62)';
-        context.fillRect(0, 0, canvas.width, canvas.height);
-        context.fillStyle = '#fff'; context.font = '600 18px sans-serif'; context.textAlign = 'center';
-        context.fillText('需要真实 V-Log 源片', canvas.width / 2, canvas.height / 2 - 4);
-        context.font = '13px sans-serif'; context.fillText('普通照片不做虚假预览', canvas.width / 2, canvas.height / 2 + 20);
-        return;
-      }
-      const profile = await loadCatalogLutProfile(item.id);
-      applyLutToCanvas(profile, canvas, canvas, workflowPreferences().lutStrength);
-    }));
-  }
-
-  async function renderPipelineCreativePreview() {
-    await ensureDemoImages();
-    const canvas = document.getElementById('lut-pipeline-creative');
-    if (!canvas) return;
-    drawImageToCanvas(originalImage, canvas);
-    const profile = await loadCatalogLutProfile(DEFAULT_LUT_ID);
-    applyLutToCanvas(profile, canvas, canvas, workflowPreferences().lutStrength);
-  }
-
-  async function initializeLutDemo() {
-    await ensureDemoImages();
-    activeLut = activeLut || await loadCatalogLutProfile(DEFAULT_LUT_ID);
-    drawImageToCanvas(originalImage, document.getElementById('lut-library-original'));
-    drawImageToCanvas(referenceImage, document.getElementById('lut-library-reference'));
-    root.renderLutWorkspace();
-    const select = document.getElementById('lut-library-select');
-    if (select && activeLut) select.value = activeLut.id;
-    await root.updateLibraryLutPreview(workflowPreferences().lutStrength);
-  }
 
   root.installOpenLut = async function (catalogId, planId) {
     const item = openLutCatalog.find(candidate => candidate.id === catalogId);
@@ -2167,12 +2151,9 @@
   }
 
   function focusEquipmentLibrary() {
-    document.querySelectorAll('#tab-venue .resource-tab').forEach(button => {
-      if (button.dataset.resource !== 'eq') button.remove();
-      else { button.classList.add('active'); button.style.pointerEvents = 'none'; }
-    });
-    ['resource-venue', 'resource-model'].forEach(id => document.getElementById(id)?.remove());
-    document.getElementById('resource-eq')?.classList.add('active');
+    // R4 now owns a shared resource workspace. Keep the legacy panes mounted
+    // until their V5-backed replacements render into the module mounts.
+    document.getElementById('tab-venue')?.classList.remove('r4-equipment-only');
   }
 
   function installDataManagementOverrides() {

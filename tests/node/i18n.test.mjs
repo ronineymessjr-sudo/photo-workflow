@@ -30,7 +30,7 @@ test('legacy workspace exposes four-language core interface dictionary', () => {
   const html = read('legacy/index.html');
   assert.match(html, /id="appLanguage"/);
   assert.match(html, /const supportedLanguages = \['zh', 'en', 'ja', 'ko'\]/);
-  for (const key of ['nav.reference', 'nav.calendar', 'nav.equipment', 'nav.lut', 'nav.settings', 'gen.intro', 'reference.title', 'settings.title']) {
+  for (const key of ['nav.reference', 'nav.calendar', 'nav.resources', 'resource.lut', 'nav.settings', 'gen.intro', 'reference.title', 'settings.title']) {
     assert.ok(html.includes(`data-i18n="${key}"`) || html.includes(`data-i18n-aria="${key}"`), `missing translation binding ${key}`);
   }
   for (const phrase of ['Photography reference library', '写真リファレンスライブラリ', '사진 레퍼런스 라이브러리']) assert.ok(html.includes(phrase));

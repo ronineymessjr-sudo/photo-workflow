@@ -134,7 +134,11 @@ describe('R3-B - contextual reference handoff', () => {
     assert.ok(html.includes('情绪人像'));
     assert.ok(html.includes('胶片'));
     assert.ok(html.includes('海边'));
+    assert.ok(html.includes('可下载素材候选'));
+    assert.ok(html.includes('作品灵感搜索'));
+    assert.ok(html.includes('人物肖像、商标和具体许可仍需在原站确认'));
     assert.ok(!html.includes('reference-open-source'));
+    assert.ok(!html.includes('Pixiv'));
   });
 
   it('opens only the selected target with encoded context query', async () => {
@@ -153,6 +157,24 @@ describe('R3-B - contextual reference handoff', () => {
     assert.equal(openedUrls.length, 1);
     assert.match(openedUrls[0], /unsplash\.com/);
     assert.match(openedUrls[0], /%E5%9F%8E%E5%B8%82%E5%A4%9C%E6%99%AF/);
+  });
+
+  it('opens a domestic inspiration search without treating it as licensed media', async () => {
+    const plan = {
+      id: 'plan-cn',
+      projectId: 'proj-cn',
+      input: { theme: '双人纪实', style: '自然', scene: '咖啡馆', mood: '松弛' },
+    };
+    const { openedUrls } = createMocks({ plan });
+    await loadLauncher();
+
+    globalThis.setSelectedTarget('xinpianchang');
+    const html = globalThis.renderContextualReferenceHandoff();
+    const result = await globalThis.openContextualReferenceSearch();
+    assert.equal(result.target, 'xinpianchang');
+    assert.equal(openedUrls.length, 1);
+    assert.match(openedUrls[0], /xinpianchang\.com\/search\?kw=/);
+    assert.ok(html.includes('仅跳转到公开搜索结果作灵感参考'));
   });
 
   it('hides handoff when there is no usable context', async () => {

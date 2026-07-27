@@ -6,24 +6,70 @@ const OPEN_TARGETS = {
   pexels: {
     id: 'pexels',
     name: 'Pexels',
-    note: '免费实拍图片',
+    kind: 'licensed-media',
+    note: '可下载素材，使用前检查人物与商标权利',
     urlForQuery: (query) => `https://www.pexels.com/zh-cn/search/${encodeURIComponent(query)}/`,
   },
   unsplash: {
     id: 'unsplash',
     name: 'Unsplash',
-    note: '高质量摄影作品',
+    kind: 'licensed-media',
+    note: '可下载素材，使用前检查人物与商标权利',
     urlForQuery: (query) => `https://unsplash.com/s/photos/${encodeURIComponent(query)}`,
   },
   pixabay: {
     id: 'pixabay',
     name: 'Pixabay',
-    note: '免费图片范围较广',
+    kind: 'licensed-media',
+    note: '可下载素材，使用前检查具体内容限制',
     urlForQuery: (query) => `https://pixabay.com/images/search/${encodeURIComponent(query)}/`,
+  },
+  behance: {
+    id: 'behance',
+    name: 'Behance',
+    kind: 'inspiration-only',
+    note: '仅作作品灵感检索，不代表可下载或商用',
+    urlForQuery: (query) => `https://www.behance.net/search/projects?search=${encodeURIComponent(query)}`,
+  },
+  pinterest: {
+    id: 'pinterest',
+    name: 'Pinterest',
+    kind: 'inspiration-only',
+    note: '仅作灵感检索，版权以原始来源为准',
+    urlForQuery: (query) => `https://www.pinterest.com/search/pins/?q=${encodeURIComponent(query)}`,
+  },
+  xinpianchang: {
+    id: 'xinpianchang',
+    name: '新片场',
+    kind: 'inspiration-only',
+    note: '仅查看公开作品和创作思路，不复制素材',
+    urlForQuery: (query) => `https://www.xinpianchang.com/search?kw=${encodeURIComponent(query)}`,
+  },
+  zcool: {
+    id: 'zcool',
+    name: '站酷',
+    kind: 'inspiration-only',
+    note: '仅查看公开作品和创作思路，不复制素材',
+    urlForQuery: (query) => `https://www.zcool.com.cn/search/content?word=${encodeURIComponent(query)}`,
+  },
+  xiaohongshu: {
+    id: 'xiaohongshu',
+    name: '小红书',
+    kind: 'inspiration-only',
+    note: '跳转公开搜索结果，使用内容前另行确认授权',
+    urlForQuery: (query) => `https://www.xiaohongshu.com/search_result?keyword=${encodeURIComponent(query)}&source=web_search_result_notes`,
+  },
+  bilibili: {
+    id: 'bilibili',
+    name: '哔哩哔哩',
+    kind: 'inspiration-only',
+    note: '跳转公开视频搜索，不下载或重新分发',
+    urlForQuery: (query) => `https://search.bilibili.com/all?keyword=${encodeURIComponent(query)}`,
   },
   'personal-library': {
     id: 'personal-library',
     name: '个人图库',
+    kind: 'personal',
     note: '搜索已连接的私人摄影库',
     urlForQuery: null,
   },
@@ -47,7 +93,13 @@ function writeStorage(key, value) {
 }
 
 function escapeHtml(value) {
-  return String(value ?? '').replace(/[&<>"']/g, '');
+  return String(value ?? '').replace(/[&<>"']/g, character => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  }[character]));
 }
 
 function app() {
@@ -133,7 +185,17 @@ function getAvailableTargets() {
   const personal = root.window?.PhotoAtelierKnowledge?.checkPersonalLibraryHealth
     ? { ...OPEN_TARGETS['personal-library'] }
     : null;
-  const base = [OPEN_TARGETS.pexels, OPEN_TARGETS.unsplash, OPEN_TARGETS.pixabay];
+  const base = [
+    OPEN_TARGETS.pexels,
+    OPEN_TARGETS.unsplash,
+    OPEN_TARGETS.pixabay,
+    OPEN_TARGETS.behance,
+    OPEN_TARGETS.pinterest,
+    OPEN_TARGETS.xinpianchang,
+    OPEN_TARGETS.zcool,
+    OPEN_TARGETS.xiaohongshu,
+    OPEN_TARGETS.bilibili,
+  ];
   return personal ? [...base, personal] : base;
 }
 
@@ -201,11 +263,23 @@ function renderContextualReferenceAction({ plan, shotId } = {}) {
   const label = targetId === 'personal-library'
     ? `搜索个人图库：${escapeHtml(query || context.theme || '当前方案')}`
     : `在 ${escapeHtml(target.name)} 搜索：${escapeHtml(query)}`;
+  const usageNote = target.kind === 'licensed-media'
+    ? '可作为素材候选，但人物肖像、商标和具体许可仍需在原站确认。'
+    : target.kind === 'inspiration-only'
+      ? '仅跳转到公开搜索结果作灵感参考，不代表获得下载、复制或商业使用授权。'
+      : '只检索你自己的图库，不上传原图。';
   return `<div class="reference-context-handoff">
-    <button class="btn btn-p btn-sm" type="button" onclick="openContextualReferenceSearch(${shotId ? `{shotId:'${escapeHtml(shotId)}'}` : ''})">${label}</button>
     <select class="reference-context-handoff__target" aria-label="选择搜索目标" onchange="setSelectedTarget(this.value);window.renderContextualReferenceHandoff?.()">
-      ${getAvailableTargets().map((t) => `<option value="${escapeHtml(t.id)}" ${t.id === targetId ? 'selected' : ''}>${escapeHtml(t.name)}</option>`).join('')}
+      <optgroup label="可下载素材候选">
+        ${getAvailableTargets().filter(t => t.kind === 'licensed-media').map((t) => `<option value="${escapeHtml(t.id)}" ${t.id === targetId ? 'selected' : ''}>${escapeHtml(t.name)}</option>`).join('')}
+      </optgroup>
+      <optgroup label="作品灵感搜索">
+        ${getAvailableTargets().filter(t => t.kind === 'inspiration-only').map((t) => `<option value="${escapeHtml(t.id)}" ${t.id === targetId ? 'selected' : ''}>${escapeHtml(t.name)}</option>`).join('')}
+      </optgroup>
+      ${getAvailableTargets().some(t => t.kind === 'personal') ? `<optgroup label="我的内容">${getAvailableTargets().filter(t => t.kind === 'personal').map((t) => `<option value="${escapeHtml(t.id)}" ${t.id === targetId ? 'selected' : ''}>${escapeHtml(t.name)}</option>`).join('')}</optgroup>` : ''}
     </select>
+    <button class="btn btn-p btn-sm" type="button" onclick="openContextualReferenceSearch(${shotId ? `{shotId:'${escapeHtml(shotId)}'}` : ''})">${label}</button>
+    <small class="reference-context-handoff__policy">${escapeHtml(usageNote)}</small>
   </div>`;
 }
 

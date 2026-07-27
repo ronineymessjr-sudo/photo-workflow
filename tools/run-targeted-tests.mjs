@@ -5,13 +5,17 @@ const scopes = {
   catalog: [
     ['--test',
       'tests/node/v5/contracts-catalog.test.mjs',
-      'tests/node/v5/catalog-ui-migration.test.mjs'],
+      'tests/node/v5/catalog-ui-migration.test.mjs',
+      'tests/node/v5/r4-resource-secondary-nav.test.mjs',
+      'tests/node/v5/r4-resource-workspace.test.mjs'],
   ],
   references: [
     ['--test',
       'tests/node/v5/reference-database-import.test.mjs',
       'tests/node/v5/reference-source-adapters.test.mjs',
       'tests/node/v5/reference-ui-migration.test.mjs',
+      'tests/node/v5/r3-reference-context-launcher.test.mjs',
+      'tests/node/v5/r4-on-demand-media.test.mjs',
       'tests/node/v5/contracts-catalog.test.mjs'],
   ],
   planning: [

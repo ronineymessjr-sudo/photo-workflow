@@ -435,6 +435,8 @@ function requestedKnowledgeRoles(brief = {}) {
 function isPhotographyDocument(item) {
   if (item.type !== 'document') return false;
   if (item.managedGenerated) return false;
+  const topLevelFolder = String(item.filename || '').replace(/\\/g, '/').split('/')[0];
+  if (topLevelFolder === '\u6444\u5f71\u77e5\u8bc6\u5e93') return false;
   return /摄影|拍摄|构图|姿势|人像|镜头|调色|灯光|photoatelier|photography/i.test(`${item.filename || ''} ${(item.tags || []).join(' ')} ${item.title || ''}`);
 }
 

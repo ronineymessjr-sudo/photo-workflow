@@ -4196,9 +4196,9 @@
                 <i data-lucide="calendar-days"></i>
                 <span class="nav-label" data-i18n="nav.calendar">日程</span>
             </button>
-            <button class="nav-item" data-tab="venue" data-role="photographer,assistant" aria-label="设备与 LUT" data-i18n-aria="nav.equipmentLut">
-                <i data-lucide="camera"></i>
-                <span class="nav-label" data-i18n="nav.equipmentLut">设备与 LUT</span>
+            <button class="nav-item" data-tab="resources" data-role="photographer,assistant" aria-label="拍摄资源" data-i18n-aria="nav.resources">
+                <i data-lucide="briefcase"></i>
+                <span class="nav-label" data-i18n="nav.resources">拍摄资源</span>
                 <span class="nav-badge" id="t-eq">0</span>
             </button>
             <button class="nav-item" data-tab="settings" data-role="photographer,assistant" aria-label="设置" data-i18n-aria="nav.settings">
@@ -4316,6 +4316,7 @@
                                 <div class="brief-inline">
                                     <select id="importVenueSelect"><option value="" data-i18n="gen.importVenue">从场地库导入</option></select>
                                     <button type="button" class="btn btn-s btn-sm" onclick="importFromVenue()" data-i18n="gen.import">导入</button>
+                                    <button type="button" class="btn btn-s btn-sm" onclick="openResourceWorkspace({section:'venue',mode:'select',returnTo:'brief',returnLabel:'返回新建方案'})">打开场地库</button>
                                 </div>
                                 <textarea id="f-scene" placeholder="如：室内自然光、城市街道或具体地址" data-i18n-placeholder="gen.scenePlaceholder"></textarea>
                             </div>
@@ -4324,6 +4325,7 @@
                                 <div class="brief-inline">
                                     <select id="importModelSelect"><option value="" data-i18n="gen.importModel">从模特库导入</option></select>
                                     <button type="button" class="btn btn-s btn-sm" onclick="importFromModel()" data-i18n="gen.import">导入</button>
+                                    <button type="button" class="btn btn-s btn-sm" onclick="openResourceWorkspace({section:'talent',mode:'select',returnTo:'brief',returnLabel:'返回新建方案'})">打开人员库</button>
                                 </div>
                                 <textarea id="f-model" placeholder="例如：一位短发女生、情侣两人，或具体产品与使用者" data-i18n-placeholder="gen.modelPlaceholder"></textarea>
                             </div>
@@ -4401,22 +4403,44 @@
         </div>
 
         <!-- ============ 资源库（场地+设备+模特） ============ -->
-        <div class="tab-cnt" id="tab-venue">
-            <!-- 资源库内部Tab导航 -->
-            <div class="resource-tabs" style="display:flex;gap:.25rem;margin-bottom:1rem;padding:.25rem;background:var(--bg2);border-radius:var(--radius);border:1px solid var(--bd);">
-                <button class="resource-tab active" data-resource="venue" onclick="showResourceTab('venue')" style="padding:.5rem 1rem;background:var(--ac-glow);border:none;border-radius:var(--radius-sm);color:var(--ac);font-size:.8rem;font-weight:500;cursor:pointer;transition:all .15s;" data-i18n="resource.venues">场地库</button>
-                <button class="resource-tab" data-resource="eq" onclick="showResourceTab('eq')" style="padding:.5rem 1rem;background:transparent;border:none;border-radius:var(--radius-sm);color:var(--t3);font-size:.8rem;font-weight:500;cursor:pointer;transition:all .15s;" data-i18n="resource.equipment">设备库</button>
-                <button class="resource-tab" data-resource="model" onclick="showResourceTab('model')" style="padding:.5rem 1rem;background:transparent;border:none;border-radius:var(--radius-sm);color:var(--t3);font-size:.8rem;font-weight:500;cursor:pointer;transition:all .15s;" data-i18n="resource.models">模特库</button>
+        <div class="tab-cnt" id="tab-resources">
+            <!-- 拍摄资源二级导航 -->
+            <div class="r4-resource-secondary-nav" role="tablist" aria-label="拍摄资源二级导航">
+                <button type="button" role="tab" class="r4-resource-nav-item active" data-r4-resource-section="summary" onclick="showResourceSection('summary')" aria-selected="true">
+                    <i data-lucide="clipboard-list"></i><span data-i18n="resource.summary">本方案</span>
+                </button>
+                <button type="button" role="tab" class="r4-resource-nav-item" data-r4-resource-section="venue" onclick="showResourceSection('venue')">
+                    <i data-lucide="map-pin"></i><span data-i18n="resource.venue">场地</span>
+                </button>
+                <button type="button" role="tab" class="r4-resource-nav-item" data-r4-resource-section="talent" onclick="showResourceSection('talent')">
+                    <i data-lucide="user"></i><span data-i18n="resource.talent">人员</span>
+                </button>
+                <button type="button" role="tab" class="r4-resource-nav-item" data-r4-resource-section="equipment" onclick="showResourceSection('equipment')">
+                    <i data-lucide="camera"></i><span data-i18n="resource.equipment">设备</span>
+                </button>
+                <button type="button" role="tab" class="r4-resource-nav-item" data-r4-resource-section="lut" onclick="showResourceSection('lut')">
+                    <i data-lucide="palette"></i><span data-i18n="resource.lut">LUT</span>
+                </button>
             </div>
-            <style>
-                .resource-tab:hover { background:var(--bg-subtle); color:var(--t2); }
-                .resource-tab.active { background:var(--ac-glow); color:var(--ac); }
-                .resource-content { display:none; }
-                .resource-content.active { display:block; }
-            </style>
+            <div class="r4-resource-return-bar" id="r4ResourceReturnBar" style="display:none;">
+                <button type="button" class="r4-resource-return-btn" onclick="closeResourceWorkspace()">
+                    <i data-lucide="arrow-left"></i><span id="r4ResourceReturnLabel" data-i18n="resource.return">返回</span>
+                </button>
+            </div>
+
+            <!-- 本方案资源汇总 -->
+            <div class="resource-content active" id="r4-resource-summary" data-r4-resource-section="summary">
+                <div class="r4-resource-module-mount" data-module="summary"></div>
+                <div class="r4-empty-state">
+                    <i data-lucide="clipboard-list" aria-hidden="true"></i>
+                    <h3 data-i18n="resource.summaryTitle">本方案资源汇总</h3>
+                    <p data-i18n="resource.summaryHint">当前方案已选场地、人员、设备和 LUT 将在此汇总。</p>
+                </div>
+            </div>
 
             <!-- 场地库内容 -->
-            <div class="resource-content active" id="resource-venue">
+            <div class="resource-content" id="resource-venue" data-r4-resource-section="venue">
+                <div class="r4-resource-module-mount" data-module="venue"></div>
             <div class="grid">
                 <aside>
                     <div class="panel">
@@ -4450,7 +4474,8 @@
             </div>
 
             <!-- 设备库内容 -->
-            <div class="resource-content" id="resource-eq">
+            <div class="resource-content" id="resource-eq" data-r4-resource-section="equipment">
+                <div class="r4-resource-module-mount" data-module="equipment"></div>
             <div class="grid">
                 <aside>
                     <div class="panel">
@@ -4492,7 +4517,8 @@
             </div>
 
             <!-- 模特库内容 -->
-            <div class="resource-content" id="resource-model">
+            <div class="resource-content" id="resource-model" data-r4-resource-section="talent">
+                <div class="r4-resource-module-mount" data-module="talent"></div>
             <div class="grid">
                 <aside>
                     <div class="panel">
@@ -4524,9 +4550,17 @@
                 <aside></aside>
             </div>
             </div>
-        </div>
-
-        <!-- ============ 参考数据库 ============ -->
+<!-- LUT 与仿色预览 -->
+            <div class="resource-content" id="r4-resource-lut" data-r4-resource-section="lut">
+                <div class="r4-resource-module-mount" data-module="lut"></div>
+                <div class="r4-empty-state">
+                    <i data-lucide="palette" aria-hidden="true"></i>
+                    <h3 data-i18n="resource.lutTitle">LUT 与仿色预览</h3>
+                    <p data-i18n="resource.lutHint">LUT 库与仿色预览将在此加载。</p>
+                </div>
+            </div>
+            </div>
+<!-- ============ 参考数据库 ============ -->
         <div class="tab-cnt" id="tab-reference">
             <section class="reference-easy-shell" aria-labelledby="easyReferenceTitle">
                 <header class="reference-easy-header">
@@ -5313,6 +5347,7 @@
 // i18n System
 const i18n = {
     zh: {
+        'nav.resources': '\u62cd\u6444\u8d44\u6e90',
         'nav.gen': '方案生成',
         'nav.reference': '参考图库',
         'nav.calendar': '拍摄日程',
@@ -5350,6 +5385,7 @@ const i18n = {
         'dashboard.equipment': '设备使用率'
     },
     en: {
+        'nav.resources': 'Shoot resources',
         'nav.gen': 'Plan', 'nav.reference': 'References', 'nav.calendar': 'Schedule', 'nav.equipment': 'Gear', 'nav.lut': 'LUT / Color', 'nav.settings': 'Settings',
         'top.workflow': 'Photography workflow', 'top.language': 'Language', 'top.search': 'Global search', 'top.searchPlaceholder': 'Search plans and schedules...', 'top.newPlan': 'New plan', 'top.profile': 'Personal settings',
         'role.welcome': 'Welcome back', 'role.intro': 'Choose your role to start creating', 'role.photographer': 'Photographer', 'role.model': 'Model', 'role.assistant': 'Assistant', 'role.logout': 'Sign out',
@@ -5375,6 +5411,7 @@ const i18n = {
         'dashboard.equipment': 'Equipment Usage'
     },
     ja: {
+        'nav.resources': '\u64ae\u5f71\u30ea\u30bd\u30fc\u30b9',
         'nav.gen': 'プラン', 'nav.reference': 'リファレンス', 'nav.calendar': '日程', 'nav.equipment': '機材', 'nav.lut': 'LUT / カラー', 'nav.settings': '設定',
         'top.workflow': '写真制作ワークフロー', 'top.language': '言語', 'top.search': '全体検索', 'top.searchPlaceholder': 'プランや日程を検索...', 'top.newPlan': '新規プラン', 'top.profile': '個人設定',
         'role.welcome': 'おかえりなさい', 'role.intro': '役割を選んで制作を始めましょう', 'role.photographer': '写真家', 'role.model': 'モデル', 'role.assistant': 'アシスタント', 'role.logout': 'ログアウト',
@@ -5390,6 +5427,7 @@ const i18n = {
         'dashboard.title': 'ダッシュボード', 'dashboard.month': '今月', 'dashboard.completion': '完了率', 'dashboard.clients': 'アクティブ顧客', 'dashboard.equipment': '機材使用率'
     },
     ko: {
+        'nav.resources': '\ucd2c\uc601 \uc790\uc6d0',
         'nav.gen': '플랜', 'nav.reference': '레퍼런스', 'nav.calendar': '일정', 'nav.equipment': '장비', 'nav.lut': 'LUT / 컬러', 'nav.settings': '설정',
         'top.workflow': '사진 제작 워크플로', 'top.language': '언어', 'top.search': '전체 검색', 'top.searchPlaceholder': '플랜과 일정 검색...', 'top.newPlan': '새 플랜', 'top.profile': '개인 설정',
         'role.welcome': '다시 오신 것을 환영합니다', 'role.intro': '역할을 선택하고 제작을 시작하세요', 'role.photographer': '사진가', 'role.model': '모델', 'role.assistant': '어시스턴트', 'role.logout': '로그아웃',
@@ -5936,9 +5974,7 @@ function showTab(tabName) {
     var tabEl = document.getElementById('tab-'+tabName);
     if (tabEl) tabEl.classList.add('active');
     // Trigger render
-    if(tabName==='eq') renderEq();
-    if(tabName==='venue') showEquipmentLutMode(window.r4EquipmentLutMode || 'equipment');
-    if(tabName==='model') renderModel();
+    if(tabName==='resources') showResourceSection(window.r4ResourceSection || 'summary');
     if(tabName==='tpl') renderTpl();
     if(tabName==='hist') renderHistFull();
     if(tabName==='backup') updateBackupStats();
@@ -5950,7 +5986,6 @@ function showTab(tabName) {
         if(getObsidianSettings().enabled && typeof searchLiveLocalAssets === 'function') searchLiveLocalAssets();
     }
     if(tabName==='settings') loadSettingsData();
-    if(tabName==='lut') showEquipmentLutMode('lut');
     if(tabName==='plans') renderPlanLibrary();
     var main = document.querySelector('.main-content');
     if (main) main.scrollTo({top:0,left:0,behavior:'auto'});
@@ -5998,49 +6033,84 @@ function startNewPlan() {
     $('f-theme')?.focus();
 }
 
-function ensureEquipmentLutModeControls() {
-    var markup = '<div class="r4-equipment-mode-bar" role="tablist" aria-label="设备与 LUT 模式">'
-        + '<button type="button" role="tab" data-r4-equipment-mode="equipment" onclick="showEquipmentLutMode(\'equipment\')"><i data-lucide="camera"></i><span>设备</span></button>'
-        + '<button type="button" role="tab" data-r4-equipment-mode="lut" onclick="showEquipmentLutMode(\'lut\')"><i data-lucide="palette"></i><span>LUT</span></button>'
-        + '<button type="button" role="tab" data-r4-equipment-mode="preview" onclick="showEquipmentLutMode(\'preview\')"><i data-lucide="columns-3"></i><span>仿色预览</span></button>'
-        + '</div>';
-    ['tab-venue', 'tab-lut'].forEach(function(id) {
-        var tab = document.getElementById(id);
-        if (!tab || tab.querySelector('.r4-equipment-mode-bar')) return;
-        tab.insertAdjacentHTML('afterbegin', markup);
-    });
-    document.getElementById('tab-venue')?.classList.add('r4-equipment-only');
-    window.PhotoAtelierR4IconSystem?.refreshIcons(document);
+function ensureResourceSecondaryNav() {
+    var tab = document.getElementById('tab-resources');
+    if (!tab || tab.querySelector('.r4-resource-secondary-nav')) return;
+    // Secondary nav is already authored in markup; this hook allows future dynamic injection.
+    window.PhotoAtelierR4IconSystem?.refreshIcons(tab);
 }
 
-function showEquipmentLutMode(mode) {
-    mode = ['equipment', 'lut', 'preview'].includes(mode) ? mode : 'equipment';
-    window.r4EquipmentLutMode = mode;
-    ensureEquipmentLutModeControls();
-    document.querySelectorAll('.tab-cnt').forEach(function(x){x.classList.remove('active');});
-    document.querySelectorAll('.nav-item').forEach(function(x){x.classList.remove('active');x.removeAttribute('aria-current');});
-    var nav = document.querySelector('.nav-item[data-tab="venue"]');
-    if (nav) { nav.classList.add('active'); nav.setAttribute('aria-current', 'page'); }
-    var target = document.getElementById(mode === 'equipment' ? 'tab-venue' : 'tab-lut');
-    if (target) target.classList.add('active');
-    if (mode === 'equipment') {
-        showResourceTab('eq');
-        renderEq();
-    } else if (typeof renderLutWorkspace === 'function') {
-        renderLutWorkspace();
-        if (mode === 'preview') {
-            requestAnimationFrame(function(){
-                document.querySelector('#tab-lut .workflow-lut-canvases')?.scrollIntoView({block:'start',behavior:'smooth'});
-            });
-        }
-    }
-    document.querySelectorAll('[data-r4-equipment-mode]').forEach(function(button) {
-        var active = button.dataset.r4EquipmentMode === mode;
-        button.classList.toggle('is-active', active);
+function showResourceSection(section) {
+    section = ['summary', 'venue', 'talent', 'equipment', 'lut'].includes(section) ? section : 'summary';
+    window.r4ResourceSection = section;
+    ensureResourceSecondaryNav();
+    document.querySelectorAll('#tab-resources .resource-content').forEach(function(el) {
+        el.classList.toggle('active', el.dataset.r4ResourceSection === section);
+    });
+    document.querySelectorAll('.r4-resource-nav-item').forEach(function(button) {
+        var active = button.dataset.r4ResourceSection === section;
+        button.classList.toggle('active', active);
         button.setAttribute('aria-selected', String(active));
     });
+    var openWorkspaceSection = function() {
+        if (window.PhotoAtelierResourceWorkspace?.showSection) {
+            window.PhotoAtelierResourceWorkspace.showSection(section);
+            return true;
+        }
+        return false;
+    };
+    if (!openWorkspaceSection()) {
+        import('../src/legacy-resource-workspace.js')
+            .then(openWorkspaceSection)
+            .catch(function(error) {
+                document.documentElement.dataset.resourceWorkspaceError = error?.message || String(error);
+                console.warn('[PhotoAtelier resources] Resource workspace unavailable.', error);
+                if (section === 'venue') renderVenue();
+                if (section === 'talent') renderModel();
+                if (section === 'equipment') renderEq();
+                if (section === 'lut' && typeof renderLutWorkspace === 'function') renderLutWorkspace();
+            });
+    }
 }
 
+function openResourceWorkspace(options) {
+    options = options || {};
+    var section = ['summary', 'venue', 'talent', 'equipment', 'lut'].includes(options.section) ? options.section : 'summary';
+    window.r4ResourceWorkspaceContext = {
+        section: section,
+        mode: options.mode === 'select' ? 'select' : 'browse',
+        projectId: options.projectId || null,
+        planId: options.planId || (typeof window.currentPlanId !== 'undefined' ? window.currentPlanId : null),
+        returnTo: options.returnTo || 'resource-summary',
+        returnLabel: options.returnLabel || '返回',
+        onSelect: typeof options.onSelect === 'function' ? options.onSelect : null
+    };
+    showTab('resources');
+    showResourceSection(section);
+    var returnBar = document.getElementById('r4ResourceReturnBar');
+    var returnLabel = document.getElementById('r4ResourceReturnLabel');
+    if (returnBar) returnBar.style.display = window.r4ResourceWorkspaceContext.mode === 'select' ? 'flex' : 'none';
+    if (returnLabel) returnLabel.textContent = window.r4ResourceWorkspaceContext.returnLabel;
+}
+
+function closeResourceWorkspace() {
+    var ctx = window.r4ResourceWorkspaceContext || {};
+    var returnTo = ctx.returnTo || 'resource-summary';
+    var returnMap = {
+        'brief': 'gen',
+        'plan-detail': 'plans',
+        'resource-summary': 'resources'
+    };
+    var targetTab = returnMap[returnTo] || returnTo;
+    window.r4ResourceWorkspaceContext = null;
+    var returnBar = document.getElementById('r4ResourceReturnBar');
+    if (returnBar) returnBar.style.display = 'none';
+    if (targetTab === 'resources') {
+        showResourceSection('summary');
+    } else {
+        showTab(targetTab);
+    }
+}
 // 资源库内部Tab切换
 function showResourceTab(resourceType) {
     document.querySelectorAll('.resource-tab').forEach(function(x){x.classList.remove('active');});
@@ -6638,28 +6708,11 @@ function ensureStarterBriefOptions() {
 }
 
 function addSampleData() {
-    const eq = sg(SK.EQ)||[];
-    const v = sg(SK.V)||[];
-    const m = sg(SK.M)||[];
-    let added = {eq:0, v:0, m:0};
-    sampleEq.forEach(s => { if(!eq.some(e=>e.n===s.n)) { eq.push({...s,id:Date.now().toString()+Math.random(),at:new Date().toISOString()}); added.eq++; } });
-    sampleVenues.forEach(s => { if(!v.some(x=>x.name===s.name)) { v.push({...s,id:Date.now().toString()+Math.random(),at:new Date().toISOString()}); added.v++; } });
-    if(added.eq>0||added.v>0||added.m>0) {
-        // 批量写入 localStorage，减少存储操作次数
-        var data = { eq: eq, venues: v, models: m };
-        ss(SK.EQ, data.eq);
-        ss(SK.V, data.venues);
-        ss(SK.M, data.models);
-        renderEq(); renderVenue(); renderModel();
-        toast(`已添加 ${added.eq} 件设备、${added.v} 个场地、${added.m} 位模特`,'ok');
-    }
+    toast('示例资源已由 V5 迁移器统一管理，请在拍摄资源中新增真实资源。','er');
 }
 
 function addSampleEq() {
-    const list = sg(SK.EQ)||[];
-    let count = 0;
-    sampleEq.forEach(s => { if(!list.some(e=>e.n===s.n)) { list.push({...s,id:Date.now().toString()+Math.random(),at:new Date().toISOString()}); count++; } });
-    ss(SK.EQ,list); renderEq(); toast(`已添加 ${count} 件示例设备`,'ok');
+    toast('请在拍摄资源的设备库中登记设备。','er');
 }
 
 // ===== Equipment =====
@@ -6681,20 +6734,17 @@ function renderEq() {
         const items=byCat[k]; if(!items.length) return;
         const cat=CATS[k];
         html+=`<div class="eq-cat" data-aos="fade-up" data-aos-delay="${delay}"><div class="eq-cat-hdr"><span class="eq-cat-icon">${cat.ic}</span><span class="eq-cat-name">${cat.n}</span><span class="eq-cat-n">${items.length} 件</span></div>`;
-        html+=items.map((e,i)=>{const image=/^(?:https?:\/\/|assets\/)/i.test(e.imageUrl||'')?e.imageUrl:'assets/demo/equipment-kit.jpg';return `<div class="eq-item eq-item--visual" data-aos="fade-right" data-aos-delay="${delay+i*50}"><img class="eq-item-image" src="${escHtml(image)}" alt="${escHtml(e.n)}"><span class="eq-item-name">${escHtml(e.n)}</span>${e.note?`<span class="eq-item-note">${escHtml(e.note)}</span>`:''}<div class="eq-item-actions"><button class="btn-i2" onclick="delEq('${e.id}')" title="删除">✕</button></div></div>`;}).join('');
+        html+=items.map((e,i)=>{const image=/^(?:https?:\/\/|assets\/)/i.test(e.imageUrl||'')?e.imageUrl:'';return `<div class="eq-item eq-item--visual" data-aos="fade-right" data-aos-delay="${delay+i*50}">${image?`<img class="eq-item-image" src="${escHtml(image)}" alt="${escHtml(e.n)}">`:'<span class="eq-item-image eq-item-image--empty" aria-hidden="true">CAM</span>'}<span class="eq-item-name">${escHtml(e.n)}</span>${e.note?`<span class="eq-item-note">${escHtml(e.note)}</span>`:''}<div class="eq-item-actions"><button class="btn-i2" onclick="delEq('${e.id}')" title="删除">✕</button></div></div>`;}).join('');
         html+='</div>';
         delay += 100;
     });
     $('eq-list').innerHTML=html||'<div class="eq-empty">' + (searchTerm ? '未找到匹配的设备' : '设备库为空，添加你的第一件设备') + '</div>';
     if(typeof AOS !== 'undefined') AOS.refresh();
 }
-function delEq(id){ let l=sg(SK.EQ)||[]; l=l.filter(e=>e.id!==id); ss(SK.EQ,l); renderEq(); toast('已删除'); }
+function delEq(){ toast('全局资源删除未开放；可在资源详情中移出当前方案。','er'); }
 $('eqForm').addEventListener('submit',e=>{
     e.preventDefault();
-    const n=$('eq-name').value.trim(),c=$('eq-cat').value,note=$('eq-note').value.trim(),imageUrl=$('eq-image').value.trim();
-    if(!n){toast('请输入设备名称','er');return;}
-    const list=sg(SK.EQ)||[]; list.push({id:Date.now().toString(),n,c,note,imageUrl,at:new Date().toISOString()}); ss(SK.EQ,list);
-    $('eq-name').value=''; $('eq-note').value=''; $('eq-image').value=''; renderEq(); toast('设备已添加','ok');
+    openResourceWorkspace({section:'equipment',mode:'manage'});
 });
 
 // ===== Venue =====
@@ -6719,15 +6769,11 @@ function renderVenue() {
         </div>`).join('');
     if(typeof AOS !== 'undefined') AOS.refresh();
 }
-function delVenue(id){ let l=sg(SK.V)||[]; l=l.filter(v=>v.id!==id); ss(SK.V,l); renderVenue(); toast('已删除'); }
+function delVenue(){ toast('全局资源删除未开放；可在资源详情中移出当前方案。','er'); }
 function useVenue(id){ const v=(sg(SK.V)||[]).find(x=>x.id===id); if(v){ $('f-scene').value=$('f-scene').value?$('f-scene').value+', '+v.name:v.name; updatePlanReadiness(); toast('已引用到场景'); } }
 $('venueForm').addEventListener('submit',e=>{
     e.preventDefault();
-    const v={id:Date.now().toString(),name:$('v-name').value.trim(),addr:$('v-addr').value.trim(),styles:$('v-styles').value.trim(),contact:$('v-contact').value.trim(),note:$('v-note').value.trim()};
-    if(!v.name){toast('请输入场地名称','er');return;}
-    const list=sg(SK.V)||[]; list.push(v); ss(SK.V,list);
-    ['v-name','v-addr','v-styles','v-contact','v-note'].forEach(k=>$(k).value='');
-    renderVenue(); toast('场地已添加','ok');
+    openResourceWorkspace({section:'venue',mode:'manage'});
 });
 
 // ===== Model =====
@@ -6746,16 +6792,11 @@ function renderModel() {
             <div class="model-actions"><button class="btn btn-s btn-sm" onclick="useModel('${m.id}')">引用到方案</button></div>
         </div>`).join('');
 }
-function delModel(id){ let l=sg(SK.M)||[]; l=l.filter(m=>m.id!==id); ss(SK.M,l); renderModel(); toast('已删除'); }
+function delModel(){ toast('全局资源删除未开放；可在资源详情中移出当前方案。','er'); }
 function useModel(id){ const m=(sg(SK.M)||[]).find(x=>x.id===id); if(m){ const subject=m.isPreset&&m.note?m.note:m.name; $('f-model').value=$('f-model').value?$('f-model').value+', '+subject:subject; updatePlanReadiness(); toast('已引用到方案'); } }
 if($('modelForm')) $('modelForm').addEventListener('submit',e=>{
     e.preventDefault();
-    const m={id:Date.now().toString(),name:$('m-name').value.trim(),styles:$('m-styles').value.trim(),contact:$('m-contact').value.trim(),avail:$('m-avail').value,auth:$('m-auth').value,note:$('m-note').value.trim()};
-    if(!m.name){toast('请输入模特名称','er');return;}
-    const list=sg(SK.M)||[]; list.push(m); ss(SK.M,list);
-    ['m-name','m-styles','m-contact','m-note'].forEach(k=>$(k).value='');
-    $('m-avail').value='available'; $('m-auth').value='pending';
-    renderModel(); toast('模特已添加','ok');
+    openResourceWorkspace({section:'talent',mode:'manage'});
 });
 
 // ===== Templates =====
@@ -6877,6 +6918,10 @@ function genFromTpl(id) {
 }
 // ===== 一键导入功能 =====
 function refreshImportSelects() {
+    if (window.PhotoAtelierResourceWorkspace?.syncBriefSelectors) {
+        window.PhotoAtelierResourceWorkspace.syncBriefSelectors();
+        return;
+    }
     // 刷新模特选择器
     const modelSelect = $('importModelSelect');
     if (modelSelect) {
@@ -6901,6 +6946,10 @@ function refreshImportSelects() {
 }
 
 function importFromModel() {
+    if (window.PhotoAtelierResourceWorkspace?.importBriefResource) {
+        window.PhotoAtelierResourceWorkspace.importBriefResource('talent');
+        return;
+    }
     const select = $('importModelSelect');
     const id = select.value;
     if (!id) { toast('请先选择模特', 'er'); return; }
@@ -6922,6 +6971,10 @@ function importFromModel() {
 }
 
 function importFromVenue() {
+    if (window.PhotoAtelierResourceWorkspace?.importBriefResource) {
+        window.PhotoAtelierResourceWorkspace.importBriefResource('venue');
+        return;
+    }
     const select = $('importVenueSelect');
     const id = select.value;
     if (!id) { toast('请先选择场地', 'er'); return; }
@@ -14145,6 +14198,7 @@ async function searchObsidianRest(query, settings, limit) {
     const url = `${settings.baseUrl.replace(/\/$/, '')}/search/simple/?query=${encodeURIComponent(query)}&contextLength=90`;
     const resp = await fetch(url, {
         method: 'POST',
+        signal: typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? AbortSignal.timeout(4500) : undefined,
         headers: {
             ...getObsidianAuthHeaders()
         }
@@ -14160,7 +14214,10 @@ async function searchObsidianProxy(query, settings, limit) {
     if (!settings.helperBaseUrl) throw new Error('未设置本地文件代理地址');
     const helper = settings.helperBaseUrl.replace(/\/$/, '');
     const url = `${helper}/v1/search?query=${encodeURIComponent(query)}&libraryFolder=${encodeURIComponent(settings.libraryFolder || DEFAULT_OBSIDIAN_SETTINGS.libraryFolder)}&type=all&limit=${encodeURIComponent(limit || 5)}`;
-    const resp = await fetch(url, { cache: 'no-store' });
+    const resp = await fetch(url, {
+        cache: 'no-store',
+        signal: typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? AbortSignal.timeout(4500) : undefined
+    });
     if (!resp.ok) {
         const text = await resp.text();
         throw new Error(`本地文件代理检索失败 (${resp.status}) ${text.slice(0, 120)}`);
@@ -14902,6 +14959,7 @@ window.addEventListener('online', function() { toast('网络已恢复', 'ok'); }
       import('../src/legacy-v3-planning-flow.js').catch(error => { console.warn('[PhotoAtelier V5] Optional V3 planning bridge unavailable.', error); return null; }),
       import('../src/legacy-commercial-tools.js').catch(error => { console.warn('[PhotoAtelier V5] Optional commercial tools unavailable.', error); return null; }),
       import('../src/r4-workspace-integration.js').catch(error => { console.warn('[PhotoAtelier R4] Mobile field integration unavailable.', error); return null; }),
+      import('../src/legacy-resource-workspace.js').catch(error => { console.warn('[PhotoAtelier V5] Optional resource workspace unavailable.', error); return null; }),
     ]))
     .catch(error => {
       document.documentElement.dataset.v5Engine = 'error';
