@@ -17,7 +17,7 @@ async function inspectLanding(page, label, route = '', expectedLanguage = 'zh-CN
   await page.locator('.hero').waitFor({ state: 'visible' });
   if (verifyProductImage) {
     await page.waitForFunction(() => {
-      const image = document.querySelector('.product-visual img');
+      const image = document.querySelector('.hero-image');
       return image?.complete && image.naturalWidth > 0;
     });
   }
@@ -27,7 +27,7 @@ async function inspectLanding(page, label, route = '', expectedLanguage = 'zh-CN
     language: document.documentElement.lang,
     width: document.documentElement.clientWidth,
     scrollWidth: document.documentElement.scrollWidth,
-    cta: document.querySelector('[data-track="open_public_beta"]')?.getAttribute('href'),
+    cta: document.querySelector('[data-track="landing_cta_open_workspace"]')?.getAttribute('href'),
     feedbackForm: Boolean(document.querySelector('[data-feedback-form]')),
     visibleNav: [...document.querySelectorAll('.site-header nav a')]
       .filter(item => getComputedStyle(item).display !== 'none').map(item => item.textContent.trim()),
@@ -67,7 +67,7 @@ async function inspectLanding(page, label, route = '', expectedLanguage = 'zh-CN
 
     const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1 });
     const mobileMetrics = await inspectLanding(mobile, 'mobile');
-    assert(mobileMetrics.visibleNav.length === 1 && mobileMetrics.visibleNav[0] === '反馈', 'mobile: compact navigation not applied');
+    const mobileVisibleLabels = mobileMetrics.visibleNav.map(s => s.trim()); assert(mobileVisibleLabels.includes('免费开始'), 'mobile: primary CTA not retained in compact nav'); assert(!mobileVisibleLabels.includes('体验') && !mobileVisibleLabels.includes('工作方式') && !mobileVisibleLabels.includes('隐私'), 'mobile: non-CTA links not hidden in compact nav');
     await mobile.screenshot({ path: path.join(reportDir, 'landing-mobile.png'), fullPage: false, animations: 'disabled' });
 
     const app = await browser.newPage({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });

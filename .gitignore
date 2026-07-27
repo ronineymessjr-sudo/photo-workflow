@@ -24,4 +24,11 @@ src/_build-*.ps1
 src/_patch-*.js
 src/test-quote.js
 src/test.txt
-*.js-bak
+# R5 landing work: throwaway probe/patch scripts (not product source, not QA evidence)
+check-landing.cjs
+patch-e2e-mobile.cjs
+patch-e2e.ps1
+.runlogs/
+artifacts/landing-current-2026-07-27.png
+artifacts/resource-ux-audit/
+

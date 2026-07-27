@@ -1,6 +1,6 @@
 {
   "desktop": {
-    "title": "PhotoAtelier | 摄影方案、参考图库与拍摄执行工作台",
+    "title": "PhotoAtelier | 把参考图变成能直接开拍的方案",
     "h1": "PhotoAtelier",
     "language": "zh-CN",
     "width": 1440,
@@ -8,14 +8,14 @@
     "cta": "/legacy/?mode=public-beta",
     "feedbackForm": true,
     "visibleNav": [
-      "工作流",
-      "开放素材",
+      "体验",
+      "工作方式",
       "隐私",
-      "反馈"
+      "免费开始"
     ]
   },
   "mobile": {
-    "title": "PhotoAtelier | 摄影方案、参考图库与拍摄执行工作台",
+    "title": "PhotoAtelier | 把参考图变成能直接开拍的方案",
     "h1": "PhotoAtelier",
     "language": "zh-CN",
     "width": 390,
@@ -23,7 +23,7 @@
     "cta": "/legacy/?mode=public-beta",
     "feedbackForm": true,
     "visibleNav": [
-      "反馈"
+      "免费开始"
     ]
   }
 }

@@ -1,0 +1,53 @@
+{
+  "packageName": "PhotoAtelier Landing R5 Agent Handoff",
+  "version": "R5",
+  "date": "2026-07-27",
+  "status": "planning-only",
+  "objective": "Implement the approved public landing page direction with a central vertical timeline, alternating left-right content stages, progressive reveal motion, and GPT Image generated photography.",
+  "readOrder": [
+    "00-START-HERE.md",
+    "01-LAYOUT-CONTENT-SPEC.md",
+    "02-MOTION-TECHNICAL-SPEC.md",
+    "03-GPT-IMAGE-ASSET-MANIFEST.md",
+    "04-AGENT-WORK-ORDER.md",
+    "05-ACCEPTANCE-CHECKLIST.md"
+  ],
+  "selectedDirection": {
+    "file": "assets/photoatelier-landing-r5-selected-direction.png",
+    "sha256": "34B3699E1A4D858F0E4A2E89C1A5A4090AEA70E4D9CD0D64EA73E8B3F75BB098"
+  },
+  "implementationRules": {
+    "centralTimeline": true,
+    "alternatingDesktopStages": true,
+    "progressiveReveal": true,
+    "generatedPhotographyOnly": true,
+    "generatedAssetFlag": "synthetic=true",
+    "stockPhotographyAllowed": false,
+    "commercialThirdPartyPhotographyAllowed": false,
+    "remotionAllowed": false,
+    "hyperframeAllowed": false,
+    "productCodeChangedByThisPackage": false,
+    "deploymentPerformedByThisPackage": false
+  },
+  "forbiddenAreas": [
+    "Schema v5",
+    "V5 domain entities and contracts",
+    "legacy application workflows",
+    "local storage migration logic",
+    "Agent planning state machine",
+    "production deployment configuration"
+  ],
+  "requiredVerification": [
+    "Desktop screenshot at 1440x900",
+    "Tablet screenshot at 834x1112",
+    "Mobile screenshot at 390x844",
+    "No horizontal overflow",
+    "Keyboard navigation works",
+    "Reduced-motion mode works",
+    "All image assets are local GPT Image generated files",
+    "All generated image records are marked synthetic=true",
+    "No runtime errors or missing assets"
+  ],
+  "handoffOwner": "Implementation Agent",
+  "acceptanceOwner": "Codex"
+}
