@@ -108,7 +108,7 @@ function onRequestOptions2() {
 }
 __name(onRequestOptions2, "onRequestOptions");
 
-// ../.wrangler/tmp/pages-XMdvgw/functionsRoutes-0.32300524688286825.mjs
+// ../.wrangler/tmp/pages-9VECRr/functionsRoutes-0.001966786134591114.mjs
 var routes = [
   {
     routePath: "/api/public/events",
