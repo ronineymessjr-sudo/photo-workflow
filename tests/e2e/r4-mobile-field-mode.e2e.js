@@ -221,12 +221,18 @@ async function runChecks(page) {
   // === Mobile schedule ===
   await openSchedule(page, { ...mockState, activeTab: 'schedule' });
 
-  // Default selected date is today; navigate to August and select a different date that has a plan.
+  // Default selected date is today; navigate to the target plan date's month.
   const today = new Date().toISOString().slice(0, 10);
   const targetDate = '2026-08-15';
-  await page.click('[data-action="next-month"]');
-  await page.waitForTimeout(200);
-  await page.click(`[data-date="${targetDate}"]`);
+  const todayParts = today.split('-').map(Number);
+  const targetParts = targetDate.split('-').map(Number);
+  const monthDiff = (targetParts[0] - todayParts[0]) * 12 + (targetParts[1] - todayParts[1]);
+  const navAction = monthDiff >= 0 ? 'next-month' : 'prev-month';
+  for (let i = 0; i < Math.abs(monthDiff); i++) {
+    await page.click(`#r4-mobile-schedule [data-action="${navAction}"]`);
+    await page.waitForTimeout(120);
+  }
+  await page.click(`#r4-mobile-schedule [data-date="${targetDate}"]`);
   await page.waitForTimeout(200);
   const selectedDate = await page.evaluate(() => window.__r4LastDate);
   if (selectedDate !== targetDate) throw new Error(`expected selected date ${targetDate}, got ${selectedDate}`);

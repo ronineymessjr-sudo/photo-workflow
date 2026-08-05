@@ -86,8 +86,38 @@
       }
     }
 
+    function openCustomShotDialog(planId) {
+      let dialog = doc.getElementById('photoatelier-custom-shot-dialog');
+      if (!dialog) {
+        dialog = doc.createElement('dialog');
+        dialog.id = 'photoatelier-custom-shot-dialog';
+        dialog.className = 'workflow-dialog';
+        dialog.innerHTML = `<form method="dialog" class="workflow-dialog__form"><div class="workflow-dialog__head"><div><span class="workflow-dialog__eyebrow">CUSTOM SHOT</span><h3>添加自定义镜头</h3><p>补充一条可直接进入分镜、日程和执行稿的镜头。</p></div><button class="btn btn-s btn-sm" type="button" data-dialog-close>关闭</button></div><div class="workflow-dialog__grid"><label>场景 / 位置<input name="scene" required placeholder="如：窗边、街口、吧台"></label><label>焦段<input name="focalLength" value="50mm f/1.4" placeholder="如：35mm f/1.4"></label><label class="wide">画面与动作<input name="description" required placeholder="如：人物缓慢走向窗边，停留两秒回头"></label><label>景别<select name="shotSize"><option>中景</option><option>近景</option><option>全景</option><option>特写</option></select></label><label>情绪<input name="mood" value="自然" placeholder="如：克制、松弛、期待"></label><label>构图<input name="composition" value="三分法"></label><label>光线<input name="lighting" value="自然光"></label><label>预计分钟<input name="duration" type="number" min="1" max="60" value="5"></label><label>道具（可选）<input name="props" placeholder="如：花束、椅子"></label></div><div class="workflow-dialog__actions"><button class="btn btn-s" type="button" data-dialog-close>取消</button><button class="btn btn-p" value="save">加入分镜</button></div></form>`;
+        doc.body.appendChild(dialog);
+        dialog.querySelectorAll('[data-dialog-close]').forEach(button => button.addEventListener('click', function () { dialog.close(); }));
+        dialog.addEventListener('close', function () {
+          if (dialog.returnValue !== 'save' || !dialog.dataset.planId) return;
+          const form = dialog.querySelector('form');
+          const values = Object.fromEntries(new FormData(form).entries());
+          if (!values.scene || !values.description) return;
+          const shots = getCurrentShots(dialog.dataset.planId);
+          shots.push({ scene: values.scene, description: values.description, shotSize: values.shotSize || '中景', method: '定点拍摄', focalLength: values.focalLength || '50mm f/1.4', composition: values.composition || '三分法', lighting: values.lighting || '自然光', props: values.props || '无', angle: '平视', mood: values.mood || '自然', duration: Number(values.duration) || 5, notes: '自定义镜头 - ' + values.description, priority: 'recommended', knowledgeSourceIds: [], references: [] });
+          saveShots(dialog.dataset.planId, shots);
+          notify('镜头已添加', 'ok');
+          refreshPlanView(dialog.dataset.planId);
+          form.reset();
+        });
+      }
+      dialog.dataset.planId = planId;
+      dialog.showModal();
+    }
+
     function addCustomShot(planId) {
       const pid = planId || getCurrentPlanId();
+      if (pid && doc && doc.body && typeof doc.createElement === 'function') {
+        openCustomShotDialog(pid);
+        return;
+      }
       if (!pid) { notify('没有当前方案，请先生成或打开方案', 'er'); return; }
 
       const scene = typeof prompt === 'function' ? prompt('场景名称（如：窗边、沙发区）:') : null;

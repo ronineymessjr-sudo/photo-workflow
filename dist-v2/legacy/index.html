@@ -6,18 +6,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PhotoAtelier - 摄影方案智能工作流 / Photography Planning Workflow</title>
     <meta name="description" content="PhotoAtelier 是面向摄影师的方案创建与参考检索工作流，支持拍摄方案、分镜脚本、本地图库、LUT、日程、历史、海外素材平台与 SEO 发布策略。Photography planning, shot lists, local reference search, LUT workflow and global publishing keywords.">
+    <meta name="robots" content="noindex,follow">
     <meta name="keywords" content="摄影方案生成,拍摄策划工具,摄影工作流,分镜脚本,摄影日程管理,参考图库,LUT,海外素材,SEO发布,photography workflow,photo planning,portrait shot list,moodboard,LUT workflow,photographer CRM">
     <meta property="og:title" content="PhotoAtelier - 摄影方案与海外参考工作流">
     <meta property="og:description" content="生成拍摄方案、关联本地 Obsidian 图库、LUT、镜头检索、海外素材平台和 SEO 发布策略。">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://ronineymessjr-sudo.github.io/photo-workflow/">
-    <meta property="og:image" content="https://ronineymessjr-sudo.github.io/photo-workflow/og-image.png">
+    <meta property="og:url" content="https://photoatelier.pages.dev/legacy/">
+    <meta property="og:image" content="https://photoatelier.pages.dev/assets/landing-ai/hero-urban-dawn.webp">
     <meta name="twitter:card" content="summary_large_image">
     <meta property="og:locale" content="zh_CN">
     <meta property="og:locale:alternate" content="en_US">
     <meta name="twitter:title" content="PhotoAtelier - Photography Planning Workflow">
     <meta name="twitter:description" content="Shot lists, references, LUTs, schedules and global publishing keywords for photographers.">
-    <link rel="canonical" href="https://ronineymessjr-sudo.github.io/photo-workflow/">
+    <link rel="canonical" href="https://photoatelier.pages.dev/legacy/">
     <!-- JSON-LD Schema -->
     <script type="application/ld+json">
     {
@@ -26,8 +27,8 @@
         "name": "PhotoAtelier - Photography Planning Workflow",
         "alternateName": "PhotoAtelier 摄影方案智能工作流",
         "description": "A photography planning workflow for shot lists, local reference search, LUT recommendations, schedules, history, overseas stock references and SEO publishing keywords.",
-        "url": "https://ronineymessjr-sudo.github.io/photo-workflow/",
-        "applicationCategory": "PhotographyApplication",
+        "url": "https://photoatelier.pages.dev/legacy/",
+        "applicationCategory": "DesignApplication",
         "operatingSystem": "Any",
         "inLanguage": ["zh-CN", "en-US"],
         "offers": {
@@ -51,41 +52,9 @@
         ]
     }
     </script>
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "FAQPage",
-        "mainEntity": [
-            {
-                "@type": "Question",
-                "name": "PhotoAtelier 是什么？",
-                "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "PhotoAtelier 是一款专业的摄影工作流管理工具，帮助摄影师智能生成拍摄方案、管理日程、场地和模特资源，提升拍摄效率。"
-                }
-            },
-            {
-                "@type": "Question",
-                "name": "PhotoAtelier 支持哪些摄影风格？",
-                "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "支持时尚、人像、婚纱、商业、纪实、风景、建筑、美食、产品、街头、艺术等11种摄影风格，每种风格包含专业的镜头模板和拍摄建议。"
-                }
-            },
-            {
-                "@type": "Question",
-                "name": "PhotoAtelier 是免费的吗？",
-                "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "是的，PhotoAtelier 基础功能完全免费，注册后即可使用全部功能。"
-                }
-            }
-        ]
-    }
-    </script>
     <!-- Favicon -->
-    <link rel="icon" type="image/jpeg" href="favicon.jpg">
-    <link rel="apple-touch-icon" href="favicon.jpg">
+    <link rel="icon" type="image/png" href="favicon-64.png">
+    <link rel="apple-touch-icon" href="favicon-64.png">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAOnx5S09ydFYWWNSfcEqDTTHgtNA==" crossorigin="anonymous" referrerpolicy="no-referrer" async></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@0.344.0/dist/umd/lucide.min.js" async onload="window.lucide&&window.lucide.createIcons()"></script>
@@ -2439,6 +2408,7 @@
             display: flex;
             align-items: center;
             gap: .5rem;
+            pointer-events: none;
         }
         .toast.show {
             transform: translateY(0);
@@ -4107,41 +4077,46 @@
 
 <!-- Login Overlay -->
 <div id="loginOverlay" style="position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;background:var(--bg);">
-    <!-- Particle Background -->
-    <div class="particles-container" id="particlesContainer"></div>
-    <div class="login-container" style="position:relative;z-index:1;text-align:center;max-width:380px;padding:2rem;width:100%;">
-        <!-- Google 风格 Logo -->
-        <div style="margin-bottom:2.5rem;">
-            <svg width="48" height="48" viewBox="0 0 48 48" style="margin:0 auto 1rem;display:block;">
-                <circle cx="24" cy="24" r="22" fill="none" stroke="var(--ac)" stroke-width="2"/>
-                <circle cx="24" cy="24" r="8" fill="var(--ac)" opacity="0.3"/>
-                <circle cx="24" cy="24" r="3" fill="var(--ac)"/>
-                <line x1="24" y1="2" x2="24" y2="16" stroke="var(--ac)" stroke-width="1.5"/>
-                <line x1="24" y1="32" x2="24" y2="46" stroke="var(--ac)" stroke-width="1.5"/>
-                <line x1="2" y1="24" x2="16" y2="24" stroke="var(--ac)" stroke-width="1.5"/>
-                <line x1="32" y1="24" x2="46" y2="24" stroke="var(--ac)" stroke-width="1.5"/>
-            </svg>
-            <h1 style="font-family:var(--font-serif);font-size:1.8rem;font-weight:400;letter-spacing:-0.02em;margin-bottom:.3rem;color:var(--t1);" data-i18n="login.title">登录</h1>
-            <p style="color:var(--t3);font-size:.9rem;" data-i18n="login.subtitle">继续使用 PhotoAtelier</p>
+    <div class="login-container auth-shell">
+        <div class="auth-brand" aria-label="PhotoAtelier">
+            <span class="auth-brand__mark" aria-hidden="true"></span>
+            <span>PhotoAtelier</span>
         </div>
-        <!-- 登录卡片 -->
-        <div id="loginForm" class="login-card" style="background:var(--bg3);border:1px solid var(--bd);border-radius:16px;padding:2rem;text-align:left;">
-            <div style="margin-bottom:1.5rem;">
-                <label style="display:block;font-size:.85rem;color:var(--t2);margin-bottom:.5rem;font-weight:500;" data-i18n="login.email">邮箱地址</label>
-                <input type="email" id="loginEmail" placeholder="请输入邮箱" data-i18n-placeholder="login.email" style="width:100%;padding:12px 16px;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;color:var(--t1);font-family:inherit;font-size:.95rem;transition:all .2s;">
+        <div class="auth-heading">
+            <h1 id="authTitle">继续你的拍摄工作</h1>
+            <p id="authSubtitle">登录此设备上的 PhotoAtelier 账户。</p>
+        </div>
+        <div id="loginForm" class="login-card auth-card">
+            <div class="auth-tabs" role="tablist" aria-label="账户方式">
+                <button id="authLoginTab" class="auth-tab active" type="button" role="tab" aria-selected="true" onclick="switchAuthMode('login')">登录</button>
+                <button id="authRegisterTab" class="auth-tab" type="button" role="tab" aria-selected="false" onclick="switchAuthMode('register')">注册</button>
             </div>
-            <div style="margin-bottom:1.5rem;">
-                <label style="display:block;font-size:.85rem;color:var(--t2);margin-bottom:.5rem;font-weight:500;" data-i18n="login.password">密码</label>
-                <input type="password" id="loginPassword" placeholder="输入密码" data-i18n-placeholder="login.password" style="width:100%;padding:12px 16px;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;color:var(--t1);font-family:inherit;font-size:.95rem;transition:all .2s;">
+            <div class="auth-field" id="registerNameField" hidden>
+                <label for="registerName">显示名称</label>
+                <input type="text" id="registerName" autocomplete="name" placeholder="例如：任摄影">
             </div>
-            <button onclick="handleLogin()" class="btn btn-p" style="width:100%;padding:12px;border-radius:8px;font-size:.95rem;font-weight:500;margin-top:.5rem;" data-i18n="login.button">登录</button>
-            <p style="margin-top:1.5rem;font-size:.8rem;color:var(--t3);text-align:center;" data-i18n="login.hint">首次登录将自动创建账号</p>
+            <div class="auth-field">
+                <label for="loginEmail">邮箱地址</label>
+                <input type="email" id="loginEmail" autocomplete="email" placeholder="name@example.com">
+            </div>
+            <div class="auth-field">
+                <label for="loginPassword">密码</label>
+                <input type="password" id="loginPassword" autocomplete="current-password" placeholder="至少 8 位">
+            </div>
+            <div class="auth-field" id="registerConfirmField" hidden>
+                <label for="registerConfirmPassword">确认密码</label>
+                <input type="password" id="registerConfirmPassword" autocomplete="new-password" placeholder="再次输入密码">
+            </div>
+            <button id="authSubmitButton" type="button" onclick="handleAuthSubmit()" class="btn btn-p auth-submit">登录</button>
+            <p class="auth-hint" id="authHint">账户信息只保存在当前浏览器，不会上传密码。</p>
+            <div class="auth-divider"><span>或</span></div>
+            <button type="button" class="auth-guest" onclick="continueAsGuest()">先以体验模式进入</button>
+            <p class="auth-guest-note">不创建账户，也能先生成并保存拍摄方案。</p>
         </div>
         <div id="loginLoading" style="display:none;margin-top:1.5rem;">
             <div style="width:24px;height:24px;border:2px solid var(--bd);border-top-color:var(--ac);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto;"></div>
-            <p style="font-size:.85rem;color:var(--t3);margin-top:.75rem;">正在登录...</p>
+            <p id="authLoadingText" style="font-size:.85rem;color:var(--t3);margin-top:.75rem;">正在验证...</p>
         </div>
-        <!-- spin 已在主 CSS 中定义 -->
     </div>
 </div>
 
@@ -5221,113 +5196,125 @@
         <!-- ============ 设置 ============ -->
         <div class="tab-cnt" id="tab-settings">
             <div class="settings-shell">
-                <section>
-                    <div class="panel">
-                        <div class="p-head"><h2 data-i18n="settings.title">设置</h2></div>
-                        <div class="p-body settings-grid">
-                            <div class="fg">
-                                <label>本地测试状态</label>
-                                <div style="padding:.75rem;background:var(--bg-subtle);border-radius:var(--radius);font-size:.8rem;color:var(--t2);line-height:1.6;">
-                                    当前本地访问会自动进入测试账号，不需要登录。需要测试登录页时，在浏览器控制台设置 <span style="color:var(--ac);">pa_require_login=true</span>。
+                <header class="settings-header">
+                    <p class="settings-kicker">PREFERENCES</p>
+                    <h2 data-i18n="settings.title">设置</h2>
+                    <p>账户、外观、图库和数据都在这里管理。常用选项在前，高级连接默认收起。</p>
+                </header>
+
+                <div class="settings-layout">
+                    <nav class="settings-nav" aria-label="设置分类" role="tablist">
+                        <button class="active" type="button" role="tab" aria-selected="true" aria-controls="settings-account" data-settings-section="account"><i data-lucide="user-round" aria-hidden="true"></i><span>账户</span></button>
+                        <button type="button" role="tab" aria-selected="false" aria-controls="settings-appearance" data-settings-section="appearance"><i data-lucide="sun-moon" aria-hidden="true"></i><span>外观</span></button>
+                        <button type="button" role="tab" aria-selected="false" aria-controls="settings-library" data-settings-section="library"><i data-lucide="images" aria-hidden="true"></i><span>图库连接</span></button>
+                        <button type="button" role="tab" aria-selected="false" aria-controls="settings-data" data-settings-section="data"><i data-lucide="database" aria-hidden="true"></i><span>数据</span></button>
+                        <button type="button" role="tab" aria-selected="false" aria-controls="settings-about" data-settings-section="about"><i data-lucide="info" aria-hidden="true"></i><span>关于</span></button>
+                    </nav>
+
+                    <div class="settings-content">
+                        <section class="settings-section active" id="settings-account" role="tabpanel">
+                            <h3>账户</h3>
+                            <div class="settings-group">
+                                <div class="settings-profile-row" id="settingsUserInfo">
+                                    <div class="settings-avatar"><span id="settingsUserAvatar">P</span></div>
+                                    <div class="settings-profile-copy">
+                                        <strong id="settingsUserName">体验用户</strong>
+                                        <span id="settingsUserEmail">数据仅保存在当前浏览器</span>
+                                        <small id="settingsUserRole">摄影师</small>
+                                    </div>
+                                    <button class="settings-link-button" type="button" onclick="logout()">切换账户</button>
+                                </div>
+                                <div class="settings-row">
+                                    <div><strong>使用方式</strong><span>体验模式无需注册；登录本机账户可区分个人资料。</span></div>
+                                    <span class="settings-status">本地优先</span>
                                 </div>
                             </div>
-                            <!-- 用户信息 -->
-                            <div class="fg" id="settingsUserInfo">
-                                <label><i data-lucide="user-round" aria-hidden="true"></i>账户信息</label>
-                                <div style="display:flex;align-items:center;gap:1rem;padding:.75rem;background:var(--bg-subtle);border-radius:var(--radius);margin-top:.25rem;">
-                                    <div style="width:48px;height:48px;background:var(--ac-gradient);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:#fff;font-weight:600;">
-                                        <span id="settingsUserAvatar">P</span>
+                        </section>
+
+                        <section class="settings-section" id="settings-appearance" role="tabpanel" hidden>
+                            <h3>外观</h3>
+                            <div class="settings-group">
+                                <div class="settings-row settings-row--control">
+                                    <div><strong>主题</strong><span>跟随系统，或固定使用亮色、暗色。</span></div>
+                                    <div class="settings-segmented" role="group" aria-label="主题">
+                                        <button type="button" onclick="setTheme('auto')">自动</button>
+                                        <button type="button" onclick="setTheme('dark')">暗色</button>
+                                        <button type="button" onclick="setTheme('light')">亮色</button>
                                     </div>
-                                    <div style="flex:1;">
-                                        <div style="font-weight:600;color:var(--t1);" id="settingsUserName">本地用户</div>
-                                        <div style="font-size:.8rem;color:var(--t3);" id="settingsUserEmail">user@local</div>
-                                        <div style="font-size:.7rem;color:var(--ac);margin-top:.15rem;" id="settingsUserRole">摄影师</div>
-                                    </div>
-                                </div>
-                                <div style="display:flex;gap:.5rem;margin-top:.75rem;">
-                                    <button class="btn btn-s btn-sm" onclick="logout()" style="color:var(--er);border-color:var(--er);">退出登录</button>
                                 </div>
                             </div>
-                            
-                            <!-- Pexels API Key -->
-                            <div class="fg">
-                                <label>在线参考图</label>
-                                <p style="font-size:.74rem;color:var(--t2);line-height:1.6;">参考库里的开放图库可直接搜索，不需要配置。只有想在方案中自动载入更多 Pexels 图片时，才需要下面的高级连接。</p>
-                                <details class="personal-library-advanced">
-                                    <summary>连接 Pexels 自动预览（高级）</summary>
-                                    <div style="display:flex;gap:.5rem;margin-top:.65rem;">
-                                        <input type="password" id="settingsPexelsKey" placeholder="Pexels API Key" style="flex:1;">
-                                        <button class="btn btn-s btn-sm" onclick="saveSettingsPexelsKey()">保存</button>
+                        </section>
+
+                        <section class="settings-section" id="settings-library" role="tabpanel" hidden>
+                            <h3>图库与连接</h3>
+                            <div class="settings-group">
+                                <div class="settings-row settings-row--stack">
+                                    <div><strong>个人图库和摄影笔记</strong><span>连接自己的图片目录或 Obsidian。未连接时仍可使用内置素材。</span></div>
+                                    <div class="settings-action-line">
+                                        <span id="personalLibrarySummary" class="settings-muted">未连接，不影响方案生成。</span>
+                                        <button class="settings-link-button" type="button" onclick="openPersonalLibrarySettings()">连接</button>
+                                        <button class="settings-link-button settings-link-button--danger" type="button" id="disconnectPersonalLibraryButton" onclick="disconnectPersonalLibrary()" hidden>断开</button>
                                     </div>
-                                    <p style="font-size:.7rem;color:var(--t3);margin-top:.35rem;">可在 <a href="https://www.pexels.com/api/" target="_blank" rel="noreferrer" style="color:var(--ac);">Pexels API</a> 免费申请；不填写不影响内置参考图和开放图库。</p>
-                                </details>
-                            </div>
-                            
-                            <div class="fg">
-                                <label>我的图库和摄影笔记 <span style="font-size:.7rem;color:var(--t3);">（可选）</span></label>
-                                <div class="personal-library-summary">
-                                    <p>内置参考图、开放图库和上传图片无需设置即可使用。只有想搜索自己电脑里的照片或 Obsidian 笔记时，才需要连接个人图库。</p>
-                                    <div id="personalLibrarySummary" style="font-size:.72rem;color:var(--t3);">未连接，不影响方案生成。</div>
-                                    <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
-                                        <button class="btn btn-s btn-sm" type="button" onclick="openPersonalLibrarySettings()">连接我的图库</button>
-                                        <button class="btn btn-s btn-sm" type="button" id="disconnectPersonalLibraryButton" onclick="disconnectPersonalLibrary()" hidden>断开连接</button>
-                                    </div>
-                                </div>
-                                <details class="personal-library-advanced" id="personalLibraryAdvanced">
-                                    <summary>高级连接设置</summary>
-                                    <div class="personal-library-advanced__body">
-                                        <input type="text" id="settingsObsidianLibraryFolder" placeholder="图库或笔记目录">
-                                        <input type="text" id="settingsObsidianUrl" placeholder="Obsidian Local REST API 地址">
-                                        <input type="text" id="settingsObsidianHelperUrl" placeholder="本机图库服务地址">
-                                        <input type="password" id="settingsObsidianApiKey" placeholder="Obsidian Local REST API Key">
-                                        <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
-                                            <button class="btn btn-p btn-sm" type="button" onclick="saveObsidianSettingsFromUi()">保存并连接</button>
-                                            <button class="btn btn-s btn-sm" type="button" onclick="testObsidianConnection()">测试个人图库</button>
+                                    <details class="settings-disclosure" id="personalLibraryAdvanced">
+                                        <summary>高级连接设置</summary>
+                                        <div class="personal-library-advanced__body settings-form-stack">
+                                            <input type="text" id="settingsObsidianLibraryFolder" placeholder="图库或笔记目录">
+                                            <input type="text" id="settingsObsidianUrl" placeholder="Obsidian Local REST API 地址">
+                                            <input type="text" id="settingsObsidianHelperUrl" placeholder="本机图库服务地址">
+                                            <input type="password" id="settingsObsidianApiKey" placeholder="Obsidian Local REST API Key">
+                                            <div class="settings-button-row">
+                                                <button class="btn btn-p btn-sm" type="button" onclick="saveObsidianSettingsFromUi()">保存并连接</button>
+                                                <button class="btn btn-s btn-sm" type="button" onclick="testObsidianConnection()">测试连接</button>
+                                            </div>
+                                            <div id="obsidianSettingsStatus" class="settings-muted"></div>
                                         </div>
-                                        <div id="obsidianSettingsStatus" style="font-size:.72rem;color:var(--t3);"></div>
+                                    </details>
+                                </div>
+                                <div class="settings-row settings-row--stack">
+                                    <div><strong>在线参考图</strong><span>开放图库搜索无需配置。Pexels 自动预览属于可选高级能力。</span></div>
+                                    <details class="settings-disclosure">
+                                        <summary>配置 Pexels</summary>
+                                        <div class="settings-inline-form">
+                                            <input type="password" id="settingsPexelsKey" placeholder="Pexels API Key">
+                                            <button class="btn btn-s btn-sm" type="button" onclick="saveSettingsPexelsKey()">保存</button>
+                                        </div>
+                                    </details>
+                                </div>
+                                <div class="settings-row settings-row--stack">
+                                    <div><strong>LUT 库状态</strong><span>只在需要维护调色资源时查看。</span></div>
+                                    <div id="lutLibraryStatus" class="settings-muted"></div>
+                                    <button class="settings-link-button settings-align-start" type="button" onclick="markLutLibraryValidatedToday()">标记今日已验证</button>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="settings-section" id="settings-data" role="tabpanel" hidden>
+                            <h3>数据</h3>
+                            <div class="settings-group">
+                                <div class="settings-row settings-row--control">
+                                    <div><strong>备份与迁移</strong><span>导出或导入 JSON，不会上传原始图片。</span></div>
+                                    <div class="settings-button-row">
+                                        <button class="btn btn-s btn-sm" type="button" onclick="exportAllData()"><i data-lucide="download" aria-hidden="true"></i>导出</button>
+                                        <button class="btn btn-s btn-sm" type="button" onclick="document.getElementById('importFileInput').click()"><i data-lucide="upload" aria-hidden="true"></i>导入</button>
+                                        <input type="file" id="importFileInput" accept=".json" hidden onchange="importAllData(event)">
                                     </div>
-                                </details>
-                            </div>
-                            
-                            <div class="fg">
-                                <label>LUT 库 / 验证状态</label>
-                                <div id="lutLibraryStatus" style="padding:.75rem;background:var(--bg2);border-radius:var(--radius-sm);font-size:.78rem;color:var(--t2);"></div>
-                                <div style="display:flex;gap:.5rem;margin-top:.5rem;">
-                                    <button class="btn btn-s btn-sm" onclick="markLutLibraryValidatedToday()">标记今日已验证</button>
+                                </div>
+                                <div class="settings-row settings-row--control settings-row--danger">
+                                    <div><strong>清空本机数据</strong><span>删除当前浏览器中的方案、日程和设置，无法撤销。</span></div>
+                                    <button class="btn btn-d btn-sm" type="button" onclick="clearAllData()">清空数据</button>
                                 </div>
                             </div>
-                            
-                            <!-- Theme -->
-                            <div class="fg">
-                                <label>主题</label>
-                                <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
-                                    <button class="btn btn-s btn-sm" onclick="setTheme('auto')">自动</button>
-                                    <button class="btn btn-s btn-sm" onclick="setTheme('dark')">暗色</button>
-                                    <button class="btn btn-s btn-sm" onclick="setTheme('light')">亮色</button>
-                                </div>
+                        </section>
+
+                        <section class="settings-section" id="settings-about" role="tabpanel" hidden>
+                            <h3>关于</h3>
+                            <div class="settings-group">
+                                <div class="settings-row"><div><strong>PhotoAtelier</strong><span>摄影方案、参考图、分镜、设备、LUT 与日程工作台。</span></div><span class="settings-status">Public Beta</span></div>
+                                <div class="settings-row"><div><strong>隐私</strong><span>个人图库路径和本机账户凭据默认只保存在当前设备。</span></div></div>
                             </div>
-                            
-                            <!-- Data Management -->
-                            <div class="fg">
-                                <label><i data-lucide="database" aria-hidden="true"></i>数据管理</label>
-                                <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
-                                    <button class="btn btn-s btn-sm" onclick="exportAllData()"><i data-lucide="download" aria-hidden="true"></i>导出全部数据</button>
-                                    <button class="btn btn-s btn-sm" onclick="document.getElementById('importFileInput').click()"><i data-lucide="upload" aria-hidden="true"></i>导入数据</button>
-                                    <input type="file" id="importFileInput" accept=".json" style="display:none;" onchange="importAllData(event)">
-                                    <button class="btn btn-d btn-sm" onclick="clearAllData()"><i data-lucide="trash-2" aria-hidden="true"></i>清空数据</button>
-                                </div>
-                                <p style="font-size:.72rem;color:var(--t3);margin-top:.35rem;">导出为 JSON 文件，可用于备份和迁移</p>
-                            </div>
-                            
-                            <!-- About -->
-                            <div style="padding:1rem;background:var(--bg2);border-radius:var(--radius-sm);font-size:.8rem;color:var(--t3);margin-top:1rem;">
-                                <p><strong>PhotoAtelier</strong> v1.0</p>
-                                <p style="margin-top:.25rem;">摄影师工作流管理工具 · 分镜脚本 · 参考图库 · 日程管理</p>
-                                <p style="margin-top:.25rem;">参考图库支持 25+ 免费商用图库平台</p>
-                            </div>
-                        </div>
+                        </section>
                     </div>
-                </section>
+                </div>
             </div>
         </div>
     </main>
@@ -5361,7 +5348,7 @@ const i18n = {
         'login.email': '邮箱地址',
         'login.password': '密码',
         'login.button': '登录',
-        'login.hint': '首次登录将自动创建账号',
+        'login.hint': '本机账户凭据只保存在当前浏览器',
         'gen.title': '快速建立拍摄提案', 'gen.intro': '填写 5 项必要信息，生成可编辑预选方案。',
         'gen.quickStart': '快速起稿', 'gen.templatePortrait': '单人人像', 'gen.templatePair': '双人拍摄', 'gen.templateProduct': '产品内容', 'gen.templateVideo': '短片内容',
         'gen.theme': '拍摄任务', 'gen.themePlaceholder': '如：品牌人物短片、双人纪实或产品内容',
@@ -5394,7 +5381,7 @@ const i18n = {
         'login.email': 'Email',
         'login.password': 'Password',
         'login.button': 'Sign In',
-        'login.hint': 'First login will auto-create account',
+        'login.hint': 'Local account credentials stay in this browser',
         'gen.title': 'Build a shoot proposal', 'gen.intro': 'Fill in the 5 required fields to generate an editable candidate plan.',
         'gen.quickStart': 'Quick start', 'gen.templatePortrait': 'Solo portrait', 'gen.templatePair': 'Two-person shoot', 'gen.templateProduct': 'Product content', 'gen.templateVideo': 'Short video',
         'gen.theme': 'Shoot objective', 'gen.themePlaceholder': 'Example: brand portrait film, documentary pair, or product content', 'gen.style': 'Visual direction', 'gen.chooseStyle': 'Choose a style', 'gen.mood': 'Intended mood', 'gen.model': 'Subject / model', 'gen.scene': 'Scene / location', 'gen.duration': 'Shoot duration', 'gen.people': 'People', 'gen.extra': 'Additional requirements', 'gen.button': 'Generate candidate plan', 'gen.import': 'Import', 'gen.importVenue': 'Import from locations', 'gen.importModel': 'Import from models', 'gen.scenePlaceholder': 'Example: indoor daylight, city street, or a specific address', 'gen.modelPlaceholder': 'Example: one short-haired woman, a couple, or a product and its user',
@@ -5593,22 +5580,110 @@ if (document.getElementById('loginOverlay')) {
 // ===== Auth System & App Entry =====
 (function() {
     const API_BASE = localStorage.getItem('pa_api_base') || 'https://photoatelier-api.photomagic.workers.dev';
-    const USE_LOCAL_MODE = localStorage.getItem('pa_use_local') === 'true' || false;
     const TOKEN_KEY = 'pw_token';
     const USER_KEY = 'pw_user';
     const ROLE_KEY = 'pw_role';
-    const PUBLIC_BETA_MODE = new URLSearchParams(window.location.search).get('mode') === 'public-beta';
-    const TEST_BYPASS_LOGIN = (['127.0.0.1', 'localhost'].includes(window.location.hostname) || PUBLIC_BETA_MODE)
-        && localStorage.getItem('pa_require_login') !== 'true';
+    const LOCAL_ACCOUNTS_KEY = 'pa_local_accounts_v1';
+    const GUEST_SESSION_KEY = 'pa_guest_session_v1';
+    const PASSWORD_ITERATIONS = 120000;
+    const AUTH_QUERY = new URLSearchParams(window.location.search).get('auth');
+    const TEST_BYPASS_LOGIN = ['127.0.0.1', 'localhost'].includes(window.location.hostname)
+        && AUTH_QUERY === 'skip';
+    let authMode = 'login';
+
+    function bytesToBase64(bytes) {
+        let binary = '';
+        bytes.forEach(function(byte) { binary += String.fromCharCode(byte); });
+        return btoa(binary);
+    }
+
+    function createSalt() {
+        const bytes = new Uint8Array(16);
+        crypto.getRandomValues(bytes);
+        return bytesToBase64(bytes);
+    }
+
+    async function derivePassword(password, salt, iterations) {
+        const encoder = new TextEncoder();
+        const keyMaterial = await crypto.subtle.importKey('raw', encoder.encode(password), 'PBKDF2', false, ['deriveBits']);
+        const saltBytes = Uint8Array.from(atob(salt), function(char) { return char.charCodeAt(0); });
+        const bits = await crypto.subtle.deriveBits({
+            name: 'PBKDF2',
+            hash: 'SHA-256',
+            salt: saltBytes,
+            iterations: iterations
+        }, keyMaterial, 256);
+        return bytesToBase64(new Uint8Array(bits));
+    }
+
+    function readLocalAccounts() {
+        return readLocalJson(LOCAL_ACCOUNTS_KEY, []);
+    }
+
+    async function registerLocalAccount(name, email, password) {
+        const accounts = readLocalAccounts();
+        const normalizedEmail = email.toLowerCase();
+        if (accounts.some(function(account) { return account.email === normalizedEmail; })) {
+            throw new Error('该邮箱已注册，请直接登录');
+        }
+        const salt = createSalt();
+        const passwordHash = await derivePassword(password, salt, PASSWORD_ITERATIONS);
+        const user = {
+            id: 'local-user-' + Date.now(),
+            name: name || normalizedEmail.split('@')[0],
+            email: normalizedEmail,
+            role: 'photographer'
+        };
+        accounts.push({
+            user: user,
+            salt: salt,
+            passwordHash: passwordHash,
+            iterations: PASSWORD_ITERATIONS,
+            createdAt: new Date().toISOString()
+        });
+        localStorage.setItem(LOCAL_ACCOUNTS_KEY, JSON.stringify(accounts));
+        return user;
+    }
+
+    async function loginLocalAccount(email, password) {
+        const normalizedEmail = email.toLowerCase();
+        const account = readLocalAccounts().find(function(item) { return item.email === normalizedEmail || item.user?.email === normalizedEmail; });
+        if (!account) throw new Error('没有找到这个本机账户，请先注册');
+        const passwordHash = await derivePassword(password, account.salt, account.iterations || PASSWORD_ITERATIONS);
+        if (passwordHash !== account.passwordHash) throw new Error('密码不正确');
+        return account.user;
+    }
+
+    function saveLocalSession(user, token) {
+        localStorage.setItem('pa_use_local', 'true');
+        localStorage.setItem(TOKEN_KEY, token);
+        localStorage.setItem(USER_KEY, JSON.stringify(user));
+    }
 
     function ensureTestSession() {
         if (!TEST_BYPASS_LOGIN) return false;
-        const localUser = { id: 'local-test-user', email: 'test@photoatelier.local', name: '本地测试用户', role: 'photographer' };
-        localStorage.setItem('pa_use_local', 'true');
-        localStorage.setItem(TOKEN_KEY, 'local-test-token');
-        localStorage.setItem(USER_KEY, JSON.stringify(localUser));
+        const localUser = { id: 'guest-user', email: 'guest@local', name: '体验用户', role: 'photographer', guest: true };
+        saveLocalSession(localUser, 'local-guest-token');
         if (!localStorage.getItem(ROLE_KEY)) localStorage.setItem(ROLE_KEY, 'photographer');
         return true;
+    }
+
+    function clearExpiredGuestSession() {
+        if (TEST_BYPASS_LOGIN) return;
+        try {
+            const storedUser = JSON.parse(localStorage.getItem(USER_KEY) || 'null');
+            const guestSessionActive = sessionStorage.getItem(GUEST_SESSION_KEY) === 'active';
+            if (!storedUser?.guest || guestSessionActive) return;
+            localStorage.removeItem(TOKEN_KEY);
+            localStorage.removeItem(USER_KEY);
+            localStorage.removeItem(ROLE_KEY);
+            localStorage.removeItem('pa_use_local');
+        } catch (e) {
+            localStorage.removeItem(TOKEN_KEY);
+            localStorage.removeItem(USER_KEY);
+            localStorage.removeItem(ROLE_KEY);
+            localStorage.removeItem('pa_use_local');
+        }
     }
 
     function isLocalMode() {
@@ -5625,12 +5700,6 @@ if (document.getElementById('loginOverlay')) {
 
     // Local mode API mock for offline usage
     const localApi = {
-        async login(credentials) {
-            // Simulate successful login with local user
-            const localUser = { id: 'local', email: credentials.email, name: '本地用户', role: 'photographer' };
-            localStorage.setItem('pa_user', JSON.stringify(localUser));
-            return { user: localUser, token: 'local-token' };
-        },
         async getPlans() {
             return readLocalJson('pw_plans', []);
         },
@@ -5710,7 +5779,6 @@ if (document.getElementById('loginOverlay')) {
                 throw err;
             }
         },
-        login(email, password) { return this.request('/api/auth/login', 'POST', { email, password }); },
         async getSchedules() {
             if (isLocalMode()) return { schedules: await localApi.getSchedules() };
             return this.request('/api/schedules');
@@ -5749,44 +5817,74 @@ if (document.getElementById('loginOverlay')) {
         }
     };
 
-    // Login handler
-    window.handleLogin = async function() {
+    window.switchAuthMode = function(mode) {
+        authMode = mode === 'register' ? 'register' : 'login';
+        const registering = authMode === 'register';
+        const loginTab = document.getElementById('authLoginTab');
+        const registerTab = document.getElementById('authRegisterTab');
+        loginTab?.classList.toggle('active', !registering);
+        registerTab?.classList.toggle('active', registering);
+        loginTab?.setAttribute('aria-selected', String(!registering));
+        registerTab?.setAttribute('aria-selected', String(registering));
+        document.getElementById('registerNameField').hidden = !registering;
+        document.getElementById('registerConfirmField').hidden = !registering;
+        document.getElementById('loginPassword').autocomplete = registering ? 'new-password' : 'current-password';
+        document.getElementById('authTitle').textContent = registering ? '创建本机账户' : '继续你的拍摄工作';
+        document.getElementById('authSubtitle').textContent = registering
+            ? '用于在这台设备上区分你的方案、日程和设置。'
+            : '登录此设备上的 PhotoAtelier 账户。';
+        document.getElementById('authSubmitButton').textContent = registering ? '创建账户' : '登录';
+        document.getElementById('authHint').textContent = registering
+            ? '这是本机账户，不提供跨设备同步。请妥善保存密码。'
+            : '账户信息只保存在当前浏览器，不会上传密码。';
+    };
+
+    window.continueAsGuest = function() {
+        localStorage.removeItem('pa_require_login');
+        const guest = { id: 'guest-user', email: 'guest@local', name: '体验用户', role: 'photographer', guest: true };
+        saveLocalSession(guest, 'local-guest-token');
+        sessionStorage.setItem(GUEST_SESSION_KEY, 'active');
+        localStorage.setItem(ROLE_KEY, 'photographer');
+        const loginOverlay = document.getElementById('loginOverlay');
+        if (loginOverlay) loginOverlay.style.display = 'none';
+        enterApp('photographer');
+        syncHeaderUserAvatar();
+        toast('已进入体验模式', 'ok');
+    };
+
+    window.handleAuthSubmit = async function() {
         const email = document.getElementById('loginEmail').value.trim();
         const password = document.getElementById('loginPassword').value;
         if (!email || !password) { toast('请输入邮箱和密码', 'er'); return; }
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { toast('请输入有效的邮箱地址', 'er'); return; }
+        if (password.length < 8) { toast('密码至少需要 8 位', 'er'); return; }
+        if (authMode === 'register') {
+            const confirmPassword = document.getElementById('registerConfirmPassword').value;
+            if (password !== confirmPassword) { toast('两次输入的密码不一致', 'er'); return; }
+        }
 
         document.getElementById('loginForm').style.display = 'none';
         document.getElementById('loginLoading').style.display = 'block';
+        document.getElementById('authLoadingText').textContent = authMode === 'register' ? '正在创建账户...' : '正在验证...';
 
         try {
-            let res;
-            try {
-                res = await window.api.login(email, password);
-            } catch (e) {
-                // Fallback to local mode
-                /* Backend unreachable, switching to local mode */
-                localStorage.setItem('pa_use_local', 'true');
-                res = await localApi.login({ email, password });
-                toast('后端服务不可用，已切换到本地模式', 'i');
-            }
-            if (res.success || res.token === 'local-token') {
-                localStorage.setItem(TOKEN_KEY, res.token);
-                localStorage.setItem(USER_KEY, JSON.stringify(res.user));
-                document.getElementById('welcomeEmail').textContent = res.user.email;
-                showRoleSelector();
-                toast('登录成功', 'ok');
-            } else {
-                toast(res.error || '登录失败', 'er');
-                document.getElementById('loginForm').style.display = 'block';
-                document.getElementById('loginLoading').style.display = 'none';
-            }
+            const user = authMode === 'register'
+                ? await registerLocalAccount(document.getElementById('registerName').value.trim(), email, password)
+                : await loginLocalAccount(email, password);
+            sessionStorage.removeItem(GUEST_SESSION_KEY);
+            saveLocalSession(user, 'local-account-' + user.id);
+            localStorage.removeItem('pa_require_login');
+            document.getElementById('welcomeEmail').textContent = user.email;
+            showRoleSelector();
+            toast(authMode === 'register' ? '账户已创建' : '登录成功', 'ok');
         } catch (e) {
-            toast('网络错误: ' + e.message, 'er');
+            toast(e.message || '账户操作失败', 'er');
             document.getElementById('loginForm').style.display = 'block';
             document.getElementById('loginLoading').style.display = 'none';
         }
     };
+
+    window.handleLogin = window.handleAuthSubmit;
 
     // Logout
     window.logout = function() {
@@ -5795,7 +5893,9 @@ if (document.getElementById('loginOverlay')) {
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem(USER_KEY);
         localStorage.removeItem(ROLE_KEY);
-        ensureTestSession();
+        localStorage.removeItem('pa_use_local');
+        sessionStorage.removeItem(GUEST_SESSION_KEY);
+        localStorage.setItem('pa_require_login', 'true');
         location.reload();
     };
 
@@ -5890,6 +5990,7 @@ document.addEventListener('keydown', function(e) {
     // Check auth state on load (with error handling for mobile browsers)
     let token = null, user = null, role = null;
     try {
+        clearExpiredGuestSession();
         ensureTestSession();
         token = localStorage.getItem(TOKEN_KEY);
         user = localStorage.getItem(USER_KEY);
@@ -5985,7 +6086,10 @@ function showTab(tabName) {
         if(typeof loadEasyReferenceGallery === 'function') loadEasyReferenceGallery();
         if(getObsidianSettings().enabled && typeof searchLiveLocalAssets === 'function') searchLiveLocalAssets();
     }
-    if(tabName==='settings') loadSettingsData();
+    if(tabName==='settings') {
+        loadSettingsData();
+        showSettingsSection(window.currentSettingsSection || 'account');
+    }
     if(tabName==='plans') renderPlanLibrary();
     var main = document.querySelector('.main-content');
     if (main) main.scrollTo({top:0,left:0,behavior:'auto'});
@@ -6008,8 +6112,37 @@ function syncHeaderUserAvatar() {
 
 function openPersonalSettings() {
     syncHeaderUserAvatar();
+    window.currentSettingsSection = 'account';
     showTab('settings');
 }
+
+function showSettingsSection(sectionName) {
+    var section = String(sectionName || 'account');
+    var target = document.getElementById('settings-' + section);
+    if (!target) {
+        section = 'account';
+        target = document.getElementById('settings-account');
+    }
+    window.currentSettingsSection = section;
+    document.querySelectorAll('.settings-nav [data-settings-section]').forEach(function(button) {
+        var selected = button.dataset.settingsSection === section;
+        button.classList.toggle('active', selected);
+        button.setAttribute('aria-selected', selected ? 'true' : 'false');
+    });
+    document.querySelectorAll('.settings-section').forEach(function(panel) {
+        var selected = panel === target;
+        panel.classList.toggle('active', selected);
+        panel.hidden = !selected;
+    });
+    var main = document.querySelector('.main-content');
+    if (main) main.scrollTo({top: 0, left: 0, behavior: 'auto'});
+}
+
+document.querySelectorAll('.settings-nav [data-settings-section]').forEach(function(button) {
+    button.addEventListener('click', function() {
+        showSettingsSection(button.dataset.settingsSection);
+    });
+});
 
 syncHeaderUserAvatar();
 
@@ -14796,7 +14929,7 @@ function loadSettingsData() {
             
             if (avatarEl) avatarEl.textContent = (user.name || user.email || 'U').charAt(0).toUpperCase();
             if (nameEl) nameEl.textContent = user.name || '用户';
-            if (emailEl) emailEl.textContent = user.email || '';
+            if (emailEl) emailEl.textContent = user.guest ? '数据仅保存在当前浏览器' : (user.email || '');
             if (roleEl) roleEl.textContent = roleNames[role] || role;
         }
     } catch(e) {}

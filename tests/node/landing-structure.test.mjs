@@ -74,3 +74,28 @@ test('hero image has width, height, alt, and local URL', () => {
   assert.ok(/alt="[^"]+"/.test(tag), 'hero image missing alt');
   assert.ok(/src="\.\/assets\/landing-ai\//.test(tag), 'hero image src is not local');
 });
+
+test('timeline reference uses compact R6 generated image', () => {
+  const html = read('index.html');
+  const css = read('assets/landing.css');
+  assert.ok(html.includes('reference-portrait-r6.webp'), 'R6 reference image missing');
+  assert.ok(html.includes('width="960" height="1200"'), 'reference image dimensions are stale');
+  assert.ok(css.includes('max-height: 500px'), 'reference image has no compact height cap');
+  assert.ok(css.includes('height: auto'), 'intrinsic image height can still stretch the timeline');
+});
+
+test('landing copy distinguishes guest trial from account sync', () => {
+  const html = read('index.html');
+  assert.ok(html.includes('免注册即可体验'), 'guest trial copy missing');
+  assert.ok(html.includes('登录后可扩展同步'), 'account sync boundary missing');
+  assert.ok(!html.includes('无需登录 · 免费体验'), 'stale no-login claim remains');
+});
+
+test('landing introduces photographer field notes instead of data modes', () => {
+  const html = read('index.html');
+  assert.ok(html.includes('来自摄影知识库的现场方法'), 'field-note source label missing');
+  assert.ok(html.includes('把“自然一点”，换成模特听得懂的动作。'), 'field-note headline missing');
+  assert.ok(html.includes('data-settings-section') === false, 'workspace settings leaked into landing');
+  assert.ok(!html.includes('三种数据模式，按你的方式工作'), 'retired data-mode section remains');
+  assert.ok(!html.includes('class="mode-grid"'), 'retired data-mode grid remains');
+});

@@ -58,6 +58,9 @@ const scopes = {
     ['tools/check-syntax.js'],
     ['tests/smoke.mjs'],
   ],
+  seo: [
+    ['--test', 'tests/node/seo.test.mjs'],
+  ],
   'all-v5': [
     ['--test',
       'tests/node/v5/contracts-catalog.test.mjs',

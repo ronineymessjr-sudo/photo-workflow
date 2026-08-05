@@ -108,6 +108,12 @@ test('P1 resource secondary nav browser behavior', { timeout: 60000 }, async (t)
   const executablePath = findBrowserExecutable();
   const browser = await chromium.launch({ headless: true, executablePath });
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+  await page.addInitScript(() => {
+    localStorage.setItem('pa_use_local', 'true');
+    localStorage.setItem('pw_token', 'local-test-token');
+    localStorage.setItem('pw_user', JSON.stringify({ name: '本地用户', email: 'user@local' }));
+    localStorage.setItem('pw_role', 'photographer');
+  });
 
   try {
     await page.goto(server.url, { waitUntil: 'networkidle' });

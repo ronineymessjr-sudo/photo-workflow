@@ -11,7 +11,7 @@ function assert(condition, message) {
 }
 
 async function enterWorkspace(page) {
-  await page.goto(new URL('legacy/?mode=public-beta', baseUrl).href, { waitUntil: 'domcontentloaded' });
+  await page.goto(new URL('legacy/?mode=public-beta&auth=skip', baseUrl).href, { waitUntil: 'domcontentloaded' });
   const roleButton = page.locator('button[onclick="enterApp(\'photographer\')"]');
   if (await roleButton.isVisible().catch(() => false)) await roleButton.click();
   await page.locator('[data-tab="reference"]').waitFor({ state: 'visible' });

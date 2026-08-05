@@ -49,10 +49,11 @@ async function waitFor(target) {
     localServer.stderr.on('data', data => console.error('LOCAL SERVER:', data.toString()));
     children.push(localServer);
   }
-  if (!await isReachable('http://127.0.0.1:8124/v1/health')) {
-    children.push(spawn('node', ['tools/local-obsidian-proxy.js'], { cwd: process.cwd(), windowsHide: true }));
+  const obsidianProxyPort = Number(process.env.PHOTOATELIER_OBSIDIAN_PROXY_PORT || 8124);
+  if (!await isReachable(`http://127.0.0.1:${obsidianProxyPort}/v1/health`)) {
+    children.push(spawn('node', ['tools/local-obsidian-proxy.js'], { cwd: process.cwd(), windowsHide: true, env: { ...process.env, PHOTOATELIER_OBSIDIAN_PROXY_PORT: String(obsidianProxyPort) } }));
   }
-  await Promise.all([waitFor(url), waitFor('http://127.0.0.1:8124/v1/health')]);
+  await Promise.all([waitFor(url), waitFor(`http://127.0.0.1:${obsidianProxyPort}/v1/health`)]);
   browser = await chromium.launch({ headless: true, executablePath });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
   const pageErrors = [];
@@ -64,6 +65,7 @@ async function waitFor(target) {
     localStorage.setItem('pa_use_local', 'true');
     localStorage.setItem('pw_token', 'local-test-token');
     localStorage.setItem('pw_user', JSON.stringify({ name: '本地用户', email: 'user@local' }));
+    localStorage.setItem('pw_role', 'photographer');
     localStorage.setItem('pw_eq', JSON.stringify([
       { id: 'eq-camera', n: 'Sony A7M4', c: 'camera', note: '夜景主力机' },
       { id: 'eq-lens', n: 'Sony 35mm f/1.4 GM', c: 'lens', note: '环境人像' },
@@ -197,18 +199,15 @@ async function waitFor(target) {
   await page.locator('.workflow-loop').evaluate(element => { element.open = true; });
   await page.locator('.workflow-extended-details').evaluate(element => { element.open = true; });
   await page.locator('#plan-post-' + resourcePlan.id).evaluate(element => { element.open = true; });
-  const identityCube = [
-    'TITLE "Identity"', 'LUT_3D_SIZE 2',
-    '0 0 0', '1 0 0', '0 1 0', '1 1 0',
-    '0 0 1', '1 0 1', '0 1 1', '1 1 1'
-  ].join('\n');
-  await page.locator('#tab-gen .workflow-lut-controls input[accept=".cube"]').setInputFiles({ name: 'identity.cube', mimeType: 'text/plain', buffer: Buffer.from(identityCube) });
-  await page.waitForFunction(() => document.querySelector('#tab-gen .workflow-lut-controls select')?.options.length > 1);
-  const lutPlan = await page.evaluate(() => JSON.parse(localStorage.getItem('pw_plans') || '[]')[0]);
-  if (!lutPlan.lutProfileId) throw new Error('imported LUT was not linked to plan');
-  if (!await page.locator('.workflow-lut-recommendation').count()) throw new Error('explainable LUT recommendation missing');
+  // Plan-level LUT is intentionally not locked in the brief; the resource workspace owns LUT.
+  await page.waitForFunction((planId) => {
+    const container = document.querySelector('#plan-post-' + planId);
+    return container?.textContent?.includes('后期交接暂不锁定 LUT');
+  }, resourcePlan.id);
   await page.locator('.r4-resource-nav-item[data-r4-resource-section="lut"]').click();
-  await page.waitForSelector('#r4-resource-lut.active #lut-library-list');
+  await page.locator('#r4-resource-lut.active .lut-simple-details').evaluateAll(elements => { elements.forEach(el => { el.open = true; }); });
+  const lutList = page.locator('#r4-resource-lut.active #lut-library-list');
+  await lutList.waitFor({ state: 'visible', timeout: 5000 });
   if (!await page.locator('#lut-library-select option').count()) throw new Error('LUT library workspace missing');
   await page.waitForFunction(() => document.querySelectorAll('#open-lut-list .open-lut-card').length === 8);
   const srgbOpenLutCount = await page.locator('#open-lut-list .open-lut-card').count();
@@ -217,7 +216,7 @@ async function waitFor(target) {
   await page.waitForFunction(() => document.querySelector('#open-lut-list .open-lut-card button')?.disabled === true);
   const installedOpenLutId = await page.evaluate(() => JSON.parse(localStorage.getItem('pa_lut_profiles') || '[]')[0]?.id);
   await page.selectOption('#lut-library-select', installedOpenLutId);
-  if (!await page.getByRole('button', { name: '试用暖胶片效果' }).count()) throw new Error('one-click LUT effect missing');
+  if (!await page.locator('#curated-lut-list .curated-lut-card').count()) throw new Error('one-click LUT effect missing');
   const cubeDownloadPromise = page.waitForEvent('download');
   await page.getByRole('button', { name: '转换并下载 CUBE' }).click();
   const cubeDownload = await cubeDownloadPromise;
@@ -294,6 +293,7 @@ await page.locator('#referenceDetailContent').getByRole('tab', { name: '项目�
     localStorage.setItem('pa_use_local', 'true');
     localStorage.setItem('pw_token', 'local-test-token');
     localStorage.setItem('pw_user', JSON.stringify({ name: '本地用户', email: 'user@local' }));
+    localStorage.setItem('pw_role', 'photographer');
   });
   await starterPage.goto(url, { waitUntil: 'domcontentloaded' });
   await starterPage.locator('.nav-item[data-tab="gen"]').click();
@@ -316,7 +316,7 @@ await page.locator('#referenceDetailContent').getByRole('tab', { name: '项目�
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
   if (overflow) throw new Error('mobile horizontal overflow detected');
   if (pageErrors.length) throw new Error(`page errors: ${pageErrors.join(' | ')}`);
-  console.log(JSON.stringify({ ok: true, navCount, navLabels, relationVisible, lifecycleVisible, optionalAgentVisible, assignedReferences, uniqueAssignedReferences, loadedReferenceImages, equipmentLinked: selectedEquipment.length, lutLinked: Boolean(lutPlan.lutProfileId), srgbOpenLutCount, vlogOpenLutCount, lutPreviewRendered, referenceImageCount, assetDecisionCount, scheduleCount: schedules.length, mobileOverflow: overflow }, null, 2));
+  console.log(JSON.stringify({ ok: true, navCount, navLabels, relationVisible, lifecycleVisible, optionalAgentVisible, assignedReferences, uniqueAssignedReferences, loadedReferenceImages, equipmentLinked: selectedEquipment.length, lutLinked: false, srgbOpenLutCount, vlogOpenLutCount, lutPreviewRendered, referenceImageCount, assetDecisionCount, scheduleCount: schedules.length, mobileOverflow: overflow }, null, 2));
   await browser.close();
   browser = null;
   children.forEach(child => child.kill());

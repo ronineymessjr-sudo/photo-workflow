@@ -1,0 +1,14 @@
+/assets/*
+  Cache-Control: public, max-age=604800
+
+/src/landing-motion.js
+  Cache-Control: public, max-age=3600
+
+/src/public-beta.js
+  Cache-Control: public, max-age=3600
+
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+/guides/*
+  Cache-Control: public, max-age=0, must-revalidate

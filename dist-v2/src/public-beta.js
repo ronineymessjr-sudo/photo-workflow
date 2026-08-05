@@ -1,4 +1,5 @@
-const API_BASE = 'https://photoatelier-v2-api.photomagic.workers.dev';
+const FEEDBACK_ENDPOINT = '/api/public/feedback';
+const EVENTS_ENDPOINT = '/api/public/events';
 const SESSION_KEY = 'pa_beta_session_id';
 const QUEUE_KEY = 'pa_beta_feedback_queue';
 const ANALYTICS_KEY = 'pa_beta_analytics_consent';
@@ -31,6 +32,8 @@ if (consentInput) {
     track('analytics_consent_changed', { enabled: consentInput.checked });
   });
 }
+
+if (localStorage.getItem(ANALYTICS_KEY) === 'true') track('page_view');
 
 document.querySelectorAll('[data-track]').forEach(element => {
   element.addEventListener('click', () => track(element.dataset.track));
@@ -79,7 +82,7 @@ if (form) {
 flushQueue().catch(() => {});
 
 async function sendFeedback(payload) {
-  const response = await fetch(`${API_BASE}/api/public/feedback`, {
+  const response = await fetch(FEEDBACK_ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -120,7 +123,9 @@ function getSessionId() {
 
 function track(name, metadata = {}) {
   if (localStorage.getItem(ANALYTICS_KEY) !== 'true') return;
+  const event = { eventId: crypto.randomUUID(), name, metadata, at: new Date().toISOString(), page: location.href, locale, sessionId: getSessionId() };
   const events = JSON.parse(localStorage.getItem('pa_beta_local_events') || '[]');
-  events.push({ name, metadata, at: new Date().toISOString() });
+  events.push(event);
   localStorage.setItem('pa_beta_local_events', JSON.stringify(events.slice(-100)));
+  fetch(EVENTS_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(event) }).catch(() => {});
 }

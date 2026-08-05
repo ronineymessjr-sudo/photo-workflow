@@ -79,7 +79,7 @@ async function runChecks(page) {
       hasIcon: !!btn.querySelector('svg, i[data-lucide], .lucide')
     }));
   });
-  const expectedLabels = ['方案库', '新建方案', '参考图库', '拍摄日程', '设备与 LUT', '设置'];
+  const expectedLabels = ['方案库', '新建方案', '参考图库', '拍摄日程', '拍摄资源', '设置'];
   const actualLabels = navLabels.map(n => n.label);
   for (const label of expectedLabels) {
     if (!actualLabels.includes(label)) throw new Error(`missing nav destination: ${label}`);
@@ -110,19 +110,26 @@ async function runChecks(page) {
   const advancedOpen = await page.locator('details.brief-advanced').evaluate(el => el.open);
   if (advancedOpen) throw new Error('secondary constraints should be collapsed by default');
 
-  // R4-B: Equipment and LUT are combined under one destination.
-  await page.locator('.nav-item[data-tab="venue"]').click();
-  await page.waitForSelector('#tab-venue.active', { timeout: 5000 });
+  // R4-B: Resource workspace combines venue, talent, equipment and LUT under one destination.
+  await page.locator('.nav-item[data-tab="resources"]').click();
+  await page.waitForSelector('.r4-resource-secondary-nav', { timeout: 5000 });
   await page.waitForTimeout(300);
-  const venueTabActive = await page.locator('#tab-venue.active').count();
-  if (venueTabActive === 0) throw new Error('Equipment & LUT destination should activate venue tab');
-  const lutTabActive = await page.locator('#tab-lut.active').count();
-  if (lutTabActive !== 0) throw new Error('Equipment and LUT surfaces must not stack at the same time');
-  const modeButtons = await page.locator('[data-r4-equipment-mode]').count();
-  if (modeButtons < 3) throw new Error('Equipment & LUT destination should expose three segmented modes');
-  await page.locator('[data-r4-equipment-mode="lut"]').first().click();
-  await page.waitForSelector('#tab-lut.active', { timeout: 5000 });
-  if (await page.locator('#tab-venue.active').count()) throw new Error('LUT mode should hide the equipment surface');
+  const sectionCount = await page.locator('.r4-resource-nav-item').count();
+  if (sectionCount !== 5) throw new Error(`Resource workspace should expose five secondary sections, got ${sectionCount}`);
+  const summaryActive = await page.locator('#r4-resource-summary.active').count();
+  if (summaryActive === 0) throw new Error('Resource workspace should start on summary');
+  await page.locator('.r4-resource-nav-item[data-r4-resource-section="equipment"]').click();
+  await page.waitForTimeout(200);
+  const eqActive = await page.locator('#resource-eq.active').count();
+  if (eqActive === 0) throw new Error('Equipment section should activate');
+  const lutActiveWhileEq = await page.locator('#r4-resource-lut.active').count();
+  if (lutActiveWhileEq !== 0) throw new Error('Equipment and LUT surfaces must not stack at the same time');
+  await page.locator('.r4-resource-nav-item[data-r4-resource-section="lut"]').click();
+  await page.waitForTimeout(200);
+  const lutActive = await page.locator('#r4-resource-lut.active').count();
+  if (lutActive === 0) throw new Error('LUT section should activate');
+  const eqActiveWhileLut = await page.locator('#resource-eq.active').count();
+  if (eqActiveWhileLut !== 0) throw new Error('LUT section should hide the equipment surface');
 
   // No old standalone LUT nav item remains.
   const lutNav = await page.locator('.sidebar-nav .nav-item[data-tab="lut"]').count();
@@ -144,13 +151,11 @@ async function runChecks(page) {
   await page.waitForTimeout(300);
   await page.screenshot({ path: path.join(evidenceDir, 'r4-schedule-1440.png'), fullPage: false });
 
-  await page.locator('.nav-item[data-tab="venue"]').click();
-  await page.locator('[data-r4-equipment-mode="equipment"]:visible').click();
-  await page.waitForSelector('#tab-venue.active', { timeout: 5000 });
+  await page.locator('.nav-item[data-tab="resources"]').click();
+  await page.locator('.r4-resource-nav-item[data-r4-resource-section="equipment"]').click();
   await page.waitForTimeout(300);
   await page.screenshot({ path: path.join(evidenceDir, 'r4-equipment-1440.png'), fullPage: false });
-  await page.locator('[data-r4-equipment-mode="lut"]').first().click();
-  await page.waitForSelector('#tab-lut.active', { timeout: 5000 });
+  await page.locator('.r4-resource-nav-item[data-r4-resource-section="lut"]').click();
   await page.waitForTimeout(300);
   await page.screenshot({ path: path.join(evidenceDir, 'r4-lut-1440.png'), fullPage: false });
 

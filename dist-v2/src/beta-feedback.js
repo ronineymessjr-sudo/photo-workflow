@@ -1,4 +1,4 @@
-const API_BASE = 'https://photoatelier-v2-api.photomagic.workers.dev';
+const FEEDBACK_ENDPOINT = '/api/public/feedback';
 const QUEUE_KEY = 'pa_beta_feedback_queue';
 const SESSION_KEY = 'pa_beta_session_id';
 const BUILD = 'legacy-v5-public-beta-2026.07';
@@ -74,7 +74,7 @@ form.addEventListener('submit', async event => {
 });
 
 flushQueue().catch(() => {});
-async function send(payload) { const response = await fetch(`${API_BASE}/api/public/feedback`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); if (!response.ok) throw new Error(`Feedback API returned ${response.status}`); }
+async function send(payload) { const response = await fetch(FEEDBACK_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); if (!response.ok) throw new Error(`Feedback API returned ${response.status}`); }
 async function flushQueue() { const remaining = []; for (const item of readQueue()) { try { await send(item); } catch (_) { remaining.push(item); } } localStorage.setItem(QUEUE_KEY, JSON.stringify(remaining)); }
 function readQueue() { try { return JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]'); } catch (_) { return []; } }
 function getSessionId() { let value = localStorage.getItem(SESSION_KEY); if (!value) { value = crypto.randomUUID(); localStorage.setItem(SESSION_KEY, value); } return value; }

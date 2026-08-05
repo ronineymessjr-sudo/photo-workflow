@@ -33,6 +33,7 @@ async function runChecks(page) {
     localStorage.setItem('pa_use_local', 'true');
     localStorage.setItem('pw_token', 'local-test-token');
     localStorage.setItem('pw_user', JSON.stringify({ name: '本地用户', email: 'user@local' }));
+    localStorage.setItem('pw_role', 'photographer');
   });
 
   await page.goto(url, { waitUntil: 'domcontentloaded' });

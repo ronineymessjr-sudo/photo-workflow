@@ -1,17 +1,50 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
-    <url>
-        <loc>https://photoatelier.pages.dev/</loc>
-        <lastmod>2026-07-18</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>1.0</priority>
-        <xhtml:link rel="alternate" hreflang="zh-CN" href="https://photoatelier.pages.dev/" />
-        <xhtml:link rel="alternate" hreflang="en" href="https://photoatelier.pages.dev/en/" />
-        <xhtml:link rel="alternate" hreflang="ja" href="https://photoatelier.pages.dev/ja/" />
-        <xhtml:link rel="alternate" hreflang="ko" href="https://photoatelier.pages.dev/ko/" />
-        <xhtml:link rel="alternate" hreflang="x-default" href="https://photoatelier.pages.dev/" />
-    </url>
-    <url><loc>https://photoatelier.pages.dev/en/</loc><lastmod>2026-07-18</lastmod><changefreq>weekly</changefreq><priority>0.9</priority><xhtml:link rel="alternate" hreflang="zh-CN" href="https://photoatelier.pages.dev/" /><xhtml:link rel="alternate" hreflang="en" href="https://photoatelier.pages.dev/en/" /><xhtml:link rel="alternate" hreflang="ja" href="https://photoatelier.pages.dev/ja/" /><xhtml:link rel="alternate" hreflang="ko" href="https://photoatelier.pages.dev/ko/" /></url>
-    <url><loc>https://photoatelier.pages.dev/ja/</loc><lastmod>2026-07-18</lastmod><changefreq>weekly</changefreq><priority>0.9</priority><xhtml:link rel="alternate" hreflang="zh-CN" href="https://photoatelier.pages.dev/" /><xhtml:link rel="alternate" hreflang="en" href="https://photoatelier.pages.dev/en/" /><xhtml:link rel="alternate" hreflang="ja" href="https://photoatelier.pages.dev/ja/" /><xhtml:link rel="alternate" hreflang="ko" href="https://photoatelier.pages.dev/ko/" /></url>
-    <url><loc>https://photoatelier.pages.dev/ko/</loc><lastmod>2026-07-18</lastmod><changefreq>weekly</changefreq><priority>0.9</priority><xhtml:link rel="alternate" hreflang="zh-CN" href="https://photoatelier.pages.dev/" /><xhtml:link rel="alternate" hreflang="en" href="https://photoatelier.pages.dev/en/" /><xhtml:link rel="alternate" hreflang="ja" href="https://photoatelier.pages.dev/ja/" /><xhtml:link rel="alternate" hreflang="ko" href="https://photoatelier.pages.dev/ko/" /></url>
+  <url>
+    <loc>https://photoatelier.pages.dev/</loc>
+    <lastmod>2026-07-30</lastmod>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://photoatelier.pages.dev/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://photoatelier.pages.dev/en/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://photoatelier.pages.dev/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://photoatelier.pages.dev/ko/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://photoatelier.pages.dev/"/>
+  </url>
+  <url>
+    <loc>https://photoatelier.pages.dev/en/</loc>
+    <lastmod>2026-07-30</lastmod>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://photoatelier.pages.dev/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://photoatelier.pages.dev/en/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://photoatelier.pages.dev/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://photoatelier.pages.dev/ko/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://photoatelier.pages.dev/"/>
+  </url>
+  <url>
+    <loc>https://photoatelier.pages.dev/ja/</loc>
+    <lastmod>2026-07-30</lastmod>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://photoatelier.pages.dev/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://photoatelier.pages.dev/en/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://photoatelier.pages.dev/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://photoatelier.pages.dev/ko/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://photoatelier.pages.dev/"/>
+  </url>
+  <url>
+    <loc>https://photoatelier.pages.dev/ko/</loc>
+    <lastmod>2026-07-30</lastmod>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://photoatelier.pages.dev/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://photoatelier.pages.dev/en/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://photoatelier.pages.dev/ja/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://photoatelier.pages.dev/ko/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://photoatelier.pages.dev/"/>
+  </url>
+  <url><loc>https://photoatelier.pages.dev/guides/</loc><lastmod>2026-07-30</lastmod></url>
+  <url><loc>https://photoatelier.pages.dev/guides/reference-image-to-shot-plan/</loc><lastmod>2026-07-30</lastmod></url>
+  <url><loc>https://photoatelier.pages.dev/guides/portrait-shot-list/</loc><lastmod>2026-07-30</lastmod></url>
+  <url><loc>https://photoatelier.pages.dev/guides/posing-prompts/</loc><lastmod>2026-07-30</lastmod></url>
+  <url><loc>https://photoatelier.pages.dev/guides/photo-shoot-schedule/</loc><lastmod>2026-07-30</lastmod></url>
+  <url><loc>https://photoatelier.pages.dev/guides/lut-workflow/</loc><lastmod>2026-07-30</lastmod></url>
+  <url><loc>https://photoatelier.pages.dev/guides/log-to-rec709/</loc><lastmod>2026-07-30</lastmod></url>
+  <url><loc>https://photoatelier.pages.dev/guides/photography-location-scout/</loc><lastmod>2026-07-30</lastmod></url>
+  <url><loc>https://photoatelier.pages.dev/guides/portrait-natural-light/</loc><lastmod>2026-07-30</lastmod></url>
+  <url><loc>https://photoatelier.pages.dev/guides/photography-gear-checklist/</loc><lastmod>2026-07-30</lastmod></url>
+  <url><loc>https://photoatelier.pages.dev/guides/reference-image-copyright/</loc><lastmod>2026-07-30</lastmod></url>
 </urlset>

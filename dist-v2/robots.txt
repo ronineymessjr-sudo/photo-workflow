@@ -19,3 +19,4 @@ Allow: /
 
 # Sitemap
 Sitemap: https://photoatelier.pages.dev/sitemap.xml
+Sitemap: https://photoatelier.pages.dev/sitemap.txt

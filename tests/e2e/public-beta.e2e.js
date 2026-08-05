@@ -71,14 +71,19 @@ async function inspectLanding(page, label, route = '', expectedLanguage = 'zh-CN
     await mobile.screenshot({ path: path.join(reportDir, 'landing-mobile.png'), fullPage: false, animations: 'disabled' });
 
     const app = await browser.newPage({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });
-    await app.goto(new URL('legacy/?mode=public-beta&lang=en', baseUrl).href, { waitUntil: 'domcontentloaded' });
+    await app.goto(new URL('legacy/?mode=public-beta&auth=skip&lang=en', baseUrl).href, { waitUntil: 'domcontentloaded' });
     const feedbackButton = app.getByRole('button', { name: 'Submit product feedback' });
     await feedbackButton.waitFor({ state: 'visible' });
     if (!(await app.locator('#appLanguage').isVisible())) {
-      const photographer = app.locator('button[onclick="enterApp(\'photographer\')"]');
-      await photographer.waitFor({ state: 'visible' });
-      assert((await photographer.textContent()).trim() === 'Photographer', 'app: first-run role selector was not localized');
-      await photographer.click();
+      const guest = app.locator('button[onclick="continueAsGuest()"]');
+      if (await guest.count() === 1 && await guest.isVisible()) {
+        await guest.click();
+      } else {
+        const photographer = app.locator('button[onclick="enterApp(\'photographer\')"]');
+        await photographer.waitFor({ state: 'visible' });
+        assert((await photographer.textContent()).trim() === 'Photographer', 'app: first-run role selector was not localized');
+        await photographer.click();
+      }
     }
     await app.locator('#appLanguage').waitFor({ state: 'visible' });
     assert((await app.locator('[data-tab="reference"] .nav-label').textContent()).trim() === 'References', 'app: English navigation missing');

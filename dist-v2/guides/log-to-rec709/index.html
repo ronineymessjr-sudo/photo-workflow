@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>S-Log、D-Log M 与 Apple Log 转 Rec.709 | PhotoAtelier 摄影指南</title>
+  <meta name="description" content="面向 DaVinci Resolve、Photoshop 和 Blackmagic Camera 用户的 Log 到 Rec.709 基础检查清单。">
+  <meta name="robots" content="index,follow,max-image-preview:large">
+  <link rel="canonical" href="https://photoatelier.pages.dev/guides/log-to-rec709/">
+  <link rel="icon" type="image/png" href="/favicon-64.png">
+  <link rel="stylesheet" href="/assets/guides.css">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="S-Log、D-Log M 与 Apple Log 转 Rec.709">
+  <meta property="og:description" content="面向 DaVinci Resolve、Photoshop 和 Blackmagic Camera 用户的 Log 到 Rec.709 基础检查清单。">
+  <meta property="og:url" content="https://photoatelier.pages.dev/guides/log-to-rec709/">
+  <meta property="og:image" content="https://photoatelier.pages.dev/assets/landing-ai/lut-before.webp">
+  <meta name="twitter:card" content="summary_large_image">
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Article","headline":"S-Log、D-Log M 与 Apple Log 转 Rec.709","description":"面向 DaVinci Resolve、Photoshop 和 Blackmagic Camera 用户的 Log 到 Rec.709 基础检查清单。","image":"https://photoatelier.pages.dev/assets/landing-ai/lut-before.webp","datePublished":"2026-07-30","dateModified":"2026-07-30","mainEntityOfPage":"https://photoatelier.pages.dev/guides/log-to-rec709/","author":{"@type":"Organization","name":"PhotoAtelier"},"publisher":{"@type":"Organization","name":"PhotoAtelier"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"PhotoAtelier","item":"https://photoatelier.pages.dev/"},{"@type":"ListItem","position":2,"name":"摄影指南","item":"https://photoatelier.pages.dev/guides/"},{"@type":"ListItem","position":3,"name":"S-Log、D-Log M 与 Apple Log 转 Rec.709","item":"https://photoatelier.pages.dev/guides/log-to-rec709/"}]}]}</script>
+</head>
+<body>
+  <header class="site-header"><a class="brand" href="/">PhotoAtelier</a><nav aria-label="主要导航"><a href="/guides/">摄影指南</a><a href="/legacy/?mode=public-beta">打开工作台</a></nav></header>
+  <main>
+    <section class="hero">
+      <div><p class="eyebrow">PhotoAtelier 摄影指南</p><h1>S-Log、D-Log M 与 Apple Log 转 Rec.709</h1><p class="lead">面向 DaVinci Resolve、Photoshop 和 Blackmagic Camera 用户的 Log 到 Rec.709 基础检查清单。</p></div>
+      <img src="/assets/landing-ai/lut-before.webp" alt="尚未完成显示转换的原创低对比度人像概念图" width="1000" height="1250">
+    </section>
+    <article class="article">
+      <div class="note"><strong>使用说明</strong><br>本文用于拍摄准备和现场执行，不替代相机厂商的色彩管理文档、场地规定或商业授权核查。</div>
+      
+      <section>
+        <h2>先识别输入曲线和色域</h2>
+        <p>文件名或设备名称不足以判断输入。确认 Sony S-Log2/S-Log3 与对应 S-Gamut、DJI D-Log M、Apple Log 或 Blackmagic Film，并查阅设备官方色彩管理说明。</p>
+        
+      </section>
+      <section>
+        <h2>优先使用色彩管理或官方转换</h2>
+        <p>在 DaVinci Resolve 中可使用项目色彩管理或 Color Space Transform；在其他软件中使用与输入严格匹配的官方技术 LUT。技术转换的目标是得到正常显示起点，不是直接完成最终风格。</p>
+        
+      </section>
+      <section>
+        <h2>转换前后分别检查</h2>
+        <p>转换前处理明显错误的白平衡和曝光；转换后检查肤色、亮度范围与饱和度。不要重复套用转换 LUT，否则对比度和饱和度会异常。</p>
+        
+      </section>
+      <section>
+        <h2>手机 Log 也需要同样的记录</h2>
+        <p>Blackmagic Camera 拍摄 Apple Log 或其他支持格式时，记录设备、编码、色彩空间和导出目标。交给剪辑或调色人员时一并提供，避免后期猜测。</p>
+        
+      </section>
+      <section class="related-guides" aria-labelledby="related-guides-title">
+        <h2 id="related-guides-title">下一步看什么</h2>
+        <p>把当前步骤完成后，再用下面的指南补齐方案里最容易缺失的部分。</p>
+        <div><a href="/guides/lut-workflow/"><strong>LUT 新手工作流：先校正，再选择风格</strong><span>理解转换 LUT 与创意 LUT 的区别，使用安全顺序完成相机 Log 素材的基础调色。</span></a><a href="/guides/photography-gear-checklist/"><strong>摄影师拍摄当天的器材清单：按镜头任务准备，而不是盲目多带</strong><span>从机身、镜头、存储、电力、稳定与补光五类准备出发，把每件器材对应到具体镜头任务，减少遗漏和无效负重。</span></a><a href="/guides/reference-image-to-shot-plan/"><strong>参考图怎么拆成可执行的拍摄分镜</strong><span>从人物、场景、光线、构图和情绪五个维度分析参考图，再把结果转换为可执行镜头清单。</span></a></div>
+      </section>
+      <section>
+        <h2>完成前检查</h2>
+        <p>把方法写进方案后，再从执行者视角完整读一遍：摄影师是否知道机位和焦段，模特是否听得懂动作，协作人员是否知道时间与所需资源，后期是否拿到了正确的色彩信息。</p>
+        <p>最后删除无法观察、无法确认或无法在现场完成的描述。保留的每一项都应能被勾选、替换或复盘，这样方案才不只是好看的文字。</p>
+        <ul><li>来源和授权信息可追踪</li><li>镜头与交付目标对应</li><li>资源、时间和替代方案明确</li><li>原始素材不会被 LUT 或导出流程覆盖</li></ul>
+      </section>
+      <div class="cta"><div><strong>把这些步骤放进真实方案</strong><br><span>在 PhotoAtelier 中建立参考、分镜、资源和日程关系。</span></div><a class="button" href="/legacy/?mode=public-beta">打开工作台</a></div>
+    </article>
+  </main>
+  <footer>PhotoAtelier · 摄影方案、分镜、资源与日程工作台 · <a href="/">返回首页</a></footer>
+</body>
+</html>

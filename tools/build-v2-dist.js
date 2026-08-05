@@ -41,6 +41,7 @@ copy('workspace.html', output);
 copy('assets/app.css', output);
 copy('src/app.js', output);
 copy('src/public-beta.js', output);
+copy('src/landing-motion.js', output);
 copy('src/beta-feedback.js', output);
 copyTree('src/core', output);
 copyTree('src/data', output);
@@ -48,7 +49,8 @@ copyTree('src/services', output);
 copyTree('src/v5', output);
 copyTree('src/pages', output);
 for (const locale of ['en', 'ja', 'ko']) copyTree(locale, output);
-for (const optional of ['favicon.jpg', 'robots.txt', 'sitemap.xml', 'manifest.webmanifest', 'sw.js']) copyOptional(optional, output);
+copyTree('guides', output);
+for (const optional of ['favicon.jpg', 'favicon-64.png', 'robots.txt', 'sitemap.xml', 'sitemap.txt', 'manifest.webmanifest', 'sw.js', '_headers', '_redirects', 'google67c093daaeda8997.html', 'd78ec4343cd045feb784e87950786218.txt']) copyOptional(optional, output);
 
 copy('legacy/index.html', output);
 for (const file of legacyRuntimeFiles) copy(file, output);
