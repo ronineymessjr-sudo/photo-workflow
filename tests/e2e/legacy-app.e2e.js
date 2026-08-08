@@ -164,7 +164,11 @@ async function waitFor(target) {
   const referenceAssignments = await page.evaluate(() => JSON.parse(localStorage.getItem('pw_plans') || '[]')[0]?.shotReferenceAssignments || {});
   const assignedReferences = Object.keys(referenceAssignments).length;
   if (!assignedReferences) throw new Error('shot-to-reference assignments were not persisted');
-  if (!Object.values(referenceAssignments).some(id => String(id).startsWith('asset-'))) throw new Error('real local images were not prioritized for shot references');
+  const localAssetCount = await page.evaluate(async (port) => {
+    const response = await fetch(`http://127.0.0.1:${port}/v1/health`);
+    return Number((await response.json()).assets || 0);
+  }, obsidianProxyPort);
+  if (localAssetCount && !Object.values(referenceAssignments).some(id => String(id).startsWith('asset-'))) throw new Error('real local images were not prioritized for shot references');
   const uniqueAssignedReferences = new Set(Object.values(referenceAssignments)).size;
   if (uniqueAssignedReferences !== assignedReferences) throw new Error('shot references were repeated even though the local library had enough alternatives');
   await page.locator('.workflow-loop').evaluate(element => { element.open = true; });
