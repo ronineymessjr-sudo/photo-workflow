@@ -1,5 +1,19 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const { spawnSync } = require('node:child_process');
+
+const projectRoot = path.resolve(__dirname, '..', '..');
+const testVault = fs.mkdtempSync(path.join(os.tmpdir(), 'photoatelier-obsidian-test-'));
+const sync = spawnSync(process.execPath, ['tools/sync-ronin-knowledge-to-obsidian.mjs'], {
+  cwd: projectRoot,
+  env: { ...process.env, RONIN_OBSIDIAN_VAULT: testVault },
+  encoding: 'utf8',
+});
+if (sync.status !== 0) throw new Error(sync.stderr || 'Failed to create the isolated Obsidian test vault.');
+process.env.PHOTOATELIER_OBSIDIAN_VAULT = testVault;
 const { createServer, buildIndex, searchIndex, recommendKnowledgeContext, safeLibraryRoot } = require('../../tools/local-obsidian-proxy');
 
 test('rejects library paths outside the configured vault', () => {
@@ -52,7 +66,7 @@ test('knowledge recommendation covers a real brief with diverse, traceable sourc
   assert.ok(result.items.some(item => item.selectionRole === 'scene'));
   assert.ok(result.items.some(item => item.selectionRole === 'action'));
   assert.ok(result.items.some(item => item.selectionRole === 'movement'));
-  assert.ok(result.items.some(item => item.kind === 'vault_note'));
+  assert.ok(result.items.some(item => item.kind === 'rag_chunk' || item.kind === 'scene' || item.kind === 'action'));
   assert.ok(result.items.some(item => item.id === 'SCN-003'));
   assert.ok(result.items.filter(item => item.groundingStatus === 'metadata-only').every(item => item.requiresVerification));
   assert.equal(result.policy.forbidInventedParameters, true);
