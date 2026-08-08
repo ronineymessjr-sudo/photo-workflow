@@ -2,7 +2,7 @@ name: Validate and Deploy PhotoAtelier V2
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, release/photoatelier-v3]
     paths:
       - 'index.html'
       - 'assets/**'
@@ -67,7 +67,7 @@ jobs:
   deploy-pages:
     name: Deploy canonical V2 pages
     needs: quality
-    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/release/photoatelier-v3')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -91,7 +91,7 @@ jobs:
   deploy-worker:
     name: Deploy V2 Worker
     needs: quality
-    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/release/photoatelier-v3')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
