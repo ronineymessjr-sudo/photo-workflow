@@ -4953,7 +4953,7 @@
                 updateDashboard(localData);
                 
                 // 然后尝试从API获取更多数据
-                var API_BASE = window.api ? window.api.base : 'https://photoatelier-api.photomagic.workers.dev';
+                var API_BASE = window.api ? window.api.base : 'https://photoatelier-v2-api.photomagic.workers.dev';
                 var token = localStorage.getItem('pw_token');
                 
                 if (token) {
@@ -5579,7 +5579,7 @@ if (document.getElementById('loginOverlay')) {
 
 // ===== Auth System & App Entry =====
 (function() {
-    const API_BASE = localStorage.getItem('pa_api_base') || 'https://photoatelier-api.photomagic.workers.dev';
+    const API_BASE = localStorage.getItem('pa_api_base') || 'https://photoatelier-v2-api.photomagic.workers.dev';
     const TOKEN_KEY = 'pw_token';
     const USER_KEY = 'pw_user';
     const ROLE_KEY = 'pw_role';

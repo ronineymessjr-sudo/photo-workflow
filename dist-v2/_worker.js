@@ -108,7 +108,7 @@ function onRequestOptions2() {
 }
 __name(onRequestOptions2, "onRequestOptions");
 
-// ../.wrangler/tmp/pages-9VECRr/functionsRoutes-0.001966786134591114.mjs
+// ../.wrangler/tmp/pages-hMWjlj/functionsRoutes-0.040615304012066034.mjs
 var routes = [
   {
     routePath: "/api/public/events",
@@ -140,7 +140,7 @@ var routes = [
   }
 ];
 
-// ../../../../../AppData/Roaming/npm/node_modules/wrangler/node_modules/path-to-regexp/dist.es2015/index.js
+// ../../../../AppData/Roaming/npm/node_modules/wrangler/node_modules/path-to-regexp/dist.es2015/index.js
 function lexer(str) {
   var tokens = [];
   var i = 0;
@@ -466,7 +466,7 @@ function pathToRegexp(path, keys, options) {
 }
 __name(pathToRegexp, "pathToRegexp");
 
-// ../../../../../AppData/Roaming/npm/node_modules/wrangler/templates/pages-template-worker.ts
+// ../../../../AppData/Roaming/npm/node_modules/wrangler/templates/pages-template-worker.ts
 var escapeRegex = /[.+?^${}()|[\]\\]/g;
 function* executeRequest(request) {
   const requestPath = new URL(request.url).pathname;
