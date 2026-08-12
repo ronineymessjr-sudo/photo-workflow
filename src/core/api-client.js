@@ -1,3 +1,12 @@
+const LEGACY_API_BASE = 'https://photoatelier-v2-api.photomagic.workers.dev';
+
+function defaultApiBase() {
+  const hostname = typeof location === 'undefined' ? '' : String(location.hostname || '');
+  return hostname === 'photoatelier.pages.dev' || hostname.endsWith('.photoatelier.pages.dev')
+    ? '/api/worker'
+    : LEGACY_API_BASE;
+}
+
 export class ApiError extends Error {
   constructor(message, options = {}) {
     super(message);
@@ -14,13 +23,18 @@ export class ApiClient {
   }
 
   get settings() {
-    return this.storage.get('settings', {
+    const preferredApiBase = defaultApiBase();
+    const settings = this.storage.get('settings', {
       remoteEnabled: false,
-      apiBase: 'https://photoatelier-v2-api.photomagic.workers.dev',
+      apiBase: preferredApiBase,
       syncToken: '',
       obsidianBridgeUrl: 'http://127.0.0.1:8124',
       obsidianBridgeToken: '',
     });
+    if (settings.apiBase === LEGACY_API_BASE && preferredApiBase === '/api/worker') {
+      return { ...settings, apiBase: preferredApiBase };
+    }
+    return settings;
   }
 
   async request(path, options = {}) {
