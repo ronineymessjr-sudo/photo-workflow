@@ -1,5 +1,5 @@
 param(
-  [string]$BaseToken = 'QSI5bYnclanPbKsYT2lcDkTNnxI',
+  [Parameter(Mandatory = $true)][string]$BaseToken,
   [string]$PlansTable = 'tblNrQT46I5iwkPZ',
   [string]$MessagesTable = 'tblF36evkJLHBVHf'
 )
