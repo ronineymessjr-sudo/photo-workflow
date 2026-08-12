@@ -198,16 +198,18 @@
       }, `lut-${index}`);
     });
 
-    const messages = readJson('pw_messages', []).map((message, index) => stamp({
-      ...message,
-      id: message.id || `message-${index}`,
-      projectId: message.projectId || 'project-system',
-      type: message.type || message.service_type || 'notification',
-      status: message.status || 'new',
-      content: message.content || message.message || message.name || '',
-      createdAt: message.createdAt || message.created_at,
-      updatedAt: message.updatedAt || message.created_at
-    }, `message-${index}`));
+    const messages = readJson('pw_messages', [])
+      .map((message, index) => stamp({
+        ...message,
+        id: message.id || `message-${index}`,
+        projectId: message.projectId || 'project-system',
+        type: message.type || message.service_type || 'notification',
+        status: message.status || 'new',
+        content: message.content || message.message || message.name || '',
+        createdAt: message.createdAt || message.created_at,
+        updatedAt: message.updatedAt || message.created_at
+      }, `message-${index}`))
+      .filter(message => !isIgnoredPublicBetaProbeMessage(message));
 
     const relationReferences = plans.flatMap(plan => {
       const relation = plan.relations || {};
@@ -252,7 +254,22 @@
     return Array.from(map.values());
   }
 
+  function isIgnoredPublicBetaProbeMessage(record) {
+    if (!record || record.projectId !== 'public-beta' || record.type !== 'beta-feedback') return false;
+    let metadata = {};
+    if (typeof record.metadataJson === 'string') {
+      try { metadata = JSON.parse(record.metadataJson || '{}'); } catch (_) {}
+    } else {
+      metadata = record.metadataJson || {};
+    }
+    const fingerprint = [record.id, record.traceId].map(value => String(value || '')).join(' ');
+    const probeBuild = metadata.build === 'deploy-check' || /(^|-)deploy-check(?:-|$)/.test(fingerprint);
+    const probeSession = (metadata.sessionId || record.relatedId) === 'system-check' || /(^|-)system-check(?:-|$)/.test(fingerprint);
+    return probeBuild && probeSession;
+  }
+
   async function mergeRemote(entity, records) {
+    const remoteRecords = entity === 'messages' ? (records || []).filter(item => !isIgnoredPublicBetaProbeMessage(item)) : (records || []);
     if (entity === 'projects') writeJson('pa_projects', mergeByUpdatedAt(readJson('pa_projects', []), records));
     if (entity === 'plans') writeJson('pw_plans', mergeByUpdatedAt(readJson('pw_plans', []), records));
     if (entity === 'tasks') {
@@ -262,10 +279,16 @@
     }
     if (entity === 'reviews') writeJson('pa_reviews', mergeByUpdatedAt(readJson('pa_reviews', []), records));
     if (entity === 'luts') writeJson('pa_lut_profiles', mergeByUpdatedAt(readJson('pa_lut_profiles', []), records));
-    if (entity === 'messages') writeJson('pw_messages', mergeByUpdatedAt(readJson('pw_messages', []), records));
+    if (entity === 'messages') {
+      const localMessages = readJson('pw_messages', []);
+      const keptLocal = localMessages.filter(item => !isIgnoredPublicBetaProbeMessage(item));
+      const removedLocalIds = localMessages.filter(item => isIgnoredPublicBetaProbeMessage(item)).map(item => String(item.id));
+      writeJson('pw_messages', mergeByUpdatedAt(keptLocal, remoteRecords));
+      await Promise.all(removedLocalIds.map(id => Store.remove('messages', id).catch(() => {})));
+    }
     if (entity === 'references') {
       writeJson('pa_feishu_references', mergeByUpdatedAt(readJson('pa_feishu_references', []), records));
-      await Store.bulkPut('assets', records);
+      await Store.bulkPut('assets', remoteRecords);
     }
     if (entity === 'shots') {
       const byPlan = new Map();
@@ -277,7 +300,7 @@
       byPlan.forEach((items, planId) => writeJson(`pa_shots_${planId}`, mergeByUpdatedAt(readJson(`pa_shots_${planId}`, []), items)));
     }
     const storeName = { tasks: 'schedules', luts: 'lutProfiles' }[entity] || entity;
-    if (Domain.ENTITY_TYPES.includes(storeName)) await Store.bulkPut(storeName, records).catch(() => {});
+    if (Domain.ENTITY_TYPES.includes(storeName)) await Store.bulkPut(storeName, remoteRecords).catch(() => {});
   }
 
   async function pushAll() {
