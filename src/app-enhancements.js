@@ -2227,15 +2227,252 @@
     };
   }
 
+  /* R4-C: Desktop Active Plan and shot workspace */
+  let r4StylesLoaded = false;
+  function loadR4ActivePlanStyles() {
+    if (r4StylesLoaded || document.getElementById('r4-active-plan-styles')) return;
+    const link = document.createElement('link');
+    link.id = 'r4-active-plan-styles';
+    link.rel = 'stylesheet';
+    link.href = '../src/r4-active-plan.css';
+    document.head.appendChild(link);
+    r4StylesLoaded = true;
+  }
+
+  function getPlanReferences(plan) {
+    const relationGraph = (typeof buildCanonicalRelations === 'function' ? buildCanonicalRelations(plan) : []) || [];
+    const refs = relationGraph
+      .filter(rel => rel && rel.provenance && (rel.provenance.sourceUrl || rel.provenance.sourceFile || rel.provenance.thumbnail))
+      .map(rel => ({
+        ...rel.provenance,
+        synthetic: rel.synthetic === true || rel.provenance.synthetic === true,
+        validationStatus: rel.validationStatus || rel.provenance.validationStatus || 'pending'
+      }));
+    if (refs.length) return refs;
+    const selections = plan?.resourceSelections || {};
+    const selectedIds = Array.isArray(selections.referenceIds) ? selections.referenceIds : [];
+    if (selectedIds.length && typeof referenceImageCatalog !== 'undefined') {
+      return selectedIds.map(id => referenceImageCatalog.find(item => String(item.id) === String(id))).filter(Boolean);
+    }
+    return [];
+  }
+
+  function renderR4ReferenceTile(ref) {
+    const isConcept = ref.synthetic === true;
+    const typeLabel = isConcept ? 'AI 概念图' : '真实参考';
+    const title = esc(ref.title || ref.sourceId || '参考图');
+    const thumbnail = ref.thumbnail || ref.sourceUrl || ref.sourceFile || '';
+    return `
+      <article class="r4-reference-tile ${isConcept ? 'is-concept' : ''}">
+        <div class="r4-reference-tile__media">
+          ${thumbnail ? `<img src="${esc(thumbnail)}" alt="${title}" loading="lazy">` : '<span class="r4-text-tertiary">无预览</span>'}
+        </div>
+        <div class="r4-reference-tile__label">
+          <h4 class="r4-reference-tile__title">${title}</h4>
+          <div class="r4-reference-tile__type ${isConcept ? 'is-concept' : ''}">${typeLabel}</div>
+        </div>
+      </article>`;
+  }
+
+  function renderR4ReferencePanel(plan) {
+    const refs = getPlanReferences(plan);
+    const content = refs.length
+      ? `<div class="r4-reference-list">${refs.slice(0, 6).map(renderR4ReferenceTile).join('')}</div>`
+      : `<div class="r4-empty-state">
+          <h4 class="r4-empty-state__title">还没有选择参考图</h4>
+          <p class="r4-empty-state__body">从参考库添加真实参考，或继续无参考拍摄。</p>
+          <button class="r4-btn r4-btn-primary" onclick="showTab('reference')">打开参考库</button>
+        </div>`;
+    return `
+      <aside class="r4-reference-panel" aria-label="项目参考">
+        <header class="r4-reference-panel__header">
+          <h3 class="r4-reference-panel__title">参考图</h3>
+          <p class="r4-reference-panel__count">${refs.length} 张已选</p>
+        </header>
+        ${content}
+      </aside>`;
+  }
+
+  function renderR4PlanNav(plan) {
+    const lifecycle = planLifecycleStatus(plan);
+    const lifecycleLabels = { candidate: '预选方案', confirmed: '正式方案', scheduled: '已排期' };
+    const summaryLine = [plan.input && plan.input.style, plan.input && plan.input.mood, plan.input && plan.input.scene].filter(Boolean).join(' · ');
+    return `
+      <nav class="r4-plan-nav" aria-label="方案导航">
+        <div class="r4-plan-nav__brand">PhotoAtelier</div>
+        <div>
+          <span class="r4-status-badge is-${esc(lifecycle)}">${esc(lifecycleLabels[lifecycle] || '工作方案')}</span>
+          <h2 class="r4-plan-nav__title">${esc(plan.title || '拍摄方案')}</h2>
+          <p class="r4-plan-nav__summary">${esc(summaryLine || '拍摄条件待补充')}</p>
+        </div>
+        <dl class="r4-plan-nav__meta">
+          <div><dt>风格</dt><dd>${esc(plan.input && plan.input.style || '待确认')}</dd></div>
+          <div><dt>场景</dt><dd>${esc(plan.input && plan.input.scene || '待确认')}</dd></div>
+          <div><dt>时长</dt><dd>${esc(plan.input && plan.input.duration || '待定')}</dd></div>
+          <div><dt>人数</dt><dd>${esc(plan.input && plan.input.people || 1)} 人</dd></div>
+        </dl>
+        <div class="r4-nav-actions">
+          <button class="r4-btn" onclick="showTab('library')">返回方案库</button>
+          <button class="r4-btn r4-btn-primary" onclick="openPlanScheduleDialog('${esc(plan.id)}')">安排拍摄</button>
+        </div>
+      </nav>`;
+  }
+
+  function renderR4ShotRow(plan, shot, index) {
+    const shotId = `shot-${index}`;
+    const complete = typeof isShotComplete === 'function' ? isShotComplete(plan.id, index) : false;
+    const title = shot.name || shot.scene || `镜头 ${index + 1}`;
+    const lensKit = typeof getPlanLensKit === 'function' ? getPlanLensKit(plan) : [];
+    const lens = typeof getPlannedLensForShot === 'function' ? getPlannedLensForShot(shot, lensKit) : (shot.focalLength || '');
+    const lightingDir = typeof shot.lighting === 'object' ? (shot.lighting.direction || '') : '';
+    const lighting = lightingDir || (typeof shot.lighting === 'string' ? shot.lighting : '');
+    const pose = shot.method || shot.description || '';
+    const time = `${shot.duration || 0} min`;
+    return `
+      <div class="r4-shot-row ${complete ? 'is-complete' : ''}" data-shot-index="${index}" onclick="openR4ShotDetail('${esc(plan.id)}', ${index})">
+        <div class="r4-shot-row__number">${String(index + 1).padStart(2, '0')}</div>
+        <div class="r4-shot-row__name" title="${esc(title)}">${esc(title)}</div>
+        <div class="r4-shot-row__cell" title="${esc(shot.shotSize || '')}">${esc(shot.shotSize || '')}</div>
+        <div class="r4-shot-row__cell" title="${esc(lens)}">${esc(lens)}</div>
+        <div class="r4-shot-row__cell" title="${esc(pose)}">${esc(pose)}</div>
+        <div class="r4-shot-row__cell" title="${esc(lighting)}">${esc(lighting)}</div>
+        <div class="r4-shot-row__time">${esc(time)}</div>
+        <div class="r4-shot-row__state ${complete ? 'is-complete' : 'is-pending'}">${complete ? '已完成' : '待拍'}</div>
+        <button class="r4-shot-row__more" onclick="event.stopPropagation(); openR4ShotDetail('${esc(plan.id)}', ${index})" aria-label="更多">⋯</button>
+      </div>`;
+  }
+
+  function renderR4ShotList(plan) {
+    const shots = typeof root.generateShotList === 'function' ? root.generateShotList(plan) : [];
+    const totalMinutes = shots.reduce((sum, shot) => sum + Number(shot.duration || 0), 0);
+    const rows = shots.map((shot, index) => renderR4ShotRow(plan, shot, index)).join('');
+    return `
+      <section class="r4-shot-list-section">
+        <div class="r4-shot-list-section__header">
+          <h3>分镜执行表</h3>
+          <span class="r4-shot-list-section__meta">${shots.length} 个镜头 · ${totalMinutes} 分钟</span>
+        </div>
+        <div class="r4-shot-list">${rows || '<p class="r4-empty-state__body">当前方案没有可用镜头。</p>'}</div>
+      </section>`;
+  }
+
+  function renderR4ShotDetailFields(shot) {
+    const lensKit = typeof getPlanLensForShot === 'function' ? getPlanLensForShot(shot, typeof getPlanLensKit === 'function' ? getPlanLensKit({}) : []) : (shot.focalLength || '');
+    const lighting = typeof shot.lighting === 'object'
+      ? [shot.lighting.main, shot.lighting.direction, shot.lighting.auxiliary, shot.lighting.effect].filter(Boolean).join(' · ')
+      : (shot.lighting || '');
+    const fields = [
+      { label: '景别', value: shot.shotSize || '' },
+      { label: '镜头 / 焦段', value: lensKit },
+      { label: '动作 / 摆姿', value: shot.method || shot.description || '' },
+      { label: '光线方向', value: lighting },
+      { label: '构图 / 角度', value: [shot.composition, shot.angle].filter(Boolean).join(' · ') },
+      { label: '道具', value: shot.props || '无' },
+      { label: '备选方案', value: shot.alternative || '按现场条件调整' },
+      { label: '备注', value: shot.notes || '' }
+    ];
+    return `<div class="r4-shot-detail__fields">${fields.map(f => `
+      <div class="r4-field">
+        <span class="r4-field__label">${esc(f.label)}</span>
+        <span class="r4-field__value">${esc(f.value) || '—'}</span>
+      </div>`).join('')}</div>`;
+  }
+
+  root.openR4ShotDetail = function (planId, index) {
+    const plan = currentPlan(planId);
+    if (!plan) return;
+    const shots = typeof root.generateShotList === 'function' ? root.generateShotList(plan) : [];
+    const shot = shots[index];
+    if (!shot) return;
+    const container = document.getElementById(`r4-shot-detail-${esc(planId)}`);
+    if (!container) return;
+    container.classList.remove('is-hidden');
+    container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    const refs = getPlanReferences(plan);
+    const ref = refs[index % Math.max(refs.length, 1)];
+    const complete = typeof isShotComplete === 'function' ? isShotComplete(planId, index) : false;
+    const title = shot.name || shot.scene || `镜头 ${index + 1}`;
+    const media = ref
+      ? `<img src="${esc(ref.thumbnail || ref.sourceUrl || ref.sourceFile || '')}" alt="${esc(ref.title || '参考图')}" loading="lazy">`
+      : `<div class="r4-empty-state__body">无关联参考图</div>`;
+    container.innerHTML = `
+      <div class="r4-shot-detail__header">
+        <h4 class="r4-shot-detail__title">#${String(index + 1).padStart(2, '0')} · ${esc(title)}</h4>
+        <button class="r4-shot-detail__close" onclick="closeR4ShotDetail('${esc(planId)}')" aria-label="关闭">×</button>
+      </div>
+      <div class="r4-shot-detail__body">
+        <div class="r4-shot-detail__media">${media}</div>
+        ${renderR4ShotDetailFields(shot)}
+        <div class="r4-shot-detail__actions">
+          <label class="r4-shot-detail__complete">
+            <input type="checkbox" ${complete ? 'checked' : ''} onchange="toggleR4ShotComplete('${esc(planId)}', ${index})">
+            标记为已完成
+          </label>
+          <button class="r4-btn" onclick="showTab('reference')">查看参考库</button>
+          <button class="r4-btn" onclick="openOnSetMode('${esc(planId)}')">现场模式</button>
+        </div>
+      </div>`;
+    document.querySelectorAll('.r4-shot-row').forEach(row => row.classList.remove('is-selected'));
+    const selectedRow = document.querySelector(`.r4-shot-row[data-shot-index="${index}"]`);
+    if (selectedRow) selectedRow.classList.add('is-selected');
+  };
+
+  root.closeR4ShotDetail = function (planId) {
+    const container = document.getElementById(`r4-shot-detail-${esc(planId || (root.currentPlanData?.id))}`);
+    if (container) {
+      container.classList.add('is-hidden');
+      container.innerHTML = '';
+    }
+    document.querySelectorAll('.r4-shot-row').forEach(row => row.classList.remove('is-selected'));
+  };
+
+  root.toggleR4ShotComplete = function (planId, index) {
+    if (typeof toggleShotComplete === 'function') {
+      const current = typeof isShotComplete === 'function' ? isShotComplete(planId, index) : false;
+      toggleShotComplete(planId, index, !current);
+    }
+    const row = document.querySelector(`.r4-shot-row[data-shot-index="${index}"]`);
+    if (row) {
+      const complete = typeof isShotComplete === 'function' ? isShotComplete(planId, index) : false;
+      row.classList.toggle('is-complete', complete);
+      const state = row.querySelector('.r4-shot-row__state');
+      if (state) {
+        state.className = `r4-shot-row__state ${complete ? 'is-complete' : 'is-pending'}`;
+        state.textContent = complete ? '已完成' : '待拍';
+      }
+    }
+    root.openR4ShotDetail(planId, index);
+  };
+
+  function renderR4ActivePlan(plan, legacyHtml, lifecycleHtml) {
+    return `
+      <div class="r4-active-plan" data-plan-id="${esc(plan.id)}">
+        ${renderR4PlanNav(plan)}
+        ${renderR4ReferencePanel(plan)}
+        <main class="r4-shot-workspace">
+          ${renderR4ShotList(plan)}
+          <section id="r4-shot-detail-${esc(plan.id)}" class="r4-shot-detail-section is-hidden" aria-live="polite"></section>
+          <details class="r4-legacy-document">
+            <summary>完整方案文档</summary>
+            <div class="r4-legacy-document__body">${legacyHtml}</div>
+          </details>
+          ${lifecycleHtml || ''}
+        </main>
+      </div>`;
+  }
+
   function wrapExistingFunctions() {
     const scheduleFeishu = () => root.PhotoAtelierFeishu?.schedule();
     const originalRender = root.renderPlanContent;
-    if (typeof originalRender === 'function' && !originalRender.__workflowWrapped) {
+    if (typeof originalRender === 'function' && !originalRender.__r4Wrapped) {
       const wrapped = function (plan) {
+        loadR4ActivePlanStyles();
         setTimeout(() => root.initializePlanLutPreview?.(plan.id), 0);
-        return originalRender(plan) + renderLifecyclePanel(plan);
+        const legacyHtml = originalRender(plan);
+        const lifecycleHtml = renderLifecyclePanel(plan);
+        return renderR4ActivePlan(plan, legacyHtml, lifecycleHtml);
       };
-      wrapped.__workflowWrapped = true;
+      wrapped.__r4Wrapped = true;
       root.renderPlanContent = wrapped;
     }
     const originalSavePlan = root.savePlan;
