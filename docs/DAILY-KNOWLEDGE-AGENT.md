@@ -25,21 +25,15 @@
 
 ## 分类代理
 
-默认配置使用 Ollama 的 OpenAI 兼容接口：
+默认配置使用 OpenAI 的多模态接口：
 
 ```text
-http://127.0.0.1:11434/v1/chat/completions
+https://api.openai.com/v1/chat/completions
 ```
 
-官方兼容说明：<https://docs.ollama.com/api/openai-compatibility>
+官方接口说明：<https://platform.openai.com/docs/guides/images-vision>
 
-本机没有安装 Ollama 时，系统自动使用规则分类并在状态页标记 `rules-fallback`，每日入库不会中断。安装 Ollama 后可自行拉取配置中的模型：
-
-```powershell
-ollama pull qwen3:8b
-```
-
-也可通过 `.env` 把 `DAILY_KB_AGENT_BASE_URL`、`DAILY_KB_AGENT_MODEL` 和 `DAILY_KB_AGENT_API_KEY` 指向其他 OpenAI 兼容服务。不要把真实密钥提交到仓库。
+在本机 `.env` 中设置 `DAILY_KB_AGENT_API_KEY`（或系统环境变量 `OPENAI_API_KEY`）后，新增内容会交由多模态模型分类。模型会同时读取收藏卡片可见的标题、作者、收藏夹标签与封面图地址，生成构图、动作、光线、场景、时间和色彩等可检索索引；不会保存原图、下载视频或读取原帖全文。密钥缺失或接口临时不可用时，系统自动使用规则分类并在状态页标记 `rules-fallback`，每日入库不会中断。不要把真实密钥提交到仓库。
 
 ## 使用
 
@@ -59,6 +53,12 @@ npm run agent:daily:dry-run
 
 ```powershell
 npm run agent:daily:scheduled
+```
+
+对已有且带封面的收藏补充视觉索引（不重新访问平台）：
+
+```powershell
+npm run agent:daily:reclassify-visual
 ```
 
 只处理已经生成的捕获文件，不访问平台：

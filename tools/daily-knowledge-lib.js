@@ -128,21 +128,41 @@ function classifyByRules(item) {
   };
 }
 
+function cleanVisualIndex(value) {
+  if (!value || typeof value !== 'object') return null;
+  const fields = ['shotType', 'composition', 'subjectAction', 'lighting', 'scene', 'timeOfDay', 'colorStyle'];
+  const visualIndex = Object.fromEntries(fields.map((field) => [field, cleanText(value[field], 80)]).filter(([, fieldValue]) => fieldValue));
+  return Object.keys(visualIndex).length ? visualIndex : null;
+}
+
+function isHttpUrl(value) {
+  try {
+    return ['http:', 'https:'].includes(new URL(String(value || '')).protocol);
+  } catch (_) {
+    return false;
+  }
+}
+
 function sanitizeClassification(raw, fallback) {
   const workflowStage = WORKFLOW_STAGES.includes(raw?.workflowStage) ? raw.workflowStage : fallback.workflowStage;
   const contentType = CONTENT_TYPES.includes(raw?.contentType) ? raw.contentType : fallback.contentType;
   const knowledgeValue = VALUE_LEVELS.includes(raw?.knowledgeValue) ? raw.knowledgeValue : fallback.knowledgeValue;
   const topics = uniqueStrings(raw?.topics?.length ? raw.topics : fallback.topics, 6);
+  const visualIndex = cleanVisualIndex(raw?.visualIndex);
   return {
     summary: cleanText(raw?.summary || fallback.summary, 240),
     primaryTopic: cleanText(raw?.primaryTopic || topics[0] || fallback.primaryTopic, 40),
     topics,
     workflowStage,
     contentType,
-    searchableTags: uniqueStrings(raw?.searchableTags?.length ? raw.searchableTags : fallback.searchableTags),
+    searchableTags: uniqueStrings([
+      ...(raw?.searchableTags?.length ? raw.searchableTags : fallback.searchableTags),
+      ...Object.values(visualIndex || {})
+    ]),
     knowledgeValue,
     needsReview: raw?.needsReview !== false,
-    classifiedBy: raw?.classifiedBy || 'local-model'
+    classifiedBy: raw?.classifiedBy || 'model',
+    visualIndex
   };
 }
 
@@ -157,8 +177,9 @@ function extractJsonArray(content) {
 async function requestModelBatch(items, agentConfig, fetchImpl = global.fetch) {
   const baseUrl = process.env.DAILY_KB_AGENT_BASE_URL || agentConfig.baseUrl;
   const model = process.env.DAILY_KB_AGENT_MODEL || agentConfig.model;
-  const apiKey = process.env.DAILY_KB_AGENT_API_KEY || '';
+  const apiKey = process.env.DAILY_KB_AGENT_API_KEY || process.env.OPENAI_API_KEY || '';
   if (!baseUrl || !model || typeof fetchImpl !== 'function') throw new Error('模型接口未配置');
+  if (!apiKey) throw new Error('模型 API 密钥未配置');
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), Number(agentConfig.timeoutMs) || 8000);
@@ -168,19 +189,27 @@ async function requestModelBatch(items, agentConfig, fetchImpl = global.fetch) {
     title: item.title,
     author: item.author,
     collectionName: item.collectionName,
-    sourceTags: item.sourceTags
+    sourceTags: item.sourceTags,
+    hasCover: isHttpUrl(item.cover)
   }));
   const prompt = [
     '你是个人摄影知识库的分类代理。仅依据给定收藏元数据分类，不补写原帖正文，不推断用户的敏感属性。',
     `workflowStage 只能是：${WORKFLOW_STAGES.join('、')}。`,
     `contentType 只能是：${CONTENT_TYPES.join('、')}。knowledgeValue 只能是 high、medium、low。`,
-    '每条返回 id、summary、primaryTopic、topics、workflowStage、contentType、searchableTags、knowledgeValue、needsReview。',
+    '每条返回 id、summary、primaryTopic、topics、workflowStage、contentType、searchableTags、knowledgeValue、needsReview、visualIndex。',
+    'visualIndex 只在存在对应画面信息时返回，可用字段为 shotType、composition、subjectAction、lighting、scene、timeOfDay、colorStyle。不要猜测不可见细节。',
     '元数据不足时 needsReview 必须为 true。只返回 JSON 数组。',
     JSON.stringify(payload)
   ].join('\n');
+  const content = [{ type: 'text', text: prompt }];
+  for (const item of items) {
+    if (!isHttpUrl(item.cover)) continue;
+    content.push({ type: 'text', text: `封面对应条目 id: ${item.id}` });
+    content.push({ type: 'image_url', image_url: { url: item.cover, detail: 'low' } });
+  }
 
   try {
-    const response = await fetch(`${String(baseUrl).replace(/\/$/, '')}/chat/completions`, {
+    const response = await fetchImpl(`${String(baseUrl).replace(/\/$/, '')}/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -191,7 +220,7 @@ async function requestModelBatch(items, agentConfig, fetchImpl = global.fetch) {
         temperature: 0.1,
         messages: [
           { role: 'system', content: 'Return valid JSON only.' },
-          { role: 'user', content: prompt }
+          { role: 'user', content }
         ]
       }),
       signal: controller.signal
@@ -209,6 +238,13 @@ async function classifyItems(items, agentConfig = {}, fetchImpl = global.fetch) 
   const fallbacks = new Map(items.map((item) => [item.id, classifyByRules(item)]));
   if (!agentConfig.enabled || process.env.DAILY_KB_AGENT_PROVIDER === 'rules') {
     return { items: items.map((item) => ({ ...item, classification: fallbacks.get(item.id) })), mode: 'rules', warnings: [] };
+  }
+  if (agentConfig.provider === 'openai-vision' && !(process.env.DAILY_KB_AGENT_API_KEY || process.env.OPENAI_API_KEY)) {
+    return {
+      items: items.map((item) => ({ ...item, classification: fallbacks.get(item.id) })),
+      mode: 'rules-fallback',
+      warnings: ['视觉模型 API 密钥未配置，已使用规则分类']
+    };
   }
 
   const batchSize = Math.max(1, Math.min(Number(agentConfig.batchSize) || 20, 50));
@@ -230,19 +266,20 @@ async function classifyItems(items, agentConfig = {}, fetchImpl = global.fetch) 
         lastError = error;
       }
     }
-    if (!modelRows) warnings.push(`本地模型不可用，${batch.length} 条已使用规则分类：${cleanText(lastError?.message, 120)}`);
+    if (!modelRows) warnings.push(`分类模型不可用，${batch.length} 条已使用规则分类：${cleanText(lastError?.message, 120)}`);
     const rowsById = new Map((modelRows || []).map((row) => [String(row.id), row]));
     for (const item of batch) {
       const fallback = fallbacks.get(item.id);
       const modelRow = rowsById.get(item.id);
       classified.push({
         ...item,
-        classification: sanitizeClassification(modelRow ? { ...modelRow, classifiedBy: 'local-model' } : fallback, fallback)
+        classification: sanitizeClassification(modelRow ? { ...modelRow, classifiedBy: agentConfig.provider || 'model' } : fallback, fallback)
       });
     }
   }
 
-  return { items: classified, mode: usedModel ? (warnings.length ? 'hybrid' : 'local-model') : 'rules-fallback', warnings };
+  const modelMode = agentConfig.provider === 'openai-vision' ? 'vision-model' : 'model';
+  return { items: classified, mode: usedModel ? (warnings.length ? 'hybrid' : modelMode) : 'rules-fallback', warnings };
 }
 
 function listCaptureFiles(captureDir) {
@@ -302,6 +339,20 @@ function markdownLink(title, url) {
   return `[${String(title || '打开原帖').replace(/[\[\]]/g, '')}](<${url}>)`;
 }
 
+function formatVisualIndex(visualIndex) {
+  if (!visualIndex) return '';
+  const labels = {
+    shotType: '景别',
+    composition: '构图',
+    subjectAction: '动作',
+    lighting: '光线',
+    scene: '场景',
+    timeOfDay: '时间',
+    colorStyle: '色彩'
+  };
+  return Object.entries(visualIndex).map(([key, value]) => `${labels[key] || key}：${value}`).join('；');
+}
+
 function buildDailyNote(date, runAt, newItems, summary) {
   const lines = [
     '---',
@@ -345,6 +396,7 @@ function buildDailyNote(date, runAt, newItems, summary) {
       `- 内容类型：${c.contentType}`,
       `- 检索标签：${c.searchableTags.join('、') || '待补充'}`,
       `- 摘要：${c.summary}`,
+      ...(c.visualIndex ? [`- 视觉索引：${formatVisualIndex(c.visualIndex)}`] : []),
       `- 核验状态：${c.needsReview ? '待人工核验' : '已具备充分元数据'}`,
       `- 知识 ID：\`${item.id}\``,
       ''
@@ -380,7 +432,7 @@ function buildProfileNote(runAt, ledgerItems, timezone) {
 
 function buildStatusNote(runAt, summary, warnings) {
   const warningLines = warnings.length ? warnings.map((warning) => `- ${warning}`).join('\n') : '- 无';
-  return `---\ntitle: "每日知识自动化状态"\ntype: generated-automation-status\ngenerated_by: photoatelier-daily-agent\ngenerated_at: ${yamlString(runAt)}\n---\n\n# 每日知识自动化状态\n\n## 最近运行\n\n- 时间：${runAt}\n- 采集状态：${summary.collectionStatus}\n- 新增链接：${summary.newCount}\n- 已有链接：${summary.existingCount}\n- 唯一链接总数：${summary.totalCount}\n- 分类方式：${summary.classificationMode}\n- 处理捕获文件：${summary.processedCaptureFiles}\n\n## 警告\n\n${warningLines}\n\n## 判断方式\n\n- \`local-model\`：本机开源模型完成分类。\n- \`hybrid\`：部分批次使用本机模型，失败批次使用规则。\n- \`rules-fallback\`：本机模型不可用，规则分类继续运行。\n- \`rules\`：明确关闭模型，仅使用规则。\n- \`not-needed\`：本次没有新增链接，无需分类。\n- 登录失效或页面结构变化时只记录警告，不尝试绕过平台验证。\n`;
+  return `---\ntitle: "每日知识自动化状态"\ntype: generated-automation-status\ngenerated_by: photoatelier-daily-agent\ngenerated_at: ${yamlString(runAt)}\n---\n\n# 每日知识自动化状态\n\n## 最近运行\n\n- 时间：${runAt}\n- 采集状态：${summary.collectionStatus}\n- 新增链接：${summary.newCount}\n- 已有链接：${summary.existingCount}\n- 唯一链接总数：${summary.totalCount}\n- 分类方式：${summary.classificationMode}\n- 处理捕获文件：${summary.processedCaptureFiles}\n\n## 警告\n\n${warningLines}\n\n## 判断方式\n\n- \`vision-model\`：多模态模型根据可见元数据和封面完成分类。\n- \`model\`：文本模型根据可见元数据完成分类。\n- \`hybrid\`：部分批次使用模型，失败批次使用规则。\n- \`rules-fallback\`：模型不可用，规则分类继续运行。\n- \`rules\`：明确关闭模型，仅使用规则。\n- \`not-needed\`：本次没有新增链接，无需分类。\n- 登录失效或页面结构变化时只记录警告，不尝试绕过平台验证。\n`;
 }
 
 function buildDailyIndex(dailyDir) {
@@ -471,6 +523,39 @@ async function runDailyKnowledge(options = {}) {
   return summary;
 }
 
+async function reclassifyExistingKnowledge(options = {}) {
+  const projectRoot = path.resolve(options.projectRoot || path.join(__dirname, '..'));
+  const configPath = expandPath(options.configPath || 'config/daily-knowledge-agent.json', projectRoot);
+  const config = options.config || readJson(configPath, {});
+  const storage = config.storage || {};
+  const ledgerFile = expandPath(storage.ledgerFile || 'data/daily-knowledge/ledger.json', projectRoot);
+  const ledger = readJson(ledgerFile, { schemaVersion: 1, updatedAt: null, processedCaptureFiles: [], items: [] });
+  const agentConfig = config.agent || {};
+  const candidates = (ledger.items || []).filter((item) => isHttpUrl(item.cover) && !item.classification?.visualIndex);
+  const classification = await classifyItems(candidates, agentConfig, options.fetchImpl || global.fetch);
+  const classifiedById = new Map(classification.items
+    .filter((item) => item.classification?.classifiedBy === 'openai-vision')
+    .map((item) => [item.id, item.classification]));
+  const updatedAt = options.runAt || new Date().toISOString();
+  const nextItems = (ledger.items || []).map((item) => {
+    const nextClassification = classifiedById.get(item.id);
+    return nextClassification ? { ...item, classification: nextClassification, visualIndexedAt: updatedAt } : item;
+  });
+
+  if (!options.dryRun && classifiedById.size) {
+    writeJson(ledgerFile, { ...ledger, updatedAt, items: nextItems });
+  }
+
+  return {
+    ok: true,
+    dryRun: Boolean(options.dryRun),
+    totalCandidates: candidates.length,
+    updatedCount: classifiedById.size,
+    classificationMode: classification.mode,
+    warnings: classification.warnings
+  };
+}
+
 module.exports = {
   buildDailyIndex,
   buildDailyNote,
@@ -481,6 +566,7 @@ module.exports = {
   expandPath,
   loadUnprocessedCaptures,
   normalizePlatformUrl,
+  reclassifyExistingKnowledge,
   runDailyKnowledge,
   sanitizeClassification
 };

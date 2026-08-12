@@ -15,12 +15,12 @@
   },
   "agent": {
     "enabled": true,
-    "provider": "ollama",
-    "baseUrl": "http://127.0.0.1:11434/v1",
-    "model": "qwen3:8b",
+    "provider": "openai-vision",
+    "baseUrl": "https://api.openai.com/v1",
+    "model": "gpt-4.1-mini",
     "timeoutMs": 8000,
     "retries": 1,
-    "batchSize": 20,
+    "batchSize": 10,
     "fallback": "rules"
   },
   "storage": {

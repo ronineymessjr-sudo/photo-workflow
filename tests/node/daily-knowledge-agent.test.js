@@ -5,6 +5,7 @@ const path = require('node:path');
 const test = require('node:test');
 const {
   classifyByRules,
+  classifyItems,
   normalizePlatformUrl,
   runDailyKnowledge
 } = require('../../tools/daily-knowledge-lib');
@@ -30,6 +31,58 @@ test('rule fallback produces searchable photography metadata', () => {
   assert.equal(result.contentType, '教程');
   assert.ok(result.searchableTags.includes('人像'));
   assert.equal(result.needsReview, true);
+});
+
+test('vision classification sends the visible cover and stores visual search fields', async () => {
+  const previousKey = process.env.DAILY_KB_AGENT_API_KEY;
+  process.env.DAILY_KB_AGENT_API_KEY = 'test-key';
+  let requestBody;
+  try {
+    const result = await classifyItems([{
+      id: 'xiaohongshu-vision-test',
+      platform: 'xiaohongshu',
+      title: '人像拍摄参考',
+      author: '作者',
+      collectionName: '拍摄',
+      sourceTags: ['摄影'],
+      cover: 'https://example.com/cover.jpg'
+    }], {
+      enabled: true,
+      provider: 'openai-vision',
+      baseUrl: 'https://api.example.com/v1',
+      model: 'vision-test',
+      timeoutMs: 1000,
+      batchSize: 10
+    }, async (_url, options) => {
+      requestBody = JSON.parse(options.body);
+      return {
+        ok: true,
+        json: async () => ({ choices: [{ message: { content: JSON.stringify([{
+          id: 'xiaohongshu-vision-test',
+          summary: '自然光人像参考',
+          primaryTopic: '人像',
+          topics: ['人像'],
+          workflowStage: '拍摄',
+          contentType: '参考',
+          searchableTags: ['自然光'],
+          knowledgeValue: 'high',
+          needsReview: true,
+          visualIndex: {
+            composition: '三分法',
+            lighting: '侧逆光',
+            subjectAction: '站立回眸'
+          }
+        }]) } }] })
+      };
+    });
+    assert.equal(result.mode, 'vision-model', JSON.stringify(result));
+    assert.ok(requestBody.messages[1].content.some((part) => part.type === 'image_url' && part.image_url.url === 'https://example.com/cover.jpg'));
+    assert.equal(result.items[0].classification.visualIndex.composition, '三分法');
+    assert.ok(result.items[0].classification.searchableTags.includes('侧逆光'));
+  } finally {
+    if (previousKey === undefined) delete process.env.DAILY_KB_AGENT_API_KEY;
+    else process.env.DAILY_KB_AGENT_API_KEY = previousKey;
+  }
 });
 
 test('daily run is incremental and preserves the same-day note on rerun', async (t) => {

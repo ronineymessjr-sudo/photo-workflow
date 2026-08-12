@@ -37,9 +37,26 @@ function createStaticServer(rootDir = PROJECT_ROOT) {
       return;
     }
 
+    let requestUrl;
     let pathname;
-    try { pathname = decodeURIComponent(new URL(req.url, 'http://127.0.0.1').pathname); }
+    try {
+      requestUrl = new URL(req.url, 'http://127.0.0.1');
+      pathname = decodeURIComponent(requestUrl.pathname);
+    }
     catch (_) { res.writeHead(400); res.end('Bad request'); return; }
+
+    if (pathname === '/') {
+      res.writeHead(302, { Location: '/legacy/' });
+      res.end();
+      return;
+    }
+
+    // Old relative links and stale browser tabs can accumulate /legacy/ segments.
+    if (/^\/(?:legacy\/){2,}/.test(pathname)) {
+      res.writeHead(302, { Location: `/legacy/${requestUrl.search}${requestUrl.hash}` });
+      res.end();
+      return;
+    }
 
     const requested = path.resolve(root, `.${pathname}`);
     if (!isInside(root, requested)) {

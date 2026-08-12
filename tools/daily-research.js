@@ -1,7 +1,7 @@
 const { spawnSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
-const { expandPath, runDailyKnowledge } = require('./daily-knowledge-lib');
+const { expandPath, reclassifyExistingKnowledge, runDailyKnowledge } = require('./daily-knowledge-lib');
 
 const projectRoot = path.resolve(__dirname, '..');
 
@@ -12,13 +12,15 @@ function parseArgs(argv) {
     dryRun: false,
     headless: undefined,
     bootstrapLogin: false,
-    skipModel: false
+    skipModel: false,
+    reclassifyVisual: false
   };
   for (let index = 2; index < argv.length; index++) {
     const value = argv[index];
     if (value === '--collect') args.collect = true;
     else if (value === '--dry-run') args.dryRun = true;
     else if (value === '--skip-model') args.skipModel = true;
+    else if (value === '--reclassify-visual') args.reclassifyVisual = true;
     else if (value === '--bootstrap-login') args.bootstrapLogin = true;
     else if (value === '--headless') args.headless = argv[++index] !== 'false';
     else if (value === '--config' && argv[index + 1]) args.configPath = path.resolve(argv[++index]);
@@ -64,6 +66,16 @@ function runCollector(config, args) {
 async function main() {
   const args = parseArgs(process.argv);
   const config = loadConfig(args.configPath);
+  if (args.reclassifyVisual) {
+    const summary = await reclassifyExistingKnowledge({
+      projectRoot,
+      configPath: args.configPath,
+      config,
+      dryRun: args.dryRun
+    });
+    console.log(JSON.stringify(summary, null, 2));
+    return;
+  }
   let collectionResult = { ok: true, warnings: [] };
 
   if (args.bootstrapLogin || args.collect) collectionResult = runCollector(config, args);

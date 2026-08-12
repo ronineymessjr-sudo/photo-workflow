@@ -79,15 +79,43 @@
     try { return JSON.parse(storage.getItem(key) || JSON.stringify(fallback)); } catch (_) { return fallback; }
   }
 
+  function isIgnoredPublicBetaProbeMessage(record) {
+    if (!record || record.projectId !== 'public-beta' || record.type !== 'beta-feedback') return false;
+    let metadata = {};
+    if (typeof record.metadataJson === 'string') {
+      try { metadata = JSON.parse(record.metadataJson || '{}'); } catch (_) {}
+    } else {
+      metadata = record.metadataJson || {};
+    }
+    const fingerprint = [record.id, record.traceId].map(value => String(value || '')).join(' ');
+    const probeBuild = metadata.build === 'deploy-check' || /(^|-)deploy-check(?:-|$)/.test(fingerprint);
+    const probeSession = (metadata.sessionId || record.relatedId) === 'system-check' || /(^|-)system-check(?:-|$)/.test(fingerprint);
+    return probeBuild && probeSession;
+  }
+
+  async function pruneLegacyPublicBetaProbeMessages(storage) {
+    const messages = readJson(storage, 'pw_messages', []);
+    const kept = messages.filter(item => !isIgnoredPublicBetaProbeMessage(item));
+    const removedIds = messages
+      .filter(item => isIgnoredPublicBetaProbeMessage(item))
+      .map(item => String(item.id))
+      .filter(Boolean);
+    if (!removedIds.length) return { messages, removedIds };
+    storage.setItem('pw_messages', JSON.stringify(kept));
+    await Promise.all(removedIds.map(id => remove('messages', id).catch(() => {})));
+    return { messages: kept, removedIds };
+  }
+
   async function migrateLegacy(storage) {
     if (!storage || !Domain) return { skipped: true, reason: 'storage unavailable' };
+    const messageCleanup = await pruneLegacyPublicBetaProbeMessages(storage);
     const marker = readJson(storage, 'pa_indexeddb_migration_v1', null);
     if (marker && marker.completed) return marker;
     const snapshot = {
       pw_plans: readJson(storage, 'pw_plans', []),
       pw_schedule: readJson(storage, 'pw_schedule', []),
       pw_schedules: readJson(storage, 'pw_schedules', []),
-      pw_messages: readJson(storage, 'pw_messages', []),
+      pw_messages: messageCleanup.messages,
       pa_reviews: readJson(storage, 'pa_reviews', []),
       pa_shoot_records: readJson(storage, 'pa_shoot_records', [])
     };
@@ -100,6 +128,7 @@
     await bulkPut('reviews', migrated.reviews);
     await bulkPut('shootRecords', migrated.shootRecords);
     storage.setItem('pw_schedule', JSON.stringify(migrated.schedules));
+    storage.setItem('pw_messages', JSON.stringify(migrated.messages));
     const result = {
       completed: true, schemaVersion: 1, completedAt: Domain.nowIso(),
       counts: { plans: migrated.plans.length, schedules: migrated.schedules.length, messages: migrated.messages.length }

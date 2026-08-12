@@ -17,3 +17,14 @@ test('local workspace server redirects root and serves the legacy workspace', as
   assert.equal(workspace.status, 200);
   assert.match(await workspace.text(), /PhotoAtelier/);
 });
+
+test('local workspace server canonicalizes repeated legacy paths', async (t) => {
+  const server = createStaticServer();
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  t.after(() => new Promise(resolve => server.close(resolve)));
+  const { port } = server.address();
+
+  const response = await fetch(`http://127.0.0.1:${port}/legacy/legacy/legacy/?mode=public-beta`, { redirect: 'manual' });
+  assert.equal(response.status, 302);
+  assert.equal(response.headers.get('location'), '/legacy/?mode=public-beta');
+});
