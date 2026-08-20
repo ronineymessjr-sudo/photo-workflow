@@ -86,7 +86,7 @@ jobs:
         run: |
           test -n "$CLOUDFLARE_API_TOKEN" || { echo "CLOUDFLARE_API_TOKEN is missing"; exit 1; }
           test -n "$CLOUDFLARE_ACCOUNT_ID" || { echo "CLOUDFLARE_ACCOUNT_ID is missing"; exit 1; }
-          wrangler pages deploy dist-v2 --project-name=photoatelier
+          wrangler pages deploy dist-v2 --project-name=photoatelier --branch=main
 
   deploy-worker:
     name: Deploy V2 Worker
