@@ -13,6 +13,7 @@ const legacyRuntimeFiles = [
   'src/storage.js',
   'src/feishu-sync.js',
   'src/app-enhancements.js',
+  'src/public-feedback-client.js',
   'src/beta-feedback.js',
   'src/legacy-v5-bridge.js',
   'src/legacy-knowledge-bridge.js',
@@ -40,6 +41,7 @@ copy('index.html', output);
 copy('workspace.html', output);
 copy('assets/app.css', output);
 copy('src/app.js', output);
+copy('src/public-feedback-client.js', output);
 copy('src/public-beta.js', output);
 copy('src/landing-motion.js', output);
 copy('src/beta-feedback.js', output);

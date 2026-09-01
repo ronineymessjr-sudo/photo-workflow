@@ -6,6 +6,49 @@ const DEFAULT_ORIGINS = [
   'https://photoatelier.pages.dev',
   'https://ronineymessjr-sudo.github.io',
 ];
+const PUBLIC_FEEDBACK_AREA_CODES = Object.freeze({
+  plan: 'plan',
+  references: 'references',
+  schedule: 'schedule',
+  lut: 'lut',
+  connections: 'connections',
+  ui: 'ui',
+  other: 'other',
+  '方案生成': 'plan',
+  '参考图库': 'references',
+  '日程与现场': 'schedule',
+  'LUT与后期': 'lut',
+  'LUT 与后期': 'lut',
+  '数据连接': 'connections',
+  '界面与操作': 'ui',
+  '其他': 'other',
+  'Plan generation': 'plan',
+  'Reference library': 'references',
+  'Schedule and on-set': 'schedule',
+  'LUTs and post': 'lut',
+  'LUT & post': 'lut',
+  'Data connections': 'connections',
+  'Interface and interactions': 'ui',
+  'Other': 'other',
+  'プラン生成': 'plan',
+  'リファレンス': 'references',
+  '参考ライブラリ': 'references',
+  '日程と現場': 'schedule',
+  'LUTと仕上げ': 'lut',
+  'データ接続': 'connections',
+  '画面と操作': 'ui',
+  'その他': 'other',
+  '계획 생성': 'plan',
+  '플랜 생성': 'plan',
+  '레퍼런스 라이브러리': 'references',
+  '일정과 현장': 'schedule',
+  'LUT와 후반 작업': 'lut',
+  'LUT와 후반': 'lut',
+  'LUT와 후보정': 'lut',
+  '데이터 연결': 'connections',
+  '화면과 조작': 'ui',
+  '기타': 'other',
+});
 
 const COMMON_FIELDS = ['id', 'createdAt', 'updatedAt', 'payloadJson'];
 const NUMBER_FIELDS = new Set(['sequence', 'durationMinutes', 'strength', 'planScore', 'executionScore', 'keepRate', 'selectedCount']);
@@ -64,6 +107,7 @@ export function normalizePublicFeedback(payload = {}) {
   const task = clean(payload.task, 240);
   const friction = clean(payload.friction, 1200);
   const area = clean(payload.area, 60) || '其他';
+  const areaCode = normalizeFeedbackAreaCode(area);
   const rating = Number(payload.rating);
   if (!task || !friction) throw new HttpError(400, 'Task and friction are required', 'INVALID_FEEDBACK');
   if (!Number.isInteger(rating) || rating < 1 || rating > 5) throw new HttpError(400, 'Rating must be an integer from 1 to 5', 'INVALID_FEEDBACK');
@@ -72,6 +116,7 @@ export function normalizePublicFeedback(payload = {}) {
     task,
     friction,
     area,
+    areaCode,
     rating,
     page: normalizeFeedbackPage(payload.page),
     build: clean(payload.build, 60),
@@ -94,6 +139,7 @@ export function buildPublicFeedbackRecord(payload, now = new Date().toISOString(
     traceId: id,
     content: `[${feedback.area}] ${feedback.task}\n${feedback.friction}`,
     metadataJson: {
+      areaCode: feedback.areaCode,
       rating: feedback.rating,
       page: feedback.page,
       build: feedback.build,
@@ -108,7 +154,23 @@ export function buildPublicFeedbackRecord(payload, now = new Date().toISOString(
 
 export function shouldIgnorePublicFeedback(payload = {}) {
   const feedback = normalizePublicFeedback(payload);
-  return feedback.build === 'deploy-check' && feedback.sessionId === 'system-check';
+  const probeBuild = feedback.build === 'deploy-check' || /(^|-)deploy-check(?:-|$)/.test(feedback.feedbackId);
+  const probeSession = feedback.sessionId === 'system-check' || /(^|-)system-check(?:-|$)/.test(feedback.feedbackId);
+  return probeBuild && probeSession;
+}
+
+export function isIgnoredPublicFeedbackRecord(record = {}) {
+  if (record.projectId !== 'public-beta' || record.type !== 'beta-feedback') return false;
+  let metadata = {};
+  if (typeof record.metadataJson === 'string') {
+    try { metadata = JSON.parse(record.metadataJson || '{}'); } catch (_) {}
+  } else {
+    metadata = record.metadataJson || {};
+  }
+  const fingerprint = [record.id, record.traceId].map(value => String(value || '')).join(' ');
+  const probeBuild = metadata.build === 'deploy-check' || /(^|-)deploy-check(?:-|$)/.test(fingerprint);
+  const probeSession = (metadata.sessionId || record.relatedId) === 'system-check' || /(^|-)system-check(?:-|$)/.test(fingerprint);
+  return probeBuild && probeSession;
 }
 
 function normalizeFeedbackPage(value) {
@@ -118,6 +180,10 @@ function normalizeFeedbackPage(value) {
   } catch (_) {
     return '';
   }
+}
+
+function normalizeFeedbackAreaCode(value) {
+  return PUBLIC_FEEDBACK_AREA_CODES[String(value || '').trim()] || 'other';
 }
 
 async function acceptPublicFeedback(request, env) {
@@ -254,9 +320,12 @@ export default {
 
       const listMatch = url.pathname.match(/^\/api\/feishu\/([a-z-]+)\/records$/);
       if (listMatch && request.method === 'GET') {
-        const records = (await listFeishuRecords(listMatch[1], env))
+        let records = (await listFeishuRecords(listMatch[1], env))
           .map(item => item.business)
           .filter(record => record.id);
+        if (listMatch[1] === 'messages') {
+          records = records.filter(record => !isIgnoredPublicFeedbackRecord(record));
+        }
         return json(request, env, { ok: true, entity: listMatch[1], records });
       }
 

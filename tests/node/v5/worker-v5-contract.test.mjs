@@ -113,6 +113,66 @@ test('public beta system validation probes are acknowledged without entering the
   assert.equal(data.ignored, true);
 });
 
+test('message listing hides historical public beta validation probes', async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url, options = {}) => {
+    if (String(url).includes('/auth/v3/tenant_access_token/internal')) {
+      return new Response(JSON.stringify({ code: 0, tenant_access_token: 'tenant-token' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    if (String(url).includes('/records')) {
+      return new Response(JSON.stringify({
+        code: 0,
+        data: {
+          items: [
+            { record_id: 'rec-probe', fields: { payloadJson: JSON.stringify({ id: 'feedback-deploy-check-system-check', projectId: 'public-beta', type: 'beta-feedback', relatedId: 'system-check', traceId: 'feedback-deploy-check-system-check', metadataJson: { build: 'deploy-check', sessionId: 'system-check' } }) } },
+            { record_id: 'rec-user', fields: { payloadJson: JSON.stringify({ id: 'feedback-user-0001', projectId: 'public-beta', type: 'beta-feedback', relatedId: 'visitor', traceId: 'feedback-user-0001', metadataJson: { build: 'public-beta-r6', sessionId: 'visitor' } }) } },
+          ],
+        },
+      }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }
+    throw new Error(`Unexpected fetch: ${url} ${options.method || 'GET'}`);
+  };
+
+  try {
+    const response = await worker.fetch(new Request('https://worker.test/api/feishu/messages/records', {
+      headers: { 'X-PhotoAtelier-Token': 'sync-token' },
+    }), {
+      APP_SYNC_TOKEN: 'sync-token',
+      FEISHU_APP_ID: 'app-id',
+      FEISHU_APP_SECRET: 'app-secret',
+      FEISHU_APP_TOKEN: 'app-token',
+      FEISHU_TABLE_MESSAGES: 'table-messages',
+    });
+    assert.equal(response.status, 200);
+    const payload = await response.json();
+    assert.deepEqual(payload.records.map(item => item.id), ['feedback-user-0001']);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('public beta feedback adds a stable areaCode for localized labels', () => {
+  for (const [area, areaCode] of [
+    ['方案生成', 'plan'],
+    ['Plan generation', 'plan'],
+    ['参考ライブラリ', 'references'],
+    ['LUT와 후보정', 'lut'],
+  ]) {
+    const normalized = normalizePublicFeedback({
+      feedbackId: `feedback-area-${areaCode}`,
+      task: '完成方案',
+      friction: '设置过程太长',
+      area,
+      rating: 2,
+    });
+    assert.equal(normalized.areaCode, areaCode);
+    assert.equal(buildPublicFeedbackRecord(normalized).metadataJson.areaCode, areaCode);
+  }
+});
+
 test('public feedback route rejects invalid input before private sync authorization', async () => {
   const response = await worker.fetch(new Request('https://worker.test/api/public/feedback', {
     method: 'POST', headers: { 'Content-Type': 'application/json', Origin: 'https://photoatelier.test' },
