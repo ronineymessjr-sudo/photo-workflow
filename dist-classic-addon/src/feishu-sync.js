@@ -13,7 +13,13 @@
     auto: 'pa_feishu_auto_sync',
     lastSync: 'pa_feishu_last_sync'
   };
-  const DEFAULT_API_BASE = 'https://photoatelier-v2-api.photomagic.workers.dev';
+  const LEGACY_API_BASE = 'https://photoatelier-v2-api.photomagic.workers.dev';
+  const DEFAULT_API_BASE = (() => {
+    const hostname = String(root.location?.hostname || '');
+    return hostname === 'photoatelier.pages.dev' || hostname.endsWith('.photoatelier.pages.dev')
+      ? '/api/worker'
+      : LEGACY_API_BASE;
+  })();
   let syncTimer = 0;
   let syncing = false;
 
@@ -31,8 +37,10 @@
 
   function settings() {
     const legacy = readJson('pa_v2_settings', {});
+    const savedApiBase = localStorage.getItem(SETTINGS.apiBase) || legacy.apiBase || DEFAULT_API_BASE;
+    const apiBase = savedApiBase === LEGACY_API_BASE && DEFAULT_API_BASE === '/api/worker' ? DEFAULT_API_BASE : savedApiBase;
     return {
-      apiBase: (localStorage.getItem(SETTINGS.apiBase) || legacy.apiBase || DEFAULT_API_BASE).replace(/\/$/, ''),
+      apiBase: apiBase.replace(/\/$/, ''),
       token: localStorage.getItem(SETTINGS.token) || legacy.syncToken || '',
       enabled: localStorage.getItem(SETTINGS.enabled) === 'true' || (!localStorage.getItem(SETTINGS.enabled) && Boolean(legacy.remoteEnabled)),
       auto: localStorage.getItem(SETTINGS.auto) === 'true' || (!localStorage.getItem(SETTINGS.auto) && Boolean(legacy.remoteEnabled)),

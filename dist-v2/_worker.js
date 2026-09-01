@@ -3,6 +3,42 @@ var __name = (target, value) => __defProp(target, "name", { value, configurable:
 
 // api/public/_shared.js
 var AREA_VALUES = /* @__PURE__ */ new Set(["plan", "references", "schedule", "lut", "connections", "ui", "other"]);
+var AREA_ALIASES = /* @__PURE__ */ new Map([
+  ["\u65B9\u6848\u751F\u6210", "plan"],
+  ["\u53C2\u8003\u56FE\u5E93", "references"],
+  ["\u65E5\u7A0B\u4E0E\u73B0\u573A", "schedule"],
+  ["LUT\u4E0E\u540E\u671F", "lut"],
+  ["LUT \u4E0E\u540E\u671F", "lut"],
+  ["\u6570\u636E\u8FDE\u63A5", "connections"],
+  ["\u754C\u9762\u4E0E\u64CD\u4F5C", "ui"],
+  ["\u5176\u4ED6", "other"],
+  ["Plan generation", "plan"],
+  ["Reference library", "references"],
+  ["Schedule and on-set", "schedule"],
+  ["LUTs and post", "lut"],
+  ["LUT & post", "lut"],
+  ["Data connections", "connections"],
+  ["Interface and interactions", "ui"],
+  ["Other", "other"],
+  ["\u30D7\u30E9\u30F3\u751F\u6210", "plan"],
+  ["\u30EA\u30D5\u30A1\u30EC\u30F3\u30B9", "references"],
+  ["\u53C2\u8003\u30E9\u30A4\u30D6\u30E9\u30EA", "references"],
+  ["\u65E5\u7A0B\u3068\u73FE\u5834", "schedule"],
+  ["LUT\u3068\u4ED5\u4E0A\u3052", "lut"],
+  ["\u30C7\u30FC\u30BF\u63A5\u7D9A", "connections"],
+  ["\u753B\u9762\u3068\u64CD\u4F5C", "ui"],
+  ["\u305D\u306E\u4ED6", "other"],
+  ["\uACC4\uD68D \uC0DD\uC131", "plan"],
+  ["\uD50C\uB79C \uC0DD\uC131", "plan"],
+  ["\uB808\uD37C\uB7F0\uC2A4 \uB77C\uC774\uBE0C\uB7EC\uB9AC", "references"],
+  ["\uC77C\uC815\uACFC \uD604\uC7A5", "schedule"],
+  ["LUT\uC640 \uD6C4\uBC18 \uC791\uC5C5", "lut"],
+  ["LUT\uC640 \uD6C4\uBC18", "lut"],
+  ["LUT\uC640 \uD6C4\uBCF4\uC815", "lut"],
+  ["\uB370\uC774\uD130 \uC5F0\uACB0", "connections"],
+  ["\uD654\uBA74\uACFC \uC870\uC791", "ui"],
+  ["\uAE30\uD0C0", "other"]
+]);
 var EVENT_VALUES = /* @__PURE__ */ new Set(["page_view", "analytics_consent_changed", "landing_cta_open_workspace", "feedback_submitted"]);
 function json(body, status = 200) {
   return Response.json(body, {
@@ -28,8 +64,22 @@ function isUuid(value) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || ""));
 }
 __name(isUuid, "isUuid");
+function normalizeFeedbackArea(value) {
+  const normalized = text(value, 60);
+  return AREA_VALUES.has(normalized) ? normalized : AREA_ALIASES.get(normalized) || "";
+}
+__name(normalizeFeedbackArea, "normalizeFeedbackArea");
+function normalizeFeedbackPage(value) {
+  try {
+    const url = new URL(String(value || ""));
+    return `${url.origin}${url.pathname}`.slice(0, 300);
+  } catch (_) {
+    return "";
+  }
+}
+__name(normalizeFeedbackPage, "normalizeFeedbackPage");
 function isValidFeedback(payload) {
-  return isUuid(payload.feedbackId) && text(payload.task, 240).length > 1 && AREA_VALUES.has(payload.area) && text(payload.friction, 1200).length > 1 && Number.isInteger(Number(payload.rating)) && Number(payload.rating) >= 1 && Number(payload.rating) <= 5;
+  return isUuid(payload.feedbackId) && text(payload.task, 240).length > 1 && Boolean(normalizeFeedbackArea(payload.area)) && text(payload.friction, 1200).length > 1 && Number.isInteger(Number(payload.rating)) && Number(payload.rating) >= 1 && Number(payload.rating) <= 5;
 }
 __name(isValidFeedback, "isValidFeedback");
 function isValidEvent(payload) {
@@ -92,10 +142,10 @@ async function onRequestPost2({ request, env }) {
     payload.feedbackId,
     (/* @__PURE__ */ new Date()).toISOString(),
     text(payload.task, 240),
-    payload.area,
+    normalizeFeedbackArea(payload.area),
     text(payload.friction, 1200),
     Number(payload.rating),
-    text(payload.page, 500),
+    normalizeFeedbackPage(payload.page),
     text(payload.build, 80),
     text(payload.locale, 24),
     text(payload.sessionId, 80)
@@ -108,7 +158,34 @@ function onRequestOptions2() {
 }
 __name(onRequestOptions2, "onRequestOptions");
 
-// ../.wrangler/tmp/pages-hMWjlj/functionsRoutes-0.040615304012066034.mjs
+// api/worker/[[path]].js
+var DEFAULT_UPSTREAM = "https://photoatelier-v2-api.photomagic.workers.dev";
+async function onRequest({ request, env, params }) {
+  const path = Array.isArray(params.path) ? params.path.join("/") : String(params.path || "");
+  const upstream = String(env.PHOTOATELIER_WORKER_URL || DEFAULT_UPSTREAM).replace(/\/$/, "");
+  const source = new URL(request.url);
+  const target = new URL(`${upstream}/${path}`);
+  target.search = source.search;
+  const headers = new Headers(request.headers);
+  headers.delete("host");
+  headers.set("X-Forwarded-Host", source.host);
+  const response = await fetch(target, {
+    method: request.method,
+    headers,
+    body: ["GET", "HEAD"].includes(request.method) ? void 0 : request.body,
+    redirect: "manual"
+  });
+  const responseHeaders = new Headers(response.headers);
+  responseHeaders.set("Cache-Control", "no-store");
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: responseHeaders
+  });
+}
+__name(onRequest, "onRequest");
+
+// ../.wrangler/tmp/pages-8X0fvQ/functionsRoutes-0.6228262162275382.mjs
 var routes = [
   {
     routePath: "/api/public/events",
@@ -137,6 +214,13 @@ var routes = [
     method: "POST",
     middlewares: [],
     modules: [onRequestPost2]
+  },
+  {
+    routePath: "/api/worker/:path*",
+    mountPath: "/api/worker",
+    method: "",
+    middlewares: [],
+    modules: [onRequest]
   }
 ];
 
