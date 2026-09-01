@@ -1,4 +1,4 @@
-import { isDeployCheck, isValidFeedback, json, readJson, text } from './_shared.js';
+import { isDeployCheck, isValidFeedback, json, normalizeFeedbackArea, normalizeFeedbackPage, readJson, text } from './_shared.js';
 
 export async function onRequestPost({ request, env }) {
   let payload;
@@ -21,10 +21,10 @@ export async function onRequestPost({ request, env }) {
     payload.feedbackId,
     new Date().toISOString(),
     text(payload.task, 240),
-    payload.area,
+    normalizeFeedbackArea(payload.area),
     text(payload.friction, 1200),
     Number(payload.rating),
-    text(payload.page, 500),
+    normalizeFeedbackPage(payload.page),
     text(payload.build, 80),
     text(payload.locale, 24),
     text(payload.sessionId, 80),

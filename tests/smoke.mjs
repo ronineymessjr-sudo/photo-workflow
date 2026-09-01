@@ -4,6 +4,7 @@ const required = [
   'index.html',
   'workspace.html',
   'src/app.js',
+  'src/public-feedback-client.js',
   'src/public-beta.js',
   'src/beta-feedback.js',
   'src/legacy-v5-bridge.js',

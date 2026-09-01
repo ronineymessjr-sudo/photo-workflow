@@ -14,8 +14,24 @@ const sync = spawnSync(process.execPath, ['tools/sync-ronin-knowledge-to-obsidia
 });
 if (sync.status !== 0) throw new Error(sync.stderr || 'Failed to create the isolated Obsidian test vault.');
 process.env.PHOTOATELIER_OBSIDIAN_VAULT = testVault;
-const { createServer, buildIndex, searchIndex, recommendKnowledgeContext, safeLibraryRoot } = require('../../tools/local-obsidian-proxy');
+const { createServer, buildIndex, searchIndex, recommendKnowledgeContext, safeLibraryRoot, resolveObsidianVault } = require('../../tools/local-obsidian-proxy');
 
+test('discovers the active Obsidian vault after it moves from the legacy default', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'photoatelier-obsidian-config-'));
+  const homeDir = path.join(root, 'home');
+  const appData = path.join(root, 'appdata');
+  const activeVault = path.join(root, 'active-vault');
+  fs.mkdirSync(path.join(appData, 'obsidian'), { recursive: true });
+  fs.mkdirSync(activeVault, { recursive: true });
+  fs.writeFileSync(path.join(appData, 'obsidian', 'obsidian.json'), JSON.stringify({
+    vaults: {
+      old: { path: path.join(root, 'missing-vault'), ts: 1 },
+      active: { path: activeVault, ts: 2, open: true },
+    },
+  }));
+
+  assert.equal(resolveObsidianVault({ explicit: '', homeDir, appData }), path.resolve(activeVault));
+});
 test('rejects library paths outside the configured vault', () => {
   assert.throws(() => safeLibraryRoot('..\\..\\Windows'), /超出 Obsidian 库范围/);
 });

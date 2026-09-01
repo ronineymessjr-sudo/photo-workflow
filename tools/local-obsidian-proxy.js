@@ -5,7 +5,39 @@ const os = require('os');
 const crypto = require('crypto');
 
 const PORT = Number(process.env.PHOTOATELIER_OBSIDIAN_PROXY_PORT || 8124);
-const VAULT_ROOT = path.resolve(process.env.PHOTOATELIER_OBSIDIAN_VAULT || path.join(os.homedir(), 'Documents', 'Obsidian Vault'));
+
+function resolveObsidianVault({ explicit = process.env.PHOTOATELIER_OBSIDIAN_VAULT, homeDir = os.homedir(), appData = process.env.APPDATA } = {}) {
+  if (explicit) return path.resolve(explicit);
+
+  const legacyDefault = path.resolve(homeDir, 'Documents', 'Obsidian Vault');
+  if (fs.existsSync(legacyDefault)) return legacyDefault;
+
+  const configFiles = [
+    appData && path.join(appData, 'obsidian', 'obsidian.json'),
+    appData && path.join(appData, 'Obsidian', 'obsidian.json'),
+  ].filter(Boolean);
+
+  for (const configFile of configFiles) {
+    try {
+      if (!fs.existsSync(configFile)) continue;
+      const config = JSON.parse(fs.readFileSync(configFile, 'utf8'));
+      const vaults = Object.values(config.vaults || {})
+        .filter(item => item && item.path)
+        .sort((left, right) => Number(Boolean(right.open)) - Number(Boolean(left.open)) || Number(right.ts || 0) - Number(left.ts || 0));
+      const active = vaults.find(item => {
+        const candidate = path.resolve(item.path);
+        return fs.existsSync(candidate) && fs.statSync(candidate).isDirectory();
+      });
+      if (active) return path.resolve(active.path);
+    } catch (_) {
+      // A malformed desktop config must not prevent an explicit/default vault from starting.
+    }
+  }
+
+  return legacyDefault;
+}
+
+const VAULT_ROOT = resolveObsidianVault();
 const DEFAULT_LIBRARY = process.env.PHOTOATELIER_OBSIDIAN_LIBRARY || '.';
 const WRITE_ROOT = path.join(VAULT_ROOT, 'PhotoAtelier', '复盘回流');
 const PROJECT_ROOT = path.resolve(__dirname, '..');
@@ -717,4 +749,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { createServer, buildIndex, searchIndex, recommendKnowledgeContext, buildCandidates, writeReviewNote, readVaultNote, safeLibraryRoot };
+module.exports = { createServer, buildIndex, searchIndex, recommendKnowledgeContext, buildCandidates, writeReviewNote, readVaultNote, safeLibraryRoot, resolveObsidianVault };

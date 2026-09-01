@@ -155,15 +155,22 @@ test('message listing hides historical public beta validation probes', async () 
 });
 
 test('public beta feedback adds a stable areaCode for localized labels', () => {
-  const normalized = normalizePublicFeedback({
-    feedbackId: 'feedback-area-0001',
-    task: '完成方案',
-    friction: '设置过程太长',
-    area: '方案生成',
-    rating: 2,
-  });
-  assert.equal(normalized.areaCode, 'plan');
-  assert.equal(buildPublicFeedbackRecord(normalized).metadataJson.areaCode, 'plan');
+  for (const [area, areaCode] of [
+    ['方案生成', 'plan'],
+    ['Plan generation', 'plan'],
+    ['参考ライブラリ', 'references'],
+    ['LUT와 후보정', 'lut'],
+  ]) {
+    const normalized = normalizePublicFeedback({
+      feedbackId: `feedback-area-${areaCode}`,
+      task: '完成方案',
+      friction: '设置过程太长',
+      area,
+      rating: 2,
+    });
+    assert.equal(normalized.areaCode, areaCode);
+    assert.equal(buildPublicFeedbackRecord(normalized).metadataJson.areaCode, areaCode);
+  }
 });
 
 test('public feedback route rejects invalid input before private sync authorization', async () => {
