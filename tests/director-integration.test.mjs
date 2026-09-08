@@ -111,4 +111,6 @@ test('all inline scripts parse and submit awaits director, shot list reuses resp
     assert.match(html, /if \(plan\.director\) return plan\.shotList \|\| \[\];/);
     assert.match(html, /generateDirectorCandidateForPlan/);
     assert.match(html, /synthetic=true/);
+    assert.match(html, /const IS_LOCAL_HOST = \['127\.0\.0\.1', 'localhost', '\[::1\]'\]/);
+    assert.match(html, /if \(USE_LOCAL_MODE\) \{/);
 });

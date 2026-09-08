@@ -4355,7 +4355,9 @@ if (document.getElementById('loginOverlay')) {
 // ===== Auth System & App Entry =====
 (function() {
     const API_BASE = localStorage.getItem('pa_api_base') || 'https://photoatelier-api.photomagic.workers.dev';
-    const USE_LOCAL_MODE = localStorage.getItem('pa_use_local') === 'true' || false;
+    const IS_LOCAL_HOST = ['127.0.0.1', 'localhost', '[::1]'].includes(location.hostname);
+    const USE_LOCAL_MODE = IS_LOCAL_HOST || localStorage.getItem('pa_use_local') === 'true';
+    window.__PHOTOATELIER_LOCAL_MODE__ = USE_LOCAL_MODE;
     const TOKEN_KEY = 'pw_token';
     const USER_KEY = 'pw_user';
     const ROLE_KEY = 'pw_role';
@@ -4385,6 +4387,11 @@ if (document.getElementById('loginOverlay')) {
             schedules.push(schedule);
             localStorage.setItem('pw_schedules', JSON.stringify(schedules));
             return schedule;
+        },
+        async deleteSchedule(id) {
+            const schedules = safeJsonParse('pw_schedules', []).filter(item => item.id !== id);
+            localStorage.setItem('pw_schedules', JSON.stringify(schedules));
+            return { success: true };
         },
         async getMessages() {
             return safeJsonParse('pw_messages', []);
@@ -4419,16 +4426,16 @@ if (document.getElementById('loginOverlay')) {
             }
         },
         login(email, password) { return this.request('/api/auth/login', 'POST', { email, password }); },
-        getSchedules() { return this.request('/api/schedules'); },
-        createSchedule(data) { return this.request('/api/schedules', 'POST', data); },
-        deleteSchedule(id) { return this.request(`/api/schedules/${id}`, 'DELETE'); },
-        getPlans() { return this.request('/api/plans'); },
-        createPlan(data) { return this.request('/api/plans', 'POST', data); },
+        getSchedules() { return USE_LOCAL_MODE ? localApi.getSchedules() : this.request('/api/schedules'); },
+        createSchedule(data) { return USE_LOCAL_MODE ? localApi.createSchedule(data) : this.request('/api/schedules', 'POST', data); },
+        deleteSchedule(id) { return USE_LOCAL_MODE ? localApi.deleteSchedule(id) : this.request(`/api/schedules/${id}`, 'DELETE'); },
+        getPlans() { return USE_LOCAL_MODE ? localApi.getPlans() : this.request('/api/plans'); },
+        createPlan(data) { return USE_LOCAL_MODE ? localApi.createPlan(data) : this.request('/api/plans', 'POST', data); },
         syncToFeishuCalendar(schedules) { return this.request('/api/feishu/sync-calendar', 'POST', { schedules }); },
         writeToFeishuBitable(app_token, table_id, records) { return this.request('/api/feishu/bitable', 'POST', { app_token, table_id, records }); },
         // Messages
-        getMessages() { return this.request('/api/messages'); },
-        createMessage(data) { return this.request('/api/messages', 'POST', data); },
+        getMessages() { return USE_LOCAL_MODE ? localApi.getMessages() : this.request('/api/messages'); },
+        createMessage(data) { return USE_LOCAL_MODE ? Promise.resolve(data) : this.request('/api/messages', 'POST', data); },
         updateMessageStatus(id, status) { return this.request(`/api/messages/${id}`, 'PATCH', { status }); },
         deleteMessage(id) { return this.request(`/api/messages/${id}`, 'DELETE'); }
     };
@@ -4702,6 +4709,7 @@ function closeShortcutsModal(e) {
 
     // Load data from server
     async function loadServerData() {
+        if (USE_LOCAL_MODE) return;
         const token = localStorage.getItem(TOKEN_KEY);
         if (!token) {
             /* Not logged in, skipping server sync */
@@ -4728,6 +4736,30 @@ function closeShortcutsModal(e) {
         role = localStorage.getItem(ROLE_KEY);
     } catch (e) {
         /* localStorage not available, using session mode */
+    }
+
+    if (USE_LOCAL_MODE) {
+        const localUser = { id: 'local', email: 'local@photoatelier.local', name: '本地用户', role: 'photographer' };
+        localStorage.setItem(TOKEN_KEY, 'local-token');
+        localStorage.setItem(USER_KEY, JSON.stringify(localUser));
+        if (!role) {
+            role = 'photographer';
+            localStorage.setItem(ROLE_KEY, role);
+        }
+        const welcomeEl = document.getElementById('welcomeEmail');
+        if (welcomeEl) welcomeEl.textContent = '本地模式';
+        const loginOverlay = document.getElementById('loginOverlay');
+        const roleOverlay = document.getElementById('roleOverlay');
+        const appLayout = document.getElementById('appLayout');
+        if (loginOverlay) loginOverlay.style.display = 'none';
+        if (roleOverlay) roleOverlay.style.display = 'none';
+        const particles = document.querySelector('.particles');
+        if (particles) particles.remove();
+        if (appLayout) {
+            appLayout.style.display = 'flex';
+            setTimeout(function() { initTabs(); }, 100);
+        }
+        return;
     }
 
     if (token && user) {
@@ -9524,6 +9556,7 @@ async function savePlan(plan){
     ps.unshift(plan);
     if(ps.length>50)ps.pop();
     savePlans(ps);
+    if(window.__PHOTOATELIER_LOCAL_MODE__) return plan.id;
     // 同步到数据库API
     try{
         await window.api.createPlan(plan);
