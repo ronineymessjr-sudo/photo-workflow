@@ -1,5 +1,6 @@
 // Photo Workflow Backend API - Cloudflare Workers
 import { createHash, createHmac } from 'node:crypto';
+import { createDirectorPlan } from './director-plan.mjs';
 
 // Cloudflare Workers 环境中 Buffer 不可用，使用替代方案
 function base64UrlEncode(str) {
@@ -272,7 +273,12 @@ export default {
             const uid = verifyToken(request.headers.get('authorization'), env);
 
             // Auth
-            if (path === '/api/auth/login' && method === 'POST') {
+            if (path === '/api/director/plan' && method === 'POST') {
+                if (!uid) result = { status: 401, body: { error: '未登录' } };
+                else if (!env.DIRECTOR_API_BASE || !env.DIRECTOR_API_BASE.startsWith('https://')) result = { status: 503, body: { error: 'DIRECTOR_NOT_CONFIGURED：请先部署受保护的 Director 服务' } };
+                else result = { status: 200, body: await createDirectorPlan(body, { baseUrl: env.DIRECTOR_API_BASE }) };
+            }
+            else if (path === '/api/auth/login' && method === 'POST') {
                 result = await handleLogin(env, body);
             }
             // Schedules

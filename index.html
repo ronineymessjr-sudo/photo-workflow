@@ -4164,6 +4164,7 @@
 
 <div class="toast" id="toast"></div>
 
+<script src="assets/director-client.js"></script>
 <script>
 // i18n System
 const i18n = {
@@ -6012,6 +6013,7 @@ async function generateImagesBatch(planId) {
     const plans = sg(SK.P) || [];
     const plan = plans.find(p => p.id === planId);
     if (!plan) { toast('方案不存在', 'er'); return []; }
+    if (plan.director) { toast('此版只接通方案生成，未连接预期成片；不会调用旧九宫格模板。', 'i'); return []; }
 
     const inp = plan.input;
     const basePrompt = buildImagePrompt(plan);
@@ -6107,6 +6109,102 @@ function renderImageGallery(plan) {
 
     html += '</div></div>';
     return html;
+}
+
+function renderDirectorCandidatePanel(plan) {
+    const shots = Array.isArray(plan.shotList) ? plan.shotList : [];
+    const candidates = Array.isArray(plan.director && plan.director.generationCandidates)
+        ? plan.director.generationCandidates : [];
+    const planKey = escHtml(String(plan.id));
+    const options = shots.map((shot, index) => {
+        const label = shot.description || shot.shotSize || shot.angle || ('镜头 ' + (index + 1));
+        return '<option value="' + index + '">镜头 ' + (index + 1) + ' · ' + escHtml(label) + '</option>';
+    }).join('');
+    const cards = candidates.map(candidate => {
+        const url = typeof candidate.url === 'string' && candidate.url.startsWith('/api/director/candidates/')
+            ? candidate.url : '';
+        if (!url) return '';
+        return '<figure class="img-card" style="margin:0">' +
+            '<img src="' + escHtml(url) + '" alt="AI 候选图，待审核" loading="lazy">' +
+            '<figcaption class="img-card-info">候选图 · 合成素材 · 待人工审核 · 镜头 ' +
+            (Number(candidate.shotIndex) + 1) + '</figcaption></figure>';
+    }).join('');
+    return '<div class="img-gallery director-candidate-panel" id="img-gallery-' + planKey + '">' +
+        '<h4>🎨 方案候选图</h4>' +
+        '<p style="color:var(--muted);font-size:.85rem">只根据已选分镜调用本机 Director 生图。结果标记为 synthetic=true，仅用于方案预览，确认前不会进入真实参考图库。</p>' +
+        '<div class="img-gen-form">' +
+        '<select id="candidate-shot-' + planKey + '" ' + (shots.length ? '' : 'disabled') + '>' + options + '</select>' +
+        '<button class="btn btn-i" onclick="generateDirectorCandidateForPlan(\'' + planKey + '\')" id="candidate-gen-btn-' + planKey + '" ' + (shots.length ? '' : 'disabled') + '>生成一张候选图</button>' +
+        '</div>' +
+        '<div class="img-grid" id="candidate-grid-' + planKey + '">' +
+        (cards || '<p style="color:var(--muted);font-size:.85rem">尚未生成候选图。</p>') +
+        '</div></div>';
+}
+
+async function generateDirectorCandidateForPlan(planId) {
+    const plans = sg(SK.P) || [];
+    const index = plans.findIndex(plan => String(plan.id) === String(planId));
+    if (index < 0) { toast('方案不存在', 'er'); return; }
+    const plan = plans[index];
+    const shotSelect = $('candidate-shot-' + planId);
+    const shotIndex = Number(shotSelect && shotSelect.value || 0);
+    const shot = (plan.shotList || [])[shotIndex];
+    if (!shot) { toast('没有可用分镜', 'er'); return; }
+    if (!window.generateDirectorCandidate) { toast('本机候选生图接口未加载', 'er'); return; }
+    const briefParts = [
+        plan.director && plan.director.submittedBrief || plan.title || '摄影方案',
+        '当前分镜：' + (shot.description || ''),
+        '摄影师位置：' + (shot.method || ''),
+        '景别与构图：' + (shot.shotSize || '') + '；' + (shot.composition || ''),
+        '焦段：' + (shot.focalLength || ''),
+        '光线：' + (shot.lighting || ''),
+        '限制：' + (shot.notes || '')
+    ].filter(Boolean);
+    const brief = briefParts.join('\n');
+    if (brief.length > 4000) { toast('当前分镜描述过长，无法安全提交', 'er'); return; }
+    const btn = $('candidate-gen-btn-' + planId);
+    if (btn) { btn.disabled = true; btn.textContent = '生成中...'; }
+    try {
+        const result = await window.generateDirectorCandidate({
+            request_id: (plan.director && plan.director.requestId || 'photoatelier') + '-image-' + Date.now(),
+            brief,
+            style_direction: plan.input && plan.input.style || '纪实摄影',
+            output_count: 1,
+            available_lenses: shot.focalLength ? [String(shot.focalLength).split(/或|、|,|，/)[0].trim()] : [],
+            reference_asset_ids: [],
+            generator: 'external-image-service',
+            provider: 'huggingface',
+            model: 'black-forest-labs/FLUX.1-schnell',
+            candidate_count: 1,
+            shot_index: shotIndex,
+            judge_mode: 'heuristic',
+            billing_mode: 'free-credit-first',
+            steps: 4,
+            width: 768,
+            height: 1024,
+            dry_run: false
+        });
+        if (!result.candidateAsset || !result.candidateAsset.url) throw new Error('未返回可审核的候选图');
+        plan.director.generationCandidates = Array.isArray(plan.director.generationCandidates)
+            ? plan.director.generationCandidates : [];
+        plan.director.generationCandidates.push({
+            ...result.candidateAsset,
+            requestId: result.request_id,
+            shotIndex,
+            createdAt: new Date().toISOString()
+        });
+        plans[index] = plan;
+        savePlans(plans);
+        currentPlanData = plan;
+        $('outCnt').innerHTML = renderPlanContent(plan);
+        toast('候选图已生成，等待人工审核', 'ok');
+    } catch (error) {
+        console.error('候选生图失败:', error);
+        toast('候选生图失败：' + (error.message || '未知错误'), 'er');
+    } finally {
+        const currentBtn = $('candidate-gen-btn-' + planId);
+        if (currentBtn) { currentBtn.disabled = false; currentBtn.textContent = '生成一张候选图'; }
+    }
 }
 
 async function genImgForPlan(planId) {
@@ -6208,9 +6306,9 @@ function renderPlanContent(plan) {
     const metaHtml = `<div class="plan-meta"><div class="mtag"><strong>主题</strong><span>${escHtml(plan.input && plan.input.theme||'待定')}</span></div><div class="mtag"><strong>风格</strong><span>${escHtml(plan.input && plan.input.style||'待定')}</span></div><div class="mtag"><strong>时长</strong><span>${plan.input && plan.input.duration||'待定'}</span></div><div class="mtag"><strong>人数</strong><span>${plan.input && plan.input.people||1}人</span></div></div>`;
 
     const sectionsHtml = plan.sections.map(s=>`
-        <div class="ps"><div class="ps-hdr"><div class="ps-icon">${s.ic}</div><h3 class="ps-title">${s.ti}</h3></div><div class="ps-cnt"><ul>${s.c.map(c=>`<li>${c}</li>`).join('')}</ul></div></div>`).join('');
+        <div class="ps"><div class="ps-hdr"><div class="ps-icon">${escHtml(s.ic)}</div><h3 class="ps-title">${escHtml(s.ti)}</h3></div><div class="ps-cnt"><ul>${s.c.map(c=>`<li>${escHtml(c)}</li>`).join('')}</ul></div></div>`).join('');
 
-    const imgGallery = renderImageGallery(plan);
+    const imgGallery = plan.director ? renderDirectorCandidatePanel(plan) : renderImageGallery(plan);
 
     // 添加模特沟通话术
     const communicationTips = getCommunicationTips(plan.input && plan.input.style);
@@ -6405,7 +6503,7 @@ function renderPlanContent(plan) {
     `;
 
     // 分镜脚本（核心功能）- 专业版
-    let shotList = generateShotList(plan);
+    let shotList = generateShotList(plan).map(shot => Object.fromEntries(Object.entries(shot).map(([key, value]) => [key, typeof value === 'string' && !['scene', 'description'].includes(key) ? escHtml(value) : value])));
     // Merge with any saved custom shots
     const savedShots = JSON.parse(localStorage.getItem(`pa_shots_${plan.id}`) || '[]');
     if (savedShots.length > 0) {
@@ -6607,11 +6705,12 @@ function renderPlanContent(plan) {
         </div>
     `;
 
-    return `<div class="plan-output-wrapper">${metaHtml + sectionsHtml + quoteHtml + shotListHtml + checklistHtml + imgGallery + commHtml + colorHtml + aiHtml}</div>`;
+    return `<div class="plan-output-wrapper">${metaHtml + sectionsHtml + quoteHtml + shotListHtml + checklistHtml + imgGallery + (plan.director ? '' : commHtml + colorHtml + aiHtml)}</div>`;
 }
 
 // 生成分镜脚本
 function generateShotList(plan) {
+    if (plan.director) return plan.shotList || [];
     const style = plan.input && plan.input.style || '复古';
     const scene = plan.input && plan.input.scene || '室内';
     const duration = plan.input && plan.input.duration || '2小时';
@@ -9470,7 +9569,7 @@ async function handleSubmit(e){
     btn.disabled=true;
     await new Promise(r=>setTimeout(r,900));
     try{
-        const plan=genPlan(input);
+        const plan=await window.generateDirectorPlan(input);
         await savePlan(plan);
         currentPlanData=plan;
         $('tplSavePanel').style.display='block';
