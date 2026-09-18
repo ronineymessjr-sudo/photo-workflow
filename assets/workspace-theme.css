@@ -1,0 +1,122 @@
+/* Shared neutral surfaces. Theme selection and application behavior stay intact. */
+:root, [data-theme="dark"], [data-theme="sunset"] {
+    --bg: #141516;
+    --bg2: #1c1e20;
+    --bg3: #252729;
+    --bg4: #303335;
+    --bg-sidebar: #191b1c;
+    --bg-panel: #1c1e20;
+    --t1: #eff0f1;
+    --t2: #bbc0c3;
+    --t3: #a0a7ab;
+    --t-muted: #a0a7ab;
+    --ac: #afc3b9;
+    --ac2: #99b1a5;
+    --ach: #c5d5cd;
+    --ok: #aebfb0;
+    --ok-soft: #aebfb0;
+    --er: #d2a6a1;
+    --er-soft: #d2a6a1;
+    --warn: #c7b493;
+    --info: #adbcca;
+    --teal: var(--ac);
+    --bd: #35393c;
+    --bd2: #51585c;
+    --ac-glow: rgba(175,195,185,.1);
+    --ac-gradient: var(--ac);
+    --ac-gradient-soft: var(--bg3);
+    --shadow: none;
+    --shadow-hover: none;
+    --shadow-ac: none;
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+    color-scheme: dark;
+}
+[data-theme="light"], [data-theme="sunrise"] {
+    --bg: #f4f5f6;
+    --bg2: #ffffff;
+    --bg3: #eceff0;
+    --bg4: #e1e5e7;
+    --bg-sidebar: #f9fafb;
+    --bg-panel: #ffffff;
+    --t1: #202528;
+    --t2: #49545a;
+    --t3: #606b71;
+    --t-muted: #606b71;
+    --ac: #395d50;
+    --ac2: #2e4d42;
+    --ach: #294539;
+    --ok: #42614c;
+    --ok-soft: #42614c;
+    --er: #904b46;
+    --er-soft: #904b46;
+    --warn: #775c32;
+    --info: #4a6277;
+    --teal: var(--ac);
+    --bd: #d9dfe2;
+    --bd2: #aab4b9;
+    --ac-glow: rgba(57,93,80,.08);
+    --ac-gradient: var(--ac);
+    --ac-gradient-soft: var(--bg3);
+    --shadow: none;
+    --shadow-hover: none;
+    --shadow-ac: none;
+    color-scheme: light;
+}
+body { background: var(--bg); font-weight: 400; }
+h1, h2, h3, h4, button, input, select, textarea { letter-spacing: 0; }
+input, select, textarea, button { font-family: var(--font-sans); }
+input, select, textarea { color: var(--t1); background-color: var(--bg2); }
+input::placeholder, textarea::placeholder { color: var(--t3); opacity: 1; }
+:focus-visible { outline: 2px solid var(--ac); outline-offset: 3px; }
+.sidebar, .mobile-header { background: var(--bg-sidebar); backdrop-filter: none; }
+.sidebar .nav-item svg,
+.sidebar .sidebar-toggle svg {
+    color: var(--t2);
+    opacity: .9 !important;
+    visibility: visible !important;
+}
+.sidebar .nav-item.active svg { color: var(--ac); opacity: 1 !important; }
+.sidebar .nav-item:hover svg { color: var(--t1); opacity: 1 !important; }
+#shortcutsModal { display: none !important; }
+#shortcutsModal.show { display: flex !important; }
+.panel, .login-card { background: var(--bg-panel); box-shadow: none; border-color: var(--bd); }
+.panel:hover, .login-card:hover { box-shadow: none; }
+.btn-p, .lang-btn.active { background: var(--ac); color: var(--bg); box-shadow: none; }
+.btn-p::after, .gradient-border::before { content: none; }
+.btn-p:hover:not(:disabled) { background: var(--ach); box-shadow: none; }
+.btn-i { background: var(--ac-glow); color: var(--ac); border-color: var(--bd2); }
+#tab-gen {
+    --plan-surface: var(--bg2);
+    --plan-surface-raised: var(--bg3);
+    --plan-surface-soft: var(--bg3);
+    --plan-border: var(--bd);
+    --plan-border-strong: var(--bd2);
+    --plan-ink: var(--t1);
+    --plan-muted: var(--t2);
+    --plan-faint: var(--t3);
+    --plan-accent: var(--ac);
+    --plan-accent-strong: var(--ach);
+    --plan-accent-soft: var(--ac-glow);
+    --plan-warm: var(--warn);
+    --plan-state-ok: var(--ok);
+    --plan-state-warn: var(--warn);
+    --plan-state-error: var(--er);
+    --plan-state-info: var(--info);
+}
+#tab-gen .panel, #tab-gen .panel:hover { box-shadow: none; border-radius: 8px; }
+#tab-gen .btn-p { color: var(--bg); }
+@media print {
+    body { background: white; color: black; }
+}
+.main-content { min-width: 0; }
+#tab-gen .step-indicator { display: flex; gap: 16px; }
+#tab-gen .step-item { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; }
+#tab-gen .step-num { width: 28px; height: 28px; flex: 0 0 28px; display: grid; place-items: center; border: 1px solid var(--bd2); border-radius: 50%; }
+#tab-gen .step-label { font-size: 12px; }
+@media (max-width: 768px) {
+    .main-content { width: 100%; max-width: 100%; }
+    .top-header { flex-wrap: wrap; gap: 12px; height: auto; }
+    .top-header > div { flex-wrap: wrap; min-width: 0; max-width: 100%; }
+    #tab-gen > .grid { grid-template-columns: minmax(0, 1fr) !important; }
+    #tab-gen .grid > *, #tab-gen .panel { min-width: 0; }
+}

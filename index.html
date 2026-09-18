@@ -240,18 +240,6 @@
             text-rendering: optimizeLegibility;
             transition: background-color 0.4s ease, color 0.4s ease;
         }
-        /* Grid background pattern */
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background-image: 
-                linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
-            background-size: 40px 40px;
-            pointer-events: none;
-            z-index: 0;
-        }
         h1, h2, h3 { font-family: var(--font-sans); }
         h1 { font-weight: 800; letter-spacing: -0.02em; font-size: 1.4rem; line-height: 1.2; }
         h2 { font-weight: 700; letter-spacing: -0.01em; font-size: 1.1rem; line-height: 1.25; }
@@ -290,124 +278,6 @@
         .icon-btn { display: inline-flex; align-items: center; gap: .35rem; }
         .icon-btn .lucide { width: 1.1em; height: 1.1em; }
 
-        /* ===== Background Image ===== */
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            z-index: 0;
-            pointer-events: none;
-            background-image: url('./assets/bg-fluid-silk.jpg');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            opacity: 0.3;
-        }
-        
-        /* 暗角遮罩层 - 增强可读性 */
-        body .bg-vignette {
-            position: fixed;
-            inset: 0;
-            z-index: 0;
-            pointer-events: none;
-            background: radial-gradient(ellipse at center, transparent 0%, rgba(10,10,12,0.6) 100%);
-        }
-        
-        /* 噪点纹理层 */
-        body::after {
-            content: '';
-            position: fixed;
-            inset: 0;
-            z-index: 0;
-            pointer-events: none;
-            opacity: 0.03;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-            background-repeat: repeat;
-            background-size: 256px 256px;
-        }
-        
-        /* 动态网格渐变动画 */
-        @keyframes meshFlow {
-            0%, 100% {
-                transform: translate(0, 0) scale(1);
-                filter: hue-rotate(0deg);
-            }
-            25% {
-                transform: translate(2%, -1%) scale(1.02);
-                filter: hue-rotate(5deg);
-            }
-            50% {
-                transform: translate(-1%, 2%) scale(1.01);
-                filter: hue-rotate(-3deg);
-            }
-            75% {
-                transform: translate(1%, 1%) scale(1.03);
-                filter: hue-rotate(3deg);
-            }
-        }
-        
-        /* 旧动画保留兼容性 */
-        @keyframes gridDrift {
-            0% { background-position: 0 0, 15px 15px; }
-            100% { background-position: 60px 60px, 45px 45px; }
-        }
-        @keyframes bgPulse {
-            0%, 100% { opacity: 1; transform: scale(1) rotate(0deg); }
-            33% { opacity: 0.85; transform: scale(1.02) rotate(1deg); }
-            66% { opacity: 0.9; transform: scale(1.01) rotate(-1deg); }
-        }
-        /* Floating orbs - Mesh Gradient 光晕效果 */
-        .bg-orb {
-            position: fixed;
-            border-radius: 50%;
-            filter: blur(100px);
-            pointer-events: none;
-            z-index: 0;
-            opacity: 0.3;
-        }
-        .bg-orb-1 {
-            width: 400px;
-            height: 400px;
-            background: radial-gradient(circle at 30% 30%, 
-                rgba(62, 207, 142, 0.12) 0%, 
-                rgba(62, 207, 142, 0.04) 40%, 
-                transparent 70%);
-            top: -100px;
-            right: -100px;
-            animation: float1 20s ease-in-out infinite;
-        }
-        .bg-orb-2 {
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle at 70% 70%, 
-                rgba(62, 207, 142, 0.08) 0%, 
-                rgba(62, 207, 142, 0.02) 50%, 
-                transparent 80%);
-            bottom: -50px;
-            left: -100px;
-            animation: float2 25s ease-in-out infinite;
-        }
-        .bg-orb-3 {
-            width: 250px;
-            height: 250px;
-            background: radial-gradient(circle at 50% 50%, 
-                rgba(62, 207, 142, 0.06) 0%, 
-                transparent 60%);
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            animation: float3 30s ease-in-out infinite;
-        }
-        .bg-orb-4 {
-            width: 200px;
-            height: 200px;
-            background: radial-gradient(circle at 40% 60%, 
-                rgba(62, 207, 142, 0.08) 0%, 
-                transparent 70%);
-            bottom: 20%;
-            right: 10%;
-            animation: float4 22s ease-in-out infinite;
-        }
 
         /* Language Switcher */
         .lang-switcher {
@@ -3061,14 +2931,6 @@
     <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet" />
 </head>
 <body>
-<!-- Background Vignette Overlay -->
-<div class="bg-vignette"></div>
-
-<!-- Floating Background Orbs -->
-<div class="bg-orb bg-orb-1"></div>
-<div class="bg-orb bg-orb-2"></div>
-<div class="bg-orb bg-orb-3"></div>
-<div class="bg-orb bg-orb-4"></div>
 
 <!-- Mobile Header -->
 <div class="mobile-header" style="display:none;">
@@ -6235,6 +6097,49 @@ function renderDirectorCandidatePanel(plan) {
         '</div></div>';
 }
 
+function normalizeDirectorContractList(value) {
+    if (Array.isArray(value)) return value.map(item => String(item || '').trim()).filter(Boolean);
+    if (value != null && String(value).trim()) return [String(value).trim()];
+    return [];
+}
+
+function compileDirectorShotContract(contract) {
+    const source = contract && typeof contract === 'object' ? contract : {};
+    const shotLanguage = String(source.shot_language || source.master_shot_language || '').trim();
+    const generatorPrompt = String(source.generator_prompt || source.composition_intent || '').trim();
+    const mustShow = normalizeDirectorContractList(source.master_must_show || source.must_show);
+    const rejectIf = normalizeDirectorContractList(source.master_reject_if || source.reject_if);
+    if (!shotLanguage || !generatorPrompt) {
+        throw new Error('当前分镜缺少完整镜头合同：需要 shot_language 和 generator_prompt');
+    }
+    const positive = [generatorPrompt, ...mustShow].join(' ').toLowerCase();
+    const negative = rejectIf.join(' ').toLowerCase();
+    const conflicts = [
+        [/不看镜头|look away|not direct gaze/, /脸朝镜头|直视镜头|face toward camera|direct gaze/],
+        [/完整全身|full[- ]body|head[- ]to[- ]toe/, /半身|腰部以上|waist[- ]up|medium shot/],
+        [/人物占画面\s*(?:10|15|20)%|small proportion|tiny subject/, /主体占画面\s*(?:60|80|90)%|close[- ]up|face fills/]
+    ];
+    for (const [positivePattern, negativePattern] of conflicts) {
+        if (positivePattern.test(positive) && negativePattern.test(positive)) {
+            throw new Error('当前分镜合同内部冲突：请只保留一个景别/动作/视线方向');
+        }
+    }
+    return {
+        shotLanguage,
+        generatorPrompt,
+        mustShow,
+        rejectIf,
+        section: [
+            '[SHOT CONTRACT - HARD]',
+            'shot_language: ' + shotLanguage,
+            'generator_prompt: ' + generatorPrompt,
+            'must_show: ' + (mustShow.join('; ') || 'not specified'),
+            'reject_if: ' + (rejectIf.join('; ') || 'not specified'),
+            '[END SHOT CONTRACT]'
+        ].join('\n')
+    };
+}
+
 async function buildIdentityLockWorkflowForPlan(planId) {
     const plans = sg(SK.P) || [];
     const index = plans.findIndex(plan => String(plan.id) === String(planId));
@@ -6247,6 +6152,13 @@ async function buildIdentityLockWorkflowForPlan(planId) {
     const shotIndex = Number(shotSelect && shotSelect.value || 0);
     const shot = (plan.shotList || [])[shotIndex];
     if (!shot) { toast('没有可用分镜', 'er'); return; }
+    let contractBundle;
+    try {
+        contractBundle = compileDirectorShotContract(shot.directorContract);
+    } catch (error) {
+        toast(error.message || '分镜合同不完整', 'er');
+        return;
+    }
     const briefParts = [
         plan.director && plan.director.submittedBrief || plan.title || '摄影方案',
         '当前分镜：' + (shot.description || ''),
@@ -6254,7 +6166,8 @@ async function buildIdentityLockWorkflowForPlan(planId) {
         '景别与构图：' + (shot.shotSize || '') + '；' + (shot.composition || ''),
         '焦段：' + (shot.focalLength || ''),
         '光线：' + (shot.lighting || ''),
-        '限制：' + (shot.notes || '')
+        '限制：' + (shot.notes || ''),
+        contractBundle.section
     ].filter(Boolean);
     const brief = briefParts.join('\n');
     if (brief.length > 2000) { toast('当前分镜描述过长，无法安全提交', 'er'); return; }
@@ -6319,7 +6232,13 @@ async function generateDirectorCandidateForPlan(planId) {
     const identityRefSelect = $('identity-ref-' + planId);
     const identityReferencePath = identityRefSelect && identityRefSelect.value || '';
     const contract = shot.directorContract && typeof shot.directorContract === 'object' ? shot.directorContract : {};
-    const contractText = value => Array.isArray(value) ? value.join('、') : (value == null ? '' : String(value));
+    let contractBundle;
+    try {
+        contractBundle = compileDirectorShotContract(contract);
+    } catch (error) {
+        toast(error.message || '分镜合同不完整', 'er');
+        return;
+    }
     const briefParts = [
         plan.director && plan.director.submittedBrief || plan.title || '摄影方案',
         '当前分镜：' + (shot.description || ''),
@@ -6328,10 +6247,7 @@ async function generateDirectorCandidateForPlan(planId) {
         '焦段：' + (shot.focalLength || ''),
         '光线：' + (shot.lighting || ''),
         '限制：' + (shot.notes || ''),
-        '镜头语言：' + contractText(contract.shot_language || contract.master_shot_language),
-        '生成镜头合同：' + contractText(contract.generator_prompt || contract.composition_intent),
-        '必须呈现：' + contractText(contract.must_show || contract.master_must_show),
-        '拒绝条件：' + contractText(contract.reject_if || contract.master_reject_if)
+        contractBundle.section
     ].filter(Boolean);
     const brief = briefParts.join('\n');
     if (brief.length > 4000) { toast('当前分镜描述过长，无法安全提交', 'er'); return; }
@@ -11804,7 +11720,8 @@ updateBadge();renderHistMini();renderQuickVenue();renderCalendar();renderSchedul
 window.addEventListener('offline', function() { toast('网络已断开，当前为离线模式', 'er'); });
 window.addEventListener('online', function() { toast('网络已恢复', 'ok'); });
 </script>
-<!-- AOS Animation Library -->
+    <link rel="stylesheet" href="./assets/workspace-theme.css">
+    <!-- AOS Animation Library -->
 <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
 <script>
   AOS.init({

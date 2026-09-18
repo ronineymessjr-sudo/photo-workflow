@@ -127,7 +127,7 @@
 #tab-gen #importTplSelect,
 #tab-gen .case-ref-input input,
 #tab-gen .img-gen-form select {
-    background: #121613 !important;
+    background: var(--plan-surface) !important;
     border-color: var(--plan-border) !important;
     color: var(--plan-ink) !important;
     border-radius: 9px;
@@ -270,7 +270,7 @@
 }
 
 #tab-gen .img-card {
-    background: #121613;
+    background: var(--plan-surface);
     border-color: var(--plan-border);
     border-radius: 12px;
 }
