@@ -6610,7 +6610,7 @@ function renderPlanContent(plan) {
     `;
 
     // 分镜脚本（核心功能）- 专业版
-    let shotList = generateShotList(plan).map(shot => Object.fromEntries(Object.entries(shot).map(([key, value]) => [key, typeof value === 'string' && !['scene', 'description'].includes(key) ? escHtml(value) : value])));
+    let shotList = generateShotList(plan);
     // Merge with any saved custom shots
     const savedShots = JSON.parse(localStorage.getItem(`pa_shots_${plan.id}`) || '[]');
     if (savedShots.length > 0) {
@@ -6618,156 +6618,43 @@ function renderPlanContent(plan) {
         shotList = savedShots;
     }
     const shotListHtml = `
-        <div class="ps" style="margin-top:1.5rem;border-top:2px solid #ffd700;padding-top:1rem">
-            <div class="ps-hdr">
-                <div class="ps-icon">🎬</div>
-                <h3 class="ps-title">专业分镜脚本</h3>
-                <div class="export-btn-group" style="margin-left:auto;">
-                    <button class="export-btn primary" onclick="openOnSetMode('${plan.id}')">📱 现场模式</button>
-                    <button class="export-btn" onclick="exportShotListPDF('${plan.id}')">📄 PDF</button>
-                    <button class="export-btn" onclick="printShotList('${plan.id}')">🖨 打印</button>
-                    <button class="export-btn" onclick="exportShotList('${plan.id}')">📥 TXT</button>
+        <section class="storyboard" aria-label="分镜脚本">
+            <header class="storyboard-header">
+                <div><h3>分镜脚本</h3><p>${shotList.length} 个镜头 · ${shotList.every(s => Number(s.duration) > 0) ? shotList.reduce((sum,s) => sum + Number(s.duration),0) + ' 分钟' : '时长待确认'}</p></div>
+                <div class="storyboard-actions">
+                    <button class="btn btn-s btn-sm" onclick="openOnSetMode('${plan.id}')">现场模式</button>
+                    <details class="storyboard-export"><summary>导出</summary><div>
+                        <button class="btn btn-s btn-sm" onclick="exportShotListPDF('${plan.id}')">PDF</button>
+                        <button class="btn btn-s btn-sm" onclick="printShotList('${plan.id}')">打印</button>
+                        <button class="btn btn-s btn-sm" onclick="exportShotList('${plan.id}')">文本</button>
+                    </div></details>
                 </div>
+            </header>
+            <div class="storyboard-list">
+                ${shotList.map((shot,i) => `
+                    <article class="storyboard-shot">
+                        <header class="storyboard-shot-header">
+                            <label><input type="checkbox" class="shot-check" data-shot="${i}" aria-label="完成镜头 ${i+1}" onchange="toggleShotComplete('${plan.id}', ${i}, this.checked)" ${isShotComplete(plan.id,i) ? 'checked' : ''}><span class="storyboard-number">${String(i+1).padStart(2,'0')}</span><h4>${escHtml(shot.scene || '场景待确认')}</h4></label>
+                            <span>${Number(shot.duration)>0 ? Number(shot.duration)+' 分钟' : '时长待确认'}</span>
+                        </header>
+                        <p class="storyboard-description">${escHtml(shot.description || '画面待补充')}</p>
+                        <dl class="storyboard-specs">
+                            <div><dt>景别</dt><dd>${escHtml(String(shot.shotSize || '待确认'))}</dd></div>
+                            <div><dt>焦段</dt><dd>${escHtml(String(shot.focalLength || '待确认'))}</dd></div>
+                            <div><dt>机位</dt><dd>${escHtml(String(shot.angle || '待确认'))}</dd></div>
+                        </dl>
+                        <details class="storyboard-details">
+                            <summary>拍摄细节</summary>
+                            <dl class="storyboard-detail-list">
+                                ${[['构图',shot.composition],['摄影师位置',shot.method],['光线',shot.lightingSetup || shot.lighting],['动作引导',getShotDirection(shot)],['情绪',shot.mood],['道具',shot.props],['执行要点',shot.notes],['备选',shot.alternative]].filter(([,value])=>value && value!=='无').map(([label,value])=>`<div><dt>${label}</dt><dd>${escHtml(String(value))}</dd></div>`).join('')}
+                                ${shot.camera && Object.keys(shot.camera).length ? `<div><dt>相机设置</dt><dd>${Object.entries(shot.camera).map(([key,value])=>escHtml(key)+': '+escHtml(String(value))).join(' · ')}</dd></div>` : ''}
+                            </dl>
+                        </details>
+                        <details class="storyboard-details"><summary>参考图</summary>${renderShotReferenceGallery(shot,plan.input && plan.input.style || '复古',i)}</details>
+                    </article>
+                `).join('')}
             </div>
-            <div class="ps-cnt">
-                <p style="font-size:.8rem;color:var(--t2);margin-bottom:1rem;">专业分镜清单：镜头编号、场景、画面描述、景别、焦距、构图、灯光、道具、角度、情绪、时长、备注</p>
-                <div style="overflow-x:auto;">
-                    <table style="width:100%;border-collapse:collapse;font-size:.72rem;min-width:900px;">
-                        <thead>
-                            <tr style="background:var(--bg2);border-bottom:2px solid var(--bd);">
-                                <th style="padding:.4rem;text-align:center;color:var(--ac);width:40px;">#</th>
-                                <th style="padding:.4rem;text-align:left;color:var(--ac);">场景</th>
-                                <th style="padding:.4rem;text-align:left;color:var(--ac);min-width:120px;">画面描述</th>
-                                <th style="padding:.4rem;text-align:center;color:var(--ac);">景别</th>
-                                <th style="padding:.4rem;text-align:center;color:var(--teal);">焦距</th>
-                                <th style="padding:.4rem;text-align:left;color:var(--teal);">构图</th>
-                                <th style="padding:.4rem;text-align:left;color:var(--warn);">灯光</th>
-                                <th style="padding:.4rem;text-align:left;color:#8b5cf6;">道具</th>
-                                <th style="padding:.4rem;text-align:center;color:var(--t2);">角度</th>
-                                <th style="padding:.4rem;text-align:center;color:#ec4899;">情绪</th>
-                                <th style="padding:.4rem;text-align:center;color:var(--ac);">时长</th>
-                                <th style="padding:.4rem;text-align:left;color:var(--t3);min-width:100px;">备注</th>
-                                <th style="padding:.4rem;text-align:center;color:var(--ok);width:30px;">✓</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${shotList.map((shot, i) => `
-                                <tr style="border-bottom:1px solid var(--bd);background:${i % 2 === 0 ? 'transparent' : 'var(--bg-subtle)'};">
-                                    <td style="padding:.4rem;text-align:center;font-weight:600;color:var(--ac);">#${String(i + 1).padStart(2, '0')}</td>
-                                    <td style="padding:.4rem;font-weight:500;">${escHtml(shot.scene)}</td>
-                                    <td style="padding:.4rem;">${escHtml(shot.description)}</td>
-                                    <td style="padding:.4rem;text-align:center;"><span class="eq-tag" style="font-size:.65rem;padding:.15rem .4rem;">${shot.shotSize}</span></td>
-                                    <td style="padding:.4rem;text-align:center;font-weight:500;color:var(--teal);">${shot.focalLength}</td>
-                                    <td style="padding:.4rem;font-size:.7rem;">${shot.composition}</td>
-                                    <td style="padding:.4rem;font-size:.7rem;color:var(--warn);">${shot.lighting}</td>
-                                    <td style="padding:.4rem;font-size:.7rem;color:#8b5cf6;">${shot.props}</td>
-                                    <td style="padding:.4rem;text-align:center;font-size:.7rem;">${shot.angle}</td>
-                                    <td style="padding:.4rem;text-align:center;"><span style="font-size:.7rem;color:#ec4899;">${shot.mood}</span></td>
-                                    <td style="padding:.4rem;text-align:center;font-weight:600;">${shot.duration}min</td>
-                                    <td style="padding:.4rem;font-size:.7rem;color:var(--t3);">${shot.notes}</td>
-                                    <td style="padding:.4rem;text-align:center;">
-                                        <input type="checkbox" class="shot-check" data-shot="${i}" style="width:16px;height:16px;cursor:pointer;">
-                                    </td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-                
-                <!-- 详细执行步骤 + 参考图库 -->
-                <div style="margin-top:1.5rem;padding:1rem;background:var(--bg2);border-radius:var(--radius-sm);">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;">
-                        <h4 style="color:var(--ac);margin:0;font-size:.9rem;">📋 详细执行步骤 & 参考图库</h4>
-                        <button class="btn btn-s btn-sm" onclick="loadAllPlanReferences('${plan.id}')">
-                            🔍 批量加载所有参考图
-                        </button>
-                    </div>
-                    ${shotList.map((shot, i) => `
-                        <div style="margin-bottom:1.5rem;padding:.75rem;background:var(--bg);border-radius:var(--radius-sm);border-left:3px solid var(--ac);${isShotComplete(plan.id, i) ? 'opacity:0.6;background:var(--bg2);' : ''}">
-                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">
-                                <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;">
-                                    <input type="checkbox" onchange="toggleShotComplete('${plan.id}', ${i}, this.checked)"
-                                           ${isShotComplete(plan.id, i) ? 'checked' : ''}
-                                           style="width:18px;height:18px;accent-color:var(--ac);">
-                                    <span style="font-weight:600;color:var(--ac);">镜头 #${String(i + 1).padStart(2, '0')} - ${escHtml(shot.scene)}</span>
-                                </label>
-                                <span style="font-size:.75rem;color:var(--t3);">${shot.focalLength} · ${shot.duration}min</span>
-                            </div>
-                            <div style="font-size:.78rem;color:var(--t2);line-height:1.6;">
-                                <p><strong style="color:var(--t1);">动作：</strong>${escHtml(shot.description)}</p>
-                                <p><strong style="color:var(--t1);">执行要点：</strong>${escHtml(shot.notes)}</p>
-                                ${shot.alternative ? `<p><strong style="color:var(--t1);">备选方案：</strong>${escHtml(shot.alternative)}</p>` : ''}
-                                <p><strong style="color:var(--t1);">引导话术：</strong>"${getShotDirection(shot)}"</p>
-                                ${shot.camera ? `<p><strong style="color:var(--t1);">相机参数：</strong>ISO ${escHtml(String(shot.camera.iso || '自动'))} · ${escHtml(String(shot.camera.shutter || '按光线'))} · WB ${escHtml(String(shot.camera.wb || '自动'))} · ${escHtml(String(shot.camera.focusMode || '单次自动'))} · ${escHtml(String(shot.camera.metering || '评价测光'))} · ${escHtml(String(shot.camera.driveMode || '单张'))}</p>` : ''}
-                                ${shot.lightingSetup ? `<p><strong style="color:var(--t1);">布光方案：</strong>${escHtml(shot.lightingSetup)}</p>` : ''}
-                            </div>
-                            <!-- 分类标签 -->
-                            <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.5rem;">
-                                <span style="padding:.15rem .4rem;background:rgba(255,107,107,0.15);color:var(--ac);border-radius:4px;font-size:.7rem;">${plan.input && plan.input.style || '复古'}</span>
-                                <span style="padding:.15rem .4rem;background:rgba(78,205,196,0.15);color:var(--teal);border-radius:4px;font-size:.7rem;">${shot.focalLength.split(' ')[0]}</span>
-                                <span style="padding:.15rem .4rem;background:rgba(212,149,106,0.15);color:#d4956a;border-radius:4px;font-size:.7rem;">${shot.props !== '无' ? shot.props : '无道具'}</span>
-                                <span style="padding:.15rem .4rem;background:rgba(245,158,11,0.15);color:var(--warn);border-radius:4px;font-size:.7rem;">${shot.mood}</span>
-                                ${shot.priority ? `<span style="padding:.15rem .4rem;background:${shot.priority === '必拍' ? 'rgba(239,68,68,0.15)' : shot.priority === '推荐' ? 'rgba(212,149,106,0.15)' : 'rgba(156,163,175,0.15)'};color:${shot.priority === '必拍' ? '#ef4444' : shot.priority === '推荐' ? '#d4956a' : '#9ca3af'};border-radius:4px;font-size:.7rem;">${shot.priority === '必拍' ? '★ ' : ''}${shot.priority}</span>` : ''}
-                            </div>
-                            <!-- 参考图库 -->
-                            ${renderShotReferenceGallery(shot, plan.input && plan.input.style || '复古', i)}
-                        </div>
-                    `).join('')}
-                </div>
-                
-                <!-- 例图参考来源 -->
-                <div style="margin-top:1.5rem;padding:1rem;background:linear-gradient(135deg,rgba(212,149,106,0.1),rgba(160,128,96,0.1));border-radius:var(--radius-sm);">
-                    <h4 style="color:var(--ac);margin-bottom:.75rem;font-size:.9rem;">📸 例图参考来源</h4>
-                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;font-size:.78rem;">
-                        <div>
-                            <strong style="color:#e8e8e8;">花瓣网(huaban.com)</strong>
-                            <ul style="margin:.25rem 0;padding-left:1rem;color:var(--t2);">
-                                <li>搜索关键词：<a href="https://huaban.com/search?q=${encodeURIComponent(plan.input && plan.input.style || '人像')}" target="_blank" style="color:var(--ac);">${plan.input && plan.input.style || '人像'} 摄影</a></li>
-                                <li>国内最大灵感采集平台</li>
-                                <li>点击上方链接直达搜索</li>
-                            </ul>
-                        </div>
-                        <div>
-                            <strong style="color:#f5c918;">站酷(zcool.com.cn)</strong>
-                            <ul style="margin:.25rem 0;padding-left:1rem;color:var(--t2);">
-                                <li>搜索关键词：<a href="https://www.zcool.com.cn/search/content?word=${encodeURIComponent(plan.input && plan.input.style || '人像摄影')}" target="_blank" style="color:var(--ac);">${plan.input && plan.input.style || '人像'} 摄影</a></li>
-                                <li>国内专业设计师社区</li>
-                                <li>点击上方链接直达搜索</li>
-                            </ul>
-                        </div>
-                        <div>
-                            <strong style="color:#ff2442;">小红书</strong>
-                            <ul style="margin:.25rem 0;padding-left:1rem;color:var(--t2);">
-                                <li>搜索："${plan.input && plan.input.style || '人像'}写真姿势"</li>
-                                <li>搜索："${plan.input && plan.input.focalLength || '85mm'}镜头人像"</li>
-                                <li>收藏喜欢的笔记</li>
-                            </ul>
-                        </div>
-                        <div>
-                            <strong style="color:#4285f4;">500px</strong>
-                            <ul style="margin:.25rem 0;padding-left:1rem;color:var(--t2);">
-                                <li>分类：Portrait</li>
-                                <li>筛选：${plan.input && plan.input.focalLength || '85mm'}</li>
-                                <li>高质量专业作品</li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div style="margin-top:.75rem;padding:.5rem;background:var(--bg);border-radius:var(--radius-sm);font-size:.75rem;color:var(--t3);">
-                        💡 <strong>提示：</strong>拍摄前将参考图保存到手机，现场给模特看，沟通更直观
-                    </div>
-                </div>
-                
-                <div style="margin-top:1rem;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;">
-                    <button class="btn btn-s btn-sm" onclick="addCustomShot()">➕ 添加镜头</button>
-                    <button class="btn btn-s btn-sm" onclick="reorderShots()">🔄 调整顺序</button>
-                    <button class="btn btn-s btn-sm" onclick="toggleShotView()">📋 简洁视图</button>
-                    <span style="margin-left:auto;font-size:.75rem;color:var(--t3);">
-                        📊 总时长: <strong style="color:var(--ac);">${shotList.reduce((sum, s) => sum + s.duration, 0)} 分钟</strong>
-                        | 镜头数: <strong style="color:var(--ac);">${shotList.length}</strong>
-                    </span>
-                </div>
-            </div>
-        </div>
+        </section>
     `;
 
     // 拍摄当天Checklist
