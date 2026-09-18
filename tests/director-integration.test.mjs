@@ -25,6 +25,31 @@ test('preserves current input and actual director shots without legacy templates
     assert.equal(plan.images.length, 0);
 });
 
+test('shot target varies with duration without copying upstream shots to fill it', async () => {
+    for (const [duration, count] of [['1小时', 9], ['2小时', 11], ['5小时', 16]]) {
+        let requested;
+        const plan = await createDirectorPlan({ theme: '纪实人像', duration }, {
+            baseUrl: 'http://localhost', fetchImpl: async (url, options) => {
+                requested = JSON.parse(options.body).output_count;
+                return Response.json({ shot_plans: [
+                    { shot_language: 'same', model_pose: '走动', camera_angle: 'eye_level', shot_size: 'FS' },
+                    { shot_language: 'same', model_pose: '走动' },
+                    { shot_language: 'detail', model_pose: '手部细节' },
+                ] });
+            },
+        });
+        assert.equal(requested, 8);
+        assert.equal(plan.director.desiredShotCount, count);
+        assert.equal(plan.director.shotCountLimited, true);
+        assert.equal(plan.shotList.length, 2);
+        assert.equal(plan.shotList[1].sourceShotIndex, 2);
+        assert.equal(plan.shotList[0].angle, '平视');
+        assert.equal(plan.shotList[0].shotSize, '全身');
+        assert.equal(plan.sections.length, 2);
+        assert.ok(plan.sections.every(section => section.ti.startsWith('镜头')));
+    }
+});
+
 test('candidate generation returns a review-only external result', async () => {
     let submitted;
     const result = await generateDirectorCandidate({
@@ -161,13 +186,14 @@ test('all inline scripts parse and submit awaits director, shot list reuses resp
     assert.match(html, /generationRequest\.reference_image_path = identityReferencePath/);
     assert.match(html, /buildIdentityLockWorkflowForPlan/);
     assert.match(html, /identity-workflow-status-/);
-    assert.match(html, /synthetic=true/);
+    assert.match(html, /synthetic: true/);
+    assert.match(html, /shotSnapshot: JSON\.parse/);
+    assert.match(html, /<caption>分镜总表<\/caption>/);
     assert.match(html, /\[SHOT CONTRACT - HARD\]/);
     assert.match(html, /compileDirectorShotContract/);
     assert.match(html, /当前分镜合同内部冲突/);
     assert.match(html, /contractBundle\.section/);
-    assert.match(html, /构图闸门：阻断/);
-    assert.match(html, /人脸闸门：阻断/);
+    assert.match(html, /c\.poseStatus === 'blocked' \|\| c\.faceQualityStatus === 'blocked'/);
     assert.match(html, /const IS_LOCAL_HOST = \['127\.0\.0\.1', 'localhost', '\[::1\]'\]/);
     assert.match(html, /if \(USE_LOCAL_MODE\) \{/);
 });

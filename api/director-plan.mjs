@@ -12,20 +12,32 @@ export async function createDirectorPlan(input, { baseUrl, fetchImpl = fetch } =
     const requestId = `workflow-${crypto.randomUUID()}`;
     const response = await fetchImpl(`${baseUrl.replace(/\/$/, '')}/v1/photoatelier/shoot-plan`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ request_id: requestId, brief, output_count: 3 }),
+        body: JSON.stringify({ request_id: requestId, brief, output_count: 8 }),
         signal: AbortSignal.timeout(60000),
     });
     if (!response.ok) throw new Error(`DIRECTOR_UPSTREAM_${response.status}`);
     const result = await response.json();
     if (!Array.isArray(result.shot_plans) || !result.shot_plans.length) throw new Error('DIRECTOR_INVALID_RESPONSE');
+    const uniqueShots = new Map();
+    result.shot_plans.forEach((shot, sourceIndex) => {
+        const key = shot.shot_language || JSON.stringify([shot.model_pose, shot.photographer_position, shot.lens]);
+        if (!uniqueShots.has(key)) uniqueShots.set(key, { ...shot, sourceIndex });
+    });
+    // Do not duplicate shots to meet a target that the upstream cannot yet supply.
+    const executionShots = [...uniqueShots.values()];
+    const hoursMatch = String(input.duration || '').match(/(\d+(?:\.\d+)?)\s*(小时|h|分钟|min)/i);
+    const hours = hoursMatch ? Number(hoursMatch[1]) / (/分钟|min/i.test(hoursMatch[2]) ? 60 : 1) : 2;
+    const desiredShotCount = Math.max(9, Math.min(16, Math.round(7 + hours * 2)));
     const text = value => typeof value === 'string' ? value : '';
     const sceneScale = classifySceneScale(`${input.theme || ''}\n${input.extra || ''}`);
-    const shotList = result.shot_plans.map((shot, index) => ({
+    const shotList = executionShots.slice(0, desiredShotCount).map((shot, index) => ({
         id: `${requestId}-${index}`, scene: input.scene || '场地待确认',
-        description: text(shot.model_pose), shotSize: sceneScale.shotSize,
+        description: text(shot.model_pose), shotSize: ({ECU:'局部特写',CU:'特写',MCU:'近景',MS:'中景',MFS:'中全景',FS:'全身',WS:'环境全景',EWS:'环境远景'})[shot.shot_size] || text(shot.framing) || sceneScale.shotSize,
+        title: text(shot.framing) || text(shot.model_pose),
+        sourceShotIndex: shot.sourceIndex,
         method: text(shot.photographer_position), focalLength: text(shot.lens),
         composition: text(shot.model_position), lighting: text(shot.lighting_setup),
-        props: '以实际场地和已有资源为准', angle: text(shot.camera_angle),
+        props: '以实际场地和已有资源为准', angle: ({eye_level:'平视',high_angle:'俯拍',ground_level:'贴地低机位',overhead:'正上方俯拍',low_angle:'仰拍'})[shot.camera_angle] || text(shot.camera_angle),
         mood: input.mood || '待确认', duration: 0,
         notes: `裁切：${text(shot.crop_boundary)}；必须呈现：${text(shot.must_show)}；拒绝：${text(shot.reject_if)}`,
         lightingSetup: text(shot.lighting_setup), priority: '待人工确认',
@@ -36,19 +48,13 @@ export async function createDirectorPlan(input, { baseUrl, fetchImpl = fetch } =
         title: input.theme || '摄影方案', input, savedAt: new Date().toISOString(),
         style: input.style || '', images: [], shotList,
         references: Array.isArray(result.references) ? result.references : [],
-        sections: [
-            { ti: '你的本次需求', ic: '📝', c: [brief] },
-            { ti: '摄影 Agent 接入记录', ic: '🎬', c: [
-                `请求：${requestId}`, '已调用 Director 拍摄方案接口；不是重新训练生图权重。',
-                '本次为三个候选镜头；焦距、站位与现场时长需人工确认。',
-                '方案服务目前使用检索与规则编排，不能保证完全理解所有语义；请逐项审核。',
-            ] },
-            ...shotList.map((shot, i) => ({ ti: `镜头 ${i + 1}`, ic: '📷', c: [
-                shot.description, `摄影师：${shot.method}`, `模特：${shot.composition}`,
-                `光线：${shot.lighting}`, shot.notes,
-            ] })),
-        ],
-        director: { requestId, source: 'director-shoot-plan', submittedBrief: brief,
+        sections: shotList.map((shot, i) => ({ ti: `镜头 ${i + 1} · ${shot.title}`, ic: '', c: [
+            `人物怎么做：${shot.description}`, `摄影师站哪里：${shot.method}`,
+            `人物放在哪里：${shot.composition}`, `景别与焦段：${shot.shotSize} · ${shot.focalLength}`,
+            `光线怎么用：${shot.lighting}`, `画面要求：${shot.notes}`,
+        ] })),
+        director: { requestId, source: 'director-shoot-plan', submittedBrief: brief, desiredShotCount,
+            shotCountLimited: shotList.length < desiredShotCount,
             reviewRequired: true, imageGenerationConnected: true,
             imageGenerationMode: 'external-provider-candidate-review', generationCandidates: [], sceneScale },
     };

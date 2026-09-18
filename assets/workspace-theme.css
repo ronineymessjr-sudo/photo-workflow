@@ -120,6 +120,34 @@ input::placeholder, textarea::placeholder { color: var(--t3); opacity: 1; }
 .storyboard-export > summary { padding: 6px 12px; border: 1px solid var(--bd); border-radius: 4px; }
 .storyboard-export > div { display: flex; gap: 6px; flex-wrap: wrap; padding: 8px 0; }
 .storyboard-list { margin: 20px 0; display: grid; gap: 12px; }
+.storyboard-overview { margin-top: 20px; }
+.storyboard-overview table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 13px; }
+.storyboard-overview caption { text-align: left; padding: 8px 0; font-weight: 600; }
+.storyboard-overview th, .storyboard-overview td { padding: 10px 8px; text-align: left; border-bottom: 1px solid var(--bd); overflow-wrap: anywhere; vertical-align: top; }
+.storyboard-overview th { color: var(--t2); font-weight: 500; }
+.storyboard-overview th:first-child { width: 42px; }
+.storyboard-overview th:nth-child(2) { width: 42%; }
+.storyboard-overview a { color: var(--t1); text-underline-offset: 3px; }
+.director-candidate-panel { margin-top: 28px; padding: 24px 0; border-top: 1px solid var(--bd); font: 400 14px/1.6 var(--font-sans); color: var(--t1); }
+.director-candidate-panel h3 { font-size: 18px; margin: 0 0 16px; }
+.director-candidate-panel h4 { font-size: 14px; margin: 0 0 12px; }
+.director-candidate-panel select { width: 100%; min-width: 0; min-height: 44px; border: 1px solid var(--bd); border-radius: 6px; padding: 8px; font-size: 13px; color: var(--t1); background: var(--bg2); }
+.candidate-workspace { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 24px; margin: 20px 0; }
+.candidate-brief, .candidate-results { min-width: 0; }
+.candidate-brief dt { font-size: 12px; color: var(--t2); }
+.candidate-brief dd { margin: 4px 0 12px; font-size: 13px; overflow-wrap: anywhere; }
+.candidate-result { margin: 0 0 16px; }
+.candidate-result img { width: 100%; aspect-ratio: 4/3; object-fit: contain; background: var(--bg2); border-radius: 6px; }
+.candidate-result figcaption, .candidate-empty { color: var(--t2); font-size: 13px; }
+.candidate-empty { border: 1px dashed var(--bd); padding: 32px 16px; text-align: center; }
+.candidate-options { margin-bottom: 16px; }
+.candidate-options summary { cursor: pointer; color: var(--t2); }
+.candidate-options label { display: block; margin-top: 12px; font-size: 12px; color: var(--t2); }
+@media(max-width: 600px) {
+    .candidate-workspace { grid-template-columns: minmax(0,1fr); }
+    .storyboard-overview th, .storyboard-overview td { padding: 8px 4px; font-size: 12px; }
+    .storyboard-overview th:first-child { width: 30px; }
+}
 .storyboard-shot { border: 1px solid var(--bd); background: var(--bg2); border-radius: 8px; padding: 20px; min-width: 0; }
 .storyboard-shot-header label { display: flex; align-items: center; gap: 10px; cursor: pointer; min-width: 0; }
 .storyboard-shot-header input { width: 18px; height: 18px; accent-color: var(--ac); flex-shrink: 0; }
