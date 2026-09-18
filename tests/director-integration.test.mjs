@@ -82,6 +82,7 @@ test('identity workflow bridge preserves the local reference contract without ex
 
 test('fails closed for missing configuration, invalid input, and upstream failures', async () => {
     await assert.rejects(createDirectorPlan({ theme: 'x' }), /DIRECTOR_NOT_CONFIGURED/);
+    await assert.rejects(generateDirectorCandidate({ brief: 'x' }, { baseUrl: 'http://localhost' }), /SHOT_CONTRACT_REQUIRED/);
     await assert.rejects(createDirectorPlan({ theme: 'x'.repeat(2001) }, { baseUrl: 'http://localhost' }), /INVALID_BRIEF/);
     await assert.rejects(createDirectorPlan({ theme: 'x' }, { baseUrl: 'http://localhost', fetchImpl: async () => new Response('', { status: 503 }) }), /DIRECTOR_UPSTREAM_503/);
     await assert.rejects(createDirectorPlan({ theme: 'x' }, { baseUrl: 'http://localhost', fetchImpl: async () => Response.json({}) }), /DIRECTOR_INVALID_RESPONSE/);
@@ -126,7 +127,10 @@ test('loopback bridge serves only generated PNG candidates', async t => {
     const response = await fetch(base + '/api/director/generate-candidate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ request_id: 'workflow-test', brief: '候选图', dry_run: false }),
+        body: JSON.stringify({
+            request_id: 'workflow-test', brief: '候选图', dry_run: false,
+            shot_contract: { shot_language: 'reflection-frame', generator_prompt: 'selected reflection contract' }
+        }),
     });
     assert.equal(response.status, 200);
     const data = await response.json();
@@ -158,6 +162,10 @@ test('all inline scripts parse and submit awaits director, shot list reuses resp
     assert.match(html, /buildIdentityLockWorkflowForPlan/);
     assert.match(html, /identity-workflow-status-/);
     assert.match(html, /synthetic=true/);
+    assert.match(html, /\[SHOT CONTRACT - HARD\]/);
+    assert.match(html, /compileDirectorShotContract/);
+    assert.match(html, /当前分镜合同内部冲突/);
+    assert.match(html, /contractBundle\.section/);
     assert.match(html, /构图闸门：阻断/);
     assert.match(html, /人脸闸门：阻断/);
     assert.match(html, /const IS_LOCAL_HOST = \['127\.0\.0\.1', 'localhost', '\[::1\]'\]/);

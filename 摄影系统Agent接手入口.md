@@ -17,8 +17,8 @@
 
 | 用途 | 地址 | 当前情况 |
 | --- | --- | --- |
-| 摄影系统网页、登录 | http://127.0.0.1:8125/ | 本次 GET 验证 200；登录后的完整 UI 验收未完成 |
-| 摄影系统方案桥接 | POST http://127.0.0.1:8125/api/director/plan | 已进行三组真实接口测试 |
+| 摄影系统网页、登录 | http://127.0.0.1:8126/ | 当前本机实例；登录后的完整 UI 验收未完成 |
+| 摄影系统方案桥接 | POST http://127.0.0.1:8126/api/director/plan | 当前本机实例；已进行真实接口测试 |
 | Director 自身页面 | http://127.0.0.1:8004/photoatelier/ | 本次 GET 验证 200；不是摄影系统 |
 | OpenAPI 完整合同 | http://127.0.0.1:8004/openapi.json | 本次读取成功；以此为字段真源 |
 | 拍摄方案 | POST http://127.0.0.1:8004/v1/photoatelier/shoot-plan | 摄影系统桥接实际调用此接口 |
@@ -38,10 +38,11 @@
 
 ```powershell
 Set-Location -LiteralPath 'D:\AI项目\photo-workflow-director-integration'
+$env:DIRECTOR_BRIDGE_PORT='8126'
 node tools/serve-director.mjs
 ```
 
-该桥接固定监听 `127.0.0.1:8125`，默认后端 `127.0.0.1:8004`，无须安装依赖。
+当前实例监听 `127.0.0.1:8126`；未设置环境变量时默认端口仍为 `8125`。后端为 `127.0.0.1:8004`，无须安装依赖。
 
 Director 如果停止，使用正常 Windows 用户上下文启动（在 Codex 中申请对应执行权限），不要使用离线沙箱身份运行需要联网和读取既有用户凭据的服务：
 
@@ -66,9 +67,31 @@ Set-Location -LiteralPath 'D:\AI项目\director-master-aesthetic-agent-v0.28.0'
 `director.requestId` 用于追踪，`director.submittedBrief` 用于核对原始需求；`shotList[].directorContract` 保留完整原始镜头合同。
 桥接目前请求 3 个候选镜头；超过 2000 字符的编译需求拒绝而不静默截断。`duration=0` 表示镜头时长未估算，不是完整排期。
 
+## 生图提示词合同（本轮新增，必须保留）
+
+摄影系统不能把用户散文直接当作唯一生图提示词。每次候选生图必须从当前 `shotList[shotIndex].directorContract` 编译出以下字段：
+
+```json
+{
+  "shot_language": "environmental-wide",
+  "generator_prompt": "模型可执行的机位、景别和构图描述",
+  "must_show": ["人物占比", "头手脚完整", "前中后景三层"],
+  "reject_if": ["居中证件照", "半身裁切", "空景"]
+}
+```
+
+浏览器请求会把这组合同包装为 `[SHOT CONTRACT - HARD]` 区块，再连同场景和风格提交给 Director。`must_show` 进入正向提示词，`reject_if` 进入负面提示词和本地构图闸门。不能只改 `brief` 而丢弃 `shot_contract`，也不能用旧模板替代选中的镜头。
+
+桥接层对候选生图 fail-closed：没有 `shot_contract.shot_language` 或 `shot_contract.generator_prompt` 时直接返回 `SHOT_CONTRACT_REQUIRED`，不会退回随机生图。
+
+提交前必须检查明显冲突，例如“不看镜头”与“脸朝镜头”、 “完整全身”与“半身”、 “人物占 15%”与“脸部占 90%”不能同时存在；冲突时前端阻止提交并要求修改合同。
+
+生图只产生 `synthetic=true` 的候选素材。模型、seed 或画幅可以变化，但同一轮重试不能改写镜头合同。候选仍需通过构图、人脸和人工审美审核，不能把接口成功当作生产发布。
+
 ## 已改文件
 
 - `index.html`：原方案按钮改用真实接口；分镜直接读取 Agent shotList；失败不回退旧模板；Agent 方案不调用旧九图生成；生成内容显示转义。
+- `index.html`：新增结构化镜头合同编译、冲突拦截、`must_show/reject_if` 硬区块；候选区区分当前/历史分镜并显示合同指纹。
 - `assets/director-client.js`：本机同源桥接，非本机使用已有 api 客户端及登录。
 - `api/director-plan.mjs`：字段编译及 Director 返回合同转换。
 - `api/index.js`：新增受原登录认证保护的云端方案路由；没有配置时返回 503。

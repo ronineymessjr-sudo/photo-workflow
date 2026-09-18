@@ -2,6 +2,12 @@
 export async function generateDirectorCandidate(input, { baseUrl, fetchImpl = fetch } = {}) {
     if (!baseUrl) throw new Error('DIRECTOR_NOT_CONFIGURED');
     if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('INVALID_GENERATION_REQUEST');
+    const contract = input.shot_contract;
+    if (!contract || typeof contract !== 'object' || Array.isArray(contract)
+        || typeof contract.shot_language !== 'string' || !contract.shot_language.trim()
+        || typeof contract.generator_prompt !== 'string' || !contract.generator_prompt.trim()) {
+        throw new Error('DIRECTOR_SHOT_CONTRACT_REQUIRED');
+    }
     const requestId = typeof input.request_id === 'string' && input.request_id ? input.request_id : `workflow-${crypto.randomUUID()}`;
     const brief = typeof input.brief === 'string' ? input.brief.trim() : '';
     if (!brief || brief.length > 4000) throw new Error('INVALID_GENERATION_REQUEST');
