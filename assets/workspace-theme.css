@@ -134,11 +134,15 @@ input::placeholder, textarea::placeholder { color: var(--t3); opacity: 1; }
 .storyboard-details { border-top: 1px solid var(--bd); }
 .storyboard-detail-list { display: grid; gap: 12px; padding: 8px 0 16px; }
 .storyboard-detail-list > div { display: grid; grid-template-columns: 84px minmax(0,1fr); gap: 12px; }
-.storyboard .shot-reference-gallery { padding: 0 !important; background: transparent !important; }
-.storyboard .shot-reference-gallery > div { grid-template-columns: minmax(0,1fr) !important; }
-.storyboard .shot-reference-gallery [style*="color"] { color: var(--t2) !important; }
-.storyboard .shot-reference-gallery [style*="background"] { background: transparent !important; border-color: var(--bd) !important; }
-.storyboard .shot-reference-gallery a:hover { text-decoration: underline; color: var(--t1) !important; }
+.shot-reference-gallery { padding: 8px 0 12px; min-width: 0; color: var(--t1); font: 400 13px/1.6 var(--font-sans); }
+.reference-query-label { display: block; margin-bottom: 6px; color: var(--t2); font-size: 12px; }
+.shot-reference-gallery .reference-query { width: 100%; min-width: 0; box-sizing: border-box; font-size: 13px; padding: 10px 12px; border: 1px solid var(--bd); border-radius: 6px; background: var(--bg); color: var(--t1); }
+.reference-search-actions { display: flex; gap: 8px; align-items: stretch; flex-wrap: wrap; margin-top: 10px; }
+.shot-reference-gallery .reference-platform { flex: 1 1 110px; min-width: 0; width: auto; padding: 8px 10px; border: 1px solid var(--bd); border-radius: 6px; background: var(--bg); color: var(--t1); font-size: 13px; min-height: 44px; }
+.shot-reference-gallery .reference-search-link { flex: 0 0 auto; min-height: 44px; padding: 8px 12px; font-size: 13px; color: var(--t1); background: var(--bg2); border: 1px solid var(--bd); border-radius: 6px; text-decoration: none; }
+.reference-search-link:hover { background: var(--bg3); border-color: var(--bd2); }
+.reference-search-link[aria-disabled="true"] { opacity: .5; cursor: not-allowed; }
+.reference-rights { margin: 10px 0 0; color: var(--t2); font-size: 12px; overflow-wrap: anywhere; }
 @media(max-width: 600px) {
     .storyboard-shot { padding: 14px; }
     .storyboard-specs { gap: 8px; }

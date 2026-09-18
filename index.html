@@ -11381,59 +11381,37 @@ function generateShotSearchQueries(shot, style) {
 
 // Render reference gallery for a shot (direct links mode - no API key needed)
 function renderShotReferenceGallery(shot, style, shotIndex) {
-    const queries = generateShotSearchQueries(shot, style);
-    const hasApiKey = !!getPexelsApiKey();
-
+    const query = [style, shot.scene, shot.shotSize, shot.mood].filter(Boolean).join(' ');
+    const sources = buildSearchUrls(query);
+    const platforms = ['xiaohongshu', 'huaban', 'zcool', 'pexels', 'unsplash', 'pixabay'];
     return `
-        <div class="shot-reference-gallery" id="ref-gallery-${shotIndex}" style="margin-top:1rem;padding:1rem;background:var(--bg2);border-radius:var(--radius-sm);">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;">
-                <h5 style="color:var(--ac);font-size:.85rem;margin:0;">📸 参考图库</h5>
-                ${hasApiKey ? `<button class="btn btn-s btn-sm" onclick="loadShotReferencesApi(${shotIndex}, '${style}', '${encodeURIComponent(JSON.stringify(shot).replace(/'/g, "&#39;"))}')">🔍 API搜索</button>` : ''}
+        <div class="shot-reference-gallery" id="ref-gallery-${shotIndex}">
+            <label class="reference-query-label" for="ref-query-${shotIndex}">搜索关键词</label>
+            <input id="ref-query-${shotIndex}" class="reference-query" type="search" value="${escHtml(query)}" oninput="updateShotReferenceSearch(this)">
+            <div class="reference-search-actions">
+                <select class="reference-platform" aria-label="搜索平台" onchange="updateShotReferenceSearch(this)">
+                    ${platforms.map(key => `<option value="${key}">${sources[key].name}</option>`).join('')}
+                </select>
+                <a class="btn btn-s reference-search-link" href="${escHtml(sources.xiaohongshu.url)}" target="_blank" rel="noopener noreferrer" aria-label="在小红书搜索参考图（新标签页）">搜索参考图</a>
             </div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:.75rem;">
-                ${queries.map((q, i) => {
-                    const urls = buildSearchUrls(q.query);
-                    // Group platforms by category
-                    const majorPlatforms = ['pexels', 'unsplash', 'pixabay'];
-                    const chinesePlatforms = ['xiaohongshu', 'huaban', 'zcool'];
-                    const morePlatforms = ['freepik', 'burst', 'stocksnap', 'kaboompics'];
-                    const artisticPlatforms = ['morguefile', 'lifeofpix', 'gratisography', 'magdeleine', 'picjumbo'];
-                    const nichePlatforms = ['newoldstock', 'splitshire', 'jaymantri', 'isorepublic', 'styledstock'];
-                    const extraPlatforms = ['flickr_cc', 'wikimedia', 'everypixel'];
-                    
-                    return `
-                    <div style="background:var(--bg);border-radius:8px;padding:.75rem;border-left:3px solid ${q.color};">
-                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">
-                            <span style="font-size:.78rem;font-weight:600;color:${q.color};">${q.category}</span>
-                            <span style="font-size:.7rem;color:var(--t3);">${q.description}</span>
-                        </div>
-                        <div style="font-size:.68rem;color:var(--t3);margin-bottom:.5rem;word-break:break-all;">
-                            🔑 ${q.query}
-                        </div>
-                        <!-- Major platforms (always show) -->
-                        <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.35rem;">
-                            ${majorPlatforms.map(k => `<a href="${urls[k].url}" target="_blank" rel="noopener" title="${urls[k].tip}" style="padding:.2rem .5rem;background:${urls[k].color}15;border-radius:4px;font-size:.7rem;color:${urls[k].color};text-decoration:none;transition:all .2s;border:1px solid ${urls[k].color}30;" onmouseover="this.style.background='${urls[k].color}30'" onmouseout="this.style.background='${urls[k].color}15'">${urls[k].name}</a>`).join('')}
-                        </div>
-                        <!-- Chinese platforms -->
-                        <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.35rem;">
-                            ${chinesePlatforms.map(k => `<a href="${urls[k].url}" target="_blank" rel="noopener" title="${urls[k].tip}" style="padding:.2rem .5rem;background:${urls[k].color}15;border-radius:4px;font-size:.7rem;color:${urls[k].color};text-decoration:none;transition:all .2s;border:1px solid ${urls[k].color}30;" onmouseover="this.style.background='${urls[k].color}30'" onmouseout="this.style.background='${urls[k].color}15'">${urls[k].name}</a>`).join('')}
-                        </div>
-                        <!-- More platforms (collapsible) -->
-                        <details style="margin-top:.35rem;">
-                            <summary style="cursor:pointer;font-size:.7rem;color:var(--t3);padding:.25rem 0;">📂 更多免费图库 (${morePlatforms.length + artisticPlatforms.length + nichePlatforms.length + extraPlatforms.length}个)</summary>
-                            <div style="display:flex;flex-wrap:wrap;gap:.25rem;margin-top:.35rem;">
-                                ${[...morePlatforms, ...artisticPlatforms, ...nichePlatforms, ...extraPlatforms].map(k => `<a href="${urls[k].url}" target="_blank" rel="noopener" title="${urls[k].tip}" style="padding:.15rem .4rem;background:${urls[k].color}10;border-radius:3px;font-size:.65rem;color:${urls[k].color};text-decoration:none;transition:all .2s;" onmouseover="this.style.background='${urls[k].color}20'" onmouseout="this.style.background='${urls[k].color}10'">${urls[k].name}</a>`).join('')}
-                            </div>
-                        </details>
-                    </div>`;
-                }).join('')}
-            </div>
-            <div style="margin-top:.75rem;padding:.5rem;background:var(--bg);border-radius:6px;font-size:.72rem;color:var(--t3);display:flex;align-items:center;gap:.5rem;">
-                <span>💡</span>
-                <span>点击平台按钮直接跳转搜索页，所有图库均免费可商用。如需API自动加载图片，请在设置中填入 Pexels API Key（<a href="https://www.pexels.com/api/" target="_blank" style="color:var(--ac);">免费申请</a>）</span>
-            </div>
+            <p class="reference-rights">外部搜索 · 使用图片前请核对原站授权</p>
         </div>
     `;
+}
+
+function updateShotReferenceSearch(control) {
+    const gallery = control.closest('.shot-reference-gallery');
+    const query = gallery.querySelector('.reference-query').value.trim();
+    const source = buildSearchUrls(query)[gallery.querySelector('.reference-platform').value];
+    const link = gallery.querySelector('.reference-search-link');
+    if (query && source) {
+        link.href = source.url;
+        link.removeAttribute('aria-disabled');
+        link.setAttribute('aria-label', `在${source.name}搜索参考图（新标签页）`);
+    } else {
+        link.removeAttribute('href');
+        link.setAttribute('aria-disabled', 'true');
+    }
 }
 
 // Optional: Load images via Pexels API (only works if user has set API key)
