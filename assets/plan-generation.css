@@ -1,0 +1,337 @@
+/* PhotoAtelier plan-generation visual system */
+/* Scoped to the planning workspace so the rest of the app keeps its existing contracts. */
+#tab-gen {
+    --plan-surface: #151917;
+    --plan-surface-raised: #1b201d;
+    --plan-surface-soft: rgba(223, 231, 224, 0.035);
+    --plan-border: rgba(223, 231, 224, 0.11);
+    --plan-border-strong: rgba(223, 231, 224, 0.19);
+    --plan-ink: #edf1ed;
+    --plan-muted: #a7b0a9;
+    --plan-faint: #77827b;
+    --plan-accent: #a9b8ab;
+    --plan-accent-strong: #c7d1c8;
+    --plan-accent-soft: rgba(169, 184, 171, 0.14);
+    --plan-warm: #b9a58d;
+    color: var(--plan-ink);
+}
+
+#tab-gen > .grid {
+    width: min(100%, 1320px);
+    max-width: 1320px !important;
+    grid-template-columns: minmax(360px, 0.88fr) minmax(0, 1.18fr) !important;
+    gap: 1.5rem;
+}
+
+#tab-gen .panel {
+    background: var(--plan-surface);
+    border-color: var(--plan-border);
+    border-radius: 14px;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16);
+}
+
+#tab-gen .panel:hover {
+    border-color: var(--plan-border-strong);
+    box-shadow: 0 16px 34px rgba(0, 0, 0, 0.2);
+}
+
+#tab-gen .p-head {
+    padding: 1rem 1.2rem;
+    background: var(--plan-surface-soft);
+    border-bottom-color: var(--plan-border);
+}
+
+#tab-gen .p-head h2 {
+    color: var(--plan-ink);
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+#tab-gen .p-body {
+    padding: 1.2rem;
+}
+
+#tab-gen .step-indicator {
+    padding: 0.25rem 0.2rem 1rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--plan-border);
+}
+
+#tab-gen .step-item:not(:last-child)::after {
+    background: var(--plan-border-strong);
+}
+
+#tab-gen .step-item.completed:not(:last-child)::after {
+    background: var(--plan-accent);
+}
+
+#tab-gen .step-num {
+    background: transparent;
+    color: var(--plan-faint);
+    border-color: var(--plan-border-strong);
+    box-shadow: none;
+}
+
+#tab-gen .step-item.active .step-num,
+#tab-gen .step-item.completed .step-num {
+    background: var(--plan-accent-soft);
+    color: var(--plan-accent-strong);
+    border-color: var(--plan-accent);
+    box-shadow: none;
+}
+
+#tab-gen .step-label,
+#tab-gen .fg label {
+    color: var(--plan-muted);
+    letter-spacing: 0;
+}
+
+#tab-gen .step-item.active .step-label,
+#tab-gen .step-item.completed .step-label {
+    color: var(--plan-ink);
+}
+
+#tab-gen .step-section {
+    margin-bottom: 0.9rem;
+    padding: 0.95rem;
+    background: var(--plan-surface-soft);
+    border: 1px solid var(--plan-border);
+    border-radius: 12px;
+}
+
+#tab-gen .step-section-title {
+    margin-bottom: 0.85rem;
+    color: var(--plan-accent-strong);
+    font-size: 0.76rem;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+#tab-gen .step-section-title::before {
+    width: 4px;
+    height: 14px;
+    background: var(--plan-warm);
+}
+
+#tab-gen #briefForm .fg:hover {
+    transform: none;
+}
+
+#tab-gen #briefForm input,
+#tab-gen #briefForm textarea,
+#tab-gen #briefForm select,
+#tab-gen #importModelSelect,
+#tab-gen #importVenueSelect,
+#tab-gen #importTplSelect,
+#tab-gen .case-ref-input input,
+#tab-gen .img-gen-form select {
+    background: #121613 !important;
+    border-color: var(--plan-border) !important;
+    color: var(--plan-ink) !important;
+    border-radius: 9px;
+}
+
+#tab-gen #briefForm input::placeholder,
+#tab-gen #briefForm textarea::placeholder,
+#tab-gen .case-ref-input input::placeholder {
+    color: var(--plan-faint);
+}
+
+#tab-gen #briefForm input:focus,
+#tab-gen #briefForm textarea:focus,
+#tab-gen #briefForm select:focus,
+#tab-gen #importModelSelect:focus,
+#tab-gen #importVenueSelect:focus,
+#tab-gen #importTplSelect:focus,
+#tab-gen .case-ref-input input:focus,
+#tab-gen .img-gen-form select:focus {
+    border-color: var(--plan-accent) !important;
+    box-shadow: 0 0 0 3px var(--plan-accent-soft) !important;
+    transform: none;
+}
+
+#tab-gen .btn-p,
+#tab-gen #genBtn {
+    background: var(--plan-accent);
+    color: #172019;
+    border-color: transparent;
+    box-shadow: none;
+}
+
+#tab-gen .btn-p:hover:not(:disabled),
+#tab-gen #genBtn:hover:not(:disabled) {
+    background: var(--plan-accent-strong);
+    box-shadow: 0 5px 14px rgba(169, 184, 171, 0.16);
+}
+
+#tab-gen .btn-s,
+#tab-gen .btn-i {
+    background: transparent;
+    color: var(--plan-muted);
+    border-color: var(--plan-border-strong);
+}
+
+#tab-gen .btn-s:hover,
+#tab-gen .btn-i:hover {
+    background: var(--plan-accent-soft);
+    color: var(--plan-ink);
+    border-color: var(--plan-accent);
+}
+
+#tab-gen #genBtn {
+    min-height: 44px;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    letter-spacing: 0;
+}
+
+#tab-gen .image-upload-area {
+    background: rgba(223, 231, 224, 0.025);
+    border-color: var(--plan-border-strong);
+    border-radius: 12px;
+}
+
+#tab-gen .image-upload-area:hover,
+#tab-gen .image-upload-area.dragover {
+    background: var(--plan-accent-soft);
+    border-color: var(--plan-accent);
+}
+
+#tab-gen .case-ref {
+    margin-top: 1.25rem;
+    padding: 1rem;
+    background: var(--plan-surface-soft);
+    border: 1px solid var(--plan-border);
+    border-radius: 12px;
+}
+
+#tab-gen .case-ref .p-head {
+    padding: 0 0 0.8rem;
+    background: transparent;
+}
+
+#tab-gen .case-ref-result,
+#tab-gen .plan-meta,
+#tab-gen .ps,
+#tab-gen .director-candidate-panel {
+    background: var(--plan-surface-raised);
+    border-color: var(--plan-border);
+    border-radius: 12px;
+}
+
+#tab-gen .case-ref-result h4,
+#tab-gen .ps-title,
+#tab-gen .director-candidate-panel h4 {
+    color: var(--plan-accent-strong);
+}
+
+#tab-gen .plan-meta {
+    padding: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+#tab-gen .mtag {
+    background: transparent;
+    color: var(--plan-muted);
+    border-color: var(--plan-border);
+}
+
+#tab-gen .mtag strong {
+    color: var(--plan-ink);
+}
+
+#tab-gen .ps {
+    padding: 1rem;
+    margin-bottom: 0.8rem;
+}
+
+#tab-gen .ps:hover {
+    border-color: var(--plan-border-strong);
+}
+
+#tab-gen .ps-icon {
+    background: var(--plan-accent-soft);
+    color: var(--plan-accent-strong);
+}
+
+#tab-gen .ps-cnt {
+    color: var(--plan-muted);
+}
+
+#tab-gen .ps-cnt li::before {
+    background: var(--plan-warm);
+}
+
+#tab-gen .actions,
+#tab-gen .img-gallery {
+    border-top-color: var(--plan-border);
+}
+
+#tab-gen .img-card {
+    background: #121613;
+    border-color: var(--plan-border);
+    border-radius: 12px;
+}
+
+#tab-gen .img-card:hover {
+    transform: none;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    border-color: var(--plan-border-strong);
+}
+
+#tab-gen .img-card-info {
+    color: var(--plan-muted);
+}
+
+#tab-gen .img-gen-form {
+    gap: 0.6rem;
+}
+
+#tab-gen .output-empty svg {
+    color: var(--plan-warm);
+}
+
+#tab-gen .spinner {
+    border-top-color: var(--plan-accent);
+}
+
+@media (max-width: 900px) {
+    #tab-gen > .grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    #tab-gen > .grid > section {
+        order: -1;
+    }
+}
+
+@media (max-width: 600px) {
+    #tab-gen .p-body {
+        padding: 0.9rem;
+    }
+
+    #tab-gen .step-section {
+        padding: 0.8rem;
+    }
+
+    #tab-gen .img-gen-form {
+        flex-direction: column;
+    }
+
+    #tab-gen .img-gen-form select,
+    #tab-gen .img-gen-form button {
+        width: 100%;
+        min-height: 40px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #tab-gen *,
+    #tab-gen *::before,
+    #tab-gen *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
+}
