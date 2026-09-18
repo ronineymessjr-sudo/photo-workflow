@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createDirectorPlan } from '../api/director-plan.mjs';
 import { generateDirectorCandidate } from '../api/director-generation.mjs';
+import { buildDirectorIdentityWorkflow } from '../api/director-identity-workflow.mjs';
 
 const root = path.resolve(fileURLToPath(new URL('../', import.meta.url)));
 export function createServer({
@@ -58,8 +59,25 @@ export function createServer({
                         status: 'candidate-awaiting-review',
                         source: 'external-director-provider',
                         model: result?.generation?.model || 'unknown',
+                        poseStatus: result?.generation?.pose_composition_gate?.status || 'unknown',
+                        poseReasons: Array.isArray(result?.generation?.pose_composition_gate?.reasons)
+                            ? result.generation.pose_composition_gate.reasons : [],
+                        faceQualityStatus: result?.generation?.face_quality_gate?.status || 'unknown',
+                        shotLanguage: result?.generation?.shot_language || result?.generation?.request?.selected_shot?.shot_language || '',
+                        contractFingerprint: result?.selected_shot_contract?.fingerprint || result?.generation?.shot_contract_fingerprint || '',
+                        contractSource: result?.selected_shot_contract?.source || result?.generation?.shot_contract_source || '',
                     },
                 });
+            }
+            if (pathname === '/api/director/identity-lock-workflow' && req.method === 'POST') {
+                if (req.headers.origin && req.headers.origin !== 'http://' + req.headers.host) return reply(403, { error: 'INVALID_ORIGIN' });
+                if (!req.headers['content-type']?.startsWith('application/json')) return reply(415, { error: 'JSON_REQUIRED' });
+                let body = '';
+                for await (const chunk of req) {
+                    body += chunk;
+                    if (Buffer.byteLength(body) > 20000) return reply(413, { error: 'IDENTITY_WORKFLOW_REQUEST_TOO_LARGE' });
+                }
+                return reply(200, await buildDirectorIdentityWorkflow(JSON.parse(body), { baseUrl, fetchImpl }));
             }
             if (req.method !== 'GET') return reply(405, { error: 'METHOD_NOT_ALLOWED' });
             const candidateMatch = pathname.match(/^\/api\/director\/candidates\/([A-Za-z0-9._-]+)$/);
@@ -87,5 +105,6 @@ export function createServer({
     });
 }
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-    createServer().listen(8125, '127.0.0.1', () => console.log('摄影系统：http://127.0.0.1:8125/'));
+    const port = Number(process.env.DIRECTOR_BRIDGE_PORT || 8125);
+    createServer().listen(port, '127.0.0.1', () => console.log(`摄影系统：http://127.0.0.1:${port}/`));
 }

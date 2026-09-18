@@ -10,6 +10,7 @@ The photography application's existing login remains required. No credentials we
 
 The existing form now calls `generateDirectorPlan` → `POST /api/director/plan` → Director `/v1/photoatelier/shoot-plan`.
 The plan detail also exposes a single-shot candidate flow: choose a returned shot, click “生成一张候选图”, then `generateDirectorCandidate` → local `POST /api/director/generate-candidate` → Director `/v1/photoatelier/external-generate`.
+The Director also exposes `POST /v1/photoatelier/identity-lock-workflow`, which builds a non-submitted identity-lock workflow blueprint. It accepts an authorized local identity reference, optional scene anchor, pose-control choice, aspect ratio, candidate count, and bounded retry count. It never downloads weights or calls a provider; the response remains blocked until a supported image-conditioning backend and human review are available.
 Current input fields are sent without silently truncating them (over 2000 characters is rejected).
 The stored `shotList` comes from that response, including photographer/model positions, cropping and rejection rules.
 Director failures do not fall back to the legacy `genPlan`/shot templates.
@@ -41,5 +42,6 @@ Real bridge-to-Director API requests (not mocks):
 
 These checks prove transport and mapped plan fields, not image quality or complete semantic compliance.
 The candidate route was live-smoke-tested in `dry_run` mode and returned `external-generation-condition-ready` without generating a new image.
+The identity-lock workflow endpoint was dry-run tested with and without a local reference, including path-boundary rejection; it returns `identity-lock-awaiting-reference` when no identity asset is supplied and `identity-lock-workflow-ready-for-provider` when one is present.
 Two single-image external candidates were generated separately for human review. Both remained blocked by the Director release gate; they are not production assets.
 The repository's legacy Jest tests have no package manifest or installed runner in current master; they were not reported as passed.

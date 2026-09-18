@@ -71,6 +71,8 @@ wrangler deploy --name photoatelier-api
 | `/api/messages` | GET/POST | 消息管理 | 需要 |
 | `/api/dashboard/stats` | GET | 数据统计 | 需要 |
 
+Director 本机还提供 `/v1/photoatelier/identity-lock-workflow`，用于生成不提交的“人物身份锁定”工作流蓝图；它只接受本地授权参考图路径，不下载权重、不自动调用付费服务。
+
 ## 环境变量
 
 | 变量名 | 说明 | 必需 |

@@ -10,7 +10,14 @@ export async function generateDirectorCandidate(input, { baseUrl, fetchImpl = fe
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body), signal: AbortSignal.timeout(120000),
     });
-    if (!response.ok) throw new Error(`DIRECTOR_GENERATION_UPSTREAM_${response.status}`);
+    if (!response.ok) {
+        let detail = '';
+        try {
+            const errorBody = await response.json();
+            detail = errorBody?.detail?.code || errorBody?.detail?.message || (typeof errorBody?.detail === 'string' ? errorBody.detail : '');
+        } catch { /* keep the status-only fallback */ }
+        throw new Error(`DIRECTOR_GENERATION_UPSTREAM_${response.status}${detail ? `:${detail}` : ''}`);
+    }
     const result = await response.json();
     if (!result || typeof result !== 'object') throw new Error('DIRECTOR_INVALID_GENERATION_RESPONSE');
     return result;

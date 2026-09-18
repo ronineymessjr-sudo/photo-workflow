@@ -23,6 +23,7 @@
 | OpenAPI 完整合同 | http://127.0.0.1:8004/openapi.json | 本次读取成功；以此为字段真源 |
 | 拍摄方案 | POST http://127.0.0.1:8004/v1/photoatelier/shoot-plan | 摄影系统桥接实际调用此接口 |
 | 生图条件 | POST http://127.0.0.1:8004/v1/photoatelier/generation-condition | 查 OpenAPI，不等于已接入摄影系统 |
+| 身份锁定工作流蓝图 | POST http://127.0.0.1:8004/v1/photoatelier/identity-lock-workflow | 只生成不提交的工作流；可带本地人物参考图，不下载、不联网 |
 | 外部供应商状态 | GET http://127.0.0.1:8004/v1/photoatelier/external-provider-status | 本次 credential_configured=true |
 | 配置页面 | http://127.0.0.1:8004/photoatelier/provider-config.html | 用户输入密钥的地方；不要索要或输出 token |
 | 配置 API | /v1/photoatelier/external-provider-config | 由配置页管理；不需要重新配置已有凭据 |

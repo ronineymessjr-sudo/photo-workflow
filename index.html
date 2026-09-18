@@ -6144,29 +6144,90 @@ function renderImageGallery(plan) {
     return html;
 }
 
+function inferAspectRatioFromPlan(plan) {
+    const input = plan && plan.input || {};
+    const brief = [
+        plan && plan.director && plan.director.submittedBrief,
+        input.theme, input.scene, input.extra
+    ].filter(Boolean).join(' ');
+    if (/9\s*[:：]\s*16|竖屏.*长幅|竖幅|短视频/.test(brief)) return 'portrait-tall';
+    if (/1\s*[:：]\s*1|方形|正方形/.test(brief)) return 'square';
+    if (/16\s*[:：]\s*9|横屏.*宽幅|宽屏|宽画幅/.test(brief)) return 'landscape-wide';
+    if (/竖屏|竖构图/.test(brief)) return 'portrait';
+    return 'landscape';
+}
+
 function renderDirectorCandidatePanel(plan) {
     const shots = Array.isArray(plan.shotList) ? plan.shotList : [];
+    const references = Array.isArray(plan.references) ? plan.references.filter(ref => ref && ref.image_path) : [];
     const candidates = Array.isArray(plan.director && plan.director.generationCandidates)
         ? plan.director.generationCandidates : [];
     const planKey = escHtml(String(plan.id));
+    const defaultAspectRatio = inferAspectRatioFromPlan(plan);
+    const selectedShotIndex = Number.isInteger(Number(plan.director && plan.director.selectedShotIndex))
+        ? Number(plan.director.selectedShotIndex) : 0;
+    const selectedCandidateModel = String(plan.director && plan.director.selectedCandidateModel || 'huggingface:black-forest-labs/FLUX.1-schnell');
+    const selectedCandidateAspect = String(plan.director && plan.director.selectedCandidateAspect || defaultAspectRatio);
     const options = shots.map((shot, index) => {
         const label = shot.description || shot.shotSize || shot.angle || ('镜头 ' + (index + 1));
-        return '<option value="' + index + '">镜头 ' + (index + 1) + ' · ' + escHtml(label) + '</option>';
+        return '<option value="' + index + '" ' + (index === selectedShotIndex ? 'selected' : '') + '>镜头 ' + (index + 1) + ' · ' + escHtml(label) + '</option>';
+    }).join('');
+    const referenceOptions = '<option value="">选择已授权人物参考图</option>' + references.map((ref, index) => {
+        const label = ref.asset_id || ref.style_direction || ('参考图 ' + (index + 1));
+        return '<option value="' + escHtml(String(ref.image_path)) + '" data-asset-id="' + escHtml(String(ref.asset_id || '')) + '">' + escHtml(label) + '</option>';
     }).join('');
     const cards = candidates.map(candidate => {
         const url = typeof candidate.url === 'string' && candidate.url.startsWith('/api/director/candidates/')
             ? candidate.url : '';
         if (!url) return '';
+        const poseStatus = String(candidate.poseStatus || 'unknown');
+        const poseLabel = poseStatus === 'pass' ? '构图闸门：通过筛检' : poseStatus === 'blocked' ? '构图闸门：阻断' : '构图闸门：待判定';
+        const poseColor = poseStatus === 'pass' ? 'var(--ok,#4ecdc4)' : poseStatus === 'blocked' ? 'var(--danger,#ff6b6b)' : 'var(--muted)';
+        const faceStatus = String(candidate.faceQualityStatus || 'unknown');
+        const faceLabel = faceStatus === 'pass' ? '人脸闸门：通过' : faceStatus === 'blocked' ? '人脸闸门：阻断' : '人脸闸门：待判定';
+        const reasons = Array.isArray(candidate.poseReasons) ? candidate.poseReasons.filter(Boolean).map(escHtml).join('；') : '';
+        const isCurrentShot = Number(candidate.shotIndex) === selectedShotIndex;
+        const shotStateLabel = isCurrentShot ? '当前选中分镜' : '历史分镜候选';
+        const shotStateColor = isCurrentShot ? 'var(--ok,#4ecdc4)' : 'var(--muted)';
+        const contractFingerprint = String(candidate.contractFingerprint || '');
         return '<figure class="img-card" style="margin:0">' +
             '<img src="' + escHtml(url) + '" alt="AI 候选图，待审核" loading="lazy">' +
             '<figcaption class="img-card-info">候选图 · 合成素材 · 待人工审核 · 镜头 ' +
-            (Number(candidate.shotIndex) + 1) + '</figcaption></figure>';
+            (Number(candidate.shotIndex) + 1) +
+            '<br><span style="color:' + shotStateColor + '">' + shotStateLabel + '</span> · <span style="color:' + poseColor + '">' + poseLabel + '</span> · ' + faceLabel +
+            (reasons ? '<br>阻断原因：' + reasons : '') +
+            (contractFingerprint ? '<br>合同指纹：' + escHtml(contractFingerprint) : '') +
+            (candidate.model ? '<br>模型：' + escHtml(String(candidate.model)) : '') +
+            '</figcaption></figure>';
     }).join('');
     return '<div class="img-gallery director-candidate-panel" id="img-gallery-' + planKey + '">' +
         '<h4>🎨 方案候选图</h4>' +
-        '<p style="color:var(--muted);font-size:.85rem">只根据已选分镜调用本机 Director 生图。结果标记为 synthetic=true，仅用于方案预览，确认前不会进入真实参考图库。</p>' +
+        '<p style="color:var(--muted);font-size:.85rem">只根据已选分镜调用本机 Director，再由已配置的外部生图 provider 生成候选图。结果标记为 synthetic=true，仅用于方案预览，确认前不会进入真实参考图库。</p>' +
+        '<div class="img-gen-form" style="margin-bottom:.6rem">' +
+        '<select id="identity-ref-' + planKey + '" aria-label="选择人物参考图" ' + (references.length ? '' : 'disabled') + '>' + referenceOptions + '</select>' +
+        '<select id="identity-method-' + planKey + '" aria-label="身份锁定方法">' +
+        '<option value="pulid-flux">PuLID-FLUX</option><option value="instantid">InstantID</option><option value="photomaker-v2">PhotoMaker V2</option><option value="ip-adapter-faceid">IP-Adapter FaceID</option><option value="fixed-asset-edit">固定人物资产编辑</option>' +
+        '</select>' +
+        '<select id="identity-pose-' + planKey + '" aria-label="姿势控制"><option value="openpose">OpenPose 姿势</option><option value="depth">Depth 景深</option><option value="canny">Canny 构图边缘</option><option value="none">仅文字</option></select>' +
+        '<select id="identity-aspect-' + planKey + '" aria-label="身份工作流画幅"><option value="landscape">横屏 4:3</option><option value="landscape-wide">横屏 16:9</option><option value="square">方形 1:1</option><option value="portrait">竖屏 3:4</option><option value="portrait-tall">竖屏 9:16</option></select>' +
+        '<button class="btn btn-s" onclick="buildIdentityLockWorkflowForPlan(\'' + planKey + '\')" id="identity-workflow-btn-' + planKey + '" ' + (references.length && shots.length ? '' : 'disabled') + '>建立身份锁定工作流</button>' +
+        '</div>' +
+        '<div id="identity-workflow-status-' + planKey + '" style="color:var(--muted);font-size:.8rem;margin:.35rem 0 .75rem">' + (references.length ? '先选择人物参考图，再建立不生图的工作流。' : '该方案没有可用的本地授权人物参考图。') + '</div>' +
         '<div class="img-gen-form">' +
         '<select id="candidate-shot-' + planKey + '" ' + (shots.length ? '' : 'disabled') + '>' + options + '</select>' +
+         '<select id="candidate-model-' + planKey + '" aria-label="选择外部生图模型" ' + (shots.length ? '' : 'disabled') + '>' +
+         '<option value="huggingface:black-forest-labs/FLUX.1-schnell" ' + (selectedCandidateModel === 'huggingface:black-forest-labs/FLUX.1-schnell' ? 'selected' : '') + '>Hugging Face FLUX.1-schnell（已配置免费额度，推荐）</option>' +
+         '<option value="pollinations:flux" ' + (selectedCandidateModel === 'pollinations:flux' ? 'selected' : '') + '>Flux（公开实验）</option>' +
+         '<option value="pollinations:krea" ' + (selectedCandidateModel === 'pollinations:krea' ? 'selected' : '') + '>Krea（公开实验）</option>' +
+         '<option value="pollinations:sana" ' + (selectedCandidateModel === 'pollinations:sana' ? 'selected' : '') + '>Sana（公开实验）</option>' +
+         '</select>' +
+         '<select id="candidate-aspect-' + planKey + '" aria-label="选择画幅比例" ' + (shots.length ? '' : 'disabled') + '>' +
+         '<option value="landscape" ' + (selectedCandidateAspect === 'landscape' ? 'selected' : '') + '>横屏 4:3</option>' +
+         '<option value="landscape-wide" ' + (selectedCandidateAspect === 'landscape-wide' ? 'selected' : '') + '>横屏 16:9</option>' +
+         '<option value="square" ' + (selectedCandidateAspect === 'square' ? 'selected' : '') + '>方形 1:1</option>' +
+         '<option value="portrait" ' + (selectedCandidateAspect === 'portrait' ? 'selected' : '') + '>竖屏 3:4</option>' +
+         '<option value="portrait-tall" ' + (selectedCandidateAspect === 'portrait-tall' ? 'selected' : '') + '>竖屏 9:16</option>' +
+        '</select>' +
         '<button class="btn btn-i" onclick="generateDirectorCandidateForPlan(\'' + planKey + '\')" id="candidate-gen-btn-' + planKey + '" ' + (shots.length ? '' : 'disabled') + '>生成一张候选图</button>' +
         '</div>' +
         '<div class="img-grid" id="candidate-grid-' + planKey + '">' +
@@ -6174,16 +6235,18 @@ function renderDirectorCandidatePanel(plan) {
         '</div></div>';
 }
 
-async function generateDirectorCandidateForPlan(planId) {
+async function buildIdentityLockWorkflowForPlan(planId) {
     const plans = sg(SK.P) || [];
     const index = plans.findIndex(plan => String(plan.id) === String(planId));
     if (index < 0) { toast('方案不存在', 'er'); return; }
     const plan = plans[index];
+    const referenceSelect = $('identity-ref-' + planId);
+    const referenceImagePath = referenceSelect && referenceSelect.value || '';
+    if (!referenceImagePath) { toast('请先选择人物参考图', 'er'); return; }
     const shotSelect = $('candidate-shot-' + planId);
     const shotIndex = Number(shotSelect && shotSelect.value || 0);
     const shot = (plan.shotList || [])[shotIndex];
     if (!shot) { toast('没有可用分镜', 'er'); return; }
-    if (!window.generateDirectorCandidate) { toast('本机候选生图接口未加载', 'er'); return; }
     const briefParts = [
         plan.director && plan.director.submittedBrief || plan.title || '摄影方案',
         '当前分镜：' + (shot.description || ''),
@@ -6194,11 +6257,88 @@ async function generateDirectorCandidateForPlan(planId) {
         '限制：' + (shot.notes || '')
     ].filter(Boolean);
     const brief = briefParts.join('\n');
+    if (brief.length > 2000) { toast('当前分镜描述过长，无法安全提交', 'er'); return; }
+    const methodSelect = $('identity-method-' + planId);
+    const poseSelect = $('identity-pose-' + planId);
+    const aspectSelect = $('identity-aspect-' + planId);
+    const btn = $('identity-workflow-btn-' + planId);
+    const status = $('identity-workflow-status-' + planId);
+    if (!window.buildDirectorIdentityWorkflow) { toast('身份锁定工作流接口未加载', 'er'); return; }
+    if (btn) { btn.disabled = true; btn.textContent = '校验中...'; }
+    if (status) status.textContent = '正在编译分镜、人物参考和质量闸门……';
+    try {
+        const result = await window.buildDirectorIdentityWorkflow({
+            request_id: (plan.director && plan.director.requestId || 'photoatelier') + '-identity-lock-' + Date.now(),
+            brief,
+            style_direction: plan.input && plan.input.style || '纪实摄影',
+            output_count: 3,
+            identity_method: methodSelect && methodSelect.value || 'pulid-flux',
+            execution_backend: 'external-provider',
+            reference_image_path: referenceImagePath,
+            pose_control: poseSelect && poseSelect.value || 'openpose',
+            visible_face_expected: !/(背身|背影|rear|back to camera|face hidden)/i.test(brief),
+            aspect_ratio: aspectSelect && aspectSelect.value || 'landscape',
+            candidate_count: 2,
+            max_retries: 2
+        });
+        plan.director.identityWorkflow = {
+            status: result.status,
+            workflowVersion: result.workflow && result.workflow.workflow_version,
+            identityMethod: methodSelect && methodSelect.value || 'pulid-flux',
+            referenceAssetId: referenceSelect.options[referenceSelect.selectedIndex]?.dataset.assetId || '',
+            createdAt: new Date().toISOString(),
+            execution: 'not-submitted'
+        };
+        plans[index] = plan;
+        savePlans(plans);
+        if (status) status.innerHTML = '<span style="color:var(--ok,#4ecdc4)">工作流已写入本地：' + escHtml(result.status || 'ready') + '；未下载、未生图、未产生费用。</span>';
+        toast('身份锁定工作流已建立，等待 provider 接入', 'ok');
+    } catch (error) {
+        console.error('身份锁定工作流失败:', error);
+        if (status) status.textContent = '建立失败：' + (error.message || '未知错误');
+        toast('身份锁定工作流失败：' + (error.message || '未知错误'), 'er');
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = '建立身份锁定工作流'; }
+    }
+}
+
+async function generateDirectorCandidateForPlan(planId) {
+    const plans = sg(SK.P) || [];
+    const index = plans.findIndex(plan => String(plan.id) === String(planId));
+    if (index < 0) { toast('方案不存在', 'er'); return; }
+    const plan = plans[index];
+    const shotSelect = $('candidate-shot-' + planId);
+    const shotIndex = Number(shotSelect && shotSelect.value || 0);
+    const modelSelect = $('candidate-model-' + planId);
+    const [provider, selectedModel] = String(modelSelect && modelSelect.value || 'pollinations:flux').split(':');
+    const aspectSelect = $('candidate-aspect-' + planId);
+    const aspectRatio = aspectSelect && aspectSelect.value || 'landscape';
+    const shot = (plan.shotList || [])[shotIndex];
+    if (!shot) { toast('没有可用分镜', 'er'); return; }
+    if (!window.generateDirectorCandidate) { toast('本机候选生图接口未加载', 'er'); return; }
+    const identityRefSelect = $('identity-ref-' + planId);
+    const identityReferencePath = identityRefSelect && identityRefSelect.value || '';
+    const contract = shot.directorContract && typeof shot.directorContract === 'object' ? shot.directorContract : {};
+    const contractText = value => Array.isArray(value) ? value.join('、') : (value == null ? '' : String(value));
+    const briefParts = [
+        plan.director && plan.director.submittedBrief || plan.title || '摄影方案',
+        '当前分镜：' + (shot.description || ''),
+        '摄影师位置：' + (shot.method || ''),
+        '景别与构图：' + (shot.shotSize || '') + '；' + (shot.composition || ''),
+        '焦段：' + (shot.focalLength || ''),
+        '光线：' + (shot.lighting || ''),
+        '限制：' + (shot.notes || ''),
+        '镜头语言：' + contractText(contract.shot_language || contract.master_shot_language),
+        '生成镜头合同：' + contractText(contract.generator_prompt || contract.composition_intent),
+        '必须呈现：' + contractText(contract.must_show || contract.master_must_show),
+        '拒绝条件：' + contractText(contract.reject_if || contract.master_reject_if)
+    ].filter(Boolean);
+    const brief = briefParts.join('\n');
     if (brief.length > 4000) { toast('当前分镜描述过长，无法安全提交', 'er'); return; }
     const btn = $('candidate-gen-btn-' + planId);
     if (btn) { btn.disabled = true; btn.textContent = '生成中...'; }
     try {
-        const result = await window.generateDirectorCandidate({
+        const generationRequest = {
             request_id: (plan.director && plan.director.requestId || 'photoatelier') + '-image-' + Date.now(),
             brief,
             style_direction: plan.input && plan.input.style || '纪实摄影',
@@ -6206,17 +6346,28 @@ async function generateDirectorCandidateForPlan(planId) {
             available_lenses: shot.focalLength ? [String(shot.focalLength).split(/或|、|,|，/)[0].trim()] : [],
             reference_asset_ids: [],
             generator: 'external-image-service',
-            provider: 'huggingface',
-            model: 'black-forest-labs/FLUX.1-schnell',
+            provider,
+            model: selectedModel,
             candidate_count: 1,
             shot_index: shotIndex,
+            shot_contract: Object.keys(contract).length ? contract : undefined,
             judge_mode: 'heuristic',
             billing_mode: 'free-credit-first',
             steps: 4,
-            width: 768,
-            height: 1024,
+            aspect_ratio: aspectRatio,
             dry_run: false
-        });
+        };
+        if (identityReferencePath && provider === 'pollinations') {
+            throw new Error('公开实验模型仅支持文字提示词；请清除人物参考图后再生成');
+        }
+        if (identityReferencePath) {
+            // Keep the selected authorized image on the loopback path. The
+            // Director switches to its configured reference-capable provider
+            // model and uses image-to-image conditioning; no cloud storage is
+            // introduced by this browser flow.
+            generationRequest.reference_image_path = identityReferencePath;
+        }
+        const result = await window.generateDirectorCandidate(generationRequest);
         if (!result.candidateAsset || !result.candidateAsset.url) throw new Error('未返回可审核的候选图');
         plan.director.generationCandidates = Array.isArray(plan.director.generationCandidates)
             ? plan.director.generationCandidates : [];
@@ -6224,8 +6375,15 @@ async function generateDirectorCandidateForPlan(planId) {
             ...result.candidateAsset,
             requestId: result.request_id,
             shotIndex,
+            contractFingerprint: result.selected_shot_contract && result.selected_shot_contract.fingerprint
+                ? result.selected_shot_contract.fingerprint : (result.candidateAsset.contractFingerprint || ''),
+            contractSource: result.selected_shot_contract && result.selected_shot_contract.source
+                ? result.selected_shot_contract.source : (result.candidateAsset.contractSource || ''),
             createdAt: new Date().toISOString()
         });
+        plan.director.selectedShotIndex = shotIndex;
+        plan.director.selectedCandidateModel = modelSelect && modelSelect.value || `${provider}:${selectedModel}`;
+        plan.director.selectedCandidateAspect = aspectRatio;
         plans[index] = plan;
         savePlans(plans);
         currentPlanData = plan;
@@ -6624,7 +6782,7 @@ function renderPlanContent(plan) {
                                 <p><strong style="color:var(--t1);">执行要点：</strong>${escHtml(shot.notes)}</p>
                                 ${shot.alternative ? `<p><strong style="color:var(--t1);">备选方案：</strong>${escHtml(shot.alternative)}</p>` : ''}
                                 <p><strong style="color:var(--t1);">引导话术：</strong>"${getShotDirection(shot)}"</p>
-                                ${shot.camera ? `<p><strong style="color:var(--t1);">相机参数：</strong>ISO ${shot.camera.iso} · ${shot.camera.shutter} · WB ${shot.camera.wb} · ${shot.camera.focusMode} · ${shot.camera.metering} · ${shot.camera.driveMode}</p>` : ''}
+                                ${shot.camera ? `<p><strong style="color:var(--t1);">相机参数：</strong>ISO ${escHtml(String(shot.camera.iso || '自动'))} · ${escHtml(String(shot.camera.shutter || '按光线'))} · WB ${escHtml(String(shot.camera.wb || '自动'))} · ${escHtml(String(shot.camera.focusMode || '单次自动'))} · ${escHtml(String(shot.camera.metering || '评价测光'))} · ${escHtml(String(shot.camera.driveMode || '单张'))}</p>` : ''}
                                 ${shot.lightingSetup ? `<p><strong style="color:var(--t1);">布光方案：</strong>${escHtml(shot.lightingSetup)}</p>` : ''}
                             </div>
                             <!-- 分类标签 -->
