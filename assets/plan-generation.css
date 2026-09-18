@@ -335,3 +335,66 @@
         transition-duration: 0.01ms !important;
     }
 }
+
+/* Semantic color audit: the plan workspace uses one restrained accent family. */
+#tab-gen {
+    --plan-state-ok: #acbcae;
+    --plan-state-warn: #c0aa8d;
+    --plan-state-error: #c29b92;
+    --plan-state-info: #a7b2b8;
+}
+
+#tab-gen .tool-link {
+    color: var(--plan-muted);
+    border-bottom-color: transparent;
+}
+
+#tab-gen .tool-link:hover {
+    color: var(--plan-accent-strong);
+    border-bottom-color: var(--plan-border-strong);
+}
+
+#tab-gen .case-ref-result .eq-tag {
+    color: var(--plan-accent-strong);
+    background: var(--plan-accent-soft);
+}
+
+/* Inline legacy tokens are normalized here until the renderer moves to semantic classes. */
+#tab-gen [style*="color:var(--t1)"],
+#tab-gen [style*="color: var(--t1)"] {
+    color: var(--plan-ink) !important;
+}
+
+#tab-gen [style*="color:var(--t2)"],
+#tab-gen [style*="color: var(--t2)"],
+#tab-gen [style*="color:var(--t3)"],
+#tab-gen [style*="color: var(--t3)"],
+#tab-gen [style*="color:var(--muted)"],
+#tab-gen [style*="color: var(--muted)"] {
+    color: var(--plan-muted) !important;
+}
+
+#tab-gen [style*="color:var(--ac)"],
+#tab-gen [style*="color: var(--ac)"] {
+    color: var(--plan-accent-strong) !important;
+}
+
+#tab-gen .director-candidate-panel [style*="var(--ok"],
+#tab-gen .director-candidate-panel [style*="var(--success"] {
+    color: var(--plan-state-ok) !important;
+}
+
+#tab-gen .director-candidate-panel [style*="var(--danger"],
+#tab-gen .director-candidate-panel [style*="var(--er"],
+#tab-gen .director-candidate-panel [style*="var(--error"] {
+    color: var(--plan-state-error) !important;
+}
+
+#tab-gen .director-candidate-panel [style*="var(--warn"],
+#tab-gen .director-candidate-panel [style*="var(--warning"] {
+    color: var(--plan-state-warn) !important;
+}
+
+#tab-gen .director-candidate-panel [style*="var(--info"] {
+    color: var(--plan-state-info) !important;
+}
