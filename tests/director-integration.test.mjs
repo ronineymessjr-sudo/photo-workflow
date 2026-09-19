@@ -4,7 +4,7 @@ import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import vm from 'node:vm';
-import { createDirectorPlan } from '../api/director-plan.mjs';
+import { createDirectorPlan, createGuestPlanDraft } from '../api/director-plan.mjs';
 import { generateDirectorCandidate } from '../api/director-generation.mjs';
 import { buildDirectorIdentityWorkflow } from '../api/director-identity-workflow.mjs';
 import { createServer } from '../tools/serve-director.mjs';
@@ -54,6 +54,15 @@ test('shot target varies with duration without copying upstream shots to fill it
         assert.equal(plan.sections.length, 2);
         assert.ok(plan.sections.every(section => section.ti.startsWith('镜头')));
     }
+});
+
+test('guest draft is executable without a Director deployment and retains distinct shots', () => {
+    const plan = createGuestPlanDraft({ theme: '雨夜城市纪实', scene: '斑马线', duration: '2小时', people: '1' });
+    assert.equal(plan.director.source, 'guest-rule-draft');
+    assert.equal(plan.director.imageGenerationConnected, false);
+    assert.equal(plan.shotList.length, 11);
+    assert.equal(new Set(plan.shotList.map(shot => shot.title)).size, plan.shotList.length);
+    assert.equal(plan.images.length, 0);
 });
 
 test('candidate generation returns a review-only external result', async () => {

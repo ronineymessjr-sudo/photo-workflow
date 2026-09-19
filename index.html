@@ -3052,13 +3052,6 @@
                 <span class="nav-label">设置</span>
             </button>
         </nav>
-        <!-- Theme Switcher -->
-        <div class="theme-switcher">
-            <button class="theme-btn" id="themeToggle" onclick="cycleTheme()" title="切换主题">
-                <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-                <span class="theme-label" id="themeLabel">自动</span>
-            </button>
-        </div>
         <button class="sidebar-toggle" id="sidebarToggle">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
@@ -3815,6 +3808,8 @@
                 </aside>
                 <section>
                     <div class="panel">
+                        <div class="p-head"><h2>预设方案</h2></div>
+                        <div class="p-body" id="preset-plan-library"></div>
                         <div class="p-head"><h2>已保存方案</h2></div>
                         <div class="p-body" id="saved-plan-library"></div>
                         <div class="p-head"><h2>方案模板</h2><span id="tpl-total" style="font-size:.72rem;color:var(--t3)"></span></div>
@@ -3962,16 +3957,6 @@
                                     免费申请：<a href="https://www.pexels.com/api/" target="_blank" style="color:var(--ac);">https://www.pexels.com/api/</a> 
                                     · 不填也能用，只是无法自动加载图片预览
                                 </p>
-                            </div>
-                            
-                            <!-- Theme -->
-                            <div class="fg">
-                                <label>主题</label>
-                                <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
-                                    <button class="btn btn-s btn-sm" onclick="setTheme('auto')">自动</button>
-                                    <button class="btn btn-s btn-sm" onclick="setTheme('dark')">暗色</button>
-                                    <button class="btn btn-s btn-sm" onclick="setTheme('light')">亮色</button>
-                                </div>
                             </div>
                             
                             <!-- Data Management -->
@@ -4200,11 +4185,14 @@ if (document.getElementById('loginOverlay')) {
 (function() {
     const API_BASE = localStorage.getItem('pa_api_base') || 'https://photoatelier-api.photomagic.workers.dev';
     const IS_LOCAL_HOST = ['127.0.0.1', 'localhost', '[::1]'].includes(location.hostname);
-    const USE_LOCAL_MODE = IS_LOCAL_HOST || localStorage.getItem('pa_use_local') === 'true';
-    window.__PHOTOATELIER_LOCAL_MODE__ = USE_LOCAL_MODE;
     const TOKEN_KEY = 'pw_token';
     const USER_KEY = 'pw_user';
     const ROLE_KEY = 'pw_role';
+    const USE_LOCAL_MODE = IS_LOCAL_HOST || localStorage.getItem('pa_use_local') === 'true';
+    const USE_GUEST_MODE = !IS_LOCAL_HOST && !localStorage.getItem(TOKEN_KEY) && localStorage.getItem('pa_guest_mode') !== 'false';
+    const USE_BROWSER_STORAGE = USE_LOCAL_MODE || USE_GUEST_MODE;
+    window.__PHOTOATELIER_LOCAL_MODE__ = USE_LOCAL_MODE;
+    window.__PHOTOATELIER_GUEST_MODE__ = USE_GUEST_MODE;
 
     // Local mode API mock for offline usage
     const localApi = {
@@ -4270,16 +4258,16 @@ if (document.getElementById('loginOverlay')) {
             }
         },
         login(email, password) { return this.request('/api/auth/login', 'POST', { email, password }); },
-        getSchedules() { return USE_LOCAL_MODE ? localApi.getSchedules() : this.request('/api/schedules'); },
-        createSchedule(data) { return USE_LOCAL_MODE ? localApi.createSchedule(data) : this.request('/api/schedules', 'POST', data); },
-        deleteSchedule(id) { return USE_LOCAL_MODE ? localApi.deleteSchedule(id) : this.request(`/api/schedules/${id}`, 'DELETE'); },
-        getPlans() { return USE_LOCAL_MODE ? localApi.getPlans() : this.request('/api/plans'); },
-        createPlan(data) { return USE_LOCAL_MODE ? localApi.createPlan(data) : this.request('/api/plans', 'POST', data); },
+        getSchedules() { return USE_BROWSER_STORAGE ? localApi.getSchedules() : this.request('/api/schedules'); },
+        createSchedule(data) { return USE_BROWSER_STORAGE ? localApi.createSchedule(data) : this.request('/api/schedules', 'POST', data); },
+        deleteSchedule(id) { return USE_BROWSER_STORAGE ? localApi.deleteSchedule(id) : this.request(`/api/schedules/${id}`, 'DELETE'); },
+        getPlans() { return USE_BROWSER_STORAGE ? localApi.getPlans() : this.request('/api/plans'); },
+        createPlan(data) { return USE_BROWSER_STORAGE ? localApi.createPlan(data) : this.request('/api/plans', 'POST', data); },
         syncToFeishuCalendar(schedules) { return this.request('/api/feishu/sync-calendar', 'POST', { schedules }); },
         writeToFeishuBitable(app_token, table_id, records) { return this.request('/api/feishu/bitable', 'POST', { app_token, table_id, records }); },
         // Messages
-        getMessages() { return USE_LOCAL_MODE ? localApi.getMessages() : this.request('/api/messages'); },
-        createMessage(data) { return USE_LOCAL_MODE ? Promise.resolve(data) : this.request('/api/messages', 'POST', data); },
+        getMessages() { return USE_BROWSER_STORAGE ? localApi.getMessages() : this.request('/api/messages'); },
+        createMessage(data) { return USE_BROWSER_STORAGE ? Promise.resolve(data) : this.request('/api/messages', 'POST', data); },
         updateMessageStatus(id, status) { return this.request(`/api/messages/${id}`, 'PATCH', { status }); },
         deleteMessage(id) { return this.request(`/api/messages/${id}`, 'DELETE'); }
     };
@@ -4562,7 +4550,7 @@ function closeShortcutsModal(e) {
 
     // Load data from server
     async function loadServerData() {
-        if (USE_LOCAL_MODE) return;
+        if (USE_BROWSER_STORAGE) return;
         const token = localStorage.getItem(TOKEN_KEY);
         if (!token) {
             /* Not logged in, skipping server sync */
@@ -5321,21 +5309,55 @@ if($('modelForm')) $('modelForm').addEventListener('submit',e=>{
 // ===== Templates =====
 let currentPlanData = null;
 
+const BUILT_IN_PLAN_PRESETS = [
+    { id: 'portrait-natural', name: '自然人像', desc: '户外单人、自然光', input: { theme: '自然光人像', style: '自然纪实', modelDesc: '成年人物', scene: '有树荫的街道或公园', mood: '松弛自然', duration: '2小时', people: '1', extra: '保留环境与人物互动，不要过度摆拍。' } },
+    { id: 'couple-walk', name: '双人漫步', desc: '双人关系、城市街道', input: { theme: '双人城市漫步', style: '纪实电影感', modelDesc: '两位成年人物', scene: '步行街或河边步道', mood: '亲密轻松', duration: '2小时', people: '2', extra: '以走路、停留和交流为主，避免整齐站立。' } },
+    { id: 'graduation', name: '毕业写真', desc: '校园、纪念组图', input: { theme: '校园毕业写真', style: '清透胶片', modelDesc: '成年毕业生', scene: '校园建筑与草坪', mood: '明亮克制', duration: '2小时', people: '1', extra: '保留校服或学位服细节，含环境建立镜头。' } },
+    { id: 'brand-product', name: '品牌人物内容', desc: '人物与产品、短内容', input: { theme: '品牌人物内容', style: '干净商业感', modelDesc: '成年人物与产品使用者', scene: '明亮室内或店铺', mood: '可信、有活力', duration: '3小时', people: '1', extra: '明确产品使用动作，预留横竖画幅裁切空间。' } }
+];
+
+function renderPresetPlanLibrary() {
+    const container = $('preset-plan-library');
+    if (!container) return;
+    container.innerHTML = BUILT_IN_PLAN_PRESETS.map(preset => `
+        <article class="library-plan-row">
+            <h3>${escHtml(preset.name)}</h3><p class="reference-rights">${escHtml(preset.desc)}</p>
+            <button class="btn btn-s btn-sm" onclick="useBuiltInPlanPreset('${preset.id}')">选用并编辑</button>
+        </article>`).join('');
+}
+
+function useBuiltInPlanPreset(id) {
+    const preset = BUILT_IN_PLAN_PRESETS.find(item => item.id === id);
+    if (!preset) return;
+    const input = preset.input;
+    $('f-theme').value = input.theme; $('f-style').value = input.style; $('f-model').value = input.modelDesc;
+    $('f-scene').value = input.scene; $('f-mood').value = input.mood; $('f-dur').value = input.duration;
+    $('f-people').value = input.people; $('f-extra').value = input.extra;
+    if (window._updateStepIndicator) window._updateStepIndicator();
+    showTab('gen');
+    toast(`已载入预设：${preset.name}`, 'ok');
+}
+
 function renderSavedPlanLibrary() {
     const container = $('saved-plan-library');
     if (!container) return;
     const schedules = sg('pw_schedule') || [];
     const plans = getPlans();
-    container.innerHTML = plans.length ? plans.map((plan, index) => `
+    container.innerHTML = plans.length ? plans.map((plan, index) => {
+        const cover = plan.coverImage?.data || plan.coverImage?.url || plan.images?.[0]?.data || plan.images?.[0]?.url || '';
+        return `
         <article class="library-plan-row">
+            ${cover ? `<img src="${escHtml(cover)}" alt="${escHtml(plan.title)}的方案图" style="width:76px;height:56px;object-fit:cover;border-radius:6px;float:right;margin-left:.75rem;">` : ''}
             <h3>${escHtml(plan.title)}</h3>
+            <p class="reference-rights">${cover ? '已保存方案图' : '尚未选择方案图'}</p>
             <div class="library-plan-actions">
                 <button class="btn btn-s btn-sm" onclick="loadPlan('${plan.id}')">查看方案</button>
                 <input type="date" id="adopt-date-${index}" aria-label="${escHtml(plan.title)}的拍摄日期" required>
                 <button class="btn btn-s btn-sm" onclick="adoptSavedPlan('${plan.id}', 'adopt-date-${index}')">采用并安排拍摄</button>
             </div>
             ${schedules.filter(s => String(s.planId) === String(plan.id)).map(s => `<div class="library-plan-session"><span>${escHtml(s.date)}</span><button class="btn btn-s btn-sm" onclick="openOnSetMode('${plan.id}')">进入当天拍摄</button></div>`).join('')}
-        </article>`).join('') : '<p class="reference-rights">暂无已保存方案</p>';
+        </article>`;
+    }).join('') : '<p class="reference-rights">暂无已保存方案</p>';
 }
 
 function adoptSavedPlan(planId, dateInputId) {
@@ -5347,6 +5369,25 @@ function adoptSavedPlan(planId, dateInputId) {
         toast('这份方案已经安排在该日期');
         return;
     }
+
+    if (USE_GUEST_MODE) {
+        role = 'photographer';
+        localStorage.setItem(ROLE_KEY, role);
+        const welcomeEl = document.getElementById('welcomeEmail');
+        if (welcomeEl) welcomeEl.textContent = '游客模式';
+        const loginOverlay = document.getElementById('loginOverlay');
+        const roleOverlay = document.getElementById('roleOverlay');
+        const appLayout = document.getElementById('appLayout');
+        if (loginOverlay) loginOverlay.style.display = 'none';
+        if (roleOverlay) roleOverlay.style.display = 'none';
+        const particles = document.querySelector('.particles');
+        if (particles) particles.remove();
+        if (appLayout) {
+            appLayout.style.display = 'flex';
+            setTimeout(function() { initTabs(); }, 100);
+        }
+        return;
+    }
     saveScheduleWithUndo({id: crypto.randomUUID(), planId: plan.id, date: input.value,
         title: plan.title, location: plan.input?.scene || '', time: '', status: 'pending'});
     renderSchedules();
@@ -5355,6 +5396,7 @@ function adoptSavedPlan(planId, dateInputId) {
 }
 
 function renderTpl() {
+    renderPresetPlanLibrary();
     renderSavedPlanLibrary();
     const list=sg(SK.T)||[];
     $('t-tpl').textContent=list.length;
@@ -6428,7 +6470,12 @@ function renderPlanContent(plan) {
     const sectionsHtml = (plan.director ? [] : (plan.sections || []).filter(s => !/本次需求|接入记录|拍摄清单|拍摄当天/.test(s.ti))).map(s=>`
         <div class="ps"><div class="ps-hdr"><div class="ps-icon">${escHtml(s.ic)}</div><h3 class="ps-title">${escHtml(s.ti)}</h3></div><div class="ps-cnt"><ul>${s.c.map(c=>`<li>${escHtml(c)}</li>`).join('')}</ul></div></div>`).join('');
 
-    const imgGallery = plan.director ? renderDirectorCandidatePanel(plan) : renderImageGallery(plan);
+    const isGuestDraft = plan.director && plan.director.source === 'guest-rule-draft';
+    const imgGallery = plan.director && plan.director.imageGenerationConnected
+        ? renderDirectorCandidatePanel(plan)
+        : isGuestDraft
+            ? '<p class="reference-rights">游客方案已保存在当前浏览器。候选方案图需先上传自己的参考图；云端生图服务准备好后才会显示生成入口。</p>'
+            : renderImageGallery(plan);
 
     // 添加模特沟通话术
     const communicationTips = getCommunicationTips(plan.input && plan.input.style);
@@ -9473,11 +9520,17 @@ function getPlans(){return sg(SK.P)||[]}
 function savePlans(l){ss(SK.P,l)}
 async function savePlan(plan){
     const ps=getPlans();
-    plan.id=Date.now().toString();
-    ps.unshift(plan);
+    plan.id=plan.id||Date.now().toString();
+    if(!plan.coverImage && Array.isArray(plan.images) && plan.images.length){
+        const image=plan.images[0];
+        plan.coverImage={data:image.data||'',url:image.url||'',name:image.name||'方案图',synthetic:!!image.synthetic};
+    }
+    const existingIndex=ps.findIndex(item=>String(item.id)===String(plan.id));
+    if(existingIndex>-1) ps[existingIndex]=plan;
+    else ps.unshift(plan);
     if(ps.length>50)ps.pop();
     savePlans(ps);
-    if(window.__PHOTOATELIER_LOCAL_MODE__) return plan.id;
+    if(window.__PHOTOATELIER_LOCAL_MODE__||window.__PHOTOATELIER_GUEST_MODE__) return plan.id;
     // 同步到数据库API
     try{
         await window.api.createPlan(plan);
@@ -9608,7 +9661,11 @@ function removeImage(id) {
 
 // Save images with plan
 function savePlanWithImages(plan) {
-    plan.images = uploadedImages;
+    plan.images = uploadedImages.slice();
+    if (plan.images.length) {
+        const image = plan.images[0];
+        plan.coverImage = {data:image.data||'',url:image.url||'',name:image.name||'方案图',synthetic:!!image.synthetic};
+    }
     savePlan(plan);
     uploadedImages = [];
     renderImagePreviews();
