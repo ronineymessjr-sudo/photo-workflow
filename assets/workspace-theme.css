@@ -171,6 +171,13 @@ input::placeholder, textarea::placeholder { color: var(--t3); opacity: 1; }
 .reference-search-link:hover { background: var(--bg3); border-color: var(--bd2); }
 .reference-search-link[aria-disabled="true"] { opacity: .5; cursor: not-allowed; }
 .reference-rights { margin: 10px 0 0; color: var(--t2); font-size: 12px; overflow-wrap: anywhere; }
+.plan-reference-search { border-top: 1px solid var(--bd); padding: 16px 0; }
+.plan-reference-search > summary { cursor: pointer; color: var(--t1); font-size: 14px; }
+.library-plan-row { padding: 16px 0; border-bottom: 1px solid var(--bd); }
+.library-plan-row h3 { margin: 0 0 12px; font-size: 14px; overflow-wrap: anywhere; }
+.library-plan-actions, .library-plan-session { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; }
+.library-plan-actions input { width: auto; min-width: 0; max-width: 100%; }
+.library-plan-session { font-size: 13px; color: var(--t2); }
 @media(max-width: 600px) {
     .storyboard-shot { padding: 14px; }
     .storyboard-specs { gap: 8px; }

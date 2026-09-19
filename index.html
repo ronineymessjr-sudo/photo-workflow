@@ -3252,33 +3252,12 @@
                                 </div>
                                 <div class="tool-section">
                                     <h4><i data-lucide="lightbulb" style="width:1em;height:1em;vertical-align:middle;margin-right:.3em;"></i>灵感参考</h4>
-                                    <a href="https://www.pinterest.com/" target="_blank" class="tool-link">Pinterest - 情绪板</a>
-                                    <a href="https://www.behance.net/" target="_blank" class="tool-link">Behance - 高质量作品</a>
-                                    <a href="https://500px.com/" target="_blank" class="tool-link">500px - 摄影作品</a>
+                                    <button class="btn btn-s btn-sm" onclick="openPlanReferenceSearch()">查找本方案参考图</button>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 拍摄清单 -->
-                    <div class="side-panel">
-                        <div class="panel">
-                            <div class="p-head"><h2><i data-lucide="clipboard-list" style="width:1em;height:1em;vertical-align:middle;margin-right:.3em;"></i>拍摄清单</h2></div>
-                            <div class="p-body">
-                                <div class="checklist">
-                                    <label class="check-item"><input type="checkbox" class="ck"> 勘景踩点（2次）</label>
-                                    <label class="check-item"><input type="checkbox" class="ck"> 检查天气/光线</label>
-                                    <label class="check-item"><input type="checkbox" class="ck"> 确认器材（电池/卡）</label>
-                                    <label class="check-item"><input type="checkbox" class="ck"> 与模特确认时间地点</label>
-                                    <label class="check-item"><input type="checkbox" class="ck"> 准备道具/服装</label>
-                                    <label class="check-item"><input type="checkbox" class="ck"> 提前30分钟到场</label>
-                                    <label class="check-item"><input type="checkbox" class="ck"> 给模特看参考图</label>
-                                    <label class="check-item"><input type="checkbox" class="ck"> 拍摄中及时回看</label>
-                                    <label class="check-item"><input type="checkbox" class="ck"> 备份RAW文件</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </aside>
 
                 <section>
@@ -3836,6 +3815,8 @@
                 </aside>
                 <section>
                     <div class="panel">
+                        <div class="p-head"><h2>已保存方案</h2></div>
+                        <div class="p-body" id="saved-plan-library"></div>
                         <div class="p-head"><h2>方案模板</h2><span id="tpl-total" style="font-size:.72rem;color:var(--t3)"></span></div>
                         <div class="p-body" id="tpl-list"></div>
                     </div>
@@ -4537,9 +4518,18 @@ function closeShortcutsModal(e) {
     window.toggleMobileSidebar = function() {
         var sidebar = document.getElementById('sidebar');
         var overlay = document.getElementById('sidebarOverlay');
+        // Keep the backdrop below the drawer in the same stacking context.
+        if (sidebar && overlay && overlay.parentElement !== sidebar.parentElement) sidebar.parentElement.appendChild(overlay);
         if (sidebar) sidebar.classList.toggle('open');
         if (overlay) overlay.classList.toggle('show');
     };
+
+    document.getElementById('sidebar')?.addEventListener('click', function(event) {
+        if (event.target.closest('[data-tab]')) {
+            this.classList.remove('open');
+            document.getElementById('sidebarOverlay')?.classList.remove('show');
+        }
+    }, true);
 
     // Show role selector after login
     function showRoleSelector() {
@@ -5331,7 +5321,41 @@ if($('modelForm')) $('modelForm').addEventListener('submit',e=>{
 // ===== Templates =====
 let currentPlanData = null;
 
+function renderSavedPlanLibrary() {
+    const container = $('saved-plan-library');
+    if (!container) return;
+    const schedules = sg('pw_schedule') || [];
+    const plans = getPlans();
+    container.innerHTML = plans.length ? plans.map((plan, index) => `
+        <article class="library-plan-row">
+            <h3>${escHtml(plan.title)}</h3>
+            <div class="library-plan-actions">
+                <button class="btn btn-s btn-sm" onclick="loadPlan('${plan.id}')">查看方案</button>
+                <input type="date" id="adopt-date-${index}" aria-label="${escHtml(plan.title)}的拍摄日期" required>
+                <button class="btn btn-s btn-sm" onclick="adoptSavedPlan('${plan.id}', 'adopt-date-${index}')">采用并安排拍摄</button>
+            </div>
+            ${schedules.filter(s => String(s.planId) === String(plan.id)).map(s => `<div class="library-plan-session"><span>${escHtml(s.date)}</span><button class="btn btn-s btn-sm" onclick="openOnSetMode('${plan.id}')">进入当天拍摄</button></div>`).join('')}
+        </article>`).join('') : '<p class="reference-rights">暂无已保存方案</p>';
+}
+
+function adoptSavedPlan(planId, dateInputId) {
+    const plan = getPlans().find(p => String(p.id) === String(planId));
+    const input = $(dateInputId);
+    if (!plan || !input || !input.reportValidity()) return;
+    const schedules = sg(SK_SCHED) || [];
+    if (schedules.some(s => String(s.planId) === String(planId) && s.date === input.value)) {
+        toast('这份方案已经安排在该日期');
+        return;
+    }
+    saveScheduleWithUndo({id: crypto.randomUUID(), planId: plan.id, date: input.value,
+        title: plan.title, location: plan.input?.scene || '', time: '', status: 'pending'});
+    renderSchedules();
+    renderSavedPlanLibrary();
+    toast('方案已采用并加入拍摄日程', 'ok');
+}
+
 function renderTpl() {
+    renderSavedPlanLibrary();
     const list=sg(SK.T)||[];
     $('t-tpl').textContent=list.length;
     $('tpl-total').textContent=`共 ${list.length} 个模板`;
@@ -6020,11 +6044,16 @@ function inferAspectRatioFromPlan(plan) {
 }
 
 function renderShotInstructions(shot) {
+    const contract = shot.directorContract || {};
+    const readable = value => Array.isArray(value) ? value.join('；') : value;
     return '<dl class="storyboard-detail-list">' + [
         ['拍什么', shot.title || shot.scene], ['人物怎么做', shot.description],
         ['摄影师站哪里', shot.method], ['人物放在哪里', shot.composition],
         ['景别与焦段', [shot.shotSize, shot.focalLength].filter(Boolean).join(' · ')],
-        ['光线怎么用', shot.lightingSetup || shot.lighting], ['画面要求', shot.notes]
+        ['光线怎么用', shot.lightingSetup || shot.lighting],
+        ['画面保留什么', readable(contract.must_show)], ['哪些情况不要', readable(contract.reject_if)],
+        ['取景边界', readable(contract.crop_boundary)],
+        ['拍摄提醒', contract.must_show || contract.reject_if || contract.crop_boundary ? '' : shot.notes]
     ].filter(([,value]) => value).map(([label,value]) => '<div><dt>' + label + '</dt><dd>' + escHtml(String(value)) + '</dd></div>').join('') + '</dl>';
 }
 
@@ -6070,6 +6099,8 @@ function selectDirectorCandidateShot(planId, value) {
     const plan = plans.find(p => String(p.id) === String(planId));
     const index = Number(value);
     if (!plan || !Number.isInteger(index) || !plan.shotList[index]) return;
+    plan.director.selectedCandidateModel = $('candidate-model-' + planId)?.value || plan.director.selectedCandidateModel;
+    plan.director.selectedCandidateAspect = $('candidate-aspect-' + planId)?.value || plan.director.selectedCandidateAspect;
     plan.director.selectedShotIndex = index;
     savePlans(plans);
     currentPlanData = plan;
@@ -6604,7 +6635,6 @@ function renderPlanContent(plan) {
             <header class="storyboard-header">
                 <div><h3>分镜脚本</h3><p>${shotList.length} 个镜头 · ${shotList.every(s => Number(s.duration) > 0) ? shotList.reduce((sum,s) => sum + Number(s.duration),0) + ' 分钟' : '时长待确认'}</p></div>
                 <div class="storyboard-actions">
-                    <button class="btn btn-s btn-sm" onclick="openOnSetMode('${plan.id}')">现场模式</button>
                     <details class="storyboard-export"><summary>导出</summary><div>
                         <button class="btn btn-s btn-sm" onclick="exportShotListPDF('${plan.id}')">PDF</button>
                         <button class="btn btn-s btn-sm" onclick="printShotList('${plan.id}')">打印</button>
@@ -6620,7 +6650,6 @@ function renderPlanContent(plan) {
                 ${shotList.map((shot,i) => `
                     <details class="storyboard-shot" id="shot-detail-${i}"><summary>镜头 ${String(i+1).padStart(2,'0')} · ${escHtml(shot.title || shot.scene || '拍摄细节')}</summary><article>
                         ${renderShotInstructions(shot)}
-                        <details class="storyboard-details"><summary>参考图</summary>${renderShotReferenceGallery(shot,plan.input && plan.input.style || '复古',i)}</details>
                     </article></details>
                 `).join('')}
             </div>
@@ -6628,7 +6657,8 @@ function renderPlanContent(plan) {
     `;
 
 
-    return `<div class="plan-output-wrapper">${metaHtml + shotListHtml + imgGallery + sectionsHtml + quoteHtml + (plan.director ? '' : commHtml + colorHtml + aiHtml)}</div>`;
+    const referenceSearch = `<details class="plan-reference-search" id="plan-reference-search"><summary>查找参考图</summary>${renderShotReferenceGallery({scene: [plan.input?.theme, plan.input?.scene].filter(Boolean).join(' ')}, plan.input?.style || '', 'plan')}</details>`;
+    return `<div class="plan-output-wrapper">${metaHtml + shotListHtml + referenceSearch + imgGallery + sectionsHtml + quoteHtml + (plan.director ? '' : commHtml + colorHtml + aiHtml)}</div>`;
 }
 
 // 生成分镜脚本
@@ -10586,7 +10616,8 @@ function renderCalendar() {
 function renderSchedules() {
     const schedules = sg(SK_SCHED) || [];
     const now = new Date();
-    const upcoming = schedules.filter(s => new Date(s.date) >= now).sort((a, b) => new Date(a.date) - new Date(b.date));
+    now.setHours(0, 0, 0, 0);
+    const upcoming = schedules.filter(s => new Date(s.date + 'T00:00:00') >= now).sort((a, b) => a.date.localeCompare(b.date));
     
     if (upcoming.length === 0) {
         $('todoList').innerHTML = '<p style="color:var(--t3);text-align:center;padding:2rem">暂无拍摄日程</p>';
@@ -10606,6 +10637,7 @@ function renderSchedules() {
                 <div class="schedule-title">${s.title}</div>
                 <div class="schedule-meta">${s.time || ''} ${s.location || ''}</div>
             </div>
+            ${s.planId && getPlans().some(p => String(p.id) === String(s.planId)) ? `<button class="btn btn-s btn-sm" onclick="openOnSetMode('${s.planId}')">进入拍摄</button>` : ''}
             <button class="btn-i2" onclick="deleteSchedule('${s.id}')">✕</button>
         </div>`;
     }).join('');
@@ -11309,6 +11341,14 @@ function generateShotSearchQueries(shot, style) {
 }
 
 // Render reference gallery for a shot (direct links mode - no API key needed)
+function openPlanReferenceSearch() {
+    const section = $('plan-reference-search');
+    if (!section) { toast('请先生成或打开一份方案'); return; }
+    section.open = true;
+    section.scrollIntoView({behavior: 'smooth', block: 'center'});
+    section.querySelector('input')?.focus({preventScroll: true});
+}
+
 function renderShotReferenceGallery(shot, style, shotIndex) {
     const query = [style, shot.scene, shot.shotSize, shot.mood].filter(Boolean).join(' ');
     const sources = buildSearchUrls(query);
