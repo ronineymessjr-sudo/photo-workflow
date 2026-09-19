@@ -81,7 +81,7 @@
     <!-- Favicon -->
     <link rel="icon" type="image/jpeg" href="favicon.jpg">
     <link rel="apple-touch-icon" href="favicon.jpg">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-qZvrbSO6oLHm0Dd3G7gBzSa+IDKxND4e8JZiOjkVN/bRlY7vY1WnFVW8v4wZav3vvEqRJ5x1pCB0kKxWbO3H0Q==" crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAOnx5S09ydFYWWNSfcEqDTTHgtNA==" crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
     <!-- Motion Animation -->
     <script src="https://cdn.jsdelivr.net/npm/motion@11.11.13/dist/motion.min.js" defer></script>
     <!-- Lucide Icons -->
@@ -10078,7 +10078,7 @@ function renderHistFull(){
     $('histFull').innerHTML = ps.length ? ps.map(p => {
         const d = new Date(p.savedAt);
         const imgCount = (p.images || []).length;
-        return `<div class="hist-item"><div class="hist-title">${escHtml(p.title)} ${imgCount ? `<span style="font-size:.65rem;color:var(--ac);">🖼️${imgCount}</span>` : ''}</div><div class="hist-meta"><span>${p.input && p.input.style || '待定'}</span><span>${d.toLocaleString()}</span></div><div class="hist-actions"><button class="btn btn-s btn-sm" onclick="loadPlan('${p.id}')">查看</button><button class="btn btn-d btn-sm" onclick="delPlan('${p.id}');renderHistFull();renderHistMini();updateBadge();">删除</button><button class="btn btn-i btn-sm" onclick="exportPlanPdf('${p.id}')">📄 PDF</button></div></div>`;
+    return `<div class="hist-item"><div class="hist-title">${escHtml(p.title)} ${imgCount ? `<span style="font-size:.65rem;color:var(--ac);">🖼️${imgCount}</span>` : ''}</div><div class="hist-meta"><span>${p.input && p.input.style || '待定'}</span><span>${d.toLocaleString()}</span></div><div class="hist-actions"><button class="btn btn-s btn-sm" onclick="loadPlan('${p.id}')">查看</button><button class="btn btn-d btn-sm" onclick="delPlan('${p.id}');renderHistFull();renderHistMini();updateBadge();">删除</button><button class="btn btn-i btn-sm" onclick="exportPlanWord('${p.id}')">📄 Word</button></div></div>`;
     }).join('') : '<div class="hist-empty">暂无历史记录</div>';
 }
 
@@ -10154,6 +10154,60 @@ function renderQuickVenue(){
 }
 
 // ===== PDF Export =====
+function buildPlanDocumentText(plan) {
+    const shots = Array.isArray(plan.shotList) ? plan.shotList : [];
+    const lines = [
+        plan.title || '拍摄方案',
+        `风格：${plan.input?.style || '待定'}  场景：${plan.input?.scene || '待定'}  时长：${plan.input?.duration || '待定'}  人数：${plan.input?.people || 1}`,
+        '',
+        `分镜总表（${shots.length} 个）`,
+        ...shots.map((shot, index) => `${String(index + 1).padStart(2, '0')}  ${shot.title || shot.scene || '未命名镜头'}  |  ${[shot.shotSize, shot.focalLength].filter(Boolean).join(' / ') || '待定'}  |  ${shot.method || '机位待定'}`),
+        '',
+        '逐镜头执行说明',
+    ];
+    shots.forEach((shot, index) => {
+        const contract = shot.directorContract || {};
+        const readable = value => Array.isArray(value) ? value.join('；') : (value || '');
+        lines.push(
+            '',
+            `镜头 ${String(index + 1).padStart(2, '0')} · ${shot.title || shot.scene || '未命名镜头'}`,
+            `拍什么：${shot.title || shot.scene || '待补充'}`,
+            `人物怎么做：${shot.description || '待补充'}`,
+            `摄影师站哪里：${shot.method || '待补充'}`,
+            `人物放在哪里：${shot.composition || '待补充'}`,
+            `景别与焦段：${[shot.shotSize, shot.focalLength].filter(Boolean).join(' · ') || '待补充'}`,
+            `光线怎么用：${shot.lightingSetup || shot.lighting || '待补充'}`,
+            `画面保留什么：${readable(contract.must_show) || '按画面判断'}`,
+            `哪些情况不要：${readable(contract.reject_if) || '按画面判断'}`,
+            `取景边界：${readable(contract.crop_boundary) || '按画面判断'}`,
+        );
+    });
+    return lines.join('\n');
+}
+
+function exportPlanWord(id) {
+    const plan = getPlans().find(p => String(p.id) === String(id));
+    if (!plan) { toast('方案不存在', 'er'); return; }
+    const shots = Array.isArray(plan.shotList) ? plan.shotList : [];
+    const row = (label, value) => `<tr><th>${escHtml(label)}</th><td>${escHtml(value || '待补充')}</td></tr>`;
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>${escHtml(plan.title || '拍摄方案')}</title><style>
+        body{font-family:"Microsoft YaHei","PingFang SC",sans-serif;color:#1d2420;line-height:1.65;margin:36px}h1{font-size:24px;margin:0 0 8px}h2{font-size:18px;margin:28px 0 10px;border-bottom:1px solid #d8ded9;padding-bottom:6px}h3{font-size:15px;margin:24px 0 8px}.meta{color:#5f6b64;margin-bottom:22px}table{width:100%;border-collapse:collapse;margin:8px 0 18px}th,td{border:1px solid #d8ded9;padding:7px 9px;text-align:left;vertical-align:top}th{background:#f3f6f4;font-weight:600}.overview th{white-space:nowrap}.overview td:first-child{text-align:center;width:42px}.detail th{width:120px}</style></head><body>
+        <h1>${escHtml(plan.title || '拍摄方案')}</h1><div class="meta">风格：${escHtml(plan.input?.style || '待定')}　场景：${escHtml(plan.input?.scene || '待定')}　时长：${escHtml(plan.input?.duration || '待定')}　人数：${escHtml(String(plan.input?.people || 1))}</div>
+        <h2>分镜总表（${shots.length} 个）</h2><table class="overview"><thead><tr><th>序号</th><th>拍摄画面</th><th>人物动作</th><th>景别 / 焦段</th><th>机位</th></tr></thead><tbody>${shots.map((shot,index)=>`<tr><td>${String(index+1).padStart(2,'0')}</td><td>${escHtml(shot.title || shot.scene || '未命名镜头')}</td><td>${escHtml(shot.description || '待补充')}</td><td>${escHtml([shot.shotSize,shot.focalLength].filter(Boolean).join(' / ') || '待补充')}</td><td>${escHtml(shot.method || '待补充')}</td></tr>`).join('')}</tbody></table>
+        <h2>逐镜头执行说明</h2>${shots.map((shot,index)=>{const contract=shot.directorContract||{};const readable=value=>Array.isArray(value)?value.join('；'):(value||'');return `<h3>镜头 ${String(index+1).padStart(2,'0')} · ${escHtml(shot.title || shot.scene || '未命名镜头')}</h3><table class="detail">${row('拍什么',shot.title || shot.scene)}${row('人物怎么做',shot.description)}${row('摄影师站哪里',shot.method)}${row('人物放在哪里',shot.composition)}${row('景别与焦段',[shot.shotSize,shot.focalLength].filter(Boolean).join(' · '))}${row('光线怎么用',shot.lightingSetup || shot.lighting)}${row('画面保留什么',readable(contract.must_show))}${row('哪些情况不要',readable(contract.reject_if))}${row('取景边界',readable(contract.crop_boundary))}</table>`}).join('')}
+        </body></html>`;
+    const blob = new Blob(['\ufeff', html], { type: 'application/msword;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `拍摄方案_${String(plan.title || '未命名').replace(/[\\/:*?"<>|]/g, '_')}.doc`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    toast('Word 拍摄方案已下载', 'ok');
+}
+
 async function exportPlanPdf(id) {
     const plan=getPlans().find(p=>p.id===id);
     if(!plan){toast('方案不存在','er');return;}
@@ -10280,7 +10334,7 @@ async function exportModelPdf(id) {
 // ===== Copy =====
 function copyCurrentPlan(){
     if(!currentPlanData) return;
-    const text=currentPlanData.sections.map(s=>`${s.ti}\n${s.c.join('\n')}`).join('\n\n');
+    const text=buildPlanDocumentText(currentPlanData);
     navigator.clipboard.writeText(text).then(()=>toast('已复制','ok')).catch(()=>toast('复制失败','er'));
 }
 
@@ -10288,9 +10342,7 @@ function copyCurrentPlan(){
 function getActionsHtml() {
     return `<div class="actions">
         <button class="btn btn-s btn-sm" onclick="copyCurrentPlan()">📋 复制</button>
-        <button class="btn btn-s btn-sm" onclick="exportPlanPdfCurrent()">📄 PDF</button>
-        <button class="btn btn-i btn-sm" onclick="exportModelPdfCurrent()">👤 模特版PDF</button>
-        ${currentPlanId ? `<button class="btn btn-i btn-sm" onclick="genImgForPlan('${currentPlanId}')" id="action-gen-img-btn">🎨 批量生成9张</button>` : ''}
+        <button class="btn btn-s btn-sm" onclick="exportPlanWord(currentPlanData.id)">📄 Word</button>
         <button class="btn btn-d btn-sm" onclick="delCurrentPlan()">🗑️ 删除</button>
     </div>`;
 }

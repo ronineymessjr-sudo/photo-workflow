@@ -91,7 +91,7 @@ export function createServer({
                 return res.end(content);
             }
             // Never expose repository files, configuration, or credentials.
-            if (pathname !== '/' && pathname !== '/index.html' && !/^\/assets\/[\w./-]+$/.test(pathname)) return reply(404, { error: 'NOT_FOUND' });
+            if (pathname !== '/' && pathname !== '/index.html' && pathname !== '/favicon.jpg' && !/^\/assets\/[\w./-]+$/.test(pathname)) return reply(404, { error: 'NOT_FOUND' });
             const target = path.resolve(root, '.' + (pathname === '/' ? '/index.html' : pathname));
             if (!target.startsWith(root + path.sep) && target !== path.join(root, 'index.html')) return reply(403, { error: 'FORBIDDEN' });
             const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg' };

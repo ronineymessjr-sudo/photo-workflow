@@ -10,9 +10,10 @@ export async function createDirectorPlan(input, { baseUrl, fetchImpl = fetch } =
     }).filter(Boolean).join('\n');
     if ((!input.theme && !input.modelDesc) || brief.length > 2000) throw new Error('INVALID_BRIEF');
     const requestId = `workflow-${crypto.randomUUID()}`;
+    const desiredShotCount = resolveShotCount(input);
     const response = await fetchImpl(`${baseUrl.replace(/\/$/, '')}/v1/photoatelier/shoot-plan`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ request_id: requestId, brief, output_count: 8 }),
+        body: JSON.stringify({ request_id: requestId, brief, output_count: desiredShotCount }),
         signal: AbortSignal.timeout(60000),
     });
     if (!response.ok) throw new Error(`DIRECTOR_UPSTREAM_${response.status}`);
@@ -25,9 +26,6 @@ export async function createDirectorPlan(input, { baseUrl, fetchImpl = fetch } =
     });
     // Do not duplicate shots to meet a target that the upstream cannot yet supply.
     const executionShots = [...uniqueShots.values()];
-    const hoursMatch = String(input.duration || '').match(/(\d+(?:\.\d+)?)\s*(小时|h|分钟|min)/i);
-    const hours = hoursMatch ? Number(hoursMatch[1]) / (/分钟|min/i.test(hoursMatch[2]) ? 60 : 1) : 2;
-    const desiredShotCount = Math.max(9, Math.min(16, Math.round(7 + hours * 2)));
     const text = value => typeof value === 'string' ? value : '';
     const sceneScale = classifySceneScale(`${input.theme || ''}\n${input.extra || ''}`);
     const shotList = executionShots.slice(0, desiredShotCount).map((shot, index) => ({
@@ -58,6 +56,17 @@ export async function createDirectorPlan(input, { baseUrl, fetchImpl = fetch } =
             reviewRequired: true, imageGenerationConnected: true,
             imageGenerationMode: 'external-provider-candidate-review', generationCandidates: [], sceneScale },
     };
+}
+
+function resolveShotCount(input) {
+    const duration = String(input.duration || '2小时');
+    const match = duration.match(/(\d+(?:\.\d+)?)\s*(小时|h|分钟|min)/i);
+    const hours = match ? Number(match[1]) / (/分钟|min/i.test(match[2]) ? 60 : 1) : 2;
+    let count = hours <= 1 ? 9 : hours <= 2 ? 11 : hours <= 4 ? 13 : 15;
+    if (Number(input.people || 1) > 1) count += 1;
+    if (/[、，,；;\/]|多场景|转场|室内.*室外|室外.*室内/.test(String(input.scene || ''))) count += 1;
+    if (/视频|短片|品牌|产品|封面|横竖|多平台/.test(`${input.theme || ''} ${input.extra || ''}`)) count += 1;
+    return Math.max(9, Math.min(16, count));
 }
 
 function classifySceneScale(text) {

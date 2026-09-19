@@ -5,11 +5,15 @@ Based on GitHub `ronineymessjr-sudo/photo-workflow` master `2e4fabc`, not the ol
 ## Run locally
 
 Keep the existing Director service running on `http://127.0.0.1:8004`.
+
+For Director v0.28.0, apply the versioned files in `director-overlay-v0.28.0/` before starting the service. The overlay is the tested backend half of the dynamic 9-16 shot workflow; its README contains hashes and the targeted test command.
 Run `node tools/serve-director.mjs` from this checkout and open `http://127.0.0.1:8125/`.
 The photography application's existing login remains required. No credentials were copied into this repository.
 
 The existing form now calls `generateDirectorPlan` → `POST /api/director/plan` → Director `/v1/photoatelier/shoot-plan`.
 The plan detail also exposes a single-shot candidate flow: choose a returned shot, click “生成一张候选图”, then `generateDirectorCandidate` → local `POST /api/director/generate-candidate` → Director `/v1/photoatelier/external-generate`.
+
+The bridge requests 9-16 distinct shots according to duration, people, scene transitions, and delivery complexity. It does not copy upstream shots to fill a target. The plan page shows the shot overview first, then per-shot instructions; candidate generation always uses the explicitly selected shot.
 The Director also exposes `POST /v1/photoatelier/identity-lock-workflow`, which builds a non-submitted identity-lock workflow blueprint. It accepts an authorized local identity reference, optional scene anchor, pose-control choice, aspect ratio, candidate count, and bounded retry count. It never downloads weights or calls a provider; the response remains blocked until a supported image-conditioning backend and human review are available.
 Current input fields are sent without silently truncating them (over 2000 characters is rejected).
 The stored `shotList` comes from that response, including photographer/model positions, cropping and rejection rules.
