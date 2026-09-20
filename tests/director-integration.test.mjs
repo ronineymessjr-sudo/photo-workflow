@@ -23,6 +23,8 @@ test('preserves current input and actual director shots without legacy templates
     assert.equal(plan.director.reviewRequired, true);
     assert.equal(plan.director.imageGenerationConnected, true);
     assert.equal(plan.images.length, 0);
+    assert.equal(plan.shotList[0].directorContract.label, undefined);
+    assert.equal(plan.shotList[0].directorContract.subjectScale, undefined);
 });
 
 test('shot target varies with duration without copying upstream shots to fill it', async () => {
@@ -210,9 +212,23 @@ test('all inline scripts parse and submit awaits director, shot list reuses resp
     assert.doesNotMatch(html, /id="action-gen-img-btn">🎨 批量生成9张/);
     assert.match(html, /\[SHOT CONTRACT - HARD\]/);
     assert.match(html, /compileDirectorShotContract/);
+    assert.match(html, /function compileDirectorSceneBrief\(plan\)/);
+    assert.match(html, /scene_brief: compileDirectorSceneBrief\(plan\)/);
+    assert.match(html, /function formatDirectorGenerationError\(error\)/);
+    assert.match(html, /candidate-status-/);
+    assert.match(html, /外部生图模型当前超时或暂不可用/);
     assert.match(html, /当前分镜合同内部冲突/);
     assert.match(html, /contractBundle\.section/);
     assert.match(html, /c\.poseStatus === 'blocked' \|\| c\.faceQualityStatus === 'blocked'/);
     assert.match(html, /const IS_LOCAL_HOST = \['127\.0\.0\.1', 'localhost', '\[::1\]'\]/);
     assert.match(html, /if \(USE_LOCAL_MODE\) \{/);
+    assert.match(html, /window\.continueAsGuest = function/);
+    assert.match(html, /localStorage\.setItem\('pa_guest_mode', 'false'\)/);
+    assert.equal((html.match(/if \(USE_GUEST_MODE\) \{/g) || []).length, 1);
+    assert.match(html, /id="tab-role-home"/);
+    assert.match(html, /function applyRoleExperience\(role\)/);
+    assert.match(html, /function renderRoleHome\(role\)/);
+    assert.match(html, /photographer: \{ name: '摄影师'/);
+    assert.match(html, /model: \{ name: '模特'/);
+    assert.match(html, /assistant: \{ name: '摄影助理'/);
 });

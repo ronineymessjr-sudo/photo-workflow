@@ -1696,6 +1696,10 @@
             display: flex;
             align-items: center;
             gap: 1rem;
+            width: 100%;
+            text-align: left;
+            color: inherit;
+            font-family: inherit;
             padding: 1rem 1.25rem;
             background: var(--bg-subtle);
             border: 1px solid var(--border-subtle2);
@@ -2972,6 +2976,7 @@
                 <input type="password" id="loginPassword" placeholder="输入密码" data-i18n-placeholder="login.password" style="width:100%;padding:12px 16px;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;color:var(--t1);font-family:inherit;font-size:.95rem;transition:all .2s;">
             </div>
             <button onclick="handleLogin()" class="btn btn-p" style="width:100%;padding:12px;border-radius:8px;font-size:.95rem;font-weight:500;margin-top:.5rem;" data-i18n="login.button">登录</button>
+            <button onclick="continueAsGuest()" class="btn btn-s" style="width:100%;padding:12px;border-radius:8px;font-size:.95rem;font-weight:500;margin-top:.75rem;">以游客身份继续</button>
             <p style="margin-top:1.5rem;font-size:.8rem;color:var(--t3);text-align:center;" data-i18n="login.hint">首次登录将自动创建账号</p>
         </div>
         <div id="loginLoading" style="display:none;margin-top:1.5rem;">
@@ -3009,6 +3014,18 @@
     </div>
 </div>
 
+<div class="role-modal" id="roleModal" onclick="if(event.target===this)closeRoleSwitcher()">
+    <div class="role-modal-content">
+        <h2 class="role-modal-title">切换工作身份</h2>
+        <div class="role-modal-list">
+            <button class="role-modal-item" data-role-choice="photographer" onclick="switchRole('photographer')"><span class="role-modal-item-icon">📷</span><span class="role-modal-item-info"><span class="role-modal-item-name">摄影师</span><span class="role-modal-item-desc">创建方案、管理日程和交付</span></span><span class="role-modal-item-check">✓</span></button>
+            <button class="role-modal-item" data-role-choice="model" onclick="switchRole('model')"><span class="role-modal-item-icon">◉</span><span class="role-modal-item-info"><span class="role-modal-item-name">模特</span><span class="role-modal-item-desc">查看拍摄通知、地点和动作重点</span></span><span class="role-modal-item-check">✓</span></button>
+            <button class="role-modal-item" data-role-choice="assistant" onclick="switchRole('assistant')"><span class="role-modal-item-icon">☑</span><span class="role-modal-item-info"><span class="role-modal-item-name">摄影助理</span><span class="role-modal-item-desc">准备器材、场地、日程与现场事项</span></span><span class="role-modal-item-check">✓</span></button>
+        </div>
+        <button class="role-modal-close" onclick="closeRoleSwitcher()">取消</button>
+    </div>
+</div>
+
 <div class="app-layout" id="appLayout" style="display:none;">
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
@@ -3016,7 +3033,16 @@
             <span class="brand-dot"></span>
             <span class="brand-text">Photo<span>Atelier</span></span>
         </div>
+        <button class="role-switcher" onclick="openRoleSwitcher()" type="button">
+            <span class="role-switcher-icon" id="roleSwitcherIcon">📷</span>
+            <span class="role-switcher-info"><span class="role-switcher-label">当前身份</span><span class="role-switcher-name" id="roleSwitcherName">摄影师</span></span>
+            <span class="role-switcher-arrow">›</span>
+        </button>
         <nav class="sidebar-nav">
+            <button class="nav-item" data-tab="role-home" data-role="photographer,model,assistant">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12l9-9 9 9"/><path d="M5 10v11h14V10"/><path d="M9 21v-7h6v7"/></svg>
+                <span class="nav-label">角色工作台</span>
+            </button>
             <button class="nav-item active" data-tab="gen" data-role="photographer,model,assistant">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
                 <span class="nav-label" data-i18n="nav.gen">方案生成</span>
@@ -3026,7 +3052,7 @@
                 <span class="nav-label" data-i18n="nav.tpl">方案库</span>
                 <span class="nav-badge" id="t-tpl">0</span>
             </button>
-            <button class="nav-item" data-tab="calendar" data-role="photographer">
+            <button class="nav-item" data-tab="calendar" data-role="photographer,assistant">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                 <span class="nav-label" data-i18n="nav.calendar">日程管理</span>
             </button>
@@ -3038,7 +3064,7 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
                 <span class="nav-label" data-i18n="nav.dashboard">数据看板</span>
             </button>
-            <button class="nav-item" data-tab="message" data-role="photographer,assistant">
+            <button class="nav-item" data-tab="message" data-role="photographer,model,assistant">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
                 <span class="nav-label" data-i18n="nav.message">消息看板</span>
                 <span class="nav-badge" id="t-msg" style="display:none;">0</span>
@@ -3047,7 +3073,7 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                 <span class="nav-label" data-i18n="nav.hist">历史记录</span>
             </button>
-            <button class="nav-item" data-tab="settings" data-role="photographer,assistant">
+            <button class="nav-item" data-tab="settings" data-role="photographer,model,assistant">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
                 <span class="nav-label">设置</span>
             </button>
@@ -3068,11 +3094,11 @@
                 <span style="font-size:.7rem;color:var(--t3);background:var(--bg3);padding:.15rem .5rem;border-radius:4px;">摄影工作流</span>
             </div>
             <div style="display:flex;align-items:center;gap:.5rem;">
-                <button class="btn btn-s btn-sm" onclick="showTab('gen')" style="display:flex;align-items:center;gap:.3rem;">
+                <button class="btn btn-s btn-sm" data-role="photographer,assistant" onclick="showTab('gen')" style="display:flex;align-items:center;gap:.3rem;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg>
                     新建方案
                 </button>
-                <button class="btn btn-s btn-sm" onclick="showTab('calendar')" style="display:flex;align-items:center;gap:.3rem;">
+                <button class="btn btn-s btn-sm" data-role="photographer,assistant" onclick="showTab('calendar')" style="display:flex;align-items:center;gap:.3rem;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
                     日程
                 </button>
@@ -3080,13 +3106,13 @@
                     <button class="lang-btn active" onclick="setLanguage('zh')" data-lang="zh">中文</button>
                     <button class="lang-btn" onclick="setLanguage('en')" data-lang="en">EN</button>
                 </div>
-                <div id="userAvatar" style="width:28px;height:28px;border-radius:50%;background:var(--ac);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:600;color:#121212;cursor:pointer;">P</div>
+                <button id="userAvatar" onclick="openRoleSwitcher()" title="切换身份" style="width:28px;height:28px;border-radius:50%;background:var(--ac);border:0;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:600;color:#121212;cursor:pointer;">摄</button>
             </div>
         </header>
 
         <!-- Quick Actions Bar -->
         <div class="quick-actions" style="display:flex;gap:.5rem;margin:1rem 1.5rem 0 1.5rem;padding:.75rem 1rem;background:var(--bg3);border-radius:12px;border:1px solid var(--bd);">
-            <button class="btn btn-s btn-sm" onclick="syncToFeishuBitable()" style="display:flex;align-items:center;gap:.4rem;">
+            <button class="btn btn-s btn-sm" data-role="photographer,assistant" onclick="syncToFeishuBitable()" style="display:flex;align-items:center;gap:.4rem;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                 同步飞书
             </button>
@@ -3095,6 +3121,10 @@
                 <input type="text" id="globalSearch" placeholder="搜索方案、日程..." style="padding:.4rem .75rem .4rem 2rem;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;color:var(--t1);font-size:.8rem;width:180px;">
                 <svg style="position:absolute;left:.5rem;top:50%;transform:translateY(-50%);color:var(--t3);" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             </div>
+        </div>
+
+        <div class="tab-cnt" id="tab-role-home">
+            <div style="max-width:960px;margin:0 auto;"><div class="panel"><div class="p-head"><h2 id="roleHomeTitle">角色工作台</h2></div><div class="p-body" id="roleHomeContent"></div></div></div>
         </div>
 
         <!-- ============ 方案生成 ============ -->
@@ -4318,6 +4348,15 @@ if (document.getElementById('loginOverlay')) {
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem(USER_KEY);
         localStorage.removeItem(ROLE_KEY);
+        localStorage.setItem('pa_guest_mode', 'false');
+        location.reload();
+    };
+
+    window.continueAsGuest = function() {
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(USER_KEY);
+        localStorage.setItem(ROLE_KEY, 'photographer');
+        localStorage.setItem('pa_guest_mode', 'true');
         location.reload();
     };
 
@@ -4543,7 +4582,7 @@ function closeShortcutsModal(e) {
             appLayout.style.transition = 'opacity 400ms ease';
             setTimeout(function() { appLayout.style.opacity = '1'; }, 50);
         }
-        setTimeout(function() { initTabs(); }, 100);
+        setTimeout(function() { initTabs(); applyRoleExperience(role); }, 100);
         // Load data from server
         loadServerData();
     };
@@ -4598,7 +4637,26 @@ function closeShortcutsModal(e) {
         if (particles) particles.remove();
         if (appLayout) {
             appLayout.style.display = 'flex';
-            setTimeout(function() { initTabs(); }, 100);
+            setTimeout(function() { initTabs(); applyRoleExperience(role); }, 100);
+        }
+        return;
+    }
+
+    if (USE_GUEST_MODE) {
+        role = role || 'photographer';
+        localStorage.setItem(ROLE_KEY, role);
+        const welcomeEl = document.getElementById('welcomeEmail');
+        if (welcomeEl) welcomeEl.textContent = '游客模式';
+        const loginOverlay = document.getElementById('loginOverlay');
+        const roleOverlay = document.getElementById('roleOverlay');
+        const appLayout = document.getElementById('appLayout');
+        if (loginOverlay) loginOverlay.style.display = 'none';
+        if (roleOverlay) roleOverlay.style.display = 'none';
+        const particles = document.querySelector('.particles');
+        if (particles) particles.remove();
+        if (appLayout) {
+            appLayout.style.display = 'flex';
+            setTimeout(function() { initTabs(); applyRoleExperience(role); }, 100);
         }
         return;
     }
@@ -4619,7 +4677,7 @@ function closeShortcutsModal(e) {
                 if (roleOverlay) roleOverlay.style.display = 'none';
                 if (appLayout) {
                     appLayout.style.display = 'flex';
-                    setTimeout(function() { initTabs(); loadServerData(); }, 100);
+                    setTimeout(function() { initTabs(); applyRoleExperience(role); loadServerData(); }, 100);
                 }
             } else {
                 // Logged in but no role - show role selector
@@ -4671,6 +4729,100 @@ const toast = function(m,t) { t=t||'ok'; const el=$('toast'); if(!el) return; el
 const sg = k => { try { return JSON.parse(localStorage.getItem(k))||null } catch(e) { return null } };
 const ss = (k,v) => { try { localStorage.setItem(k,JSON.stringify(v)); return true } catch(e) { return false } };
 
+const ROLE_CONFIG = {
+    photographer: { name: '摄影师', icon: '📷', avatar: '摄', title: '摄影师工作台' },
+    model: { name: '模特', icon: '◉', avatar: '模', title: '模特拍摄中心' },
+    assistant: { name: '摄影助理', icon: '☑', avatar: '助', title: '助理准备台' }
+};
+
+function getCurrentRole() {
+    const saved = localStorage.getItem('pw_role');
+    return ROLE_CONFIG[saved] ? saved : 'photographer';
+}
+
+function openRoleSwitcher() {
+    const role = getCurrentRole();
+    document.querySelectorAll('[data-role-choice]').forEach(function(item) {
+        item.classList.toggle('active', item.dataset.roleChoice === role);
+        const check = item.querySelector('.role-modal-item-check');
+        if (check) check.style.visibility = item.dataset.roleChoice === role ? 'visible' : 'hidden';
+    });
+    const modal = $('roleModal');
+    if (modal) modal.classList.add('show');
+}
+
+function closeRoleSwitcher() {
+    const modal = $('roleModal');
+    if (modal) modal.classList.remove('show');
+}
+
+function switchRole(nextRole) {
+    if (!ROLE_CONFIG[nextRole]) return;
+    localStorage.setItem('pw_role', nextRole);
+    closeRoleSwitcher();
+    applyRoleExperience(nextRole);
+    showTab('role-home');
+    toast('已切换为' + ROLE_CONFIG[nextRole].name, 'ok');
+}
+
+function applyRoleExperience(role) {
+    role = ROLE_CONFIG[role] ? role : 'photographer';
+    localStorage.setItem('pw_role', role);
+    const config = ROLE_CONFIG[role];
+    document.querySelectorAll('[data-role]').forEach(function(el) {
+        const roles = String(el.dataset.role || '').split(',');
+        el.style.display = roles.includes(role) ? '' : 'none';
+    });
+    if ($('roleSwitcherIcon')) $('roleSwitcherIcon').textContent = config.icon;
+    if ($('roleSwitcherName')) $('roleSwitcherName').textContent = config.name;
+    if ($('userAvatar')) $('userAvatar').textContent = config.avatar;
+    renderRoleHome(role);
+    const active = document.querySelector('.nav-item.active');
+    if (!active || active.style.display === 'none') showTab('role-home');
+}
+
+function getRoleSchedules() {
+    const primary = sg('pw_schedule') || [];
+    const legacy = sg('pw_schedules') || [];
+    const seen = new Set();
+    return primary.concat(legacy).filter(function(item) {
+        const key = String(item.id || [item.planId, item.date, item.title].join('|'));
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    }).sort(function(a, b) { return String(a.date || '').localeCompare(String(b.date || '')); });
+}
+
+function renderRoleHome(role) {
+    const content = $('roleHomeContent');
+    const title = $('roleHomeTitle');
+    if (!content || !title) return;
+    role = ROLE_CONFIG[role] ? role : getCurrentRole();
+    title.textContent = ROLE_CONFIG[role].title;
+    const plans = sg(SK.P) || [];
+    const equipment = sg(SK.EQ) || [];
+    const venues = sg(SK.V) || [];
+    const today = new Date().toISOString().slice(0, 10);
+    const upcoming = getRoleSchedules().filter(function(item) { return !item.date || item.date >= today; }).slice(0, 5);
+    const scheduleRows = upcoming.map(function(item) {
+        const plan = plans.find(function(candidate) { return String(candidate.id) === String(item.planId); });
+        const shots = (plan && (plan.shotList || plan.shots)) || [];
+        const shotHints = shots.slice(0, 3).map(function(shot) { return escHtml(shot.description || shot.action || shot.title || '按分镜完成动作'); }).join(' · ');
+        return `<div class="library-plan-session" style="align-items:flex-start;gap:.75rem;"><div style="min-width:88px;color:var(--t2);">${escHtml(item.date || '待定日期')}<br><span style="font-size:.72rem;color:var(--t3);">${escHtml(item.time || '时间待定')}</span></div><div style="flex:1;"><strong>${escHtml(item.title || (plan && plan.title) || '未命名拍摄')}</strong><div style="font-size:.76rem;color:var(--t3);margin-top:.25rem;">${escHtml(item.location || (plan && plan.input && plan.input.scene) || '地点待确认')}</div>${shotHints ? `<div style="font-size:.76rem;color:var(--t2);margin-top:.35rem;">动作重点：${shotHints}</div>` : ''}</div></div>`;
+    }).join('');
+    const empty = '<div class="eq-empty">暂时没有已安排的拍摄</div>';
+
+    if (role === 'model') {
+        content.innerHTML = `<div class="stats-row"><div class="stat-card"><div class="stat-num">${upcoming.length}</div><div class="stat-label">待参与拍摄</div></div><div class="stat-card"><div class="stat-num">${plans.length}</div><div class="stat-label">可查看方案</div></div></div><div class="p-head" style="padding-left:0;padding-right:0;"><h3>我的拍摄安排</h3></div>${scheduleRows || empty}<div style="display:flex;gap:.5rem;margin-top:1rem;"><button class="btn btn-p btn-sm" onclick="showTab('gen')">创建个人练习方案</button><button class="btn btn-s btn-sm" onclick="showTab('message')">查看通知</button></div>`;
+        return;
+    }
+    if (role === 'assistant') {
+        content.innerHTML = `<div class="stats-row"><div class="stat-card"><div class="stat-num">${upcoming.length}</div><div class="stat-label">待执行拍摄</div></div><div class="stat-card"><div class="stat-num">${equipment.length}</div><div class="stat-label">已登记器材</div></div><div class="stat-card"><div class="stat-num">${venues.length}</div><div class="stat-label">备选场地</div></div></div><div class="p-head" style="padding-left:0;padding-right:0;"><h3>近期准备事项</h3></div>${scheduleRows || empty}<div style="font-size:.78rem;color:var(--t2);margin-top:1rem;padding:.75rem;background:var(--bg-subtle);border-radius:var(--radius);">现场核对：场地许可 · 相机与镜头 · 电池与存储卡 · 灯光附件 · 人员到场时间</div><div style="display:flex;gap:.5rem;margin-top:1rem;"><button class="btn btn-p btn-sm" onclick="showTab('calendar')">管理日程</button><button class="btn btn-s btn-sm" onclick="showTab('venue')">检查资源</button></div>`;
+        return;
+    }
+    content.innerHTML = `<div class="stats-row"><div class="stat-card"><div class="stat-num">${plans.length}</div><div class="stat-label">已保存方案</div></div><div class="stat-card"><div class="stat-num">${upcoming.length}</div><div class="stat-label">近期拍摄</div></div><div class="stat-card"><div class="stat-num">${equipment.length + venues.length}</div><div class="stat-label">可用资源</div></div></div><div class="p-head" style="padding-left:0;padding-right:0;"><h3>下一步工作</h3></div>${scheduleRows || empty}<div style="display:flex;gap:.5rem;margin-top:1rem;"><button class="btn btn-p btn-sm" onclick="showTab('gen')">新建拍摄方案</button><button class="btn btn-s btn-sm" onclick="showTab('tpl')">打开方案库</button><button class="btn btn-s btn-sm" onclick="showTab('calendar')">安排日程</button></div>`;
+}
+
 // ===== Tabs =====
 function showTab(tabName) {
     document.querySelectorAll('.nav-item').forEach(function(x){x.classList.remove('active');});
@@ -4689,6 +4841,7 @@ function showTab(tabName) {
     if(tabName==='calendar') { renderCalendar(); renderSchedules(); }
     if(tabName==='message') renderMessages();
     if(tabName==='settings') loadSettingsData();
+    if(tabName==='role-home') renderRoleHome(getCurrentRole());
 }
 
 // 资源库内部Tab切换
@@ -5370,24 +5523,6 @@ function adoptSavedPlan(planId, dateInputId) {
         return;
     }
 
-    if (USE_GUEST_MODE) {
-        role = 'photographer';
-        localStorage.setItem(ROLE_KEY, role);
-        const welcomeEl = document.getElementById('welcomeEmail');
-        if (welcomeEl) welcomeEl.textContent = '游客模式';
-        const loginOverlay = document.getElementById('loginOverlay');
-        const roleOverlay = document.getElementById('roleOverlay');
-        const appLayout = document.getElementById('appLayout');
-        if (loginOverlay) loginOverlay.style.display = 'none';
-        if (roleOverlay) roleOverlay.style.display = 'none';
-        const particles = document.querySelector('.particles');
-        if (particles) particles.remove();
-        if (appLayout) {
-            appLayout.style.display = 'flex';
-            setTimeout(function() { initTabs(); }, 100);
-        }
-        return;
-    }
     saveScheduleWithUndo({id: crypto.randomUUID(), planId: plan.id, date: input.value,
         title: plan.title, location: plan.input?.scene || '', time: '', status: 'pending'});
     renderSchedules();
@@ -6099,6 +6234,16 @@ function renderShotInstructions(shot) {
     ].filter(([,value]) => value).map(([label,value]) => '<div><dt>' + label + '</dt><dd>' + escHtml(String(value)) + '</dd></div>').join('') + '</dl>';
 }
 
+function compileDirectorSceneBrief(plan) {
+    const input = plan && plan.input || {};
+    return [
+        input.modelDesc ? 'SUBJECT AND CLOTHING: ' + input.modelDesc : '',
+        input.scene ? 'LOCATION WEATHER AND TIME: ' + input.scene : '',
+        input.mood ? 'PERSISTENT MOOD: ' + input.mood : '',
+        input.style ? 'VISUAL STYLE: ' + input.style : ''
+    ].filter(Boolean).join('\n') || (plan && plan.title) || '摄影方案';
+}
+
 function renderDirectorCandidatePanel(plan) {
     const shots = Array.isArray(plan.shotList) ? plan.shotList : [];
     const state = plan.director || {};
@@ -6132,8 +6277,20 @@ function renderDirectorCandidatePanel(plan) {
             <label>人物参考图<select id="identity-ref-${key}"><option value="">不使用人物参考图</option>${(plan.references||[]).filter(r=>r.image_path).map((r,i)=>`<option value="${escHtml(r.image_path)}">${escHtml(r.asset_id || '参考图 '+(i+1))}</option>`).join('')}</select></label>
         </details>
         <button class="btn btn-s" id="candidate-gen-btn-${key}" onclick="generateDirectorCandidateForPlan('${key}')" ${shot?'':'disabled'}>生成当前分镜的图</button>
+        <p id="candidate-status-${key}" class="reference-rights" aria-live="polite"></p>
         <p class="reference-rights">AI合成预览，非实拍参考。每次仅生成当前分镜一张，可能消耗供应商额度。</p>
     </section>`;
+}
+
+function formatDirectorGenerationError(error) {
+    const message = String(error && error.message || '未知错误');
+    if (/DIRECTOR_GENERATION_UPSTREAM_503:provider_request_failed/.test(message)) {
+        return '外部生图模型当前超时或暂不可用；方案和分镜契约已保留，稍后可重试当前分镜。';
+    }
+    if (/402|credit|quota/i.test(message)) {
+        return '外部模型免费额度已用完；未切换付费模式，方案和分镜契约已保留。';
+    }
+    return '生成失败：' + message;
 }
 
 function selectDirectorCandidateShot(planId, value) {
@@ -6305,11 +6462,14 @@ async function generateDirectorCandidateForPlan(planId) {
     const brief = briefParts.join('\n');
     if (brief.length > 4000) { toast('当前分镜描述过长，无法安全提交', 'er'); return; }
     const btn = $('candidate-gen-btn-' + planId);
+    const status = $('candidate-status-' + planId);
     if (btn) { btn.disabled = true; btn.textContent = '生成中...'; }
+    if (status) status.textContent = '正在按当前分镜契约生成，请勿切换分镜……';
     try {
         const generationRequest = {
             request_id: (plan.director && plan.director.requestId || 'photoatelier') + '-image-' + Date.now(),
             brief,
+            scene_brief: compileDirectorSceneBrief(plan),
             style_direction: plan.input && plan.input.style || '纪实摄影',
             output_count: 1,
             available_lenses: shot.focalLength ? [String(shot.focalLength).split(/或|、|,|，/)[0].trim()] : [],
@@ -6362,7 +6522,10 @@ async function generateDirectorCandidateForPlan(planId) {
         toast('候选图已生成，等待人工审核', 'ok');
     } catch (error) {
         console.error('候选生图失败:', error);
-        toast('候选生图失败：' + (error.message || '未知错误'), 'er');
+        const readableError = formatDirectorGenerationError(error);
+        const currentStatus = $('candidate-status-' + planId);
+        if (currentStatus) currentStatus.textContent = readableError;
+        toast(readableError, 'er');
     } finally {
         const currentBtn = $('candidate-gen-btn-' + planId);
         if (currentBtn) { currentBtn.disabled = false; currentBtn.textContent = '生成当前分镜的图'; }
@@ -11581,18 +11744,22 @@ function loadSettingsData() {
     try {
         const userStr = localStorage.getItem('pw_user');
         const role = localStorage.getItem('pw_role') || 'photographer';
-        const roleNames = { photographer: '摄影师', assistant: '助理', editor: '编辑', client: '客户' };
+        const roleNames = { photographer: '摄影师', model: '模特', assistant: '摄影助理', editor: '编辑', client: '客户' };
+        const avatarEl = document.getElementById('settingsUserAvatar');
+        const nameEl = document.getElementById('settingsUserName');
+        const emailEl = document.getElementById('settingsUserEmail');
+        const roleEl = document.getElementById('settingsUserRole');
         
         if (userStr) {
             const user = JSON.parse(userStr);
-            const avatarEl = document.getElementById('settingsUserAvatar');
-            const nameEl = document.getElementById('settingsUserName');
-            const emailEl = document.getElementById('settingsUserEmail');
-            const roleEl = document.getElementById('settingsUserRole');
-            
             if (avatarEl) avatarEl.textContent = (user.name || user.email || 'U').charAt(0).toUpperCase();
             if (nameEl) nameEl.textContent = user.name || '用户';
             if (emailEl) emailEl.textContent = user.email || '';
+            if (roleEl) roleEl.textContent = roleNames[role] || role;
+        } else {
+            if (avatarEl) avatarEl.textContent = ROLE_CONFIG[role] ? ROLE_CONFIG[role].avatar : '游';
+            if (nameEl) nameEl.textContent = '游客';
+            if (emailEl) emailEl.textContent = '数据仅保存在当前浏览器';
             if (roleEl) roleEl.textContent = roleNames[role] || role;
         }
     } catch(e) {}

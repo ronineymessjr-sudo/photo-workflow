@@ -40,7 +40,10 @@ export async function createDirectorPlan(input, { baseUrl, fetchImpl = fetch } =
         notes: `裁切：${text(shot.crop_boundary)}；必须呈现：${text(shot.must_show)}；拒绝：${text(shot.reject_if)}`,
         lightingSetup: text(shot.lighting_setup), priority: '待人工确认',
         alternative: text(shot.execution_note), camera: {},
-        directorContract: { ...shot, ...sceneScale },
+        // Scene-scale hints describe the overall request and may contain
+        // multiple requested shot types. They must not overwrite this
+        // specific shot's framing contract.
+        directorContract: { ...shot },
     }));
     return {
         title: input.theme || '摄影方案', input, savedAt: new Date().toISOString(),
