@@ -6537,6 +6537,12 @@ function closeImgModal() {
 let currentPlanId = null;
 let currentPlanText = '';
 
+function renderJevReview(review) {
+    if (!review || review.status === 'unavailable') return "<div class='jev-review jev-review-muted'><strong>方案质量评审</strong><span>暂未评审，方案仍可正常使用</span></div>";
+    const copy = { ready: ['可直接拍', '当前分镜结构完整，可进入人工确认'], confirm: ['建议确认', '部分镜头或执行条件需要现场确认'], supplement: ['需要补充', '需求或执行条件还不够明确'] }[review.verdict] || ['建议确认', '请人工检查方案细节'];
+    return "<details class='jev-review jev-review-" + escHtml(review.verdict || 'confirm') + "'><summary><strong>方案质量评审</strong><span>" + copy[0] + "</span></summary><p>" + copy[1] + "</p></details>";
+}
+
 function renderPlanContent(plan) {
     currentPlanData = plan;
     currentPlanId = plan.id;
@@ -6544,6 +6550,7 @@ function renderPlanContent(plan) {
     $('tplSaveHint').style.display = 'none';
     $('planSavedAt').textContent = new Date(plan.savedAt).toLocaleString();
 
+    const jevReviewHtml = renderJevReview(plan.director && plan.director.jevReview);
     const metaHtml = `<div class="plan-meta"><div class="mtag"><strong>主题</strong><span>${escHtml(plan.input && plan.input.theme||'待定')}</span></div><div class="mtag"><strong>风格</strong><span>${escHtml(plan.input && plan.input.style||'待定')}</span></div><div class="mtag"><strong>时长</strong><span>${plan.input && plan.input.duration||'待定'}</span></div><div class="mtag"><strong>人数</strong><span>${plan.input && plan.input.people||1}人</span></div></div>`;
 
     const sectionsHtml = (plan.director ? [] : (plan.sections || []).filter(s => !/本次需求|接入记录|拍摄清单|拍摄当天/.test(s.ti))).map(s=>`
@@ -6784,7 +6791,7 @@ function renderPlanContent(plan) {
 
 
     const referenceSearch = `<details class="plan-reference-search" id="plan-reference-search"><summary>查找参考图</summary>${renderShotReferenceGallery({scene: [plan.input?.theme, plan.input?.scene].filter(Boolean).join(' ')}, plan.input?.style || '', 'plan')}</details>`;
-    return `<div class="plan-output-wrapper">${metaHtml + shotListHtml + referenceSearch + imgGallery + sectionsHtml + quoteHtml + (plan.director ? '' : commHtml + colorHtml + aiHtml)}</div>`;
+    return `<div class="plan-output-wrapper">${jevReviewHtml + metaHtml + shotListHtml + referenceSearch + imgGallery + sectionsHtml + quoteHtml + (plan.director ? '' : commHtml + colorHtml + aiHtml)}</div>`;
 }
 
 // 生成分镜脚本

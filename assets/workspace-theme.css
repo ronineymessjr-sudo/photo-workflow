@@ -105,6 +105,33 @@ input::placeholder, textarea::placeholder { color: var(--t3); opacity: 1; }
 }
 #tab-gen .panel, #tab-gen .panel:hover { box-shadow: none; border-radius: 8px; }
 #tab-gen .btn-p { color: var(--bg); }
+.jev-review {
+    margin: 0 0 16px;
+    padding: 12px 14px;
+    border: 1px solid var(--plan-border);
+    border-left: 3px solid var(--plan-state-info);
+    border-radius: 6px;
+    background: var(--plan-surface-soft);
+    color: var(--plan-ink);
+    font: 400 13px/1.55 var(--font-sans);
+}
+.jev-review summary,
+.jev-review-muted {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+.jev-review summary { cursor: pointer; }
+.jev-review summary::marker { color: var(--plan-muted); }
+.jev-review strong { font-weight: 600; }
+.jev-review span,
+.jev-review p { color: var(--plan-muted); }
+.jev-review p { margin: 10px 0 0; }
+.jev-review-ready { border-left-color: var(--plan-state-ok); }
+.jev-review-confirm { border-left-color: var(--plan-state-warn); }
+.jev-review-supplement { border-left-color: var(--plan-state-error); }
+.jev-review-muted { border-left-color: var(--plan-border-strong); }
 @media print {
     body { background: white; color: black; }
 }

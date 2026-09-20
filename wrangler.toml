@@ -13,3 +13,6 @@ ENVIRONMENT = "production"
 # SUPABASE_URL
 # SUPABASE_ANON_KEY
 # MINIMAX_API_KEY
+
+[ai]
+binding = "AI"
