@@ -1616,126 +1616,6 @@
             color: #fff;
             border-color: transparent;
         }
-        /* Role Switcher in Sidebar */
-        .role-switcher {
-            margin: .5rem .6rem;
-            padding: .6rem .8rem;
-            background: var(--bg-subtle);
-            border: 1px solid var(--border-subtle2);
-            border-radius: var(--radius-sm);
-            display: flex;
-            align-items: center;
-            gap: .6rem;
-            cursor: pointer;
-            transition: all .2s;
-        }
-        .role-switcher:hover {
-            background: var(--bg-subtle2);
-            border-color: rgba(212,132,10,0.3);
-        }
-        .role-switcher-icon {
-            font-size: 1.2rem;
-        }
-        .role-switcher-info {
-            flex: 1;
-            min-width: 0;
-        }
-        .role-switcher-label {
-            font-size: .65rem;
-            color: var(--t3);
-            text-transform: uppercase;
-            letter-spacing: .05em;
-        }
-        .role-switcher-name {
-            font-size: .8rem;
-            font-weight: 600;
-            color: var(--t1);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .role-switcher-arrow {
-            color: var(--t3);
-            font-size: .7rem;
-            transition: transform .2s;
-        }
-        .role-switcher:hover .role-switcher-arrow { transform: translateX(2px); }
-        /* Role dropdown modal */
-        .role-modal {
-            position: fixed;
-            inset: 0;
-            z-index: 600;
-            background: rgba(0,0,0,0.7);
-            backdrop-filter: blur(10px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-        }
-        .role-modal.show { display: flex; }
-        .role-modal-content {
-            background: var(--bg-secondary);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 20px;
-            padding: 2rem;
-            width: 90%;
-            max-width: 500px;
-        }
-        .role-modal-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            text-align: center;
-            margin-bottom: 1.5rem;
-            color: var(--t1);
-        }
-        .role-modal-list {
-            display: flex;
-            flex-direction: column;
-            gap: .75rem;
-        }
-        .role-modal-item {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            width: 100%;
-            text-align: left;
-            color: inherit;
-            font-family: inherit;
-            padding: 1rem 1.25rem;
-            background: var(--bg-subtle);
-            border: 1px solid var(--border-subtle2);
-            border-radius: var(--radius);
-            cursor: pointer;
-            transition: all .2s;
-        }
-        .role-modal-item:hover {
-            background: var(--bg-subtle2);
-            border-color: rgba(212,132,10,0.3);
-        }
-        .role-modal-item.active {
-            border-color: rgba(212,132,10,0.5);
-            background: rgba(212,132,10,0.08);
-        }
-        .role-modal-item-icon { font-size: 1.5rem; }
-        .role-modal-item-info { flex: 1; }
-        .role-modal-item-name { font-size: .95rem; font-weight: 600; color: var(--t1); }
-        .role-modal-item-desc { font-size: .72rem; color: var(--t3); margin-top: .2rem; }
-        .role-modal-item-check { color: #d4840a; font-size: 1.2rem; }
-        .role-modal-close {
-            display: block;
-            width: 100%;
-            margin-top: 1rem;
-            padding: .65rem;
-            background: var(--bg-subtle);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: var(--radius);
-            color: var(--t2);
-            font-size: .85rem;
-            font-family: inherit;
-            cursor: pointer;
-            transition: all .2s;
-        }
-        .role-modal-close:hover { background: rgba(255,255,255,0.1); }
-
         /* ===== Login Overlay Enhancements ===== */
         @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(24px); }
@@ -3014,18 +2894,6 @@
     </div>
 </div>
 
-<div class="role-modal" id="roleModal" onclick="if(event.target===this)closeRoleSwitcher()">
-    <div class="role-modal-content">
-        <h2 class="role-modal-title">切换工作身份</h2>
-        <div class="role-modal-list">
-            <button class="role-modal-item" data-role-choice="photographer" onclick="switchRole('photographer')"><span class="role-modal-item-icon">📷</span><span class="role-modal-item-info"><span class="role-modal-item-name">摄影师</span><span class="role-modal-item-desc">创建方案、管理日程和交付</span></span><span class="role-modal-item-check">✓</span></button>
-            <button class="role-modal-item" data-role-choice="model" onclick="switchRole('model')"><span class="role-modal-item-icon">◉</span><span class="role-modal-item-info"><span class="role-modal-item-name">模特</span><span class="role-modal-item-desc">查看拍摄通知、地点和动作重点</span></span><span class="role-modal-item-check">✓</span></button>
-            <button class="role-modal-item" data-role-choice="assistant" onclick="switchRole('assistant')"><span class="role-modal-item-icon">☑</span><span class="role-modal-item-info"><span class="role-modal-item-name">摄影助理</span><span class="role-modal-item-desc">准备器材、场地、日程与现场事项</span></span><span class="role-modal-item-check">✓</span></button>
-        </div>
-        <button class="role-modal-close" onclick="closeRoleSwitcher()">取消</button>
-    </div>
-</div>
-
 <div class="app-layout" id="appLayout" style="display:none;">
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
@@ -3033,11 +2901,6 @@
             <span class="brand-dot"></span>
             <span class="brand-text">Photo<span>Atelier</span></span>
         </div>
-        <button class="role-switcher" onclick="openRoleSwitcher()" type="button">
-            <span class="role-switcher-icon" id="roleSwitcherIcon">📷</span>
-            <span class="role-switcher-info"><span class="role-switcher-label">当前身份</span><span class="role-switcher-name" id="roleSwitcherName">摄影师</span></span>
-            <span class="role-switcher-arrow">›</span>
-        </button>
         <nav class="sidebar-nav">
             <button class="nav-item" data-tab="role-home" data-role="photographer,model,assistant">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12l9-9 9 9"/><path d="M5 10v11h14V10"/><path d="M9 21v-7h6v7"/></svg>
@@ -3106,7 +2969,7 @@
                     <button class="lang-btn active" onclick="setLanguage('zh')" data-lang="zh">中文</button>
                     <button class="lang-btn" onclick="setLanguage('en')" data-lang="en">EN</button>
                 </div>
-                <button id="userAvatar" onclick="openRoleSwitcher()" title="切换身份" style="width:28px;height:28px;border-radius:50%;background:var(--ac);border:0;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:600;color:#121212;cursor:pointer;">摄</button>
+                <button id="userAvatar" onclick="showTab('settings')" title="个人设置" style="width:28px;height:28px;border-radius:50%;background:var(--ac);border:0;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:600;color:#121212;cursor:pointer;">摄</button>
             </div>
         </header>
 
@@ -3978,6 +3841,11 @@
                                     </div>
                                 </div>
                                 <div style="display:flex;gap:.5rem;margin-top:.75rem;">
+                                    <select id="settingsRoleSelect" onchange="changeSettingsRole(this.value)" aria-label="选择工作身份" style="max-width:160px;">
+                                        <option value="photographer">摄影师</option>
+                                        <option value="model">模特</option>
+                                        <option value="assistant">摄影助理</option>
+                                    </select>
                                     <button class="btn btn-s btn-sm" onclick="logout()" style="color:var(--er);border-color:var(--er);">退出登录</button>
                                 </div>
                             </div>
@@ -4751,29 +4619,16 @@ function getCurrentRole() {
     return ROLE_CONFIG[saved] ? saved : 'photographer';
 }
 
-function openRoleSwitcher() {
-    const role = getCurrentRole();
-    document.querySelectorAll('[data-role-choice]').forEach(function(item) {
-        item.classList.toggle('active', item.dataset.roleChoice === role);
-        const check = item.querySelector('.role-modal-item-check');
-        if (check) check.style.visibility = item.dataset.roleChoice === role ? 'visible' : 'hidden';
-    });
-    const modal = $('roleModal');
-    if (modal) modal.classList.add('show');
-}
-
-function closeRoleSwitcher() {
-    const modal = $('roleModal');
-    if (modal) modal.classList.remove('show');
-}
-
 function switchRole(nextRole) {
     if (!ROLE_CONFIG[nextRole]) return;
     localStorage.setItem('pw_role', nextRole);
-    closeRoleSwitcher();
     applyRoleExperience(nextRole);
     showTab('role-home');
     toast('已切换为' + ROLE_CONFIG[nextRole].name, 'ok');
+}
+
+function changeSettingsRole(nextRole) {
+    switchRole(nextRole);
 }
 
 function applyRoleExperience(role) {
@@ -4784,8 +4639,6 @@ function applyRoleExperience(role) {
         const roles = String(el.dataset.role || '').split(',');
         el.style.display = roles.includes(role) ? '' : 'none';
     });
-    if ($('roleSwitcherIcon')) $('roleSwitcherIcon').textContent = config.icon;
-    if ($('roleSwitcherName')) $('roleSwitcherName').textContent = config.name;
     if ($('userAvatar')) $('userAvatar').textContent = config.avatar;
     renderRoleHome(role);
     const active = document.querySelector('.nav-item.active');
@@ -11824,6 +11677,8 @@ function loadSettingsData() {
         const nameEl = document.getElementById('settingsUserName');
         const emailEl = document.getElementById('settingsUserEmail');
         const roleEl = document.getElementById('settingsUserRole');
+        const roleSelect = document.getElementById('settingsRoleSelect');
+        if (roleSelect) roleSelect.value = role;
         
         if (userStr) {
             const user = JSON.parse(userStr);

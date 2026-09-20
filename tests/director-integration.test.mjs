@@ -235,4 +235,9 @@ test('all inline scripts parse and submit awaits director, shot list reuses resp
     assert.match(html, /function openScheduleMonth\(dateValue\)/);
     assert.match(html, /function setCalendarMonth\(delta\)/);
     assert.match(html, /已同步给摄影师、模特、摄影助理/);
+    assert.doesNotMatch(html, /创建方案、管理日程和交付/);
+    assert.doesNotMatch(html, /查看拍摄通知、地点和动作重点/);
+    assert.doesNotMatch(html, /准备器材、场地、日程与现场事项/);
+    assert.doesNotMatch(html, /class="role-modal"/);
+    assert.match(html, /id="settingsRoleSelect"/);
 });
