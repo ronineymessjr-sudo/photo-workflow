@@ -68,7 +68,8 @@ export async function evaluateJevPlan(plan, env, { now = new Date().toISOString(
         const answers = response && response.answers && typeof response.answers === 'object' ? response.answers : {};
         if (!hasValidAnswers(questions, answers)) return { version: REVIEW_VERSION, status: 'unavailable', reason: 'invalid_response', evaluatedAt: now };
         return { version: REVIEW_VERSION, status: 'ok', model: response.model || 'typesafe/jev', answers, ...verdict(answers), evaluatedAt: now };
-    } catch (_) {
+    } catch (error) {
+        console.error('Jev evaluation failed', { name: error && error.name, message: error && error.message });
         return { version: REVIEW_VERSION, status: 'unavailable', reason: 'evaluation_failed', evaluatedAt: now };
     }
 }
