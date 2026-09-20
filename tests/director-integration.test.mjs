@@ -240,4 +240,7 @@ test('all inline scripts parse and submit awaits director, shot list reuses resp
     assert.doesNotMatch(html, /准备器材、场地、日程与现场事项/);
     assert.doesNotMatch(html, /class="role-modal"/);
     assert.match(html, /id="settingsRoleSelect"/);
+    assert.match(html, /id="schedPlanId"/);
+    assert.match(html, /function applySchedulePlanSelection\(\)/);
+    assert.match(html, /保存后会出现在摄影师日程，并同步到模特和摄影助理工作台/);
 });

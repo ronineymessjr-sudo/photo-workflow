@@ -1885,6 +1885,36 @@
             animation: modalSlideIn 0.25s ease;
         }
         .modal.closing .modal-content { animation: modalSlideOut 0.15s ease forwards; }
+        #scheduleModal {
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        #scheduleModal .modal-content {
+            width: min(100%, 460px);
+            margin: 0;
+            padding: 1.25rem;
+            background: var(--bg2);
+            border: 1px solid var(--bd2);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-hover);
+        }
+        #scheduleModal .schedule-form-field { margin-bottom: .8rem; }
+        #scheduleModal .schedule-form-field label {
+            display: block;
+            margin-bottom: .3rem;
+            color: var(--t2);
+            font-size: .76rem;
+        }
+        #scheduleModal input, #scheduleModal select {
+            width: 100%;
+            padding: .58rem .65rem;
+            background: var(--bg3);
+            border: 1px solid var(--bd2);
+            border-radius: var(--radius);
+            color: var(--t1);
+            font-family: inherit;
+        }
         @keyframes slideInLeft {
             from { opacity: 0; transform: translateX(-20px); }
             to { opacity: 1; transform: translateX(0); }
@@ -10937,11 +10967,12 @@ function editSchedule(id) {
     document.getElementById('schedTitle').value = sched.title || '';
     document.getElementById('schedTime').value = sched.time || '';
     document.getElementById('schedLocation').value = sched.location || '';
+    populateSchedulePlanOptions(sched.planId || '');
     window._editingScheduleId = id;
     var modal = document.getElementById('scheduleModal');
     var title = modal.querySelector('h3');
     if (title) title.textContent = '编辑日程';
-    modal.style.display = 'block';
+    modal.style.display = 'flex';
 }
 
 function exportSchedule(id) {
@@ -10964,24 +10995,46 @@ function submitSchedule() {
     var title = document.getElementById('schedTitle').value;
     var time = document.getElementById('schedTime').value;
     var location = document.getElementById('schedLocation').value;
+    var planId = document.getElementById('schedPlanId').value;
+    var linkedPlan = getPlans().find(function(plan) { return String(plan.id) === String(planId); });
+    if (linkedPlan) {
+        title = title || linkedPlan.title || linkedPlan.input?.theme || '';
+        location = location || linkedPlan.input?.scene || '';
+    }
     if (!date || !title) { toast('日期和主题为必填项', 'er'); return; }
     var schedules = sg(SK_SCHED) || [];
     var editId = window._editingScheduleId;
     if (editId) {
         var idx = schedules.findIndex(function(s) { return s.id === editId; });
         if (idx >= 0) {
-            schedules[idx] = { ...schedules[idx], date: date, title: title, time: time, location: location };
+            schedules[idx] = { ...schedules[idx], date: date, title: title, time: time, location: location,
+                planId: planId || '', audience: ['photographer', 'model', 'assistant'],
+                source: linkedPlan ? 'linked-plan' : (schedules[idx].source || 'manual'),
+                planSummary: linkedPlan ? buildSchedulePlanSummary(linkedPlan) : schedules[idx].planSummary };
             ss(SK_SCHED, schedules);
             UndoManager.save({schedules: schedules, plans: sg(SK.P) || []}, 'edit_schedule');
+            if (linkedPlan) markPlanScheduled(linkedPlan, schedules[idx]);
+            _calendarCursor = new Date(date + 'T00:00:00');
+            renderCalendar();
             renderSchedules();
+            renderSavedPlanLibrary();
+            renderRoleHome(getCurrentRole());
             toast('日程已更新', 'ok');
         }
         window._editingScheduleId = null;
     } else {
-        var newSched = { id: Date.now().toString(), date: date, title: title, time: time, location: location, status: 'pending' };
+        var newSched = { id: crypto.randomUUID(), date: date, title: title, time: time, location: location, status: 'pending',
+            planId: planId || '', audience: ['photographer', 'model', 'assistant'],
+            source: linkedPlan ? 'linked-plan' : 'manual',
+            planSummary: linkedPlan ? buildSchedulePlanSummary(linkedPlan) : null };
         saveScheduleWithUndo(newSched);
+        if (linkedPlan) markPlanScheduled(linkedPlan, newSched);
+        _calendarCursor = new Date(date + 'T00:00:00');
+        renderCalendar();
         renderSchedules();
-        toast('日程已添加', 'ok');
+        renderSavedPlanLibrary();
+        renderRoleHome(getCurrentRole());
+        toast('日程已添加，并同步给摄影师、模特和摄影助理', 'ok');
     }
     closeScheduleModal();
 }
@@ -10993,6 +11046,7 @@ function closeScheduleModal() {
     document.getElementById('schedTitle').value = '';
     document.getElementById('schedTime').value = '';
     document.getElementById('schedLocation').value = '';
+    document.getElementById('schedPlanId').value = '';
     window._editingScheduleId = null;
     var title = modal.querySelector('h3');
     if (title) title.textContent = '添加日程';
@@ -11072,30 +11126,54 @@ function initDragAndDrop() {
     });
 }
 
-window.addSchedule = function() {
-    document.getElementById('scheduleModal').style.display = 'flex';
+function buildSchedulePlanSummary(plan) {
+    return { theme: plan.input?.theme || plan.title || '', scene: plan.input?.scene || '',
+        modelDesc: plan.input?.modelDesc || '', shots: (plan.shotList || plan.shots || []).slice(0, 6) };
+}
+
+function markPlanScheduled(plan, schedule) {
+    plan.status = 'scheduled';
+    plan.scheduleId = schedule.id;
+    plan.scheduledDate = schedule.date;
+    savePlans(getPlans().map(item => String(item.id) === String(plan.id) ? plan : item));
+}
+
+function populateSchedulePlanOptions(selectedId) {
+    const select = document.getElementById('schedPlanId');
+    if (!select) return;
+    select.innerHTML = '<option value="">不关联方案</option>' + getPlans().map(function(plan) {
+        return `<option value="${escHtml(plan.id)}">${escHtml(plan.title || plan.input?.theme || '未命名方案')}</option>`;
+    }).join('');
+    select.value = selectedId || '';
+}
+
+function applySchedulePlanSelection() {
+    const planId = document.getElementById('schedPlanId').value;
+    const plan = getPlans().find(item => String(item.id) === String(planId));
+    if (!plan) return;
+    document.getElementById('schedTitle').value = plan.title || plan.input?.theme || '';
+    document.getElementById('schedLocation').value = plan.input?.scene || '';
+}
+
+window.addSchedule = function(dateValue, planId) {
+    window._editingScheduleId = null;
+    const modal = document.getElementById('scheduleModal');
+    const title = modal.querySelector('h3');
+    if (title) title.textContent = '添加拍摄日程';
+    populateSchedulePlanOptions(planId || '');
+    document.getElementById('schedDate').value = dateValue || new Date().toISOString().slice(0, 10);
+    document.getElementById('schedTitle').value = '';
+    document.getElementById('schedTime').value = '';
+    document.getElementById('schedLocation').value = '';
+    if (planId) applySchedulePlanSelection();
+    modal.style.display = 'flex';
 };
 
 window.showDaySchedules = function(dateStr) {
     const schedules = sg(SK_SCHED) || [];
     const daySchedules = schedules.filter(s => s.date === dateStr);
     if (daySchedules.length === 0) {
-        if (confirm(`${dateStr} 暂无日程，是否添加？`)) {
-            const title = prompt('拍摄主题:');
-            if (title) {
-                schedules.push({
-                    id: Date.now().toString(),
-                    date: dateStr, title,
-                    time: prompt('拍摄时间 (可选):') || '',
-                    location: prompt('拍摄地点 (可选):') || '',
-                    createdAt: new Date().toISOString()
-                });
-                ss(SK_SCHED, schedules);
-                renderCalendar();
-                renderSchedules();
-                toast('日程已添加', 'ok');
-            }
-        }
+        addSchedule(dateStr);
     } else {
         alert(`${dateStr} 日程:\n${daySchedules.map(s => `• ${s.title} ${s.time} ${s.location}`).join('\n')}`);
     }
@@ -11887,12 +11965,14 @@ window.addEventListener('online', function() { toast('网络已恢复', 'ok'); }
 
 <!-- 日程添加模态框 -->
 <div id="scheduleModal" class="modal" style="display:none;">
-  <div class="modal-content" style="max-width: 400px;">
-    <h3 style="margin-bottom: 1rem; font-family: var(--font-serif);">添加日程</h3>
-    <input type="date" id="schedDate" style="width: 100%; margin-bottom: 0.75rem; padding: 0.5rem; background: var(--bg-tertiary); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--t1);">
-    <input type="text" id="schedTitle" placeholder="拍摄主题" style="width: 100%; margin-bottom: 0.75rem; padding: 0.5rem; background: var(--bg-tertiary); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--t1);">
-    <input type="time" id="schedTime" style="width: 100%; margin-bottom: 0.75rem; padding: 0.5rem; background: var(--bg-tertiary); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--t1);">
-    <input type="text" id="schedLocation" placeholder="拍摄地点（可选）" style="width: 100%; margin-bottom: 1rem; padding: 0.5rem; background: var(--bg-tertiary); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--t1);">
+  <div class="modal-content">
+    <h3 style="margin-bottom: 1rem;">添加拍摄日程</h3>
+    <div class="schedule-form-field"><label for="schedPlanId">关联方案（可选）</label><select id="schedPlanId" onchange="applySchedulePlanSelection()"><option value="">不关联方案</option></select></div>
+    <div class="schedule-form-field"><label for="schedDate">拍摄日期</label><input type="date" id="schedDate"></div>
+    <div class="schedule-form-field"><label for="schedTitle">拍摄主题</label><input type="text" id="schedTitle" placeholder="例如：城市夜景人像"></div>
+    <div class="schedule-form-field"><label for="schedTime">开始时间（可选）</label><input type="time" id="schedTime"></div>
+    <div class="schedule-form-field"><label for="schedLocation">拍摄地点（可选）</label><input type="text" id="schedLocation" placeholder="具体场地或集合地点"></div>
+    <p style="font-size:.72rem;color:var(--t3);margin:.25rem 0 1rem;">保存后会出现在摄影师日程，并同步到模特和摄影助理工作台。</p>
     <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
       <button onclick="closeScheduleModal()" style="padding: 0.5rem 1rem; background: transparent; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: var(--t2); cursor: pointer;">取消</button>
       <button onclick="submitSchedule()" style="padding: 0.5rem 1rem; background: var(--ac); border: none; border-radius: 8px; color: #000; cursor: pointer; font-weight: 600;">保存</button>
