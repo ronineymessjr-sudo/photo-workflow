@@ -231,4 +231,8 @@ test('all inline scripts parse and submit awaits director, shot list reuses resp
     assert.match(html, /photographer: \{ name: '摄影师'/);
     assert.match(html, /model: \{ name: '模特'/);
     assert.match(html, /assistant: \{ name: '摄影助理'/);
+    assert.match(html, /audience: \['photographer', 'model', 'assistant'\]/);
+    assert.match(html, /function openScheduleMonth\(dateValue\)/);
+    assert.match(html, /function setCalendarMonth\(delta\)/);
+    assert.match(html, /已同步给摄影师、模特、摄影助理/);
 });

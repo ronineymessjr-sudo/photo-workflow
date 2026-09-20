@@ -129,12 +129,38 @@ async function handleLogin(env, body) {
 
 async function handleGetSchedules(env, uid) {
     const data = await sbQuery(env, `schedules?user_id=eq.${uid}&select=*&order=date.asc`);
-    return { status: 200, body: { schedules: data || [] } };
+    const schedules = (data || []).map(row => {
+        let metadata = {};
+        try { metadata = row.description ? JSON.parse(row.description) : {}; } catch (_) {}
+        return {
+            ...row,
+            planId: metadata.planId || row.plan_id || '',
+            audience: metadata.audience || ['photographer', 'model', 'assistant'],
+            planSummary: metadata.planSummary || null,
+        };
+    });
+    return { status: 200, body: { schedules } };
 }
 
 async function handleCreateSchedule(env, uid, body) {
-    const data = await sbQuery(env, 'schedules', 'POST', { ...body, user_id: uid });
-    return { status: 201, body: { schedule: data[0] } };
+    const metadata = {
+        planId: body.planId || body.plan_id || '',
+        audience: Array.isArray(body.audience) ? body.audience : ['photographer', 'model', 'assistant'],
+        planSummary: body.planSummary || null,
+    };
+    const record = {
+        id: body.id,
+        user_id: uid,
+        date: body.date,
+        title: body.title,
+        time: body.time || null,
+        location: body.location || null,
+        description: JSON.stringify(metadata),
+        status: body.status || 'pending',
+    };
+    const data = await sbQuery(env, 'schedules', 'POST', record);
+    const saved = data && data[0] ? data[0] : record;
+    return { status: 201, body: { schedule: { ...saved, ...metadata } } };
 }
 
 async function handleDeleteSchedule(env, uid, id) {

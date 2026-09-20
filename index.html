@@ -3932,7 +3932,13 @@
                 <div class="panel" style="margin-bottom:1rem;">
                     <div class="p-head" style="justify-content:space-between">
                         <h2 data-i18n="calendar.title">拍摄日程</h2>
-                        <button class="btn btn-s btn-sm" onclick="addSchedule()" data-i18n="calendar.add">+ 添加日程</button>
+                        <div style="display:flex;align-items:center;gap:.5rem;">
+                            <button class="btn btn-s btn-sm" onclick="setCalendarMonth(-1)" title="上个月" aria-label="上个月">‹</button>
+                            <span id="calendarMonthLabel" style="min-width:76px;text-align:center;font-size:.78rem;color:var(--t2);"></span>
+                            <button class="btn btn-s btn-sm" onclick="setCalendarMonth(1)" title="下个月" aria-label="下个月">›</button>
+                            <button class="btn btn-s btn-sm" onclick="goCalendarToday()">今天</button>
+                            <button class="btn btn-s btn-sm" onclick="addSchedule()" data-i18n="calendar.add">+ 添加日程</button>
+                        </div>
                     </div>
                     <div class="p-body">
                         <div id="calendarGrid" class="calendar-grid"></div>
@@ -4242,17 +4248,19 @@ if (document.getElementById('loginOverlay')) {
             return plan;
         },
         async getSchedules() {
-            return safeJsonParse('pw_schedules', []);
+            return { schedules: safeJsonParse('pw_schedule', []) };
         },
         async createSchedule(schedule) {
-            const schedules = safeJsonParse('pw_schedules', []);
-            schedules.push(schedule);
-            localStorage.setItem('pw_schedules', JSON.stringify(schedules));
-            return schedule;
+            const schedules = safeJsonParse('pw_schedule', []);
+            const index = schedules.findIndex(item => String(item.id) === String(schedule.id));
+            if (index >= 0) schedules[index] = schedule;
+            else schedules.push(schedule);
+            localStorage.setItem('pw_schedule', JSON.stringify(schedules));
+            return { schedule };
         },
         async deleteSchedule(id) {
-            const schedules = safeJsonParse('pw_schedules', []).filter(item => item.id !== id);
-            localStorage.setItem('pw_schedules', JSON.stringify(schedules));
+            const schedules = safeJsonParse('pw_schedule', []).filter(item => String(item.id) !== String(id));
+            localStorage.setItem('pw_schedule', JSON.stringify(schedules));
             return { success: true };
         },
         async getMessages() {
@@ -4600,7 +4608,10 @@ function closeShortcutsModal(e) {
             if (schedules.schedules) {
                 // Merge with local data
                 const local = safeJsonParse('pw_schedule', []);
-                const merged = [...local, ...schedules.schedules.filter(s => !local.find(l => l.id === s.id))];
+                const remote = schedules.schedules.map(function(item) {
+                    return { ...item, planId: item.planId || item.plan_id || '', audience: item.audience || ['photographer', 'model', 'assistant'] };
+                });
+                const merged = [...local, ...remote.filter(s => !local.find(l => String(l.id) === String(s.id)))];
                 localStorage.setItem('pw_schedule', JSON.stringify(merged));
                 renderCalendar();
                 renderSchedules();
@@ -4781,16 +4792,24 @@ function applyRoleExperience(role) {
     if (!active || active.style.display === 'none') showTab('role-home');
 }
 
-function getRoleSchedules() {
+function getRoleSchedules(role) {
     const primary = sg('pw_schedule') || [];
     const legacy = sg('pw_schedules') || [];
     const seen = new Set();
-    return primary.concat(legacy).filter(function(item) {
+    const merged = primary.concat(legacy).filter(function(item) {
         const key = String(item.id || [item.planId, item.date, item.title].join('|'));
         if (seen.has(key)) return false;
         seen.add(key);
         return true;
     }).sort(function(a, b) { return String(a.date || '').localeCompare(String(b.date || '')); });
+    if (legacy.length) {
+        ss('pw_schedule', merged);
+        localStorage.removeItem('pw_schedules');
+    }
+    return role ? merged.filter(function(item) {
+        const audience = Array.isArray(item.audience) && item.audience.length ? item.audience : ['photographer', 'model', 'assistant'];
+        return audience.includes(role);
+    }) : merged;
 }
 
 function renderRoleHome(role) {
@@ -4803,24 +4822,28 @@ function renderRoleHome(role) {
     const equipment = sg(SK.EQ) || [];
     const venues = sg(SK.V) || [];
     const today = new Date().toISOString().slice(0, 10);
-    const upcoming = getRoleSchedules().filter(function(item) { return !item.date || item.date >= today; }).slice(0, 5);
-    const scheduleRows = upcoming.map(function(item) {
+    const assigned = getRoleSchedules(role).filter(function(item) { return item.status !== 'completed'; });
+    const upcoming = assigned.filter(function(item) { return !item.date || item.date >= today; });
+    const overdue = assigned.filter(function(item) { return item.date && item.date < today; }).reverse();
+    const visibleSchedules = upcoming.concat(overdue).slice(0, 5);
+    const scheduleRows = visibleSchedules.map(function(item) {
         const plan = plans.find(function(candidate) { return String(candidate.id) === String(item.planId); });
-        const shots = (plan && (plan.shotList || plan.shots)) || [];
+        const shots = (plan && (plan.shotList || plan.shots)) || (item.planSummary && item.planSummary.shots) || [];
         const shotHints = shots.slice(0, 3).map(function(shot) { return escHtml(shot.description || shot.action || shot.title || '按分镜完成动作'); }).join(' · ');
-        return `<div class="library-plan-session" style="align-items:flex-start;gap:.75rem;"><div style="min-width:88px;color:var(--t2);">${escHtml(item.date || '待定日期')}<br><span style="font-size:.72rem;color:var(--t3);">${escHtml(item.time || '时间待定')}</span></div><div style="flex:1;"><strong>${escHtml(item.title || (plan && plan.title) || '未命名拍摄')}</strong><div style="font-size:.76rem;color:var(--t3);margin-top:.25rem;">${escHtml(item.location || (plan && plan.input && plan.input.scene) || '地点待确认')}</div>${shotHints ? `<div style="font-size:.76rem;color:var(--t2);margin-top:.35rem;">动作重点：${shotHints}</div>` : ''}</div></div>`;
+        const isOverdue = item.date && item.date < today;
+        return `<div class="library-plan-session" style="align-items:flex-start;gap:.75rem;"><div style="min-width:88px;color:var(--t2);">${escHtml(item.date || '待定日期')}<br><span style="font-size:.72rem;color:var(--t3);">${escHtml(item.time || '时间待定')}</span></div><div style="flex:1;"><strong>${escHtml(item.title || (plan && plan.title) || '未命名拍摄')}</strong>${isOverdue ? '<span style="font-size:.68rem;color:var(--warn);margin-left:.4rem;">待补拍/待完成</span>' : ''}<div style="font-size:.76rem;color:var(--t3);margin-top:.25rem;">${escHtml(item.location || (plan && plan.input && plan.input.scene) || '地点待确认')}</div>${shotHints ? `<div style="font-size:.76rem;color:var(--t2);margin-top:.35rem;">动作重点：${shotHints}</div>` : ''}${plan ? `<button class="btn btn-s btn-sm" style="margin-top:.5rem;" onclick="loadPlan('${plan.id}')">查看完整方案</button>` : ''}</div></div>`;
     }).join('');
     const empty = '<div class="eq-empty">暂时没有已安排的拍摄</div>';
 
     if (role === 'model') {
-        content.innerHTML = `<div class="stats-row"><div class="stat-card"><div class="stat-num">${upcoming.length}</div><div class="stat-label">待参与拍摄</div></div><div class="stat-card"><div class="stat-num">${plans.length}</div><div class="stat-label">可查看方案</div></div></div><div class="p-head" style="padding-left:0;padding-right:0;"><h3>我的拍摄安排</h3></div>${scheduleRows || empty}<div style="display:flex;gap:.5rem;margin-top:1rem;"><button class="btn btn-p btn-sm" onclick="showTab('gen')">创建个人练习方案</button><button class="btn btn-s btn-sm" onclick="showTab('message')">查看通知</button></div>`;
+        content.innerHTML = `<div class="stats-row"><div class="stat-card"><div class="stat-num">${assigned.length}</div><div class="stat-label">待参与拍摄</div></div><div class="stat-card"><div class="stat-num">${plans.length}</div><div class="stat-label">可查看方案</div></div></div><div class="p-head" style="padding-left:0;padding-right:0;"><h3>我的拍摄安排</h3></div>${scheduleRows || empty}<div style="display:flex;gap:.5rem;margin-top:1rem;"><button class="btn btn-p btn-sm" onclick="showTab('gen')">创建个人练习方案</button><button class="btn btn-s btn-sm" onclick="showTab('message')">查看通知</button></div>`;
         return;
     }
     if (role === 'assistant') {
-        content.innerHTML = `<div class="stats-row"><div class="stat-card"><div class="stat-num">${upcoming.length}</div><div class="stat-label">待执行拍摄</div></div><div class="stat-card"><div class="stat-num">${equipment.length}</div><div class="stat-label">已登记器材</div></div><div class="stat-card"><div class="stat-num">${venues.length}</div><div class="stat-label">备选场地</div></div></div><div class="p-head" style="padding-left:0;padding-right:0;"><h3>近期准备事项</h3></div>${scheduleRows || empty}<div style="font-size:.78rem;color:var(--t2);margin-top:1rem;padding:.75rem;background:var(--bg-subtle);border-radius:var(--radius);">现场核对：场地许可 · 相机与镜头 · 电池与存储卡 · 灯光附件 · 人员到场时间</div><div style="display:flex;gap:.5rem;margin-top:1rem;"><button class="btn btn-p btn-sm" onclick="showTab('calendar')">管理日程</button><button class="btn btn-s btn-sm" onclick="showTab('venue')">检查资源</button></div>`;
+        content.innerHTML = `<div class="stats-row"><div class="stat-card"><div class="stat-num">${assigned.length}</div><div class="stat-label">待执行拍摄</div></div><div class="stat-card"><div class="stat-num">${equipment.length}</div><div class="stat-label">已登记器材</div></div><div class="stat-card"><div class="stat-num">${venues.length}</div><div class="stat-label">备选场地</div></div></div><div class="p-head" style="padding-left:0;padding-right:0;"><h3>近期准备事项</h3></div>${scheduleRows || empty}<div style="font-size:.78rem;color:var(--t2);margin-top:1rem;padding:.75rem;background:var(--bg-subtle);border-radius:var(--radius);">现场核对：场地许可 · 相机与镜头 · 电池与存储卡 · 灯光附件 · 人员到场时间</div><div style="display:flex;gap:.5rem;margin-top:1rem;"><button class="btn btn-p btn-sm" onclick="showTab('calendar')">管理日程</button><button class="btn btn-s btn-sm" onclick="showTab('venue')">检查资源</button></div>`;
         return;
     }
-    content.innerHTML = `<div class="stats-row"><div class="stat-card"><div class="stat-num">${plans.length}</div><div class="stat-label">已保存方案</div></div><div class="stat-card"><div class="stat-num">${upcoming.length}</div><div class="stat-label">近期拍摄</div></div><div class="stat-card"><div class="stat-num">${equipment.length + venues.length}</div><div class="stat-label">可用资源</div></div></div><div class="p-head" style="padding-left:0;padding-right:0;"><h3>下一步工作</h3></div>${scheduleRows || empty}<div style="display:flex;gap:.5rem;margin-top:1rem;"><button class="btn btn-p btn-sm" onclick="showTab('gen')">新建拍摄方案</button><button class="btn btn-s btn-sm" onclick="showTab('tpl')">打开方案库</button><button class="btn btn-s btn-sm" onclick="showTab('calendar')">安排日程</button></div>`;
+    content.innerHTML = `<div class="stats-row"><div class="stat-card"><div class="stat-num">${plans.length}</div><div class="stat-label">已保存方案</div></div><div class="stat-card"><div class="stat-num">${assigned.length}</div><div class="stat-label">待执行拍摄</div></div><div class="stat-card"><div class="stat-num">${equipment.length + venues.length}</div><div class="stat-label">可用资源</div></div></div><div class="p-head" style="padding-left:0;padding-right:0;"><h3>下一步工作</h3></div>${scheduleRows || empty}<div style="display:flex;gap:.5rem;margin-top:1rem;"><button class="btn btn-p btn-sm" onclick="showTab('gen')">新建拍摄方案</button><button class="btn btn-s btn-sm" onclick="showTab('tpl')">打开方案库</button><button class="btn btn-s btn-sm" onclick="showTab('calendar')">安排日程</button></div>`;
 }
 
 // ===== Tabs =====
@@ -5508,7 +5531,7 @@ function renderSavedPlanLibrary() {
                 <input type="date" id="adopt-date-${index}" aria-label="${escHtml(plan.title)}的拍摄日期" required>
                 <button class="btn btn-s btn-sm" onclick="adoptSavedPlan('${plan.id}', 'adopt-date-${index}')">采用并安排拍摄</button>
             </div>
-            ${schedules.filter(s => String(s.planId) === String(plan.id)).map(s => `<div class="library-plan-session"><span>${escHtml(s.date)}</span><button class="btn btn-s btn-sm" onclick="openOnSetMode('${plan.id}')">进入当天拍摄</button></div>`).join('')}
+            ${schedules.filter(s => String(s.planId) === String(plan.id)).map(s => `<div class="library-plan-session"><span><strong>${escHtml(s.date)}</strong> · 已同步给摄影师、模特、摄影助理</span><div style="display:flex;gap:.4rem;"><button class="btn btn-s btn-sm" onclick="openScheduleMonth('${escHtml(s.date)}')">查看日程</button><button class="btn btn-s btn-sm" onclick="openOnSetMode('${plan.id}')">进入当天拍摄</button></div></div>`).join('')}
         </article>`;
     }).join('') : '<p class="reference-rights">暂无已保存方案</p>';
 }
@@ -5523,11 +5546,21 @@ function adoptSavedPlan(planId, dateInputId) {
         return;
     }
 
-    saveScheduleWithUndo({id: crypto.randomUUID(), planId: plan.id, date: input.value,
-        title: plan.title, location: plan.input?.scene || '', time: '', status: 'pending'});
+    const schedule = {id: crypto.randomUUID(), planId: plan.id, date: input.value,
+        title: plan.title, location: plan.input?.scene || '', time: '', status: 'pending',
+        audience: ['photographer', 'model', 'assistant'], source: 'adopted-plan',
+        planSummary: { theme: plan.input?.theme || plan.title, scene: plan.input?.scene || '', modelDesc: plan.input?.modelDesc || '', shots: (plan.shotList || plan.shots || []).slice(0, 6) }};
+    saveScheduleWithUndo(schedule);
+    plan.status = 'scheduled';
+    plan.scheduleId = schedule.id;
+    plan.scheduledDate = schedule.date;
+    savePlans(getPlans().map(item => String(item.id) === String(plan.id) ? plan : item));
+    _calendarCursor = new Date(input.value + 'T00:00:00');
+    renderCalendar();
     renderSchedules();
     renderSavedPlanLibrary();
-    toast('方案已采用并加入拍摄日程', 'ok');
+    renderRoleHome(getCurrentRole());
+    toast('已加入日程，并同步给摄影师、模特和摄影助理', 'ok');
 }
 
 function renderTpl() {
@@ -10782,9 +10815,24 @@ UndoManager.save({
 // Wrapper functions with undo support
 function saveScheduleWithUndo(schedule) {
     const schedules = sg(SK_SCHED) || [];
-    schedules.push(schedule);
+    const existingIndex = schedules.findIndex(item => String(item.id) === String(schedule.id));
+    if (existingIndex >= 0) schedules[existingIndex] = schedule;
+    else schedules.push(schedule);
     ss(SK_SCHED, schedules);
     UndoManager.save({schedules: schedules, plans: sg(SK.P) || []}, 'add_schedule');
+    if (!window.__PHOTOATELIER_LOCAL_MODE__ && !window.__PHOTOATELIER_GUEST_MODE__ && localStorage.getItem('pw_token')) {
+        window.api.createSchedule(schedule).then(function(result) {
+            const saved = result && result.schedule;
+            if (!saved) return;
+            const current = sg(SK_SCHED) || [];
+            const index = current.findIndex(item => String(item.id) === String(schedule.id));
+            if (index >= 0) current[index] = { ...current[index], ...saved, planId: saved.planId || saved.plan_id || schedule.planId, audience: schedule.audience };
+            ss(SK_SCHED, current);
+        }).catch(function(error) {
+            console.warn('日程云端同步失败，已保留本地日程:', error.message);
+            toast('日程已保存在本机，云端同步暂时失败', 'er');
+        });
+    }
 }
 
 function deleteScheduleWithUndo(id) {
@@ -10839,13 +10887,33 @@ function performRedo() {
     }
 }
 
+let _calendarCursor = new Date();
+
+function setCalendarMonth(delta) {
+    _calendarCursor = new Date(_calendarCursor.getFullYear(), _calendarCursor.getMonth() + delta, 1);
+    renderCalendar();
+}
+
+function goCalendarToday() {
+    _calendarCursor = new Date();
+    renderCalendar();
+}
+
+function openScheduleMonth(dateValue) {
+    const date = new Date(dateValue + 'T00:00:00');
+    if (!Number.isNaN(date.getTime())) _calendarCursor = date;
+    showTab('calendar');
+}
+
 function renderCalendar() {
     const grid = $('calendarGrid');
     if (!grid) return;
     
     const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth();
+    const year = _calendarCursor.getFullYear();
+    const month = _calendarCursor.getMonth();
+    const monthLabel = $('calendarMonthLabel');
+    if (monthLabel) monthLabel.textContent = `${year}年${month + 1}月`;
     
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
@@ -10868,7 +10936,7 @@ function renderCalendar() {
     for (let day = 1; day <= daysInMonth; day++) {
         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const hasEvent = schedules.some(s => s.date === dateStr);
-        const isToday = day === now.getDate();
+        const isToday = day === now.getDate() && month === now.getMonth() && year === now.getFullYear();
         
         html += `<div class="calendar-day${isToday ? ' today' : ''}" onclick="showDaySchedules('${dateStr}')">
             <span class="calendar-day-num">${day}</span>
@@ -10889,7 +10957,12 @@ function renderSchedules() {
     const schedules = sg(SK_SCHED) || [];
     const now = new Date();
     now.setHours(0, 0, 0, 0);
-    const upcoming = schedules.filter(s => new Date(s.date + 'T00:00:00') >= now).sort((a, b) => a.date.localeCompare(b.date));
+    const upcoming = schedules.slice().sort((a, b) => {
+        const aPast = new Date(a.date + 'T00:00:00') < now;
+        const bPast = new Date(b.date + 'T00:00:00') < now;
+        if (aPast !== bPast) return aPast ? 1 : -1;
+        return aPast ? String(b.date).localeCompare(String(a.date)) : String(a.date).localeCompare(String(b.date));
+    });
     
     if (upcoming.length === 0) {
         $('todoList').innerHTML = '<p style="color:var(--t3);text-align:center;padding:2rem">暂无拍摄日程</p>';
@@ -10898,7 +10971,8 @@ function renderSchedules() {
     
     const months = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
     $('todoList').innerHTML = upcoming.map((s, index) => {
-        const d = new Date(s.date);
+        const d = new Date(s.date + 'T00:00:00');
+        const isPast = d < now && s.status !== 'completed';
         return `<div class="schedule-item draggable" draggable="true" data-id="${s.id}" data-index="${index}">
             <div class="drag-handle" style="margin-right:0.5rem;">⋮⋮</div>
             <div class="schedule-date">
@@ -10906,8 +10980,9 @@ function renderSchedules() {
                 <div class="schedule-date-month">${months[d.getMonth()]}</div>
             </div>
             <div class="schedule-info">
-                <div class="schedule-title">${s.title}</div>
+                <div class="schedule-title">${escHtml(s.title)} ${isPast ? '<span style="font-size:.68rem;color:var(--warn);">待补拍/待完成</span>' : ''}</div>
                 <div class="schedule-meta">${s.time || ''} ${s.location || ''}</div>
+                ${Array.isArray(s.audience) ? '<div class="schedule-meta">已同步：摄影师 · 模特 · 摄影助理</div>' : ''}
             </div>
             ${s.planId && getPlans().some(p => String(p.id) === String(s.planId)) ? `<button class="btn btn-s btn-sm" onclick="openOnSetMode('${s.planId}')">进入拍摄</button>` : ''}
             <button class="btn-i2" onclick="deleteSchedule('${s.id}')">✕</button>
