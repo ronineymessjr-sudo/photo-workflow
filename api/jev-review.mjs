@@ -60,6 +60,16 @@ function hasValidAnswers(questions, answers) {
     });
 }
 
+function classifyEvaluationFailure(error) {
+    const message = String(error && error.message || '').toLowerCase();
+    if (/unauthor|forbidden|permission|access denied/.test(message)) return 'ai_access_denied';
+    if (/quota|rate.?limit|too many requests/.test(message)) return 'ai_rate_limited';
+    if (/model.*(?:not found|unavailable|unsupported)|unknown model/.test(message)) return 'ai_model_unavailable';
+    if (/invalid|schema|validation|bad request/.test(message)) return 'ai_invalid_request';
+    if (/timeout|timed out/.test(message)) return 'ai_timeout';
+    return 'evaluation_failed';
+}
+
 export async function evaluateJevPlan(plan, env, { now = new Date().toISOString() } = {}) {
     if (!env || !env.AI || typeof env.AI.run !== 'function') return { version: REVIEW_VERSION, status: 'unavailable', reason: 'ai_binding_not_configured', evaluatedAt: now };
     try {
@@ -70,7 +80,7 @@ export async function evaluateJevPlan(plan, env, { now = new Date().toISOString(
         return { version: REVIEW_VERSION, status: 'ok', model: response.model || 'typesafe/jev', answers, ...verdict(answers), evaluatedAt: now };
     } catch (error) {
         console.error('Jev evaluation failed', { name: error && error.name, message: error && error.message });
-        return { version: REVIEW_VERSION, status: 'unavailable', reason: 'evaluation_failed', evaluatedAt: now };
+        return { version: REVIEW_VERSION, status: 'unavailable', reason: classifyEvaluationFailure(error), evaluatedAt: now };
     }
 }
 
