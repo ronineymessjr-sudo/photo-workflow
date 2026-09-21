@@ -1,4 +1,6 @@
-const REVIEW_VERSION = 'jev-shadow-v1';
+const REVIEW_VERSION = 'plan-review-v2';
+export const REVIEW_MODEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
+
 const redactSensitiveText = value => value
     .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, '[redacted-email]')
     .replace(/(?:file:\/\/\/|[A-Z]:[\\/]|\\\\)[^\r\n,，;；"'<>|]*/gi, '[redacted-local-path]')
@@ -60,12 +62,33 @@ function hasValidAnswers(questions, answers) {
     });
 }
 
+function buildReviewSchema(questions) {
+    const properties = {};
+    for (const [key, question] of Object.entries(questions)) {
+        properties[key] = question.type === 'noul'
+            ? { type: 'object', properties: { noul: { type: 'number', minimum: 0, maximum: 1 } }, required: ['noul'], additionalProperties: false }
+            : { type: 'object', properties: { score: { type: 'number', minimum: 0, maximum: 2 }, confidence: { type: 'number', minimum: 0, maximum: 1 } }, required: ['score', 'confidence'], additionalProperties: false };
+    }
+    return {
+        type: 'object',
+        properties: { answers: { type: 'object', properties, required: Object.keys(questions), additionalProperties: false } },
+        required: ['answers'],
+        additionalProperties: false,
+    };
+}
+
+function readAnswers(response) {
+    let payload = response && Object.prototype.hasOwnProperty.call(response, 'response') ? response.response : response;
+    if (typeof payload === 'string') payload = JSON.parse(payload);
+    return payload && payload.answers && typeof payload.answers === 'object' ? payload.answers : {};
+}
+
 function classifyEvaluationFailure(error) {
-    const message = String(error && error.message || '').toLowerCase();
+    const message = String(error && error.message || error || '').toLowerCase();
     if (/unauthor|forbidden|permission|access denied/.test(message)) return 'ai_access_denied';
     if (/quota|rate.?limit|too many requests/.test(message)) return 'ai_rate_limited';
     if (/model.*(?:not found|unavailable|unsupported)|unknown model/.test(message)) return 'ai_model_unavailable';
-    if (/invalid|schema|validation|bad request/.test(message)) return 'ai_invalid_request';
+    if (/invalid|schema|validation|bad request|json mode/.test(message)) return 'ai_invalid_request';
     if (/timeout|timed out/.test(message)) return 'ai_timeout';
     return 'evaluation_failed';
 }
@@ -74,12 +97,20 @@ export async function evaluateJevPlan(plan, env, { now = new Date().toISOString(
     if (!env || !env.AI || typeof env.AI.run !== 'function') return { version: REVIEW_VERSION, status: 'unavailable', reason: 'ai_binding_not_configured', evaluatedAt: now };
     try {
         const questions = buildJevQuestions(plan);
-        const response = await env.AI.run('typesafe/jev', { state: buildJevState(plan), questions });
-        const answers = response && response.answers && typeof response.answers === 'object' ? response.answers : {};
+        const response = await env.AI.run(REVIEW_MODEL, {
+            messages: [
+                { role: 'system', content: 'Evaluate a photography plan. For noul questions, return the probability from 0 to 1 that the statement is true. For score questions, use the supplied 0 to 2 rubric and return confidence from 0 to 1. Return only the requested JSON.' },
+                { role: 'user', content: JSON.stringify({ state: buildJevState(plan), questions }) },
+            ],
+            response_format: { type: 'json_schema', json_schema: buildReviewSchema(questions) },
+            temperature: 0,
+            max_tokens: 500,
+        });
+        const answers = readAnswers(response);
         if (!hasValidAnswers(questions, answers)) return { version: REVIEW_VERSION, status: 'unavailable', reason: 'invalid_response', evaluatedAt: now };
-        return { version: REVIEW_VERSION, status: 'ok', model: response.model || 'typesafe/jev', answers, ...verdict(answers), evaluatedAt: now };
+        return { version: REVIEW_VERSION, status: 'ok', model: REVIEW_MODEL, answers, ...verdict(answers), evaluatedAt: now };
     } catch (error) {
-        console.error('Jev evaluation failed', { name: error && error.name, message: error && error.message });
+        console.error('Plan review failed', { name: error && error.name, message: error && error.message });
         return { version: REVIEW_VERSION, status: 'unavailable', reason: classifyEvaluationFailure(error), evaluatedAt: now };
     }
 }
