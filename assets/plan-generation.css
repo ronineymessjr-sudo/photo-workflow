@@ -301,10 +301,6 @@
     #tab-gen > .grid {
         grid-template-columns: 1fr !important;
     }
-
-    #tab-gen > .grid > section {
-        order: -1;
-    }
 }
 
 @media (max-width: 600px) {
