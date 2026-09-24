@@ -307,8 +307,12 @@ export default {
                     plan = createGuestPlanDraft(body);
                 } else {
                     plan = await createDirectorPlan(body, { baseUrl: env.DIRECTOR_API_BASE });
+                    plan.director = { ...plan.director, imageGenerationConnected: false, imageGenerationMode: 'cloud-image-delivery-not-configured' };
                 }
                 result = { status: 200, body: await attachJevReview(plan, env) };
+            }
+            else if (path === '/api/director/generate-candidate' && method === 'POST') {
+                result = { status: 503, body: { error: 'CANDIDATE_IMAGE_DELIVERY_NOT_CONFIGURED', message: '云端候选图回传尚未配置；当前可生成并保存文字分镜。' } };
             }
             else if (path === '/api/director/identity-lock-workflow' && method === 'POST') {
                 if (!uid) result = { status: 401, body: { error: '未登录' } };

@@ -5414,7 +5414,7 @@ function renderSavedPlanLibrary() {
                 <input type="date" id="adopt-date-${index}" aria-label="${escHtml(plan.title)}的拍摄日期" required>
                 <button class="btn btn-s btn-sm" onclick="adoptSavedPlan('${plan.id}', 'adopt-date-${index}')">采用并安排拍摄</button>
             </div>
-            ${schedules.filter(s => String(s.planId) === String(plan.id)).map(s => `<div class="library-plan-session"><span><strong>${escHtml(s.date)}</strong> · 已同步给摄影师、模特、摄影助理</span><div style="display:flex;gap:.4rem;"><button class="btn btn-s btn-sm" onclick="openScheduleMonth('${escHtml(s.date)}')">查看日程</button><button class="btn btn-s btn-sm" onclick="openOnSetMode('${plan.id}')">进入当天拍摄</button></div></div>`).join('')}
+            ${schedules.filter(s => String(s.planId) === String(plan.id)).map(s => `<div class="library-plan-session"><span><strong>${escHtml(s.date)}</strong> · 参与角色：${formatScheduleAudience(s.audience) || '未指定'}</span><div style="display:flex;gap:.4rem;"><button class="btn btn-s btn-sm" onclick="openScheduleMonth('${escHtml(s.date)}')">查看日程</button><button class="btn btn-s btn-sm" onclick="openOnSetMode('${plan.id}')">进入当天拍摄</button></div></div>`).join('')}
         </article>`;
     }).join('') : '<p class="reference-rights">暂无已保存方案</p>';
 }
@@ -5443,7 +5443,12 @@ function adoptSavedPlan(planId, dateInputId) {
     renderSchedules();
     renderSavedPlanLibrary();
     renderRoleHome(getCurrentRole());
-    toast('已加入日程，并同步给摄影师、模特和摄影助理', 'ok');
+    toast('已加入方案日程', 'ok');
+}
+
+function formatScheduleAudience(audience) {
+    const labels = { photographer: '摄影师', model: '模特', assistant: '摄影助理' };
+    return Array.isArray(audience) ? audience.map(role => labels[role]).filter(Boolean).join(' · ') : '';
 }
 
 function renderTpl() {
@@ -6556,12 +6561,11 @@ function renderPlanContent(plan) {
     const sectionsHtml = (plan.director ? [] : (plan.sections || []).filter(s => !/本次需求|接入记录|拍摄清单|拍摄当天/.test(s.ti))).map(s=>`
         <div class="ps"><div class="ps-hdr"><div class="ps-icon">${escHtml(s.ic)}</div><h3 class="ps-title">${escHtml(s.ti)}</h3></div><div class="ps-cnt"><ul>${s.c.map(c=>`<li>${escHtml(c)}</li>`).join('')}</ul></div></div>`).join('');
 
-    const isGuestDraft = plan.director && plan.director.source === 'guest-rule-draft';
-    const imgGallery = plan.director && plan.director.imageGenerationConnected
-        ? renderDirectorCandidatePanel(plan)
-        : isGuestDraft
-            ? '<p class="reference-rights">游客方案已保存在当前浏览器。候选方案图需先上传自己的参考图；云端生图服务准备好后才会显示生成入口。</p>'
-            : renderImageGallery(plan);
+    const imgGallery = plan.director
+        ? plan.director.imageGenerationConnected
+            ? renderDirectorCandidatePanel(plan)
+            : '<p class="reference-rights">文字分镜已生成。云端候选图服务尚未接通，当前不能生成图片；无需上传参考图来启用此功能。</p>'
+        : renderImageGallery(plan);
 
     // 添加模特沟通话术
     const communicationTips = getCommunicationTips(plan.input && plan.input.style);
@@ -10872,7 +10876,7 @@ function renderSchedules() {
             <div class="schedule-info">
                 <div class="schedule-title">${escHtml(s.title)} ${isPast ? '<span style="font-size:.68rem;color:var(--warn);">待补拍/待完成</span>' : ''}</div>
                 <div class="schedule-meta">${s.time || ''} ${s.location || ''}</div>
-                ${Array.isArray(s.audience) ? '<div class="schedule-meta">已同步：摄影师 · 模特 · 摄影助理</div>' : ''}
+                ${formatScheduleAudience(s.audience) ? `<div class="schedule-meta">参与角色：${formatScheduleAudience(s.audience)}</div>` : ''}
             </div>
             ${s.planId && getPlans().some(p => String(p.id) === String(s.planId)) ? `<button class="btn btn-s btn-sm" onclick="openOnSetMode('${s.planId}')">进入拍摄</button>` : ''}
             <button class="btn-i2" onclick="deleteSchedule('${s.id}')">✕</button>
@@ -11041,7 +11045,7 @@ function submitSchedule() {
         renderSchedules();
         renderSavedPlanLibrary();
         renderRoleHome(getCurrentRole());
-        toast('日程已添加，并同步给摄影师、模特和摄影助理', 'ok');
+        toast('日程已添加', 'ok');
     }
     closeScheduleModal();
 }
@@ -11979,7 +11983,7 @@ window.addEventListener('online', function() { toast('网络已恢复', 'ok'); }
     <div class="schedule-form-field"><label for="schedTitle">拍摄主题</label><input type="text" id="schedTitle" placeholder="例如：城市夜景人像"></div>
     <div class="schedule-form-field"><label for="schedTime">开始时间（可选）</label><input type="time" id="schedTime"></div>
     <div class="schedule-form-field"><label for="schedLocation">拍摄地点（可选）</label><input type="text" id="schedLocation" placeholder="具体场地或集合地点"></div>
-    <p style="font-size:.72rem;color:var(--t3);margin:.25rem 0 1rem;">保存后会出现在摄影师日程，并同步到模特和摄影助理工作台。</p>
+    <p style="font-size:.72rem;color:var(--t3);margin:.25rem 0 1rem;">参与角色用于本账户内的工作台视图；不会自动邀请其他账号或发送通知。</p>
     <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
       <button onclick="closeScheduleModal()" style="padding: 0.5rem 1rem; background: transparent; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: var(--t2); cursor: pointer;">取消</button>
       <button onclick="submitSchedule()" style="padding: 0.5rem 1rem; background: var(--ac); border: none; border-radius: 8px; color: #000; cursor: pointer; font-weight: 600;">保存</button>

@@ -234,7 +234,8 @@ test('all inline scripts parse and submit awaits director, shot list reuses resp
     assert.match(html, /audience: \['photographer', 'model', 'assistant'\]/);
     assert.match(html, /function openScheduleMonth\(dateValue\)/);
     assert.match(html, /function setCalendarMonth\(delta\)/);
-    assert.match(html, /已同步给摄影师、模特、摄影助理/);
+    assert.match(html, /参与角色：\$\{formatScheduleAudience/);
+    assert.doesNotMatch(html, /已同步给摄影师、模特、摄影助理|已同步：摄影师|同步到模特和摄影助理工作台/);
     assert.doesNotMatch(html, /创建方案、管理日程和交付/);
     assert.doesNotMatch(html, /查看拍摄通知、地点和动作重点/);
     assert.doesNotMatch(html, /准备器材、场地、日程与现场事项/);
@@ -242,5 +243,5 @@ test('all inline scripts parse and submit awaits director, shot list reuses resp
     assert.match(html, /id="settingsRoleSelect"/);
     assert.match(html, /id="schedPlanId"/);
     assert.match(html, /function applySchedulePlanSelection\(\)/);
-    assert.match(html, /保存后会出现在摄影师日程，并同步到模特和摄影助理工作台/);
+    assert.match(html, /不会自动邀请其他账号或发送通知/);
 });
