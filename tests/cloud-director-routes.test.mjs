@@ -59,3 +59,22 @@ test('schedule UI describes assigned roles without claiming that notifications w
     assert.doesNotMatch(html, /已同步给摄影师、模特、摄影助理|已同步：摄影师/);
     assert.match(html, /toast\('已加入方案日程'/);
 });
+
+test('new plan form does not prefill unrelated sensitive demo content', async () => {
+    const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+    const theme = html.match(/<input id="f-theme"[^>]*>/)?.[0] || '';
+    const style = html.match(/<select id="f-style">([\s\S]*?)<\/select>/)?.[1] || '';
+    const mood = html.match(/<input id="f-mood"[^>]*>/)?.[0] || '';
+    const model = html.match(/<textarea id="f-model"[^>]*>([\s\S]*?)<\/textarea>/)?.[1];
+    const scene = html.match(/<textarea id="f-scene"[^>]*>([\s\S]*?)<\/textarea>/)?.[1];
+    const extra = html.match(/<textarea id="f-extra"[^>]*>([\s\S]*?)<\/textarea>/)?.[1];
+    assert.match(theme, /placeholder="如：雨夜城市人像"/);
+    assert.doesNotMatch(theme, /\bvalue=/);
+    assert.match(style, /<option value="">选择风格<\/option>/);
+    assert.doesNotMatch(style, /selected/);
+    assert.match(mood, /placeholder="如：轻松、克制、热烈"/);
+    assert.doesNotMatch(mood, /\bvalue=/);
+    assert.equal(model, '');
+    assert.equal(scene, '');
+    assert.equal(extra, '');
+});
