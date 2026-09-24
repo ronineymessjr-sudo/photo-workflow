@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PhotoAtelier - 摄影方案智能工作流</title>
-    <meta name="description" content="PhotoAtelier 是专业的摄影工作流管理工具，支持智能生成拍摄方案、分镜脚本、日程管理、场地与模特资源管理。11种摄影风格，195个专业镜头模板，一键导出PDF。免费注册使用。">
+    <meta name="description" content="PhotoAtelier 是摄影工作流工具，支持生成拍摄方案、分镜脚本、日程管理、场地与模特资源管理，并可打印导出 Word 或 PDF。">
     <meta name="keywords" content="摄影方案生成,拍摄策划工具,摄影工作流,分镜脚本,摄影日程管理,拍摄场地管理,模特管理,摄影设备管理,AI摄影工具,摄影师软件,摄影策划,拍摄方案模板">
     <meta property="og:title" content="PhotoAtelier - 专业摄影工作流管理">
     <meta property="og:description" content="摄影师工作流管理工具，支持分镜脚本生成、参考图库、日程管理">
@@ -81,7 +81,6 @@
     <!-- Favicon -->
     <link rel="icon" type="image/jpeg" href="favicon.jpg">
     <link rel="apple-touch-icon" href="favicon.jpg">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAOnx5S09ydFYWWNSfcEqDTTHgtNA==" crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
     <!-- Motion Animation -->
     <script src="https://cdn.jsdelivr.net/npm/motion@11.11.13/dist/motion.min.js" defer></script>
     <!-- Lucide Icons -->
@@ -7785,338 +7784,41 @@ function exportShotList(planId) {
 }
 
 // 导出PDF分镜脚本
-async function exportShotListPDF(planId) {
-    const plans = sg(SK.P) || [];
-    const plan = plans.find(p => p.id === planId);
+function getPlanForPrint(id) {
+    const plan = getPlans().find(item => String(item.id) === String(id));
+    if (!plan) return null;
+    try {
+        const savedShots = JSON.parse(localStorage.getItem('pa_shots_' + plan.id) || '[]');
+        return savedShots.length ? { ...plan, shotList: savedShots } : plan;
+    } catch (e) {
+        return plan;
+    }
+}
+
+function openPlanPrintView(plans, mode = 'plan') {
+    if (!window.PhotoAtelierPrintExport) {
+        toast('打印组件未加载，请刷新页面后重试', 'er');
+        return false;
+    }
+    if (!window.PhotoAtelierPrintExport.open(plans, mode)) {
+        toast('浏览器拦截了打印窗口，请允许弹出窗口后重试', 'er');
+        return false;
+    }
+    toast('打印稿已打开，请在打印窗口选择“另存为 PDF”', 'ok');
+    return true;
+}
+
+function exportShotListPDF(planId) {
+    const plan = getPlanForPrint(planId);
     if (!plan) { toast('方案不存在', 'er'); return; }
-    
-    // Check if jsPDF is loaded
-    if (typeof window.jspdf === 'undefined') {
-        toast('PDF库加载中，请稍后重试', 'er');
-        return;
-    }
-    
-    const { jsPDF } = window.jspdf;
-    const shotList = generateShotList(plan);
-    
-    // Create PDF with Chinese font support
-    const doc = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-    });
-    
-    // Add custom font for Chinese support
-    doc.addFileToVFS('NotoSansCJKsc-Regular.ttf', '');
-    doc.setFont('helvetica');
-    
-    let y = 15;
-    const pageWidth = doc.internal.pageSize.width;
-    const margin = 15;
-    const contentWidth = pageWidth - 2 * margin;
-    
-    // Header
-    doc.setFontSize(18);
-    doc.setTextColor(255, 107, 107);
-    doc.text('PhotoAtelier', pageWidth / 2, y, { align: 'center' });
-    y += 8;
-    
-    doc.setFontSize(14);
-    doc.setTextColor(51, 51, 51);
-    doc.text('Professional Shot List', pageWidth / 2, y, { align: 'center' });
-    y += 12;
-    
-    // Plan Info
-    doc.setFontSize(10);
-    doc.setTextColor(80, 80, 80);
-    doc.text(`Plan: ${plan.title || 'Untitled'}`, margin, y);
-    y += 6;
-    doc.text(`Style: ${plan.input?.style || 'N/A'} | Scene: ${plan.input?.scene || 'N/A'} | Duration: ${plan.input?.duration || 'N/A'}`, margin, y);
-    y += 6;
-    doc.text(`Total Shots: ${shotList.length} | Total Time: ${shotList.reduce((sum, s) => sum + s.duration, 0)} min`, margin, y);
-    y += 10;
-    
-    // Separator line
-    doc.setDrawColor(200, 200, 200);
-    doc.line(margin, y, pageWidth - margin, y);
-    y += 8;
-    
-    // Shot List Table Header
-    const colWidths = [12, 25, 45, 18, 20, 25, 20];
-    const colX = [margin];
-    for (let i = 0; i < colWidths.length - 1; i++) {
-        colX.push(colX[i] + colWidths[i]);
-    }
-    
-    doc.setFillColor(240, 240, 240);
-    doc.rect(margin, y - 4, contentWidth, 8, 'F');
-    doc.setFontSize(8);
-    doc.setTextColor(60, 60, 60);
-    
-    const headers = ['#', 'Scene', 'Description', 'Size', 'Focal', 'Comp', 'Time'];
-    headers.forEach((h, i) => {
-        doc.text(h, colX[i] + 1, y + 1);
-    });
-    y += 8;
-    
-    // Shot rows
-    shotList.forEach((shot, i) => {
-        // Check for page break
-        if (y > 270) {
-            doc.addPage();
-            y = 15;
-            // Redraw header on new page
-            doc.setFillColor(240, 240, 240);
-            doc.rect(margin, y - 4, contentWidth, 8, 'F');
-            headers.forEach((h, j) => {
-                doc.text(h, colX[j] + 1, y + 1);
-            });
-            y += 8;
-        }
-        
-        // Alternate row background
-        if (i % 2 === 1) {
-            doc.setFillColor(250, 250, 250);
-            doc.rect(margin, y - 3, contentWidth, 6, 'F');
-        }
-        
-        doc.setTextColor(40, 40, 40);
-        
-        // Shot number
-        doc.setFontSize(8);
-        doc.setTextColor(255, 107, 107);
-        doc.text(String(i + 1), colX[0] + 3, y);
-        
-        // Scene
-        doc.setTextColor(40, 40, 40);
-        const sceneText = doc.splitTextToSize(shot.scene || '', colWidths[1] - 2);
-        doc.text(sceneText, colX[1] + 1, y);
-        
-        // Description
-        const descText = doc.splitTextToSize(shot.description || '', colWidths[2] - 2);
-        doc.text(descText, colX[2] + 1, y);
-        
-        // Shot size
-        doc.text((shot.shotSize || '').substring(0, 6), colX[3] + 1, y);
-        
-        // Focal length
-        doc.setTextColor(78, 205, 196);
-        doc.text((shot.focalLength || '').substring(0, 10), colX[4] + 1, y);
-        
-        // Composition
-        doc.setTextColor(40, 40, 40);
-        doc.text((shot.composition || '').substring(0, 8), colX[5] + 1, y);
-        
-        // Duration
-        doc.text(String(shot.duration || 0) + 'm', colX[6] + 1, y);
-        
-        y += 6;
-    });
-    
-    y += 10;
-    
-    // Equipment Summary
-    if (y > 240) {
-        doc.addPage();
-        y = 15;
-    }
-    
-    doc.setFontSize(12);
-    doc.setTextColor(255, 107, 107);
-    doc.text('Equipment Summary', margin, y);
-    y += 8;
-    
-    const allProps = new Set();
-    const allFocalLengths = new Set();
-    shotList.forEach(shot => {
-        if (shot.props && shot.props !== '无') {
-            shot.props.split('、').forEach(p => allProps.add(p.trim()));
-        }
-        allFocalLengths.add(shot.focalLength);
-    });
-    
-    doc.setFontSize(9);
-    doc.setTextColor(60, 60, 60);
-    doc.text('Focal Lengths:', margin, y);
-    y += 5;
-    doc.setTextColor(40, 40, 40);
-    const focalText = Array.from(allFocalLengths).join(', ');
-    const focalLines = doc.splitTextToSize(focalText, contentWidth);
-    doc.text(focalLines, margin, y);
-    y += focalLines.length * 4 + 5;
-    
-    if (allProps.size > 0) {
-        doc.setTextColor(60, 60, 60);
-        doc.text('Props:', margin, y);
-        y += 5;
-        doc.setTextColor(40, 40, 40);
-        const propsText = Array.from(allProps).map((p, i) => `${i+1}. ${p}`).join(', ');
-        const propsLines = doc.splitTextToSize(propsText, contentWidth);
-        doc.text(propsLines, margin, y);
-    }
-    
-    // Footer
-    const pageCount = doc.internal.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        doc.setFontSize(8);
-        doc.setTextColor(150, 150, 150);
-        doc.text(`PhotoAtelier - ${new Date().toLocaleDateString()} - Page ${i}/${pageCount}`, pageWidth / 2, 285, { align: 'center' });
-    }
-    
-    // Save PDF
-    doc.save(`ShotList_${plan.title || 'Plan'}_${new Date().toISOString().slice(0, 10)}.pdf`);
-    toast('PDF分镜脚本已导出', 'ok');
+    return openPlanPrintView([plan], 'plan');
 }
 
 // 打印分镜脚本
 function printShotList(planId) {
-    const plans = sg(SK.P) || [];
-    const plan = plans.find(p => p.id === planId);
+    const plan = getPlanForPrint(planId);
     if (!plan) { toast('方案不存在', 'er'); return; }
-    
-    const shotList = generateShotList(plan);
-    
-    // Create print window content
-    const printContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <title>Shot List - ${plan.title}</title>
-            <style>
-                @page { size: A4; margin: 10mm; }
-                * { box-sizing: border-box; margin: 0; padding: 0; }
-                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 9pt; line-height: 1.4; color: var(--t-dim); }
-                .header { text-align: center; border-bottom: 2px solid var(--er-soft); padding-bottom: 10px; margin-bottom: 15px; }
-                .header h1 { font-size: 16pt; color: var(--er-soft); margin-bottom: 5px; }
-                .header h2 { font-size: 12pt; color: var(--t-muted); font-weight: normal; }
-                .meta { display: flex; justify-content: space-between; font-size: 8pt; color: var(--t-muted); margin-bottom: 15px; }
-                table { width: 100%; border-collapse: collapse; font-size: 8pt; }
-                th { background: #f5f5f5; border: 1px solid var(--t-faint); padding: 4px; text-align: left; font-weight: 600; }
-                td { border: 1px solid #eee; padding: 4px; vertical-align: top; }
-                tr:nth-child(even) { background: #fafafa; }
-                .num { color: var(--er-soft); font-weight: bold; text-align: center; }
-                .focal { color: var(--teal); }
-                .page-break { page-break-after: always; }
-                .section { margin-bottom: 15px; }
-                .section-title { font-size: 11pt; color: var(--er-soft); margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 4px; }
-                .compact-shot { border: 1px solid var(--t-faint); padding: 8px; margin-bottom: 8px; break-inside: avoid; }
-                .compact-header { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding-bottom: 4px; margin-bottom: 4px; }
-                .compact-num { font-weight: bold; font-size: 10pt; color: var(--er-soft); }
-                .compact-params { font-size: 7pt; color: var(--t-muted); }
-                .compact-desc { font-size: 8pt; margin: 4px 0; }
-                .compact-notes { font-size: 7pt; color: #999; font-style: italic; }
-                .check-box { display: inline-block; width: 12px; height: 12px; border: 1px solid var(--t-dim); margin-right: 4px; }
-                @media print {
-                    body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
-                }
-            </style>
-        </head>
-        <body>
-            <div class="header">
-                <h1>PhotoAtelier</h1>
-                <h2>Professional Shot List</h2>
-            </div>
-            <div class="meta">
-                <span><strong>Plan:</strong> ${plan.title || 'Untitled'}</span>
-                <span><strong>Style:</strong> ${plan.input?.style || 'N/A'}</span>
-                <span><strong>Total Shots:</strong> ${shotList.length}</span>
-                <span><strong>Total Time:</strong> ${shotList.reduce((sum, s) => sum + s.duration, 0)} min</span>
-            </div>
-            
-            <div class="section">
-                <div class="section-title">Shot List (Compact View)</div>
-                ${shotList.map((shot, i) => `
-                    <div class="compact-shot">
-                        <div class="compact-header">
-                            <span class="compact-num"><span class="check-box"></span> #${String(i + 1).padStart(2, '0')} ${shot.scene}</span>
-                            <span class="compact-params">${shot.focalLength} · ${shot.duration}min</span>
-                        </div>
-                        <div class="compact-desc"><strong>${shot.shotSize}</strong> - ${shot.description}</div>
-                        <div class="compact-params">${shot.composition} · ${shot.lighting} · ${shot.angle} · ${shot.mood}</div>
-                        ${shot.notes ? `<div class="compact-notes">Note: ${shot.notes}</div>` : ''}
-                    </div>
-                `).join('')}
-            </div>
-            
-            <div class="page-break"></div>
-            
-            <div class="section">
-                <div class="section-title">Detailed Shot Table</div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="width: 25px;">#</th>
-                            <th style="width: 50px;">Scene</th>
-                            <th>Description</th>
-                            <th style="width: 35px;">Size</th>
-                            <th style="width: 50px;">Focal</th>
-                            <th style="width: 50px;">Comp</th>
-                            <th style="width: 40px;">Light</th>
-                            <th style="width: 30px;">Time</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${shotList.map((shot, i) => `
-                            <tr>
-                                <td class="num">${i + 1}</td>
-                                <td>${shot.scene}</td>
-                                <td>${shot.description}</td>
-                                <td>${shot.shotSize}</td>
-                                <td class="focal">${shot.focalLength}</td>
-                                <td>${shot.composition}</td>
-                                <td>${shot.lighting}</td>
-                                <td>${shot.duration}m</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            </div>
-            
-            <div class="page-break"></div>
-            
-            <div class="section">
-                <div class="section-title">Equipment Checklist</div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="width: 30px;"><span class="check-box"></span></th>
-                            <th>Item</th>
-                            <th style="width: 100px;">Notes</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${Array.from(new Set(shotList.map(s => s.focalLength))).map(f => `
-                            <tr>
-                                <td><span class="check-box"></span></td>
-                                <td>Lens: ${f}</td>
-                                <td></td>
-                            </tr>
-                        `).join('')}
-                        ${Array.from(new Set(shotList.flatMap(s => s.props && s.props !== '无' ? s.props.split('、') : []))).map(p => `
-                            <tr>
-                                <td><span class="check-box"></span></td>
-                                <td>Prop: ${p.trim()}</td>
-                                <td></td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            </div>
-        </body>
-        </html>
-    `;
-    
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(printContent);
-    printWindow.document.close();
-    printWindow.focus();
-    setTimeout(() => {
-        printWindow.print();
-    }, 500);
-    
-    toast('打印窗口已打开', 'ok');
+    return openPlanPrintView([plan], 'plan');
 }
 
 // 打开拍摄现场模式
@@ -9990,56 +9692,9 @@ function exportPlanAsJSON(planId) {
 }
 
 function exportPlanAsPDF(planId) {
-    const plans = getPlans();
-    const plan = plans.find(p => p.id === planId);
-    if (!plan) { showToast('方案不存在'); return; }
-    
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    
-    // Title
-    doc.setFontSize(20);
-    doc.text(plan.title || '拍摄方案', 20, 25);
-    
-    // Info
-    doc.setFontSize(12);
-    doc.text(`风格: ${plan.input?.style || '待定'}`, 20, 40);
-    doc.text(`主题: ${plan.input?.theme || '待定'}`, 20, 48);
-    doc.text(`情绪: ${plan.input?.mood || '待定'}`, 20, 56);
-    doc.text(`场景: ${plan.input?.scene || '待定'}`, 20, 64);
-    doc.text(`时长: ${plan.input?.duration || '待定'}`, 20, 72);
-    doc.text(`人数: ${plan.input?.people || '待定'}`, 20, 80);
-    
-    // Brief
-    if (plan.result?.brief) {
-        doc.setFontSize(14);
-        doc.text('方案概要', 20, 95);
-        doc.setFontSize(11);
-        let y = 105;
-        const brief = plan.result.brief;
-        Object.entries(brief).forEach(([key, value]) => {
-            if (y > 270) { doc.addPage(); y = 20; }
-            doc.text(`${key}: ${value}`, 20, y);
-            y += 10;
-        });
-    }
-    
-    // Shots
-    if (plan.result?.shots?.length) {
-        doc.addPage();
-        doc.setFontSize(14);
-        doc.text('分镜列表', 20, 20);
-        doc.setFontSize(10);
-        let y = 35;
-        plan.result.shots.forEach((shot, i) => {
-            if (y > 270) { doc.addPage(); y = 20; }
-            doc.text(`${i+1}. ${shot.desc || shot.description || '分镜 ' + (i+1)}`, 20, y);
-            y += 8;
-        });
-    }
-    
-    doc.save(`方案_${plan.title || planId}_${new Date().toISOString().slice(0,10)}.pdf`);
-    showToast('PDF 导出成功');
+    const plan = getPlanForPrint(planId);
+    if (!plan) { toast('方案不存在', 'er'); return; }
+    return openPlanPrintView([plan], 'plan');
 }
 
 // ===== Search & Filter =====
@@ -10259,28 +9914,11 @@ function exportAllPlans() {
 // 批量导出PDF（逐个下载）
 async function batchExportPdf() {
     const plans = getPlans();
-    if (!plans.length) {
-        toast('没有可导出的方案', 'er');
-        return;
-    }
-    if (!confirm(`确定批量导出 ${plans.length} 个方案的 PDF 吗？\n这将逐个下载文件。`)) return;
-    
-    toast('开始批量导出，请稍候...', 'ok');
-    let success = 0;
-    for (let i = 0; i < plans.length; i++) {
-        try {
-            await exportPlanPdf(plans[i].id);
-            success++;
-            // 添加延迟避免浏览器阻止批量下载
-            if (i < plans.length - 1) {
-                await new Promise(r => setTimeout(r, 800));
-            }
-        } catch (e) {
-            console.error('导出失败:', e);
-        }
-    }
-    toast(`批量导出完成: ${success}/${plans.length}`, success === plans.length ? 'ok' : 'er');
+    if (!plans.length) { toast('没有可导出的方案', 'er'); return; }
+    if (!confirm(`将在一个打印稿中按分页整理 ${plans.length} 个方案。继续后，请在打印窗口选择“另存为 PDF”。`)) return;
+    return openPlanPrintView(plans, 'plan');
 }
+
 function updateBadge(){
     const eq=$('t-eq'),venue=$('t-venue'),model=$('t-model'),tpl=$('t-tpl'),hist=$('t-hist');
     if(eq)eq.textContent=(sg(SK.EQ)||[]).length;
@@ -10356,126 +9994,16 @@ function exportPlanWord(id) {
 }
 
 async function exportPlanPdf(id) {
-    const plan=getPlans().find(p=>p.id===id);
-    if(!plan){toast('方案不存在','er');return;}
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    const pageW = doc.internal.pageSize.getWidth();
-    let y=15;
-    doc.setFontSize(16); doc.setTextColor(232,93,4); doc.text(plan.title, pageW/2, y, {align:'center'}); y+=10;
-    doc.setFontSize(9); doc.setTextColor(160);
-    doc.text(`风格:${plan.input && plan.input.style||'待定'} | 时长:${plan.input && plan.input.duration||'待定'} | 人数:${plan.input && plan.input.people||1}人 | ${new Date(plan.savedAt).toLocaleString()}`, pageW/2, y, {align:'center'}); y+=8;
-    doc.setDrawColor(200); doc.line(15,y,pageW-15,y); y+=6;
-    plan.sections.forEach(s=>{
-        if(y>270){doc.addPage();y=15;}
-        doc.setFontSize(11); doc.setTextColor(50); doc.setFont('','bold'); doc.text(s.ti,15,y); y+=5;
-        doc.setFontSize(8); doc.setTextColor(100); doc.setFont('','normal');
-        s.c.forEach(c=>{
-            const lines=doc.splitTextToSize('• '+c, pageW-30);
-            if(y+lines.length*4>275){doc.addPage();y=10;}
-            doc.text(lines,15,y); y+=lines.length*4+1;
-        });
-        y+=3;
-    });
-    doc.save(`拍摄方案_${plan.title}_${new Date().toLocaleDateString().replace(/\//g,'-')}.pdf`);
-    toast('PDF 已下载','ok');
+    const plan = getPlanForPrint(id);
+    if (!plan) { toast('方案不存在', 'er'); return; }
+    return openPlanPrintView([plan], 'plan');
 }
 
 // 导出模特专用PDF（仅包含模特需要的信息）
 async function exportModelPdf(id) {
-    const plan=getPlans().find(p=>p.id===id);
-    if(!plan){toast('方案不存在','er');return;}
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    const pageW = doc.internal.pageSize.getWidth();
-    let y=15;
-    
-    // 标题
-    doc.setFontSize(18); doc.setTextColor(255,107,107); 
-    doc.text('拍摄参考指南', pageW/2, y, {align:'center'}); y+=12;
-    
-    // 主题信息
-    doc.setFontSize(12); doc.setTextColor(50); doc.setFont('','bold');
-    doc.text(plan.input && plan.input.theme || '拍摄主题', pageW/2, y, {align:'center'}); y+=8;
-    
-    // 基础信息
-    doc.setFontSize(9); doc.setTextColor(100); doc.setFont('','normal');
-    doc.text(`风格：${plan.input && plan.input.style||'待定'} | 时长：${plan.input && plan.input.duration||'待定'}`, pageW/2, y, {align:'center'}); y+=10;
-    doc.setDrawColor(200); doc.line(15,y,pageW-15,y); y+=8;
-    
-    // 只显示模特相关的内容（过滤掉器材、技术参数等）
-    const modelSections = plan.sections.filter(s => {
-        const title = s.ti.toLowerCase();
-        // 排除摄影师专业内容
-        return !title.includes('器材') && !title.includes('设备') && !title.includes('参数') && 
-               !title.includes('灯光') && !title.includes('技术') && !title.includes('后期') &&
-               !title.includes('备份') && !title.includes('存储');
-    });
-    
-    modelSections.forEach(s=>{
-        if(y>270){doc.addPage();y=15;}
-        doc.setFontSize(11); doc.setTextColor(50); doc.setFont('','bold'); 
-        doc.text(s.ti,15,y); y+=6;
-        doc.setFontSize(9); doc.setTextColor(80); doc.setFont('','normal');
-        s.c.forEach(c=>{
-            const lines=doc.splitTextToSize('• '+c, pageW-30);
-            if(y+lines.length*5>275){doc.addPage();y=10;}
-            doc.text(lines,15,y); y+=lines.length*5+2;
-        });
-        y+=5;
-    });
-    
-    // 添加参考图页面
-    if(plan.images && plan.images.length > 0) {
-        doc.addPage();
-        y=15;
-        doc.setFontSize(14); doc.setTextColor(255,107,107); 
-        doc.text('参考姿势', pageW/2, y, {align:'center'}); y+=10;
-        
-        // 显示前9张参考图
-        const refImages = plan.images.slice(0, 9);
-        const imgSize = 55;
-        const gap = 8;
-        const startX = 15;
-        let row = 0;
-        let col = 0;
-        
-        for(let i = 0; i < refImages.length; i++) {
-            if(i > 0 && i % 3 === 0) {
-                row++;
-                col = 0;
-            }
-            if(row >= 3) {
-                doc.addPage();
-                row = 0;
-                y = 15;
-            }
-            
-            const x = startX + col * (imgSize + gap);
-            const imgY = y + row * (imgSize + gap + 10);
-            
-            try {
-                // 添加图片占位框（实际图片需要base64编码）
-                doc.setDrawColor(200);
-                doc.rect(x, imgY, imgSize, imgSize);
-                doc.setFontSize(7); doc.setTextColor(150);
-                doc.text(`参考图 ${i+1}`, x + imgSize/2, imgY + imgSize/2, {align:'center'});
-                
-                // 添加姿势说明
-                const img = refImages[i];
-                if(img.variant) {
-                    doc.setFontSize(6); doc.setTextColor(100);
-                    doc.text(img.variant.pose, x + imgSize/2, imgY + imgSize + 4, {align:'center'});
-                }
-            } catch(e) {
-                /* 图片添加失败 */
-            }
-            col++;
-        }
-    }
-    
-    doc.save(`模特参考_${plan.title}_${new Date().toLocaleDateString().replace(/\//g,'-')}.pdf`);
-    toast('模特专用PDF已下载','ok');
+    const plan = getPlanForPrint(id);
+    if (!plan) { toast('方案不存在', 'er'); return; }
+    return openPlanPrintView([plan], 'model');
 }
 
 // ===== Copy =====
@@ -11991,5 +11519,6 @@ window.addEventListener('online', function() { toast('网络已恢复', 'ok'); }
   </div>
 </div>
 <!-- Settings Modal -->
+<script src="assets/plan-print-export.js"></script>
 </body>
 </html>
