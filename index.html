@@ -5276,7 +5276,7 @@ function renderEq() {
     if (searchTerm) {
         list = list.filter(e => e.n.toLowerCase().includes(searchTerm) || (e.note && e.note.toLowerCase().includes(searchTerm)));
     }
-    $('t-eq').textContent = list.length;
+    if ($('t-eq')) $('t-eq').textContent = list.length;
     $('eq-total').textContent = `共 ${list.length} 件`;
     const byCat = {};
     Object.keys(CATS).forEach(k=>byCat[k]=[]);
@@ -5311,7 +5311,7 @@ function renderVenue() {
     if (searchTerm) {
         list = list.filter(v => v.name.toLowerCase().includes(searchTerm) || (v.addr && v.addr.toLowerCase().includes(searchTerm)) || (v.styles && v.styles.toLowerCase().includes(searchTerm)));
     }
-    $('t-venue').textContent=list.length;
+    if ($('t-venue')) $('t-venue').textContent=list.length;
     $('venue-total').textContent=`共 ${list.length} 个场地`;
     if(!list.length){ $('venue-list').innerHTML='<div class="eq-empty">' + (searchTerm ? '未找到匹配的场地' : '场地库为空') + '</div>'; return; }
     $('venue-list').innerHTML=list.map(v=>`
@@ -5339,7 +5339,7 @@ $('venueForm').addEventListener('submit',e=>{
 // ===== Model =====
 function renderModel() {
     const list=sg(SK.M)||[];
-    $('t-model').textContent=list.length;
+    if ($('t-model')) $('t-model').textContent=list.length;
     $('model-total').textContent=`共 ${list.length} 位模特`;
     if(!list.length){ $('model-list').innerHTML='<div class="eq-empty">模特库为空</div>'; return; }
     $('model-list').innerHTML=list.map(m=>`
