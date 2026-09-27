@@ -3046,15 +3046,8 @@
                                 <!-- Step 1: 基本信息 -->
                                 <div class="step-section" data-step-section="1">
                                     <div class="step-section-title">基本信息</div>
-                                    <div class="fg"><label data-i18n="gen.theme">拍摄主题</label><input id="f-theme" placeholder="如：雨夜城市人像"></div>
-                                    <div class="fg"><label data-i18n="gen.style">风格定位</label>
-                                        <select id="f-style">
-                                            <option value="">选择风格</option><option value="时尚">时尚杂志风</option><option value="复古">复古胶片风</option>
-                                            <option value="文艺">文艺清新</option><option value="性感">私房性感</option><option value="街拍">街头街拍</option>
-                                            <option value="运动">运动活力</option><option value="古风">古风汉服</option><option value="婚纱">婚纱婚礼</option>
-                                            <option value="商业">商业广告</option><option value="情绪">情绪人像</option><option value="鱼眼">鱼眼创意</option>
-                                        </select>
-                                    </div>
+                                    <div class="fg"><label data-i18n="gen.theme">拍摄主题（选填）</label><input id="f-theme" placeholder="留空时按场景和人物自然构思"></div>
+                                    <div class="fg"><label data-i18n="gen.style">风格偏好（选填）</label><input id="f-style" placeholder="如：自然纪实、电影感；也可留空"></div>
                                     <div class="fg"><label data-i18n="gen.mood">预期情绪</label><input id="f-mood" placeholder="如：轻松、克制、热烈"></div>
                                 </div>
 
@@ -3943,8 +3936,8 @@ const i18n = {
         'login.button': '登录',
         'login.hint': '首次登录将自动创建账号',
         'gen.title': '创意需求',
-        'gen.theme': '拍摄主题',
-        'gen.style': '风格',
+        'gen.theme': '拍摄主题（选填）',
+        'gen.style': '风格偏好（选填）',
         'gen.mood': '情绪',
         'gen.model': '模特描述',
         'gen.scene': '场景',
@@ -3974,8 +3967,8 @@ const i18n = {
         'login.button': 'Sign In',
         'login.hint': 'First login will auto-create account',
         'gen.title': 'Generate Plan',
-        'gen.theme': 'Theme',
-        'gen.style': 'Style',
+        'gen.theme': 'Theme (optional)',
+        'gen.style': 'Style preference (optional)',
         'gen.mood': 'Mood',
         'gen.model': 'Model Description',
         'gen.scene': 'Scene',
@@ -6555,7 +6548,7 @@ function renderPlanContent(plan) {
     $('planSavedAt').textContent = new Date(plan.savedAt).toLocaleString();
 
     const jevReviewHtml = renderJevReview(plan.director && plan.director.jevReview);
-    const metaHtml = `<div class="plan-meta"><div class="mtag"><strong>主题</strong><span>${escHtml(plan.input && plan.input.theme||'待定')}</span></div><div class="mtag"><strong>风格</strong><span>${escHtml(plan.input && plan.input.style||'待定')}</span></div><div class="mtag"><strong>时长</strong><span>${plan.input && plan.input.duration||'待定'}</span></div><div class="mtag"><strong>人数</strong><span>${plan.input && plan.input.people||1}人</span></div></div>`;
+    const metaHtml = `<div class="plan-meta"><div class="mtag"><strong>主题</strong><span>${escHtml(plan.input && plan.input.theme||plan.title||'自然生成方案')}</span></div><div class="mtag"><strong>风格</strong><span>${escHtml(plan.input && plan.input.style||'自动建议')}</span></div><div class="mtag"><strong>时长</strong><span>${plan.input && plan.input.duration||'待定'}</span></div><div class="mtag"><strong>人数</strong><span>${plan.input && plan.input.people||1}人</span></div></div>`;
 
     const sectionsHtml = (plan.director ? [] : (plan.sections || []).filter(s => !/本次需求|接入记录|拍摄清单|拍摄当天/.test(s.ti))).map(s=>`
         <div class="ps"><div class="ps-hdr"><div class="ps-icon">${escHtml(s.ic)}</div><h3 class="ps-title">${escHtml(s.ti)}</h3></div><div class="ps-cnt"><ul>${s.c.map(c=>`<li>${escHtml(c)}</li>`).join('')}</ul></div></div>`).join('');
@@ -9363,7 +9356,6 @@ async function handleSubmit(e){
     btn.classList.add('btn-loading');
     btn.innerHTML='<span class="btn-loading-icon">⟳</span> 生成中...';
     const input={theme:$('f-theme').value.trim(),style:$('f-style').value,modelDesc:$('f-model').value.trim(),scene:$('f-scene').value.trim(),mood:$('f-mood').value.trim(),duration:$('f-dur').value,people:$('f-people').value,extra:$('f-extra').value.trim()};
-    if(!input.theme&&!input.modelDesc){toast('请填写主题或模特特征','er');btn.classList.remove('btn-loading');btn.innerHTML=btnOrigHTML;return;}
     $('outEmpty').classList.remove('active'); $('outCnt').classList.remove('active'); $('outLoad').classList.add('active');
     btn.disabled=true;
     await new Promise(r=>setTimeout(r,900));

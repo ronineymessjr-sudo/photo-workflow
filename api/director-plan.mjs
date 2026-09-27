@@ -4,16 +4,23 @@ export async function createDirectorPlan(input, { baseUrl, fetchImpl = fetch } =
     if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('INVALID_BRIEF');
     const fields = ['theme', 'style', 'modelDesc', 'scene', 'mood', 'duration', 'people', 'extra'];
     const labels = ['主题', '风格', '模特描述', '场景', '情绪', '时长', '人数', '用户补充及限制'];
+    const cleanInput = {};
     const brief = fields.map((key, i) => {
         if (input[key] != null && typeof input[key] !== 'string') throw new Error('INVALID_BRIEF');
-        return input[key] ? `${labels[i]}：${input[key]}` : '';
+        cleanInput[key] = String(input[key] || '').trim();
+        return cleanInput[key] ? `${labels[i]}：${cleanInput[key]}` : '';
     }).filter(Boolean).join('\n');
-    if ((!input.theme && !input.modelDesc) || brief.length > 2000) throw new Error('INVALID_BRIEF');
+    const hasCreativeDirection = ['style', 'modelDesc', 'scene', 'mood', 'extra'].some(key => cleanInput[key]);
+    const directionNote = cleanInput.theme ? '' : hasCreativeDirection
+        ? '主题未指定：请根据已填写的信息自然构思拍摄方向；不要臆造未提供的具体地点、人物关系、服装或道具。'
+        : '主题和风格均未指定：请生成一套中性、自然、可执行的人像拍摄方案；不要臆造具体地点、人物身份、关系、服装或道具，并将需现场决定的内容标为待确认。';
+    const compiledBrief = [brief, directionNote].filter(Boolean).join('\n');
+    if (compiledBrief.length > 2000) throw new Error('INVALID_BRIEF');
     const requestId = `workflow-${crypto.randomUUID()}`;
-    const desiredShotCount = resolveShotCount(input);
+    const desiredShotCount = resolveShotCount(cleanInput);
     const response = await fetchImpl(`${baseUrl.replace(/\/$/, '')}/v1/photoatelier/shoot-plan`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ request_id: requestId, brief, output_count: desiredShotCount }),
+        body: JSON.stringify({ request_id: requestId, brief: compiledBrief, output_count: desiredShotCount }),
         signal: AbortSignal.timeout(60000),
     });
     if (!response.ok) throw new Error(`DIRECTOR_UPSTREAM_${response.status}`);
@@ -27,16 +34,16 @@ export async function createDirectorPlan(input, { baseUrl, fetchImpl = fetch } =
     // Do not duplicate shots to meet a target that the upstream cannot yet supply.
     const executionShots = [...uniqueShots.values()];
     const text = value => typeof value === 'string' ? value : '';
-    const sceneScale = classifySceneScale(`${input.theme || ''}\n${input.extra || ''}`);
+    const sceneScale = classifySceneScale(`${cleanInput.theme}\n${cleanInput.extra}`);
     const shotList = executionShots.slice(0, desiredShotCount).map((shot, index) => ({
-        id: `${requestId}-${index}`, scene: input.scene || '场地待确认',
+        id: `${requestId}-${index}`, scene: cleanInput.scene || '场地待确认',
         description: text(shot.model_pose), shotSize: ({ECU:'局部特写',CU:'特写',MCU:'近景',MS:'中景',MFS:'中全景',FS:'全身',WS:'环境全景',EWS:'环境远景'})[shot.shot_size] || text(shot.framing) || sceneScale.shotSize,
         title: text(shot.framing) || text(shot.model_pose),
         sourceShotIndex: shot.sourceIndex,
         method: text(shot.photographer_position), focalLength: text(shot.lens),
         composition: text(shot.model_position), lighting: text(shot.lighting_setup),
         props: '以实际场地和已有资源为准', angle: ({eye_level:'平视',high_angle:'俯拍',ground_level:'贴地低机位',overhead:'正上方俯拍',low_angle:'仰拍'})[shot.camera_angle] || text(shot.camera_angle),
-        mood: input.mood || '待确认', duration: 0,
+        mood: cleanInput.mood || '待确认', duration: 0,
         notes: `裁切：${text(shot.crop_boundary)}；必须呈现：${text(shot.must_show)}；拒绝：${text(shot.reject_if)}`,
         lightingSetup: text(shot.lighting_setup), priority: '待人工确认',
         alternative: text(shot.execution_note), camera: {},
@@ -46,15 +53,15 @@ export async function createDirectorPlan(input, { baseUrl, fetchImpl = fetch } =
         directorContract: { ...shot },
     }));
     return {
-        title: input.theme || '摄影方案', input, savedAt: new Date().toISOString(),
-        style: input.style || '', images: [], shotList,
+        title: cleanInput.theme || (hasCreativeDirection ? '自由主题拍摄方案' : '自然人像方案'), input: cleanInput, savedAt: new Date().toISOString(),
+        style: cleanInput.style, images: [], shotList,
         references: Array.isArray(result.references) ? result.references : [],
         sections: shotList.map((shot, i) => ({ ti: `镜头 ${i + 1} · ${shot.title}`, ic: '', c: [
             `人物怎么做：${shot.description}`, `摄影师站哪里：${shot.method}`,
             `人物放在哪里：${shot.composition}`, `景别与焦段：${shot.shotSize} · ${shot.focalLength}`,
             `光线怎么用：${shot.lighting}`, `画面要求：${shot.notes}`,
         ] })),
-        director: { requestId, source: 'director-shoot-plan', submittedBrief: brief, desiredShotCount,
+        director: { requestId, source: 'director-shoot-plan', submittedBrief: compiledBrief, desiredShotCount,
             shotCountLimited: shotList.length < desiredShotCount,
             reviewRequired: true, imageGenerationConnected: true,
             imageGenerationMode: 'external-provider-candidate-review', generationCandidates: [], sceneScale },
@@ -79,12 +86,13 @@ export function createGuestPlanDraft(input) {
         if (input[key] != null && typeof input[key] !== 'string') throw new Error('INVALID_BRIEF');
         return String(input[key] || '').trim();
     });
-    if ((!values[0] && !values[2]) || values.join('').length > 2000) throw new Error('INVALID_BRIEF');
+    if (values.join('').length > 2000) throw new Error('INVALID_BRIEF');
 
     const requestId = `guest-${crypto.randomUUID()}`;
     const count = resolveShotCount(input);
     const scene = input.scene || '场地待确认';
     const mood = input.mood || '自然、克制';
+    const hasCreativeDirection = [values[1], values[2], values[3], values[4], values[7]].some(Boolean);
     const sceneScale = classifySceneScale(`${input.theme || ''}\n${input.extra || ''}`);
     const soloPatterns = [
         ['环境建立镜头', '环境全景', '24mm', '平视', '先拍场地与人物的空间关系，人物停留三秒后自然移动。'],
@@ -135,7 +143,7 @@ export function createGuestPlanDraft(input) {
         directorContract: { source: 'guest-rule-draft', ...sceneScale }
     }));
     return {
-        title: input.theme || '摄影方案', input, savedAt: new Date().toISOString(), style: input.style || '',
+        title: input.theme || (hasCreativeDirection ? '自由主题拍摄方案' : '自然人像方案'), input, savedAt: new Date().toISOString(), style: input.style || '',
         images: [], coverImage: null, shotList, references: [],
         sections: shotList.map((shot, index) => ({ ti: `镜头 ${index + 1} · ${shot.title}`, ic: '', c: [
             `人物怎么做：${shot.description}`, `摄影师怎么拍：${shot.method}`,

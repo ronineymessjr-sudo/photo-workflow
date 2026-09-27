@@ -27,6 +27,22 @@ test('preserves current input and actual director shots without legacy templates
     assert.equal(plan.shotList[0].directorContract.subjectScale, undefined);
 });
 
+test('theme and style can be omitted while the Director receives safe creative guidance', async () => {
+    let submitted;
+    const plan = await createDirectorPlan({ scene: '有树荫的公园', duration: '1小时', people: '1' }, {
+        baseUrl: 'http://127.0.0.1:8004', fetchImpl: async (url, options) => {
+            submitted = JSON.parse(options.body);
+            return Response.json({ shot_plans: [{ model_pose: '自然行走', photographer_position: '沿步道侧前方拍摄' }] });
+        },
+    });
+    assert.match(submitted.brief, /主题未指定/);
+    assert.match(submitted.brief, /不要臆造未提供的具体地点、人物关系、服装或道具/);
+    assert.equal(plan.input.theme, '');
+    assert.equal(plan.input.style, '');
+    assert.equal(plan.title, '自由主题拍摄方案');
+    assert.equal(plan.shotList[0].scene, '有树荫的公园');
+});
+
 test('shot target varies with duration without copying upstream shots to fill it', async () => {
     const cases = [
         [{ theme: '纪实人像', duration: '1小时' }, 9],
@@ -65,6 +81,14 @@ test('guest draft is executable without a Director deployment and retains distin
     assert.equal(plan.shotList.length, 11);
     assert.equal(new Set(plan.shotList.map(shot => shot.title)).size, plan.shotList.length);
     assert.equal(plan.images.length, 0);
+});
+
+test('guest draft can generate a neutral portrait plan with no theme or style', () => {
+    const plan = createGuestPlanDraft({ duration: '1小时', people: '1' });
+    assert.equal(plan.title, '自然人像方案');
+    assert.equal(plan.input.theme, undefined);
+    assert.equal(plan.input.style, undefined);
+    assert.equal(plan.shotList.length, 9);
 });
 
 test('candidate generation returns a review-only external result', async () => {
