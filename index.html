@@ -6147,13 +6147,43 @@ function renderShotInstructions(shot) {
     ].filter(([,value]) => value).map(([label,value]) => '<div><dt>' + label + '</dt><dd>' + escHtml(String(value)) + '</dd></div>').join('') + '</dl>';
 }
 
+function getDirectorShotFitWarning(plan, shot, selectedIndex) {
+    const input = plan && plan.input || {};
+    const brief = [input.extra, input.modelDesc, plan && plan.director && plan.director.submittedBrief].filter(Boolean).join(' ');
+    const wantsFaceDominant = /(?:人脸|脸部|面部).{0,8}(?:重点|主体|主视觉|占画面.{0,4}(?:8\d|9\d|100)\s*%|更突出|优先)|(重点|主视觉|主体).{0,8}(?:人脸|脸部|面部)|(?:脸部|面部|人脸).{0,4}(?:特写|大特写|极特写)|face.{0,10}(?:dominant|fills|close[- ]?up)/i.test(brief);
+    const wantsWideDominant = /(?:人物|主体|模特).{0,10}(?:10\s*[-–至]\s*20|15\s*%|小比例|很小|较小比例)|(?:超远景|大远景|环境远景).{0,10}(?:为主|主视觉|主要|优先)|(?:tiny|small).{0,10}(?:subject|person)/i.test(brief);
+    if (!wantsFaceDominant && !wantsWideDominant) return '';
+
+    const framing = candidate => {
+        const contract = candidate && candidate.directorContract || {};
+        const values = [candidate && candidate.shotSize, candidate && candidate.title, candidate && candidate.description,
+            contract.shot_size, contract.framing, contract.generator_prompt, contract.must_show, contract.master_must_show];
+        return values.flatMap(value => Array.isArray(value) ? value : [value]).filter(Boolean).join(' ');
+    };
+    const isClose = candidate => /近景|特写|CU\b|MCU\b|close[- ]?up|face fills/i.test(framing(candidate));
+    const isFaceClose = candidate => isClose(candidate) && /脸|面部|双眼|眼神|face|expression/i.test(framing(candidate));
+    const isWide = candidate => /远景|全身|环境建立|大全景|wide|long shot|full[- ]body|small.{0,10}subject|10\s*[-–至]\s*20\s*%|15\s*%/i.test(framing(candidate));
+    const conflict = wantsFaceDominant ? isWide(shot) && !isFaceClose(shot) : isClose(shot) && !isWide(shot);
+    if (!conflict) return '';
+
+    const shots = Array.isArray(plan && plan.shotList) ? plan.shotList : [];
+    const alternative = shots.findIndex((candidate, index) => index !== selectedIndex && (wantsFaceDominant ? isFaceClose(candidate) : isWide(candidate)));
+    const target = wantsFaceDominant ? '脸部主体/近景特写' : '人物小比例/远景';
+    const recommendation = alternative >= 0
+        ? `建议切换到镜头 ${String(alternative + 1).padStart(2, '0')}（${target}）再生成。`
+        : `当前方案没有明确的${target}镜头，建议先调整分镜。`;
+    const current = wantsFaceDominant ? '全身/远景镜头会让脸部只占较小面积。' : '近景/特写镜头无法保留人物小比例和环境关系。';
+    return `需求与当前分镜的取景有冲突：${current} ${recommendation}仍可按当前分镜生成，不会自动改写镜头合同。`;
+}
+
 function compileDirectorSceneBrief(plan) {
     const input = plan && plan.input || {};
     return [
         input.modelDesc ? 'SUBJECT AND CLOTHING: ' + input.modelDesc : '',
         input.scene ? 'LOCATION WEATHER AND TIME: ' + input.scene : '',
         input.mood ? 'PERSISTENT MOOD: ' + input.mood : '',
-        input.style ? 'VISUAL STYLE: ' + input.style : ''
+        input.style ? 'VISUAL STYLE: ' + input.style : '',
+        input.extra ? 'USER CONSTRAINTS: ' + input.extra : ''
     ].filter(Boolean).join('\n') || (plan && plan.title) || '摄影方案';
 }
 
@@ -6162,6 +6192,7 @@ function renderDirectorCandidatePanel(plan) {
     const state = plan.director || {};
     const selected = Math.max(0, Math.min(shots.length - 1, Number(state.selectedShotIndex) || 0));
     const shot = shots[selected];
+    const fitWarning = shot ? getDirectorShotFitWarning(plan, shot, selected) : '';
     const key = escHtml(String(plan.id));
     const candidates = (state.generationCandidates || []).filter(c => Number(c.shotIndex) === selected);
     const model = state.selectedCandidateModel || 'huggingface:black-forest-labs/FLUX.1-schnell';
@@ -6171,8 +6202,19 @@ function renderDirectorCandidatePanel(plan) {
     const cards = candidates.map(c => {
         if (typeof c.url !== 'string' || !c.url.startsWith('/api/director/candidates/')) return '';
         const status = c.poseStatus === 'blocked' || c.faceQualityStatus === 'blocked' ? '检查未通过' : '待人工确认';
+        const reasonLabels = {
+            'visual-energy-too-central': '人物与画面视觉重心偏中央，本镜头要求偏离中心。',
+            'camera-angle-not-machine-verified': '当前检查器不能从图像验证俯拍角度，需人工确认机位是否成立。'
+        };
+        const reviewItems = [
+            ...(Array.isArray(c.poseReasons) ? c.poseReasons.map(reason => reasonLabels[reason] || '构图/背景检查项未通过：' + String(reason)) : []),
+            ...(c.faceQualityStatus === 'blocked' ? ['自动人脸质量评估器尚未接入；这不代表检测到脸部畸形，只表示五官结构、清晰度和皮肤纹理尚未自动验证，需人工复核。'] : [])
+        ];
+        const reviewHtml = reviewItems.length
+            ? '<details class="candidate-review-notes"><summary>检查说明</summary><ul>' + reviewItems.map(item => '<li>' + escHtml(item) + '</li>').join('') + '</ul></details>'
+            : '';
         return '<figure class="candidate-result"><img src="' + escHtml(c.url) + '" alt="镜头 ' + (selected + 1) + ' AI合成候选图"><figcaption>镜头 ' + (selected + 1) + ' · AI合成 · ' + status + '</figcaption>' +
-            (c.shotSnapshot ? '<details><summary>生成时的拍摄要求</summary>' + renderShotInstructions(c.shotSnapshot) + '</details>' : '') + '</figure>';
+            reviewHtml + (c.shotSnapshot ? '<details><summary>生成时的拍摄要求</summary>' + renderShotInstructions(c.shotSnapshot) + '</details>' : '') + '</figure>';
     }).join('');
     return `<section class="director-candidate-panel" id="img-gallery-${key}">
         <h3>分镜候选图</h3>
@@ -6180,6 +6222,7 @@ function renderDirectorCandidatePanel(plan) {
         <select id="candidate-shot-${key}" onchange="selectDirectorCandidateShot('${key}', this.value)">
             ${shots.map((s,i)=>`<option value="${i}" ${i===selected?'selected':''}>${String(i+1).padStart(2,'0')} · ${escHtml(s.title || s.description || s.scene)}</option>`).join('')}
         </select>
+        ${fitWarning ? '<p class="reference-rights" role="status" style="border-left:3px solid var(--warn);padding:.55rem .7rem;margin:.5rem 0;">' + escHtml(fitWarning) + '</p>' : ''}
         <div class="candidate-workspace">
             <div class="candidate-results" id="candidate-grid-${key}">${cards || '<p class="candidate-empty">该分镜暂无候选图</p>'}</div>
             <aside class="candidate-brief"><h4>镜头 ${selected+1} · 拍摄要求</h4>${shot ? renderShotInstructions(shot) : ''}</aside>
@@ -9862,7 +9905,8 @@ function renderHistFull(){
         // newest 是默认顺序，不需要排序
     }
     
-    $('t-hist').textContent = getPlans().length;
+    const historyBadge = $('t-hist');
+    if (historyBadge) historyBadge.textContent = getPlans().length;
     $('histFullCount').textContent = `${ps.length} 条`;
     $('histHeaderCount').textContent = `${ps.length} 条方案` + (searchInput && searchInput.value.trim() ? ` (搜索: "${searchInput.value.trim()}")` : '');
     $('clearAllBtn').style.display = ps.length ? 'block' : 'none';

@@ -237,6 +237,7 @@ test('all inline scripts parse and submit awaits director, shot list reuses resp
     assert.match(html, /\[SHOT CONTRACT - HARD\]/);
     assert.match(html, /compileDirectorShotContract/);
     assert.match(html, /function compileDirectorSceneBrief\(plan\)/);
+    assert.match(html, /USER CONSTRAINTS: '\s*\+ input\.extra/);
     assert.match(html, /scene_brief: compileDirectorSceneBrief\(plan\)/);
     assert.match(html, /function formatDirectorGenerationError\(error\)/);
     assert.match(html, /candidate-status-/);
@@ -268,4 +269,42 @@ test('all inline scripts parse and submit awaits director, shot list reuses resp
     assert.match(html, /id="schedPlanId"/);
     assert.match(html, /function applySchedulePlanSelection\(\)/);
     assert.match(html, /不会自动邀请其他账号或发送通知/);
+});
+
+test('candidate card explains composition and unverified-face blockers', async () => {
+    const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+    const start = html.indexOf('function getDirectorShotFitWarning(plan, shot, selectedIndex) {');
+    const end = html.indexOf('\nfunction formatDirectorGenerationError(error)', start);
+    assert.ok(start >= 0 && end > start);
+    const context = {
+        plan: {
+            id: 'test-plan',
+            input: { extra: '人脸是画面重点，脸部占画面90%' },
+            shotList: [
+                { title: '高机位全身镜头', shotSize: '全身', directorContract: { shot_size: 'FS', generator_prompt: 'high-angle full-body frame' } },
+                { title: '手部衣料特写', shotSize: '局部特写', directorContract: { shot_size: 'ECU', generator_prompt: 'hand and fabric detail, macro close-up' } },
+                { title: '面部表情近景', shotSize: '近景', description: '近景表情，保留眼神与面部细节', directorContract: { shot_size: 'CU', generator_prompt: 'editorial close expression portrait, face fills frame' } }
+            ],
+            director: {
+                selectedShotIndex: 0,
+                generationCandidates: [{
+                    url: '/api/director/candidates/test.png', shotIndex: 0,
+                    poseStatus: 'blocked',
+                    poseReasons: ['visual-energy-too-central', 'camera-angle-not-machine-verified'],
+                    faceQualityStatus: 'blocked'
+                }]
+            }
+        },
+        escHtml: value => String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char])),
+        inferAspectRatioFromPlan: () => 'landscape',
+        renderShotInstructions: () => ''
+    };
+    vm.runInNewContext(html.slice(start, end) + '\nresult = renderDirectorCandidatePanel(plan);', context);
+    assert.match(context.result, /检查说明/);
+    assert.match(context.result, /人物与画面视觉重心偏中央/);
+    assert.match(context.result, /检查器不能从图像验证俯拍角度/);
+    assert.match(context.result, /不代表检测到脸部畸形/);
+    assert.match(context.result, /需求与当前分镜的取景有冲突/);
+    assert.match(context.result, /建议切换到镜头 03/);
+    assert.match(context.result, /不会自动改写镜头合同/);
 });

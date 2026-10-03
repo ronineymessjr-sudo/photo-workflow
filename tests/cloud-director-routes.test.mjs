@@ -60,6 +60,11 @@ test('schedule UI describes assigned roles without claiming that notifications w
     assert.match(html, /toast\('已加入方案日程'/);
 });
 
+test('history list tolerates the absent optional sidebar badge', async () => {
+    const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+    assert.match(html, /const historyBadge = \$\('t-hist'\);\s*if \(historyBadge\) historyBadge\.textContent/);
+});
+
 test('new plan form does not prefill unrelated sensitive demo content', async () => {
     const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
     const theme = html.match(/<input id="f-theme"[^>]*>/)?.[0] || '';
