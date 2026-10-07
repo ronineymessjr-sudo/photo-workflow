@@ -3,6 +3,7 @@ import { createHash, createHmac } from 'node:crypto';
 import { createDirectorPlan, createGuestPlanDraft } from './director-plan.mjs';
 import { buildDirectorIdentityWorkflow } from './director-identity-workflow.mjs';
 import { attachJevReview } from './jev-review.mjs';
+import { createPublicInquiry, createUserSchedule, deleteCustomerInquiry, deleteUserSchedule, getCustomerInquiries, getUserSchedules, handleCrewRequest, updateInquiryStatus, updateUserSchedule } from './crew-collaboration.mjs';
 
 // Cloudflare Workers 环境中 Buffer 不可用，使用替代方案
 function base64UrlEncode(str) {
@@ -39,7 +40,7 @@ function hashPassword(password, env) {
 
 const CORS = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
+    'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type,Authorization',
     'Content-Type': 'application/json'
 };
@@ -129,46 +130,19 @@ async function handleLogin(env, body) {
 }
 
 async function handleGetSchedules(env, uid) {
-    const data = await sbQuery(env, `schedules?user_id=eq.${uid}&select=*&order=date.asc`);
-    const schedules = (data || []).map(row => {
-        let metadata = {};
-        try { metadata = row.description ? JSON.parse(row.description) : {}; } catch (_) {}
-        return {
-            ...row,
-            planId: metadata.planId || row.plan_id || '',
-            audience: metadata.audience || ['photographer', 'model', 'assistant'],
-            planSummary: metadata.planSummary || null,
-        };
-    });
-    return { status: 200, body: { schedules } };
+    return await getUserSchedules({ env, uid });
 }
 
 async function handleCreateSchedule(env, uid, body) {
-    const metadata = {
-        planId: body.planId || body.plan_id || '',
-        audience: Array.isArray(body.audience) ? body.audience : ['photographer', 'model', 'assistant'],
-        planSummary: body.planSummary || null,
-    };
-    const record = {
-        id: body.id,
-        user_id: uid,
-        date: body.date,
-        title: body.title,
-        time: body.time || null,
-        location: body.location || null,
-        description: JSON.stringify(metadata),
-        status: body.status || 'pending',
-    };
-    const data = await sbQuery(env, 'schedules', 'POST', record);
-    const saved = data && data[0] ? data[0] : record;
-    return { status: 201, body: { schedule: { ...saved, ...metadata } } };
+    return await createUserSchedule({ env, uid, body });
 }
 
 async function handleDeleteSchedule(env, uid, id) {
-    const existing = await sbQuery(env, `schedules?id=eq.${id}&user_id=eq.${uid}&select=id`);
-    if (!existing || !existing.length) return { status: 404, body: { error: '日程不存在' } };
-    await sbQuery(env, `schedules?id=eq.${id}`, 'DELETE');
-    return { status: 200, body: { success: true } };
+    return await deleteUserSchedule({ env, uid, scheduleId: id });
+}
+
+async function handleUpdateSchedule(env, uid, id, body) {
+    return await updateUserSchedule({ env, uid, scheduleId: id, body });
 }
 
 async function handleGetPlans(env, uid) {
@@ -193,8 +167,7 @@ async function handleCreatePlan(env, uid, body) {
 }
 
 async function handleGetMessages(env, uid) {
-    const data = await sbQuery(env, `messages?user_id=eq.${uid}&select=*&order=created_at.desc`);
-    return { status: 200, body: { messages: data || [] } };
+    return await getCustomerInquiries({ env, uid });
 }
 
 async function handleCreateMessage(env, uid, body) {
@@ -203,20 +176,11 @@ async function handleCreateMessage(env, uid, body) {
 }
 
 async function handleDeleteMessage(env, uid, id) {
-    const existing = await sbQuery(env, `messages?id=eq.${id}&user_id=eq.${uid}&select=id`);
-    if (!existing || !existing.length) return { status: 404, body: { error: '消息不存在' } };
-    await sbQuery(env, `messages?id=eq.${id}`, 'DELETE');
-    return { status: 200, body: { success: true } };
+    return await deleteCustomerInquiry({ env, uid, messageId: id });
 }
 
 async function handlePublicMessage(env, body) {
-    const { name, email, phone, service_type, message } = body;
-    if (!name || !email) return { status: 400, body: { error: '姓名和邮箱为必填项' } };
-    const data = await sbQuery(env, 'messages', 'POST', {
-        name, email, phone: phone || '', service_type: service_type || '其他',
-        message: message || '', status: 'new', user_id: '00000000-0000-0000-0000-000000000000'
-    });
-    return { status: 201, body: { success: true, message: data[0] } };
+    return await createPublicInquiry({ env, body });
 }
 
 async function handleDashboardStats(env, uid) {
@@ -299,9 +263,13 @@ export default {
 
         try {
             const uid = verifyToken(request.headers.get('authorization'), env);
+            const crewResult = await handleCrewRequest({ url, method, env, uid, body });
 
             // Auth
-            if (path === '/api/director/plan' && method === 'POST') {
+            if (crewResult) {
+                result = crewResult;
+            }
+            else if (path === '/api/director/plan' && method === 'POST') {
                 let plan;
                 if (!env.DIRECTOR_API_BASE || !env.DIRECTOR_API_BASE.startsWith('https://')) {
                     plan = createGuestPlanDraft(body);
@@ -336,6 +304,10 @@ export default {
                 if (!uid) result = { status: 401, body: { error: '未登录' } };
                 else result = await handleDeleteSchedule(env, uid, path.split('/').pop());
             }
+            else if (path.startsWith('/api/schedules/') && method === 'PATCH') {
+                if (!uid) result = { status: 401, body: { error: '未登录' } };
+                else result = await handleUpdateSchedule(env, uid, path.split('/').pop(), body);
+            }
             // Plans
             else if (path === '/api/plans' && method === 'GET') {
                 if (!uid) result = { status: 401, body: { error: '未登录' } };
@@ -357,6 +329,10 @@ export default {
             else if (path === '/api/messages' && method === 'POST') {
                 if (!uid) result = { status: 401, body: { error: '未登录' } };
                 else result = await handleCreateMessage(env, uid, body);
+            }
+            else if (path.startsWith('/api/messages/') && method === 'PATCH') {
+                if (!uid) result = { status: 401, body: { error: '未登录' } };
+                else result = await updateInquiryStatus({ env, uid, messageId: decodeURIComponent(path.split('/').pop()), status: body.status });
             }
             else if (path.startsWith('/api/messages/') && method === 'DELETE') {
                 if (!uid) result = { status: 401, body: { error: '未登录' } };

@@ -141,6 +141,21 @@ create policy "Users can only access their own messages" on public.messages
     for all using (auth.uid() = user_id);
 ```
 
+### 拍摄协作空间
+
+应用 `supabase/migrations/20261004_crew_hall.sql`，为每场拍摄创建私密活动、成员邀请、活动讨论和变更记录表。协作数据只能由已认证的 API 经服务端访问；不要在浏览器中使用或公开 Supabase service-role key。
+
+部署 Worker 前，在 Supabase 项目确认 URL 与 service-role key 后，以 Cloudflare secret 配置服务端变量：
+
+```bash
+npx wrangler secret put SUPABASE_URL
+npx wrangler secret put SUPABASE_SERVICE_KEY
+# 仅启用作品集公开咨询时配置
+npx wrangler secret put PUBLIC_INQUIRY_OWNER_ID
+```
+
+`SUPABASE_SERVICE_KEY` 只用于 Worker 服务端，并通过应用自己的 JWT 用户 ID 对活动与成员权限做过滤。`PUBLIC_INQUIRY_OWNER_ID` 是接收作品集公开咨询的摄影师 `users.id`；未配置时公开咨询会明确失败，不会写入无人认领的全零用户。邀请目前只生成私密邀请链接，不会自动发送邮件；链接是 14 天有效的一次性凭证，数据库只保存其哈希。受邀者须用邀请邮箱对应的账号打开完整链接并主动接受，之后才可查看地点和活动讨论。当前登录系统不提供邮箱验证，因此不要把账号邮箱本身视为验证证明，也不要把邀请链接发到公开渠道。真实跨账号协作需要完成 SQL migration 和 Worker secret 配置；本地演示登录不会模拟云端成员。既有写到全零用户 ID 的历史咨询不会被自动转移，避免擅自改变所有权。
+
 ### 第二步：部署 Cloudflare Workers
 
 1. 安装 Wrangler CLI:

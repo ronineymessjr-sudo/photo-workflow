@@ -8,8 +8,9 @@ import { buildDirectorIdentityWorkflow } from '../api/director-identity-workflow
 
 const root = path.resolve(fileURLToPath(new URL('../', import.meta.url)));
 export function createServer({
-    baseUrl = 'http://127.0.0.1:8004',
+    baseUrl = process.env.DIRECTOR_BASE_URL || 'http://127.0.0.1:8004',
     fetchImpl = fetch,
+    planFactory = createDirectorPlan,
     generationRoot = process.env.DIRECTOR_GENERATION_ROOT || 'D:\\AI项目\\director-master-aesthetic-agent-v0.28.0\\runtime\\photoatelier_external_generations',
 } = {}) {
     const allowedGenerationRoot = path.resolve(generationRoot);
@@ -30,7 +31,7 @@ export function createServer({
                     body += chunk;
                     if (Buffer.byteLength(body) > 16000) return reply(413, { error: 'BRIEF_TOO_LARGE' });
                 }
-                return reply(200, await createDirectorPlan(JSON.parse(body), { baseUrl, fetchImpl }));
+                return reply(200, await planFactory(JSON.parse(body), { baseUrl, fetchImpl }));
             }
             if (pathname === '/api/director/generate-candidate' && req.method === 'POST') {
                 if (req.headers.origin && req.headers.origin !== 'http://' + req.headers.host) return reply(403, { error: 'INVALID_ORIGIN' });
@@ -91,7 +92,7 @@ export function createServer({
                 return res.end(content);
             }
             // Never expose repository files, configuration, or credentials.
-            if (pathname !== '/' && pathname !== '/index.html' && pathname !== '/favicon.jpg' && !/^\/assets\/[\w./-]+$/.test(pathname)) return reply(404, { error: 'NOT_FOUND' });
+            if (pathname !== '/' && pathname !== '/index.html' && pathname !== '/crew.html' && pathname !== '/favicon.jpg' && !/^\/assets\/[\w./-]+$/.test(pathname)) return reply(404, { error: 'NOT_FOUND' });
             const target = path.resolve(root, '.' + (pathname === '/' ? '/index.html' : pathname));
             if (!target.startsWith(root + path.sep) && target !== path.join(root, 'index.html')) return reply(403, { error: 'FORBIDDEN' });
             const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg' };
@@ -105,6 +106,7 @@ export function createServer({
     });
 }
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-    const port = Number(process.env.DIRECTOR_BRIDGE_PORT || 8125);
-    createServer().listen(port, '127.0.0.1', () => console.log(`摄影系统：http://127.0.0.1:${port}/`));
+    const port = Number(process.argv[2] || process.env.DIRECTOR_BRIDGE_PORT || 8125);
+    const baseUrl = process.argv[3] || process.env.DIRECTOR_BASE_URL || 'http://127.0.0.1:8004';
+    createServer({ baseUrl }).listen(port, '127.0.0.1', () => console.log(`摄影系统：http://127.0.0.1:${port}/`));
 }

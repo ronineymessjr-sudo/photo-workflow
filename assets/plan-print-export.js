@@ -28,7 +28,10 @@
                     ['摄影师机位', shot.method || shot.angle], ['构图位置', shot.composition],
                     ['景别与焦段', [shot.shotSize, shot.focalLength].filter(Boolean).join(' · ')],
                     ['光线', shot.lightingSetup || shot.lighting], ['画面保留', readable(contract.must_show)],
-                    ['避免情况', readable(contract.reject_if)], ['取景边界', readable(contract.crop_boundary)]
+                    ['避免情况', readable(contract.reject_if)], ['取景边界', readable(contract.crop_boundary)],
+                    ['预计用时', shot.duration ? `${shot.duration} 分钟` : '待确认'],
+                    ['参考用途', shot.reference?.purpose],
+                    ['参考来源', shot.reference?.url ? `${shot.reference.synthetic ? 'AI 概念图' : '外部参考，真实性未核验'} · ${shot.reference.url}` : '未指定']
                 ];
                 return `<section class="shot-detail"><h3>${String(index + 1).padStart(2, '0')} · ${escapeHtml(shot.title || shot.scene || '未命名镜头')}</h3><table>${rows.map(([label, value]) => `<tr><th>${escapeHtml(label)}</th><td>${escapeHtml(value || '待补充')}</td></tr>`).join('')}</table></section>`;
             }).join('');

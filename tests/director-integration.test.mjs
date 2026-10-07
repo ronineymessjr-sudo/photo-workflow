@@ -246,7 +246,10 @@ test('all inline scripts parse and submit awaits director, shot list reuses resp
     assert.match(html, /contractBundle\.section/);
     assert.match(html, /c\.poseStatus === 'blocked' \|\| c\.faceQualityStatus === 'blocked'/);
     assert.match(html, /const IS_LOCAL_HOST = \['127\.0\.0\.1', 'localhost', '\[::1\]'\]/);
-    assert.match(html, /if \(USE_LOCAL_MODE\) \{/);
+    assert.match(html, /const USE_LOCAL_MODE = false;/);
+    assert.match(html, /localStorage\.removeItem\('pa_use_local'\)/);
+    assert.match(html, /id="guestLoginButton"/);
+    assert.doesNotMatch(html, /localApi\.login|res = await localApi/);
     assert.match(html, /window\.continueAsGuest = function/);
     assert.match(html, /localStorage\.setItem\('pa_guest_mode', 'false'\)/);
     assert.equal((html.match(/if \(USE_GUEST_MODE\) \{/g) || []).length, 1);

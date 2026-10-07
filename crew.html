@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#171a18">
+  <title>拍摄协作 | Photo Workflow</title>
+  <link rel="stylesheet" href="/assets/crew-hall.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/index.html" aria-label="返回摄影工作台"><span class="brand-mark">P</span><span>Photo Workflow</span></a>
+    <a class="back-link" href="/index.html">返回工作台</a>
+  </header>
+
+  <main class="shell">
+    <section id="authGate" class="gate" hidden>
+      <p class="eyebrow">PRIVATE SHOOT SPACE</p>
+      <h1>拍摄协作</h1>
+      <p id="authMessage">请先在摄影工作台登录，再打开拍摄协作。</p>
+      <a class="button primary" href="/index.html">前往工作台登录</a>
+    </section>
+
+    <section id="app" hidden>
+      <div class="page-heading">
+        <div><p class="eyebrow">PRIVATE SHOOT SPACE</p><h1>拍摄协作</h1><p class="subheading">从已有日程建立专属空间，让摄影师、模特和助理围绕同一场拍摄沟通。</p></div>
+        <span id="accountLabel" class="account-label"></span>
+      </div>
+      <div id="backendNotice" class="backend-notice" hidden></div>
+
+      <div class="layout">
+        <aside class="event-rail" aria-label="拍摄活动">
+          <div class="rail-heading"><h2>我的拍摄</h2><span id="eventCount" class="count">0</span></div>
+          <div class="create-event">
+            <label for="scheduleSelect">从方案日程建立协作空间</label>
+            <div class="create-row"><select id="scheduleSelect"><option value="">读取日程中…</option></select><button id="createEvent" class="button primary" type="button">建立</button></div>
+            <p class="hint">方案与日程仍保存在原处；这里建立的是该场拍摄的协作空间。</p>
+          </div>
+          <div id="eventList" class="event-list"></div>
+          <p id="listEmpty" class="empty-note" hidden>还没有协作空间。先从上方选择一条拍摄日程。</p>
+        </aside>
+
+        <section id="eventPanel" class="event-panel" aria-live="polite">
+          <div id="detailEmpty" class="detail-empty"><span class="empty-symbol">+</span><h2>选择一场拍摄</h2><p>协作消息、成员确认和拍摄变更会跟随具体日程保存。</p></div>
+          <div id="detailContent" hidden></div>
+        </section>
+      </div>
+      <p class="privacy-note">协作空间仅对创建者和受邀成员开放。邀请链接不会公开展示，受邀者须使用对应邮箱登录并确认；系统不会自动代发邮件。</p>
+    </section>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  </main>
+  <script src="/assets/crew-hall.js" defer></script>
+</body>
+</html>
