@@ -51,6 +51,14 @@ const PUBLIC_FEEDBACK_AREA_CODES = Object.freeze({
 });
 
 const COMMON_FIELDS = ['id', 'createdAt', 'updatedAt', 'payloadJson'];
+const MINI_SESSION_ROUTES = new Set([
+  'POST /api/v1/agent/plans/draft-v5',
+  'POST /api/v1/images/expected-look',
+  'POST /api/v1/visual-dna/analyze',
+  'POST /api/v1/creative-directions/generate',
+  'POST /api/v1/shots/design',
+  'POST /api/references/search-images',
+]);
 const NUMBER_FIELDS = new Set(['sequence', 'durationMinutes', 'strength', 'planScore', 'executionScore', 'keepRate', 'selectedCount']);
 const ENTITY_FIELDS = {
   projects: ['title', 'status', 'shootingType', 'date', 'location', 'style', 'brief'],
@@ -100,6 +108,116 @@ function authorize(request, env) {
   if (request.headers.get('X-PhotoAtelier-Token') !== env.APP_SYNC_TOKEN) {
     throw new HttpError(401, 'Invalid PhotoAtelier sync token');
   }
+}
+
+function miniSessionConfigured(env) {
+  return Boolean(env.WECHAT_APP_ID && env.WECHAT_APP_SECRET && env.APP_SYNC_TOKEN);
+}
+
+async function issueMiniSession(request, env) {
+  if (!miniSessionConfigured(env)) throw new HttpError(503, 'Mini Program login is not configured', 'MINI_AUTH_NOT_CONFIGURED');
+  if (!env.MINI_LOGIN_LIMITER) throw new HttpError(503, 'Mini Program login protection is not configured', 'MINI_LOGIN_RATE_LIMITER_NOT_CONFIGURED');
+  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+  const loginLimit = await env.MINI_LOGIN_LIMITER.limit({ key: `photoatelier-mini-login:${ip}` });
+  if (!loginLimit.success) throw new HttpError(429, 'Too many login attempts; retry shortly', 'MINI_LOGIN_RATE_LIMITED');
+  const payload = await request.json().catch(() => { throw new HttpError(400, 'Invalid JSON body', 'INVALID_MINI_LOGIN'); });
+  const code = typeof payload.code === 'string' ? payload.code.trim() : '';
+  if (!code || code.length > 256) throw new HttpError(400, 'A valid WeChat login code is required', 'INVALID_MINI_LOGIN');
+
+  const endpoint = new URL('https://api.weixin.qq.com/sns/jscode2session');
+  endpoint.search = new URLSearchParams({
+    appid: env.WECHAT_APP_ID,
+    secret: env.WECHAT_APP_SECRET,
+    js_code: code,
+    grant_type: 'authorization_code',
+  }).toString();
+  let result;
+  try {
+    const response = await fetch(endpoint, { signal: request.signal });
+    result = await response.json();
+    if (!response.ok || result.errcode || !result.openid || !result.session_key) throw new Error('WeChat login exchange failed');
+  } catch (_) {
+    throw new HttpError(502, 'WeChat login exchange failed', 'WECHAT_LOGIN_UPSTREAM_ERROR');
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+  const sessionToken = await signMiniSession({
+    iss: 'photoatelier-api',
+    aud: 'photoatelier-mini-v2',
+    sub: await miniSubject(env.APP_SYNC_TOKEN, env.WECHAT_APP_ID, result.openid),
+    iat: now,
+    exp: now + 1800,
+    jti: crypto.randomUUID(),
+  }, env.APP_SYNC_TOKEN);
+  return { ok: true, token: sessionToken, expiresAt: new Date((now + 1800) * 1000).toISOString() };
+}
+
+async function miniSubject(secret, appId, openId) {
+  const key = await miniSessionKey(secret);
+  const signature = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(`subject\0${appId}\0${openId}`));
+  return base64UrlEncode(new Uint8Array(signature));
+}
+
+async function signMiniSession(claims, secret) {
+  const header = base64UrlEncodeText(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+  const payload = base64UrlEncodeText(JSON.stringify(claims));
+  const message = `${header}.${payload}`;
+  const signature = await crypto.subtle.sign('HMAC', await miniSessionKey(secret), new TextEncoder().encode(message));
+  return `${message}.${base64UrlEncode(new Uint8Array(signature))}`;
+}
+
+async function verifyMiniSession(token, secret) {
+  const parts = String(token || '').split('.');
+  if (parts.length !== 3) throw new HttpError(401, 'Invalid Mini Program session', 'MINI_SESSION_INVALID');
+  let header;
+  let claims;
+  let signature;
+  try {
+    header = JSON.parse(base64UrlDecodeText(parts[0]));
+    claims = JSON.parse(base64UrlDecodeText(parts[1]));
+    signature = base64UrlDecode(parts[2]);
+  } catch (_) {
+    throw new HttpError(401, 'Invalid Mini Program session', 'MINI_SESSION_INVALID');
+  }
+  if (!header || typeof header !== 'object' || !claims || typeof claims !== 'object') {
+    throw new HttpError(401, 'Invalid Mini Program session', 'MINI_SESSION_INVALID');
+  }
+  const valid = header.alg === 'HS256'
+    && await crypto.subtle.verify('HMAC', await miniSessionKey(secret), signature, new TextEncoder().encode(`${parts[0]}.${parts[1]}`));
+  const now = Math.floor(Date.now() / 1000);
+  if (!valid || claims.iss !== 'photoatelier-api' || claims.aud !== 'photoatelier-mini-v2'
+    || typeof claims.sub !== 'string' || !claims.sub || !Number.isInteger(claims.iat) || !Number.isInteger(claims.exp)
+    || claims.exp <= now || claims.exp - claims.iat > 1800 || claims.iat > now + 60 || typeof claims.jti !== 'string' || !claims.jti) {
+    throw new HttpError(401, 'Mini Program session expired or invalid', 'MINI_SESSION_INVALID');
+  }
+  return claims;
+}
+
+async function miniSessionKey(secret) {
+  const source = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), 'HKDF', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({
+    name: 'HKDF', hash: 'SHA-256', salt: new TextEncoder().encode('PhotoAtelier'),
+    info: new TextEncoder().encode('wechat-mini-session-v1'),
+  }, source, { name: 'HMAC', hash: 'SHA-256', length: 256 }, false, ['sign', 'verify']);
+}
+
+function base64UrlEncodeText(value) { return base64UrlEncode(new TextEncoder().encode(value)); }
+function base64UrlEncode(bytes) {
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+function base64UrlDecode(value) {
+  const padded = String(value).replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(value.length / 4) * 4, '=');
+  return Uint8Array.from(atob(padded), char => char.charCodeAt(0));
+}
+function base64UrlDecodeText(value) { return new TextDecoder().decode(base64UrlDecode(value)); }
+
+async function enforceMiniRateLimit(env, claims, pathname) {
+  const limiter = pathname === '/api/v1/images/expected-look' ? env.MINI_IMAGE_LIMITER : env.MINI_AI_LIMITER;
+  if (!limiter) throw new HttpError(503, 'Mini Program API protection is not configured', 'MINI_RATE_LIMITER_NOT_CONFIGURED');
+  const result = await limiter.limit({ key: `photoatelier-mini:${claims.sub}:${pathname}` });
+  if (!result.success) throw new HttpError(429, 'This Mini Program feature is temporarily rate-limited', 'MINI_AI_RATE_LIMITED');
 }
 
 export function normalizePublicFeedback(payload = {}) {
@@ -219,8 +337,14 @@ export default {
           feishuConfigured: Boolean(env.FEISHU_APP_ID && env.FEISHU_APP_SECRET && env.FEISHU_APP_TOKEN),
           planningV5: env.AGENT_ENDPOINT_V5 || env.AGENT_ENDPOINT ? 'external-provider' : 'deterministic-context-fallback',
           visionAgent: env.AGENT_VISION_ENDPOINT ? 'external-provider' : 'deterministic-fallback',
-          imageGenerationConfigured: Boolean(env.IMAGE_GENERATION_ENDPOINT),
+          imageGenerationConfigured: Boolean(env.IMAGE_GENERATION_ENDPOINT || env.HF_TOKEN),
+          imageGenerationProvider: env.IMAGE_GENERATION_ENDPOINT ? 'custom' : env.HF_TOKEN ? 'huggingface/fal-ai' : 'not-configured',
+          imageGenerationModel: env.IMAGE_GENERATION_ENDPOINT ? 'configured-by-endpoint' : env.HF_TOKEN ? 'krea/Krea-2-Turbo' : null,
           publicFeedbackEnabled: env.PUBLIC_FEEDBACK_ENABLED === 'true',
+          miniSessionConfigured: miniSessionConfigured(env),
+          miniLoginRateLimitConfigured: Boolean(env.MINI_LOGIN_LIMITER),
+          miniAiRateLimitConfigured: Boolean(env.MINI_AI_LIMITER),
+          miniImageRateLimitConfigured: Boolean(env.MINI_IMAGE_LIMITER),
         });
       }
 
@@ -228,7 +352,21 @@ export default {
         return json(request, env, { ok: true, ...(await acceptPublicFeedback(request, env)) }, 202);
       }
 
-      authorize(request, env);
+      if (url.pathname === '/api/mini/session' && request.method === 'POST') {
+        return json(request, env, await issueMiniSession(request, env));
+      }
+
+      const authorization = request.headers.get('Authorization') || '';
+      const bearerToken = authorization.match(/^Bearer\s+(.+)$/i)?.[1];
+      if (bearerToken) {
+        const route = `${request.method} ${url.pathname}`;
+        if (!MINI_SESSION_ROUTES.has(route)) throw new HttpError(403, 'This endpoint is not available to Mini Program sessions', 'MINI_SCOPE_DENIED');
+        if (!env.APP_SYNC_TOKEN) throw new HttpError(503, 'Mini Program session verification is not configured', 'MINI_AUTH_NOT_CONFIGURED');
+        const claims = await verifyMiniSession(bearerToken, env.APP_SYNC_TOKEN || '');
+        await enforceMiniRateLimit(env, claims, url.pathname);
+      } else {
+        authorize(request, env);
+      }
 
       const agentDeps = {
         env,
@@ -246,7 +384,7 @@ export default {
 
       if (url.pathname === '/api/v1/images/expected-look' && request.method === 'POST') {
         const payload = await request.json();
-        const result = await generateExpectedLookImages(payload, env);
+        const result = await generateExpectedLookImages(payload, env, request.signal);
         return json(request, env, { ok: true, ...result });
       }
 
@@ -631,25 +769,118 @@ async function createV5PlanDraft(payload, env) {
   };
 }
 
-async function generateExpectedLookImages(payload, env) {
-  if (!env.IMAGE_GENERATION_ENDPOINT) {
-    throw new HttpError(503, 'Expected-look image provider is not configured', 'IMAGE_PROVIDER_NOT_CONFIGURED');
+async function generateExpectedLookImages(payload, env, signal) {
+  if (env.IMAGE_GENERATION_ENDPOINT) {
+    const response = await fetch(env.IMAGE_GENERATION_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(env.IMAGE_GENERATION_API_KEY ? { Authorization: `Bearer ${env.IMAGE_GENERATION_API_KEY}` } : {}) },
+      body: JSON.stringify(payload),
+      signal,
+    });
+    if (!response.ok) throw new HttpError(502, `Image provider failed: ${response.status}`, 'IMAGE_PROVIDER_FAILED', { status: response.status });
+    const data = await response.json().catch(() => null);
+    const assets = Array.isArray(data?.assets) ? data.assets : Array.isArray(data?.images) ? data.images : [];
+    const normalizedAssets = assets.filter(asset => typeof (asset?.url || asset?.imageUrl) === 'string').map((asset, index) => ({
+      id: asset.id || `provider-asset-${index + 1}`,
+      url: asset.url || asset.imageUrl,
+      width: asset.width || null,
+      height: asset.height || null,
+    }));
+    if (!normalizedAssets.length) throw new HttpError(502, 'Image provider returned no usable assets', 'IMAGE_PROVIDER_EMPTY_RESULT');
+    return {
+      requestId: data?.requestId || crypto.randomUUID(),
+      provider: data?.provider || 'configured-image-endpoint',
+      model: data?.model || 'configured-by-endpoint',
+      assets: normalizedAssets,
+    };
   }
-  const response = await fetch(env.IMAGE_GENERATION_ENDPOINT, {
+
+  if (!env.HF_TOKEN) throw new HttpError(503, 'Expected-look image provider is not configured', 'IMAGE_PROVIDER_NOT_CONFIGURED');
+  const prompt = String(payload?.prompt || '').trim();
+  if (!prompt) throw new HttpError(400, 'Expected-look prompt is required', 'INVALID_IMAGE_PROMPT');
+  const count = Math.min(4, Math.max(1, Math.floor(Number(payload.count) || 1)));
+  const imageSize = expectedLookImageSize(payload.aspectRatio);
+  const providerModel = 'fal-ai/krea-2/turbo';
+  const providerModelUrl = `https://router.huggingface.co/fal-ai/${providerModel}`;
+  const headers = { Authorization: `Bearer ${env.HF_TOKEN}`, 'Content-Type': 'application/json' };
+  const submitResponse = await fetch(`${providerModelUrl}?_subdomain=queue`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...(env.IMAGE_GENERATION_API_KEY ? { Authorization: `Bearer ${env.IMAGE_GENERATION_API_KEY}` } : {}) },
-    body: JSON.stringify(payload),
+    headers,
+    body: JSON.stringify({
+      prompt,
+      num_images: count,
+      image_size: imageSize,
+      output_format: 'jpeg',
+      enable_prompt_expansion: false,
+      enable_safety_checker: true,
+    }),
+    signal,
   });
-  const data = await response.json().catch(() => null);
-  if (!response.ok) throw new HttpError(502, `Image provider failed: ${response.status}`, 'IMAGE_PROVIDER_FAILED', { status: response.status });
-  const assets = Array.isArray(data?.assets) ? data.assets : Array.isArray(data?.images) ? data.images : [];
-  if (!assets.length) throw new HttpError(502, 'Image provider returned no assets', 'IMAGE_PROVIDER_EMPTY_RESULT');
-  return { requestId: data?.requestId || crypto.randomUUID(), assets: assets.map((asset, index) => ({
-    id: asset.id || `provider-asset-${index + 1}`,
-    url: asset.url || asset.imageUrl,
-    width: asset.width || null,
-    height: asset.height || null,
-  })) };
+  if (!submitResponse.ok) throw imageProviderError(submitResponse.status);
+  const queued = await submitResponse.json().catch(() => null);
+  if (!queued?.request_id) throw new HttpError(502, 'Image provider returned an invalid queue response', 'IMAGE_PROVIDER_INVALID_RESPONSE');
+
+  const requestId = String(queued.request_id);
+  const requestUrl = `${providerModelUrl}/${encodeURIComponent(requestId)}`;
+  const deadline = Date.now() + 150_000;
+  let status = queued.status;
+  while (status !== 'COMPLETED') {
+    if (status === 'FAILED' || status === 'CANCELLED') {
+      throw new HttpError(502, 'Image provider could not complete this request', 'IMAGE_PROVIDER_FAILED', { requestId });
+    }
+    if (Date.now() >= deadline) throw new HttpError(504, 'Image generation timed out while waiting for the provider', 'IMAGE_PROVIDER_TIMEOUT', { requestId });
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    const statusResponse = await fetch(`${requestUrl}/status?_subdomain=queue`, { headers, signal });
+    if (!statusResponse.ok) throw imageProviderError(statusResponse.status);
+    const statusPayload = await statusResponse.json().catch(() => null);
+    status = statusPayload?.status;
+    if (!status) throw new HttpError(502, 'Image provider returned an invalid queue status', 'IMAGE_PROVIDER_INVALID_RESPONSE', { requestId });
+  }
+
+  const resultResponse = await fetch(`${requestUrl}?_subdomain=queue`, { headers, signal });
+  if (!resultResponse.ok) throw imageProviderError(resultResponse.status);
+  const result = await resultResponse.json().catch(() => null);
+  const images = Array.isArray(result?.images) ? result.images : [];
+  const assets = images.filter(image => isFalHostedImageUrl(image?.url)).map((image, index) => ({
+    id: `${requestId}:${index + 1}`,
+    url: image.url,
+    width: image.width || imageSize.width,
+    height: image.height || imageSize.height,
+  }));
+  if (!assets.length) throw new HttpError(502, 'Image provider returned no usable image URLs', 'IMAGE_PROVIDER_EMPTY_RESULT', { requestId });
+  return { requestId, provider: 'huggingface/fal-ai', model: 'krea/Krea-2-Turbo', assets };
+}
+
+function expectedLookImageSize(aspectRatio) {
+  const sizes = {
+    '1:1': { width: 1024, height: 1024 },
+    '3:2': { width: 1536, height: 1024 },
+    '2:3': { width: 1024, height: 1536 },
+    '4:3': { width: 1360, height: 1024 },
+    '3:4': { width: 1024, height: 1360 },
+    '16:9': { width: 1536, height: 864 },
+    '9:16': { width: 864, height: 1536 },
+    '4:5': { width: 1024, height: 1280 },
+    '5:4': { width: 1280, height: 1024 },
+  };
+  return sizes[String(aspectRatio || '3:2')] || sizes['3:2'];
+}
+
+function isFalHostedImageUrl(value) {
+  if (typeof value !== 'string') return false;
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && (url.hostname === 'fal.media' || url.hostname.endsWith('.fal.media'));
+  } catch {
+    return false;
+  }
+}
+
+function imageProviderError(status) {
+  if (status === 402) return new HttpError(402, 'Hugging Face inference credits are unavailable; no paid fallback was attempted', 'IMAGE_PROVIDER_CREDITS_EXHAUSTED');
+  if (status === 401 || status === 403) return new HttpError(503, 'Hugging Face image provider credentials are invalid or lack inference permission', 'IMAGE_PROVIDER_AUTH_FAILED');
+  if (status === 429) return new HttpError(429, 'Image provider rate limit reached; try again later', 'IMAGE_PROVIDER_RATE_LIMITED');
+  return new HttpError(502, `Image provider failed: ${status}`, 'IMAGE_PROVIDER_FAILED', { status });
 }
 
 function deterministicV5Plan(snapshot, instruction) {
