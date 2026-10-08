@@ -29,6 +29,20 @@ const snapshot = {
   lookRequest: { enabled: true, colorIntent: '低饱和蓝橙', lightingIntent: '保留霓虹', retouchIntent: '保留肤质', lutIntent: '创意 LUT' },
 };
 
+test('reference search reports an unconfigured source without contacting the provider', async () => {
+  const originalFetch = globalThis.fetch;
+  let contactedProvider = false;
+  globalThis.fetch = async () => { contactedProvider = true; throw new Error('unexpected provider request'); };
+  try {
+    const response = await worker.fetch(request('/api/references/search-images', { query: 'portrait', count: 1 }), env);
+    assert.equal(response.status, 503);
+    assert.equal((await response.json()).code, 'REFERENCE_SOURCE_NOT_CONFIGURED');
+    assert.equal(contactedProvider, false);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test('Mini Program login exchanges a one-time code for a scoped, short-lived session without exposing WeChat identifiers', async () => {
   const originalFetch = globalThis.fetch;
   const paths = [];

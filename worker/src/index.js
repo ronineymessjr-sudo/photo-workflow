@@ -683,7 +683,7 @@ function tableIdFor(entity, env) {
 }
 
 async function searchReferenceImages(query, count, env) {
-  if (!env.PEXELS_API_KEY) throw new Error('PEXELS_API_KEY missing');
+  if (!env.PEXELS_API_KEY) throw new HttpError(503, '在线参考检索尚未配置', 'REFERENCE_SOURCE_NOT_CONFIGURED');
   const response = await fetch(`https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=${Math.min(Number(count) || 12, 30)}`, {
     headers: { Authorization: env.PEXELS_API_KEY },
   });
