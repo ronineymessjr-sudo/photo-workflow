@@ -18,4 +18,4 @@ User-agent: anthropic-ai
 Allow: /
 
 # Sitemap
-Sitemap: https://ronineymessjr-sudo.github.io/photo-workflow/sitemap.xml
+Sitemap: https://photo-workflow.pages.dev/sitemap.xml

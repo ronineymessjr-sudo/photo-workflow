@@ -3,6 +3,7 @@ import { createHash, createHmac } from 'node:crypto';
 import { createDirectorPlan, createGuestPlanDraft } from './director-plan.mjs';
 import { buildDirectorIdentityWorkflow } from './director-identity-workflow.mjs';
 import { attachJevReview } from './jev-review.mjs';
+import { recordWebRequest } from './web-telemetry.mjs';
 
 // Cloudflare Workers 环境中 Buffer 不可用，使用替代方案
 function base64UrlEncode(str) {
@@ -113,6 +114,7 @@ async function handleLogin(env, body) {
         
         const sanitizedEmail = sanitizeString(email, 255);
         const users = await sbQuery(env, `users?email=eq.${encodeURIComponent(sanitizedEmail)}&select=*`);
+        if (users.error) return { status: 503, body: { error: '登录服务暂时不可用，请稍后重试' } };
         
         if (users && users.length > 0) {
             if (users[0].password_hash !== hashPassword(password, env)) return { status: 401, body: { error: '密码错误' } };
@@ -120,11 +122,10 @@ async function handleLogin(env, body) {
         }
 
         const newUser = await sbQuery(env, 'users', 'POST', { email: sanitizedEmail, password_hash: hashPassword(password, env) });
-        if (newUser.error) return { status: 500, body: { error: '注册失败: ' + (newUser.error.message || newUser.error) } };
+        if (newUser.error) return { status: 503, body: { error: '注册服务暂时不可用，请稍后重试' } };
         return { status: 201, body: { success: true, user: { id: newUser[0].id, email: newUser[0].email }, token: genToken(newUser[0].id, env) } };
     } catch (err) {
-        console.error('Login error:', err);
-        return { status: 500, body: { error: '服务器错误: ' + err.message } };
+        return { status: 500, body: { error: '登录服务发生错误，请稍后重试' } };
     }
 }
 
@@ -344,9 +345,7 @@ export default {
             else if (path === '/api/plans' && method === 'POST') {
                 if (!uid) result = { status: 401, body: { error: '未登录' } };
                 else {
-                    console.log('Creating plan for user:', uid, 'body:', JSON.stringify(body));
                     result = await handleCreatePlan(env, uid, body);
-                    console.log('Plan result:', JSON.stringify(result));
                 }
             }
             // Messages
@@ -373,22 +372,24 @@ export default {
             }
             // Health
             else if (path === '/api/health' || path === '/health') {
-                result = { status: 200, body: { status: 'ok', time: new Date().toISOString() } };
+                result = { status: 200, body: { status: 'ok', time: new Date().toISOString(), service: 'photo-workflow-web', release: 'web-discovery-20261015' } };
             }
             else {
                 result = { status: 404, body: { error: 'Not Found' } };
             }
 
+            const requestId = recordWebRequest(request, result, env, body);
             return new Response(JSON.stringify(result.body), { 
                 status: result.status, 
-                headers: { ...CORS, 'Content-Type': 'application/json' } 
+                headers: { ...CORS, 'Content-Type': 'application/json', 'X-Request-Id': requestId }
             });
 
         } catch (e) {
-            console.error('API Error:', e);
-            return new Response(JSON.stringify({ error: e.message || 'Unknown error' }), { 
+            const failure = { status: 500, body: { error: '服务器暂时不可用，请稍后重试' } };
+            const requestId = recordWebRequest(request, failure, env, body);
+            return new Response(JSON.stringify(failure.body), {
                 status: 500, 
-                headers: { ...CORS, 'Content-Type': 'application/json' } 
+                headers: { ...CORS, 'Content-Type': 'application/json', 'X-Request-Id': requestId }
             });
         }
     }

@@ -45,4 +45,4 @@ jobs:
       - name: Verify Deployment
         run: |
           sleep 5
-          curl -f https://photoatelier-api.your-account.workers.dev/health || echo "请检查 Worker 地址"
+          curl --fail --silent --show-error https://photoatelier-api.photomagic.workers.dev/api/health
