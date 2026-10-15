@@ -4115,9 +4115,13 @@ if (document.getElementById('loginOverlay')) {
     const TOKEN_KEY = 'pw_token';
     const USER_KEY = 'pw_user';
     const ROLE_KEY = 'pw_role';
-    const USE_LOCAL_MODE = IS_LOCAL_HOST || localStorage.getItem('pa_use_local') === 'true';
-    const USE_GUEST_MODE = !IS_LOCAL_HOST && !localStorage.getItem(TOKEN_KEY) && localStorage.getItem('pa_guest_mode') !== 'false';
-    const USE_BROWSER_STORAGE = USE_LOCAL_MODE || USE_GUEST_MODE;
+    if (!IS_LOCAL_HOST && localStorage.getItem(TOKEN_KEY) === 'local-token') {
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(USER_KEY);
+    }
+    const USE_LOCAL_MODE = IS_LOCAL_HOST;
+    let USE_GUEST_MODE = !IS_LOCAL_HOST && !localStorage.getItem(TOKEN_KEY) && localStorage.getItem('pa_guest_mode') !== 'false';
+    let USE_BROWSER_STORAGE = USE_LOCAL_MODE || USE_GUEST_MODE;
     window.__PHOTOATELIER_LOCAL_MODE__ = USE_LOCAL_MODE;
     window.__PHOTOATELIER_GUEST_MODE__ = USE_GUEST_MODE;
 
@@ -4212,19 +4216,16 @@ if (document.getElementById('loginOverlay')) {
         document.getElementById('loginLoading').style.display = 'block';
 
         try {
-            let res;
-            try {
-                res = await window.api.login(email, password);
-            } catch (e) {
-                // Fallback to local mode
-                /* Backend unreachable, switching to local mode */
-                localStorage.setItem('pa_use_local', 'true');
-                res = await localApi.login({ email, password });
-                toast('后端服务不可用，已切换到本地模式', 'i');
-            }
+            const res = USE_LOCAL_MODE ? await localApi.login({ email, password }) : await window.api.login(email, password);
             if (res.success || res.token === 'local-token') {
                 localStorage.setItem(TOKEN_KEY, res.token);
                 localStorage.setItem(USER_KEY, JSON.stringify(res.user));
+                if (!USE_LOCAL_MODE) {
+                    localStorage.setItem('pa_guest_mode', 'false');
+                    USE_GUEST_MODE = false;
+                    USE_BROWSER_STORAGE = false;
+                    window.__PHOTOATELIER_GUEST_MODE__ = false;
+                }
                 document.getElementById('welcomeEmail').textContent = res.user.email;
                 showRoleSelector();
                 toast('登录成功', 'ok');
@@ -4234,7 +4235,7 @@ if (document.getElementById('loginOverlay')) {
                 document.getElementById('loginLoading').style.display = 'none';
             }
         } catch (e) {
-            toast('网络错误: ' + e.message, 'er');
+            toast(e.message || '登录失败，请稍后重试', 'er');
             document.getElementById('loginForm').style.display = 'block';
             document.getElementById('loginLoading').style.display = 'none';
         }

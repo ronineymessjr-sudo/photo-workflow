@@ -12,6 +12,7 @@ ENVIRONMENT = "production"
 # JWT_SECRET
 # SUPABASE_URL
 # SUPABASE_ANON_KEY
+# SUPABASE_SERVICE_KEY (server-only; never included in static assets)
 # MINIMAX_API_KEY
 
 [ai]

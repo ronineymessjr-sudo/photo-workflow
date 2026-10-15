@@ -47,16 +47,17 @@ const CORS = {
 
 // ===== HTTP Helper using fetch =====
 async function sbQuery(env, path, method = 'GET', body = null) {
-    // 调试：检查环境变量
-    if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) {
+    const key = env.SUPABASE_SERVICE_KEY;
+    if (!env.SUPABASE_URL || !key) {
         return { error: 'Supabase not configured' };
     }
-    const url = `https://${env.SUPABASE_URL}/rest/v1/${path}`;
+    const base = env.SUPABASE_URL.trim().replace(/\/+$/, '');
+    const url = `${base.startsWith('https://') ? base : `https://${base}`}/rest/v1/${path}`;
     const headers = {
-        'apikey': env.SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${env.SUPABASE_ANON_KEY}`,
+        'apikey': key,
         'Content-Type': 'application/json'
     };
+    if (!key.startsWith('sb_secret_')) headers.Authorization = `Bearer ${key}`;
     if (method === 'POST' || method === 'PATCH') {
         headers['Prefer'] = 'return=representation';
     }
@@ -113,7 +114,7 @@ async function handleLogin(env, body) {
         if (!validatePassword(password)) return { status: 400, body: { error: '密码长度需为6-128位' } };
         
         const sanitizedEmail = sanitizeString(email, 255);
-        const users = await sbQuery(env, `users?email=eq.${encodeURIComponent(sanitizedEmail)}&select=*`);
+        const users = await sbQuery(env, `users?email=eq.${encodeURIComponent(sanitizedEmail)}&select=id,email,password_hash&limit=1`);
         if (users.error) return { status: 503, body: { error: '登录服务暂时不可用，请稍后重试' } };
         
         if (users && users.length > 0) {
@@ -166,9 +167,10 @@ async function handleCreateSchedule(env, uid, body) {
 }
 
 async function handleDeleteSchedule(env, uid, id) {
-    const existing = await sbQuery(env, `schedules?id=eq.${id}&user_id=eq.${uid}&select=id`);
+    const filter = `id=eq.${encodeURIComponent(id)}&user_id=eq.${encodeURIComponent(uid)}`;
+    const existing = await sbQuery(env, `schedules?${filter}&select=id`);
     if (!existing || !existing.length) return { status: 404, body: { error: '日程不存在' } };
-    await sbQuery(env, `schedules?id=eq.${id}`, 'DELETE');
+    await sbQuery(env, `schedules?${filter}`, 'DELETE');
     return { status: 200, body: { success: true } };
 }
 
@@ -204,9 +206,10 @@ async function handleCreateMessage(env, uid, body) {
 }
 
 async function handleDeleteMessage(env, uid, id) {
-    const existing = await sbQuery(env, `messages?id=eq.${id}&user_id=eq.${uid}&select=id`);
+    const filter = `id=eq.${encodeURIComponent(id)}&user_id=eq.${encodeURIComponent(uid)}`;
+    const existing = await sbQuery(env, `messages?${filter}&select=id`);
     if (!existing || !existing.length) return { status: 404, body: { error: '消息不存在' } };
-    await sbQuery(env, `messages?id=eq.${id}`, 'DELETE');
+    await sbQuery(env, `messages?${filter}`, 'DELETE');
     return { status: 200, body: { success: true } };
 }
 
