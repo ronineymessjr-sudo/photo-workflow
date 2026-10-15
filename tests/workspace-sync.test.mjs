@@ -6,6 +6,20 @@ import { WorkspaceSync } from '../api/workspace-state.mjs';
 import { mergeWorkspace, workspaceEntryKey, isWorkspaceEntry } from '../assets/workspace-sync-protocol.mjs';
 
 const key = id => workspaceEntryKey('local', 'pw_eq', `record:${id}`);
+test('session validation rejects forged, expired, future and incomplete tokens', async () => {
+    const env = { JWT_SECRET: 'unit-test-secret' };
+    const signed = payload => {
+        const p = JSON.stringify(payload);
+        return Buffer.from(JSON.stringify({ p, s: createHmac('sha256', env.JWT_SECRET).update(p).digest('hex') })).toString('base64url');
+    };
+    const check = token => worker.fetch(new Request('https://worker/api/auth/session', { headers: { Authorization: `Bearer ${token}` } }), env);
+    for (const token of ['local-token', 'forged', signed({ uid: 'a' }), signed({ uid: 'a', t: Date.now() - 8 * 86400000 }), signed({ uid: 'a', t: Date.now() + 86400000 })]) {
+        assert.equal((await check(token)).status, 401);
+    }
+    const valid = await check(signed({ uid: 'a', t: Date.now() }));
+    assert.equal(valid.status, 200);
+    assert.deepEqual((await valid.json()).user, { id: 'a' });
+});
 test('independent edits and deletions merge; concurrent record changes preserve both copies', () => {
     const base = { [key('a')]: { id: 'a', n: 'A' }, [key('b')]: { id: 'b', n: 'B' } };
     const local = { ...base, [key('a')]: { id: 'a', n: 'A2' } };

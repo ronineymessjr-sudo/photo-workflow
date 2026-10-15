@@ -2886,7 +2886,6 @@
                 <input type="password" id="loginPassword" placeholder="输入密码" data-i18n-placeholder="login.password" style="width:100%;padding:12px 16px;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;color:var(--t1);font-family:inherit;font-size:.95rem;transition:all .2s;">
             </div>
             <button onclick="handleLogin()" class="btn btn-p" style="width:100%;padding:12px;border-radius:8px;font-size:.95rem;font-weight:500;margin-top:.5rem;" data-i18n="login.button">登录</button>
-            <button onclick="continueAsGuest()" class="btn btn-s" style="width:100%;padding:12px;border-radius:8px;font-size:.95rem;font-weight:500;margin-top:.75rem;">以游客身份继续</button>
             <p style="margin-top:1.5rem;font-size:.8rem;color:var(--t3);text-align:center;" data-i18n="login.hint">首次登录将自动创建账号</p>
         </div>
         <div id="loginLoading" style="display:none;margin-top:1.5rem;">
@@ -3920,6 +3919,7 @@
 
 <div class="toast" id="toast"></div>
 
+<script src="assets/account-storage.js"></script>
 <script src="assets/director-client.js"></script>
 <script>
 // i18n System
@@ -4119,11 +4119,20 @@ if (document.getElementById('loginOverlay')) {
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem(USER_KEY);
     }
-    const USE_LOCAL_MODE = IS_LOCAL_HOST;
-    let USE_GUEST_MODE = !IS_LOCAL_HOST && !localStorage.getItem(TOKEN_KEY) && localStorage.getItem('pa_guest_mode') !== 'false';
+    const USE_LOCAL_MODE = IS_LOCAL_HOST && new URLSearchParams(location.search).get('offline') === '1';
+    let USE_GUEST_MODE = false;
     let USE_BROWSER_STORAGE = USE_LOCAL_MODE || USE_GUEST_MODE;
+    let SESSION_VERIFIED = USE_LOCAL_MODE;
+    window.__PHOTOATELIER_SESSION_VERIFIED__ = SESSION_VERIFIED;
     window.__PHOTOATELIER_LOCAL_MODE__ = USE_LOCAL_MODE;
     window.__PHOTOATELIER_GUEST_MODE__ = USE_GUEST_MODE;
+    function lockSession() {
+        SESSION_VERIFIED = false;
+        window.__PHOTOATELIER_SESSION_VERIFIED__ = false;
+        document.getElementById('appLayout').style.display = 'none';
+        document.getElementById('roleOverlay').style.display = 'none';
+        document.getElementById('loginOverlay').style.display = 'flex';
+    }
 
     // Local mode API mock for offline usage
     const localApi = {
@@ -4181,6 +4190,7 @@ if (document.getElementById('loginOverlay')) {
             try {
                 const r = await fetch(API_BASE + path, opts);
                 clearTimeout(timeoutId);
+                if (r.status === 401 && path !== '/api/auth/login' && localStorage.getItem(TOKEN_KEY) === token) lockSession();
                 if (!r.ok) { let errMsg = '请求失败'; try { const errData = await r.json(); errMsg = errData.error || errMsg; } catch(e) { errMsg = r.statusText || errMsg; } throw new Error(errMsg); }
                 const text = await r.text();
                 try { return JSON.parse(text); } catch(e) { throw new Error('响应格式错误'); }
@@ -4218,6 +4228,8 @@ if (document.getElementById('loginOverlay')) {
         try {
             const res = USE_LOCAL_MODE ? await localApi.login({ email, password }) : await window.api.login(email, password);
             if (res.success || res.token === 'local-token') {
+                if (!res.token || !res.user?.id) throw new Error('登录响应缺少账号信息');
+                await window.PhotoAtelierAccountStorage.activate(res.user.id);
                 localStorage.setItem(TOKEN_KEY, res.token);
                 localStorage.setItem(USER_KEY, JSON.stringify(res.user));
                 if (!USE_LOCAL_MODE) {
@@ -4226,9 +4238,8 @@ if (document.getElementById('loginOverlay')) {
                     USE_BROWSER_STORAGE = false;
                     window.__PHOTOATELIER_GUEST_MODE__ = false;
                 }
-                document.getElementById('welcomeEmail').textContent = res.user.email;
-                showRoleSelector();
-                toast('登录成功', 'ok');
+                document.getElementById('loginPassword').value = '';
+                location.reload();
             } else {
                 toast(res.error || '登录失败', 'er');
                 document.getElementById('loginForm').style.display = 'block';
@@ -4242,23 +4253,35 @@ if (document.getElementById('loginOverlay')) {
     };
 
     // Logout
-    window.logout = function() {
+    let loggingOut = false;
+    window.logout = async function() {
+        if (loggingOut) return;
+        loggingOut = true;
+        document.getElementById('appLayout').style.display = 'none';
+        document.getElementById('roleOverlay').style.display = 'none';
         if (typeof _msgRefreshTimer !== 'undefined') clearInterval(_msgRefreshTimer);
         if (typeof _msgNotifyTimer !== 'undefined') clearInterval(_msgNotifyTimer);
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(USER_KEY);
-        localStorage.removeItem(ROLE_KEY);
-        localStorage.setItem('pa_guest_mode', 'false');
-        location.reload();
+        try {
+            await window.PhotoAtelierWorkspaceSync?.sync({ force: true, noReload: true });
+            SESSION_VERIFIED = false;
+            window.__PHOTOATELIER_SESSION_VERIFIED__ = false;
+            await window.PhotoAtelierAccountStorage.activate(null);
+            localStorage.removeItem(TOKEN_KEY);
+            localStorage.removeItem(USER_KEY);
+            localStorage.removeItem(ROLE_KEY);
+            localStorage.setItem('pa_guest_mode', 'false');
+            location.reload();
+        } catch (e) {
+            loggingOut = false;
+            toast('账号缓存保存失败，请重试退出：' + e.message, 'er');
+        }
     };
-
-    window.continueAsGuest = function() {
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(USER_KEY);
-        localStorage.setItem(ROLE_KEY, 'photographer');
-        localStorage.setItem('pa_guest_mode', 'true');
+    window.addEventListener('storage', function(e) {
+        if (![TOKEN_KEY, USER_KEY, 'pa_workspace_owner', null].includes(e.key)) return;
+        document.getElementById('appLayout').style.display = 'none';
+        window.__PHOTOATELIER_SESSION_VERIFIED__ = false;
         location.reload();
-    };
+    });
 
     // Mouse spotlight effect
 (function() {
@@ -4468,6 +4491,7 @@ function closeShortcutsModal(e) {
 
     // Enter app with selected role
     window.enterApp = function(role) {
+        if (!SESSION_VERIFIED) return;
         try { localStorage.setItem(ROLE_KEY, role); } catch(e) {}
         var overlay = document.getElementById('roleOverlay');
         var appLayout = document.getElementById('appLayout');
@@ -4489,7 +4513,7 @@ function closeShortcutsModal(e) {
 
     // Load data from server
     async function loadServerData() {
-        if (USE_BROWSER_STORAGE) return;
+        if (USE_BROWSER_STORAGE || !SESSION_VERIFIED) return;
         const token = localStorage.getItem(TOKEN_KEY);
         if (!token) {
             /* Not logged in, skipping server sync */
@@ -4497,6 +4521,7 @@ function closeShortcutsModal(e) {
         }
         try {
             const schedules = await window.api.getSchedules();
+            if (localStorage.getItem(TOKEN_KEY) !== token || !SESSION_VERIFIED) return;
             if (schedules.schedules) {
                 // Merge with local data
                 const local = safeJsonParse('pw_schedule', []);
@@ -4545,62 +4570,48 @@ function closeShortcutsModal(e) {
         return;
     }
 
-    if (USE_GUEST_MODE) {
-        role = role || 'photographer';
-        localStorage.setItem(ROLE_KEY, role);
-        const welcomeEl = document.getElementById('welcomeEmail');
-        if (welcomeEl) welcomeEl.textContent = '游客模式';
-        const loginOverlay = document.getElementById('loginOverlay');
-        const roleOverlay = document.getElementById('roleOverlay');
-        const appLayout = document.getElementById('appLayout');
-        if (loginOverlay) loginOverlay.style.display = 'none';
-        if (roleOverlay) roleOverlay.style.display = 'none';
-        const particles = document.querySelector('.particles');
-        if (particles) particles.remove();
-        if (appLayout) {
-            appLayout.style.display = 'flex';
-            setTimeout(function() { initTabs(); applyRoleExperience(role); }, 100);
-        }
-        return;
-    }
-
-    if (token && user) {
-        try {
-            const userData = JSON.parse(user);
-            const welcomeEl = document.getElementById('welcomeEmail');
-            if (welcomeEl) welcomeEl.textContent = userData.email;
-            if (role) {
-                // Already logged in and has role - skip overlays
-                const loginOverlay = document.getElementById('loginOverlay');
-                const roleOverlay = document.getElementById('roleOverlay');
-                const appLayout = document.getElementById('appLayout');
-                if (loginOverlay) loginOverlay.style.display = 'none';
-                var particles = document.querySelector('.particles');
-                if (particles) particles.remove();
-                if (roleOverlay) roleOverlay.style.display = 'none';
-                if (appLayout) {
-                    appLayout.style.display = 'flex';
-                    setTimeout(function() { initTabs(); applyRoleExperience(role); loadServerData(); }, 100);
-                }
-            } else {
-                // Logged in but no role - show role selector
-                const loginOverlay = document.getElementById('loginOverlay');
-                const roleOverlay = document.getElementById('roleOverlay');
-                if (loginOverlay) loginOverlay.style.display = 'none';
-                var particles = document.querySelector('.particles');
-                if (particles) particles.remove();
-                if (roleOverlay) roleOverlay.style.display = 'flex';
-            }
-        } catch (e) {
-            console.error('Auth check error:', e);
-        }
-    } else {
-        // 未登录 - 强制显示登录界面，隐藏主应用
+    async function restoreSession() {
         const loginOverlay = document.getElementById('loginOverlay');
         const appLayout = document.getElementById('appLayout');
-        if (loginOverlay) loginOverlay.style.display = 'flex';
         if (appLayout) appLayout.style.display = 'none';
+        if (loginOverlay) loginOverlay.style.display = 'flex';
+        if (!token || !user) {
+            await window.PhotoAtelierAccountStorage.activate(null);
+            localStorage.removeItem(TOKEN_KEY);
+            localStorage.removeItem(USER_KEY);
+            return;
+        }
+        try {
+            const verified = await window.api.request('/api/auth/session');
+            if (localStorage.getItem(TOKEN_KEY) !== token) return;
+            if (!verified.success || !verified.user?.id) throw new Error('请重新登录');
+            await window.PhotoAtelierAccountStorage.activate(verified.user.id);
+            const cached = JSON.parse(user);
+            localStorage.setItem(USER_KEY, JSON.stringify({ ...cached, id: verified.user.id }));
+            SESSION_VERIFIED = true;
+            window.__PHOTOATELIER_SESSION_VERIFIED__ = true;
+            window.dispatchEvent(new Event('photoatelier:session-ready'));
+            // Reload once after the storage swap so all in-memory views use this account.
+            if (window.__PHOTOATELIER_BOOT_OWNER__ !== String(verified.user.id)) {
+                location.reload();
+                return;
+            }
+            document.getElementById('welcomeEmail').textContent = cached.email || '';
+            role = localStorage.getItem(ROLE_KEY);
+            if (loginOverlay) loginOverlay.style.display = 'none';
+            const particles = document.querySelector('.particles');
+            if (particles) particles.remove();
+            if (role) window.enterApp(role);
+            else showRoleSelector();
+        } catch (e) {
+            SESSION_VERIFIED = false;
+            window.__PHOTOATELIER_SESSION_VERIFIED__ = false;
+            // Keep the account cache intact when the server is unreachable.
+            toast(e.message || '登录验证失败，请重新登录', 'er');
+        }
     }
+    restoreSession().catch(e => toast('账号缓存读取失败：' + e.message, 'er'));
+
 })();
 
 // ===== Sidebar Toggle =====
@@ -11363,7 +11374,7 @@ function exportAllData() {
     const data = {};
     for (let i = 0; i < localStorage.length; i++) {
         const k = localStorage.key(i);
-        if (k.startsWith('pw_') || k.startsWith('pa_')) {
+        if (PhotoAtelierAccountStorage.isBusinessKey(k)) {
             data[k] = localStorage.getItem(k);
         }
     }
@@ -11384,7 +11395,7 @@ function importAllData(e) {
             const data = JSON.parse(ev.target.result);
             let count = 0;
             for (const [k, v] of Object.entries(data)) {
-                if (k.startsWith('pw_') || k.startsWith('pa_')) {
+                if (PhotoAtelierAccountStorage.isBusinessKey(k)) {
                     localStorage.setItem(k, v);
                     count++;
                 }
@@ -11403,7 +11414,7 @@ function clearAllData() {
     const keys = [];
     for (let i = 0; i < localStorage.length; i++) {
         const k = localStorage.key(i);
-        if (k.startsWith('pw_') || k.startsWith('pa_')) keys.push(k);
+        if (PhotoAtelierAccountStorage.isBusinessKey(k)) keys.push(k);
     }
     keys.forEach(k => localStorage.removeItem(k));
     toast('数据已清空，刷新页面生效', 'ok');

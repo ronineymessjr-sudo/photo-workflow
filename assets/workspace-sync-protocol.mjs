@@ -1,5 +1,5 @@
-const keys = new Set(['pw_plans', 'pw_eq', 'pw_venues', 'pw_models', 'pw_tpl', 'pw_schedule', 'pw_schedules', 'pw_messages', 'pw_todos', 'pa_custom_shots', 'pa_quote_settings']);
-export const isWorkspaceLocalKey = key => keys.has(key) || /^pa_(?:shots|shot_status|shot_rating|shot_keeper|shot_notes|shot_time|shot_images)_[\w-]+$/.test(key);
+import './account-storage.js';
+export const isWorkspaceLocalKey = globalThis.PhotoAtelierAccountStorage.isBusinessKey;
 export const workspaceEntryKey = (kind, name, id) => JSON.stringify([kind, name, id]);
 export function isWorkspaceEntry(key) {
     try {

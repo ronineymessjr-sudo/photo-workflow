@@ -52,31 +52,38 @@ function apply(entries) {
 function editing() {
     return /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName || '') || document.activeElement?.isContentEditable;
 }
-export async function syncWorkspace() {
+export async function syncWorkspace(options = {}) {
+    if (!window.__PHOTOATELIER_SESSION_VERIFIED__) return false;
     const token = localStorage.getItem('pw_token');
-    if (running || !token || token === 'local-token' || editing()) return;
+    if (!token || token === 'local-token' || (!options.force && editing()) || window.PhotoAtelierAccountStorage?.changing) return false;
+    if (running) return false;
     let user;
     try { user = JSON.parse(localStorage.getItem('pw_user') || '{}').id; } catch { return; }
-    if (!user || !window.api) return;
+    if (!user || !window.api) return false;
+    const sameSession = () => localStorage.getItem('pw_token') === token
+        && localStorage.getItem('pa_workspace_owner') === String(user)
+        && !window.PhotoAtelierAccountStorage?.changing;
     running = true;
     try {
         const owner = localStorage.getItem('pa_workspace_owner');
         if (owner && owner !== String(user)) throw new Error('浏览器保留着另一账号的资料，请先导出备份；未向当前账号上传。');
         const old = await baseline(String(user), 'read');
         const remote = await window.api.request('/api/workspace/state');
+        if (!sameSession()) return false;
         const local = capture();
         const merged = mergeWorkspace(old, local, remote.entries);
         if (merged.conflicts.length) throw new Error(`同步冲突：${merged.conflicts.length} 条资料在两边都被修改，两份原始数据均已保留。`);
-        if (editing()) return;
+        if (!options.force && editing()) return false;
         if (!equivalent(merged.entries, remote.entries)) await window.api.request('/api/workspace/state', 'POST', { revision: remote.revision, entries: merged.entries }, 45000);
         // Requests may outlive user input; do not replace changes made meanwhile.
-        if (!equivalent(capture(), local) || editing()) return;
+        if (!sameSession() || !equivalent(capture(), local) || (!options.force && editing())) return false;
         const changed = !equivalent(merged.entries, local);
         if (changed) apply(merged.entries);
         await baseline(String(user), 'write', merged.entries);
         localStorage.setItem('pa_workspace_owner', String(user));
         lastError = '';
-        if (changed) location.reload();
+        if (changed && !options.noReload) location.reload();
+        return true;
     } catch (error) {
         const message = String(error.message || error);
         if (message !== lastError) {
@@ -84,10 +91,12 @@ export async function syncWorkspace() {
             if (typeof toast === 'function') toast(message, 'er');
         }
         lastError = message;
+        return false;
     } finally { running = false; }
 }
 if (typeof window !== 'undefined') {
     window.PhotoAtelierWorkspaceSync = { sync: syncWorkspace };
+    window.addEventListener('photoatelier:session-ready', syncWorkspace);
     window.addEventListener('focus', syncWorkspace);
     setInterval(() => { if (!document.hidden) syncWorkspace(); }, 15000);
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', syncWorkspace, { once: true });

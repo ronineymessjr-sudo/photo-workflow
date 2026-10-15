@@ -1,5 +1,5 @@
 // Photo Workflow Backend API - Cloudflare Workers
-import { createHash, createHmac } from 'node:crypto';
+import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 import { createDirectorPlan, createGuestPlanDraft } from './director-plan.mjs';
 import { buildDirectorIdentityWorkflow } from './director-identity-workflow.mjs';
 import { attachJevReview } from './jev-review.mjs';
@@ -98,9 +98,11 @@ function verifyToken(authHeader, env) {
     try {
         const decoded = JSON.parse(base64UrlDecode(authHeader.slice(7)));
         const expectedSig = createHmac('sha256', secret).update(decoded.p).digest('hex');
-        if (decoded.s !== expectedSig) return null;
+        if (typeof decoded.s !== 'string' || !/^[a-f0-9]{64}$/.test(decoded.s)) return null;
+        if (!timingSafeEqual(new TextEncoder().encode(decoded.s), new TextEncoder().encode(expectedSig))) return null;
         const payload = JSON.parse(decoded.p);
-        if (Date.now() - payload.t > 7 * 24 * 3600 * 1000) return null;
+        if (typeof payload.uid !== 'string' || !payload.uid || !Number.isSafeInteger(payload.t)) return null;
+        if (payload.t > Date.now() + 300000 || Date.now() - payload.t > 7 * 24 * 3600 * 1000) return null;
         return payload.uid;
     } catch { return null; }
 }
@@ -306,7 +308,11 @@ export default {
             const uid = verifyToken(request.headers.get('authorization'), env);
 
             // Shared browser business data, isolated by the authenticated account.
-            if (path === '/api/workspace/state' && ['GET', 'POST'].includes(method)) {
+            if (path === '/api/auth/session' && method === 'GET') {
+                result = uid ? { status: 200, body: { success: true, user: { id: uid } } }
+                    : { status: 401, body: { error: '登录已失效，请重新登录' } };
+            }
+            else if (path === '/api/workspace/state' && ['GET', 'POST'].includes(method)) {
                 if (!uid) result = { status: 401, body: { error: '未登录' } };
                 else if (!env.WORKSPACE_SYNC) result = { status: 503, body: { error: 'WORKSPACE_SYNC_NOT_CONFIGURED' } };
                 else {
