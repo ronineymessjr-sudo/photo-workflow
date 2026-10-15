@@ -4,6 +4,7 @@ import { createDirectorPlan, createGuestPlanDraft } from './director-plan.mjs';
 import { buildDirectorIdentityWorkflow } from './director-identity-workflow.mjs';
 import { attachJevReview } from './jev-review.mjs';
 import { recordWebRequest } from './web-telemetry.mjs';
+export { WorkspaceSync } from './workspace-state.mjs';
 
 // Cloudflare Workers 环境中 Buffer 不可用，使用替代方案
 function base64UrlEncode(str) {
@@ -304,8 +305,21 @@ export default {
         try {
             const uid = verifyToken(request.headers.get('authorization'), env);
 
+            // Shared browser business data, isolated by the authenticated account.
+            if (path === '/api/workspace/state' && ['GET', 'POST'].includes(method)) {
+                if (!uid) result = { status: 401, body: { error: '未登录' } };
+                else if (!env.WORKSPACE_SYNC) result = { status: 503, body: { error: 'WORKSPACE_SYNC_NOT_CONFIGURED' } };
+                else {
+                    const object = env.WORKSPACE_SYNC.get(env.WORKSPACE_SYNC.idFromName(`user:${uid}`));
+                    const response = await object.fetch(new Request('https://workspace.internal/state', {
+                        method, headers: { 'Content-Type': 'application/json' },
+                        body: method === 'POST' ? JSON.stringify(body) : undefined,
+                    }));
+                    result = { status: response.status, body: await response.json() };
+                }
+            }
             // Auth
-            if (path === '/api/director/plan' && method === 'POST') {
+            else if (path === '/api/director/plan' && method === 'POST') {
                 let plan;
                 if (!env.DIRECTOR_API_BASE || !env.DIRECTOR_API_BASE.startsWith('https://')) {
                     plan = createGuestPlanDraft(body);

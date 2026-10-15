@@ -18,6 +18,14 @@ ENVIRONMENT = "production"
 [ai]
 binding = "AI"
 
+[[durable_objects.bindings]]
+name = "WORKSPACE_SYNC"
+class_name = "WorkspaceSync"
+
+[[migrations]]
+tag = "workspace-sync-v1"
+new_sqlite_classes = ["WorkspaceSync"]
+
 [observability]
 enabled = true
 head_sampling_rate = 1
