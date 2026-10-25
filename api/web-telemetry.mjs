@@ -3,9 +3,9 @@ import { createHmac, randomUUID } from 'node:crypto';
 export function recordWebRequest(request, result, env, body = {}) {
     const path = new URL(request.url).pathname;
     const health = path === '/api/health' || path === '/health';
-    const auth = path === '/api/auth/login' && request.method === 'POST';
+    const auth = ['/api/auth/login', '/api/auth/email/verify'].includes(path) && request.method === 'POST';
     const success = auth && (result.status === 200 || result.status === 201) && result.body?.success === true;
-    const known = /^\/api\/(auth\/login|director\/(plan|generate-candidate|identity-lock-workflow)|schedules|plans|messages(?:\/public)?|dashboard\/stats|health)$/;
+    const known = /^\/api\/(ai\/(providers|plan)|auth\/(login|methods|email\/(send|verify))|director\/(plan|generate-candidate|identity-lock-workflow)|schedules|plans|messages(?:\/public)?|dashboard\/stats|health)$/;
     const route = known.test(path) || health ? path : /^\/api\/(schedules|messages)\//.test(path) ? path.replace(/^(\/api\/[^/]+)\/.*/, '$1/:id') : 'other';
     let originHost = 'none';
     try {
@@ -13,7 +13,7 @@ export function recordWebRequest(request, result, env, body = {}) {
         originHost = ['photo-workflow.pages.dev', 'photoatelier.pages.dev', 'ronineymessjr-sudo.github.io', '127.0.0.1', 'localhost'].includes(host) ? host : 'other';
     } catch {}
     const requestId = randomUUID();
-    const synthetic = auth && typeof body.email === 'string' && body.email.toLowerCase().endsWith('.invalid');
+    const synthetic = path.startsWith('/api/auth/') && typeof body.email === 'string' && body.email.toLowerCase().endsWith('.invalid');
     const event = {
         event: auth ? success ? 'web_auth_success' : 'web_auth_failure' : 'web_request',
         app: 'photo-workflow-web',

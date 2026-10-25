@@ -2881,12 +2881,22 @@
                 <label style="display:block;font-size:.85rem;color:var(--t2);margin-bottom:.5rem;font-weight:500;" data-i18n="login.email">邮箱地址</label>
                 <input type="email" id="loginEmail" placeholder="请输入邮箱" data-i18n-placeholder="login.email" style="width:100%;padding:12px 16px;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;color:var(--t1);font-family:inherit;font-size:.95rem;transition:all .2s;">
             </div>
-            <div style="margin-bottom:1.5rem;">
+            <div id="loginPasswordGroup" style="margin-bottom:1.5rem;">
                 <label style="display:block;font-size:.85rem;color:var(--t2);margin-bottom:.5rem;font-weight:500;" data-i18n="login.password">密码</label>
                 <input type="password" id="loginPassword" placeholder="输入密码" data-i18n-placeholder="login.password" style="width:100%;padding:12px 16px;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;color:var(--t1);font-family:inherit;font-size:.95rem;transition:all .2s;">
             </div>
+            <div id="loginCodeGroup" hidden style="margin-bottom:1rem;">
+                <label for="loginCode">邮箱验证码</label>
+                <div style="display:flex;gap:8px;margin-top:8px;">
+                    <input id="loginCode" inputmode="numeric" autocomplete="one-time-code" maxlength="10" aria-label="邮箱验证码" style="min-width:0;flex:1;padding:12px;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;color:var(--t1);font:inherit;">
+                    <button id="sendLoginCode" type="button" class="btn btn-s">获取验证码</button>
+                </div>
+                <p id="loginCodeStatus" role="status" style="margin-top:8px;font-size:.8rem;color:var(--t2);"></p>
+            </div>
+            <button id="loginMethodToggle" type="button" class="btn btn-s" hidden style="display:none;margin-bottom:12px;">使用邮箱验证码</button>
             <button onclick="handleLogin()" class="btn btn-p" style="width:100%;padding:12px;border-radius:8px;font-size:.95rem;font-weight:500;margin-top:.5rem;" data-i18n="login.button">登录</button>
             <button onclick="continueAsGuest()" class="btn btn-s" style="width:100%;margin-top:.75rem;" data-i18n="login.guest">游客体验</button>
+            <button id="clearExpiredLogin" onclick="logout()" class="btn btn-s" type="button" style="display:none;width:100%;margin-top:.75rem;">退出失效登录，保留本机资料</button>
             <p style="margin-top:.75rem;font-size:.8rem;color:var(--t2);text-align:center;" data-i18n="login.guestHint">游客方案仅保存在当前浏览器</p>
             <p style="margin-top:1.5rem;font-size:.8rem;color:var(--t3);text-align:center;" data-i18n="login.hint">首次登录将自动创建账号</p>
         </div>
@@ -3878,6 +3888,25 @@
                                 </div>
                             </div>
                             
+                            <div class="fg" id="ownAiSettings">
+                                <h3 style="font-size:1rem;color:var(--t1);margin-bottom:12px;">接入自己的 AI</h3>
+                                <label for="ownAiProvider">服务商</label>
+                                <select id="ownAiProvider"><option value="">正在读取可用服务…</option></select>
+                                <p id="ownAiEndpoint" style="font-size:.8rem;color:var(--t2);overflow-wrap:anywhere;margin:8px 0;"></p>
+                                <label for="ownAiModel">模型 ID</label>
+                                <input id="ownAiModel" autocomplete="off" placeholder="填写供应商提供的模型 ID" maxlength="120">
+                                <label for="ownAiKey" style="margin-top:12px;">API Key</label>
+                                <input id="ownAiKey" type="password" autocomplete="off" maxlength="512" placeholder="仅本次打开页面有效">
+                                <label style="display:flex;gap:8px;align-items:flex-start;margin:12px 0;font-size:.8rem;color:var(--t2);">
+                                    <input id="ownAiConsent" type="checkbox" style="width:auto;flex:none;">
+                                    <span>允许将我填写的密钥和拍摄需求经 Photo Workflow 服务端转交上方供应商；调用可能消耗我在该供应商的付费额度。密钥不保存，刷新页面后需重新填写。</span>
+                                </label>
+                                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                    <button id="ownAiEnable" class="btn btn-s" type="button">本次使用此模型</button>
+                                    <button id="ownAiClear" class="btn btn-s" type="button">断开并清除密钥</button>
+                                </div>
+                                <p id="ownAiStatus" role="status" style="font-size:.8rem;color:var(--t2);margin-top:8px;">未接入。此入口只生成文字方案，不生成图片。</p>
+                            </div>
                             <!-- Pexels API Key -->
                             <div class="fg">
                                 <label>Pexels API Key <span style="font-size:.7rem;color:var(--t3);">（可选，用于自动加载参考图）</span></label>
@@ -4186,7 +4215,7 @@ if (document.getElementById('loginOverlay')) {
     window.api = {
         base: API_BASE,
         request: async function(path, method, body, timeout = 10000) {
-            if (USE_GUEST_MODE && !['/api/director/plan', '/api/auth/login'].includes(path)) {
+            if (USE_GUEST_MODE && !['/api/director/plan', '/api/ai/providers', '/api/ai/plan', '/api/auth/login', '/api/auth/methods', '/api/auth/email/send', '/api/auth/email/verify'].includes(path)) {
                 throw new Error('请登录后使用云端保存或团队协作');
             }
             method = method || 'GET';
@@ -4243,14 +4272,19 @@ if (document.getElementById('loginOverlay')) {
     window.handleLogin = async function() {
         const email = document.getElementById('loginEmail').value.trim();
         const password = document.getElementById('loginPassword').value;
-        if (!email || !password) { toast('请输入邮箱和密码', 'er'); return; }
+        const emailMode = document.getElementById('loginForm').dataset?.method === 'email';
+        const code = emailMode ? document.getElementById('loginCode').value.trim() : '';
+        if (!email || (!emailMode && !password)) { toast('请输入邮箱和密码', 'er'); return; }
+        if (emailMode && !/^\d{6,10}$/.test(code)) { toast('请输入邮件中的数字验证码', 'er'); return; }
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { toast('请输入有效的邮箱地址', 'er'); return; }
 
         document.getElementById('loginForm').style.display = 'none';
         document.getElementById('loginLoading').style.display = 'block';
 
         try {
-            const res = USE_LOCAL_MODE ? await localApi.login({ email, password }) : await window.api.login(email, password);
+            const res = emailMode
+                ? await window.api.request('/api/auth/email/verify', 'POST', { email, code })
+                : USE_LOCAL_MODE ? await localApi.login({ email, password }) : await window.api.login(email, password);
             if (res.success || res.token === 'local-token') {
                 if (!res.token || !res.user?.id) throw new Error('登录响应缺少账号信息');
                 await window.PhotoAtelierAccountStorage.activate(res.user.id);
@@ -4263,6 +4297,7 @@ if (document.getElementById('loginOverlay')) {
                     window.__PHOTOATELIER_GUEST_MODE__ = false;
                 }
                 document.getElementById('loginPassword').value = '';
+                if (emailMode) document.getElementById('loginCode').value = '';
                 location.reload();
             } else {
                 toast(res.error || '登录失败', 'er');
@@ -4641,6 +4676,7 @@ function closeShortcutsModal(e) {
             SESSION_VERIFIED = false;
             window.__PHOTOATELIER_SESSION_VERIFIED__ = false;
             // Keep the account cache intact when the server is unreachable.
+            document.getElementById('clearExpiredLogin').style.display = 'inline-flex';
             toast(e.message || '登录验证失败，请重新登录', 'er');
         }
     }
@@ -6638,7 +6674,11 @@ function renderPlanContent(plan) {
     $('planSavedAt').textContent = new Date(plan.savedAt).toLocaleString();
 
     const jevReviewHtml = renderJevReview(plan.director && plan.director.jevReview);
-    const metaHtml = `<div class="plan-meta"><div class="mtag"><strong>主题</strong><span>${escHtml(plan.input && plan.input.theme||plan.title||'自然生成方案')}</span></div><div class="mtag"><strong>风格</strong><span>${escHtml(plan.input && plan.input.style||'自动建议')}</span></div><div class="mtag"><strong>时长</strong><span>${plan.input && plan.input.duration||'待定'}</span></div><div class="mtag"><strong>人数</strong><span>${plan.input && plan.input.people||1}人</span></div></div>`;
+    const sourceNotice = plan.director?.source === 'guest-rule-draft'
+        ? '<p role="status" class="reference-rights">模板草稿 · 当前未连接 Director，以下不是模型生成结果，具体需求尚未由模型处理。</p>'
+        : plan.director?.source === 'byok-ai-plan'
+            ? `<p class="reference-rights">AI 方案 · ${escHtml(plan.director.provider)} / ${escHtml(plan.director.model)} · 拍摄前请核对现场条件</p>` : '';
+    const metaHtml = sourceNotice + `<div class="plan-meta"><div class="mtag"><strong>主题</strong><span>${escHtml(plan.input && plan.input.theme||plan.title||'自然生成方案')}</span></div><div class="mtag"><strong>风格</strong><span>${escHtml(plan.input && plan.input.style||'自动建议')}</span></div><div class="mtag"><strong>时长</strong><span>${plan.input && plan.input.duration||'待定'}</span></div><div class="mtag"><strong>人数</strong><span>${plan.input && plan.input.people||1}人</span></div></div>`;
 
     const sectionsHtml = (plan.director ? [] : (plan.sections || []).filter(s => !/本次需求|接入记录|拍摄清单|拍摄当天/.test(s.ti))).map(s=>`
         <div class="ps"><div class="ps-hdr"><div class="ps-icon">${escHtml(s.ic)}</div><h3 class="ps-title">${escHtml(s.ti)}</h3></div><div class="ps-cnt"><ul>${s.c.map(c=>`<li>${escHtml(c)}</li>`).join('')}</ul></div></div>`).join('');
@@ -9460,7 +9500,7 @@ async function handleSubmit(e){
         $('outLoad').classList.remove('active'); $('outCnt').classList.add('active');
         // 初始化报价计算器
         setTimeout(() => calculateQuote(plan.id), 100);
-        toast('方案已生成并保存','ok');
+        toast(plan.director?.source === 'guest-rule-draft' ? '模板草稿已保存（未连接 Director）' : '方案已生成并保存','ok');
     }catch(e){console.error('生成失败:', e); toast('生成失败: ' + (e.message || '未知错误'),'er');$('outLoad').classList.remove('active');$('outEmpty').classList.add('active');}
     finally{btn.disabled=false;btn.classList.remove('btn-loading');btn.innerHTML=btnOrigHTML;}
 }
@@ -11604,5 +11644,7 @@ window.addEventListener('online', function() { toast('网络已恢复', 'ok'); }
 <!-- Settings Modal -->
 <script src="assets/plan-print-export.js"></script>
 <script type="module" src="assets/workspace-sync.mjs"></script>
+<script src="assets/email-login.js"></script>
+<script src="assets/own-ai.js"></script>
 </body>
 </html>

@@ -4,6 +4,8 @@ import { createDirectorPlan, createGuestPlanDraft } from './director-plan.mjs';
 import { buildDirectorIdentityWorkflow } from './director-identity-workflow.mjs';
 import { attachJevReview } from './jev-review.mjs';
 import { recordWebRequest } from './web-telemetry.mjs';
+import { emailLoginEnabled, handleEmailAuth } from './email-auth.mjs';
+import { aiPlanProviders, handleAiPlan } from './ai-plan.mjs';
 export { WorkspaceSync } from './workspace-state.mjs';
 
 // Cloudflare Workers 环境中 Buffer 不可用，使用替代方案
@@ -299,7 +301,26 @@ export default {
         // Parse body
         let body = {};
         if (method === 'POST' || method === 'PUT' || method === 'PATCH') {
-            try { body = await request.json(); } catch {}
+            if (path === '/api/ai/plan') {
+                if (!request.headers.get('content-type')?.startsWith('application/json')) return Response.json({ error: 'JSON_REQUIRED' }, { status: 415, headers: CORS });
+                const reader = request.body?.getReader();
+                let size = 0, chunks = [];
+                if (reader) {
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        size += value.length;
+                        if (size > 16000) { await reader.cancel(); return Response.json({ error: 'REQUEST_TOO_LARGE' }, { status: 413, headers: CORS }); }
+                        chunks.push(value);
+                    }
+                }
+                const bytes = new Uint8Array(size);
+                let offset = 0;
+                for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.length; }
+                try { body = JSON.parse(new TextDecoder().decode(bytes)); } catch { return Response.json({ error: 'INVALID_JSON' }, { status: 400, headers: CORS }); }
+            } else {
+                try { body = await request.json(); } catch {}
+            }
         }
 
         let result;
@@ -307,8 +328,15 @@ export default {
         try {
             const uid = verifyToken(request.headers.get('authorization'), env);
 
+            // BYOK is stateless: keys are used for one provider request, never saved.
+            if (path === '/api/ai/providers' && method === 'GET') {
+                result = { status: 200, body: { providers: aiPlanProviders(env) } };
+            }
+            else if (path === '/api/ai/plan' && method === 'POST') {
+                result = await handleAiPlan(body, env);
+            }
             // Shared browser business data, isolated by the authenticated account.
-            if (path === '/api/auth/session' && method === 'GET') {
+            else if (path === '/api/auth/session' && method === 'GET') {
                 result = uid ? { status: 200, body: { success: true, user: { id: uid } } }
                     : { status: 401, body: { error: '登录已失效，请重新登录' } };
             }
@@ -343,6 +371,12 @@ export default {
                 else if (body.reference_image_path) result = { status: 422, body: { error: 'IDENTITY_REFERENCE_LOCAL_ONLY：云端尚未配置参考图存储，请使用本机摄影系统' } };
                 else if (!env.DIRECTOR_API_BASE || !env.DIRECTOR_API_BASE.startsWith('https://')) result = { status: 503, body: { error: 'DIRECTOR_NOT_CONFIGURED：请先部署受保护的 Director 服务' } };
                 else result = { status: 200, body: await buildDirectorIdentityWorkflow(body, { baseUrl: env.DIRECTOR_API_BASE }) };
+            }
+            else if (path === '/api/auth/methods' && method === 'GET') {
+                result = { status: 200, body: { emailOtp: emailLoginEnabled(env), password: true, guest: true } };
+            }
+            else if (['/api/auth/email/send', '/api/auth/email/verify'].includes(path) && method === 'POST') {
+                result = await handleEmailAuth(env, body, path.endsWith('/send') ? 'send' : 'verify', { query: sbQuery, sign: genToken });
             }
             else if (path === '/api/auth/login' && method === 'POST') {
                 result = await handleLogin(env, body);
@@ -404,7 +438,7 @@ export default {
             const requestId = recordWebRequest(request, result, env, body);
             return new Response(JSON.stringify(result.body), { 
                 status: result.status, 
-                headers: { ...CORS, 'Content-Type': 'application/json', 'X-Request-Id': requestId }
+                headers: { ...CORS, 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'X-Request-Id': requestId }
             });
 
         } catch (e) {

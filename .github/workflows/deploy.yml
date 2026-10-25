@@ -25,7 +25,7 @@ jobs:
         run: npm install -g wrangler
 
       - name: Verify shared workspace and existing API contracts
-        run: node --test tests/workspace-sync.test.mjs tests/web-discovery.test.mjs tests/cloud-director-routes.test.mjs tests/director-integration.test.mjs tests/jev-review.test.mjs tests/plan-print-export.test.mjs
+        run: node --test tests/workspace-sync.test.mjs tests/web-discovery.test.mjs tests/cloud-director-routes.test.mjs tests/director-integration.test.mjs tests/jev-review.test.mjs tests/plan-print-export.test.mjs tests/guest-entry.test.mjs tests/email-auth.test.mjs tests/ai-plan.test.mjs
 
       - name: Deploy Worker
         env:

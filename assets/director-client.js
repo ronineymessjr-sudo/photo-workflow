@@ -1,5 +1,6 @@
 (function () {
     window.generateDirectorPlan = async function (input) {
+        if (window.PhotoAtelierOwnAI?.isEnabled()) return window.PhotoAtelierOwnAI.generatePlan(input);
         const local = ['127.0.0.1', 'localhost', '[::1]'].includes(location.hostname);
         if (local) {
             const response = await fetch('/api/director/plan', {

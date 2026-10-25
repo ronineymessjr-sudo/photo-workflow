@@ -4,6 +4,13 @@ import { readFile } from 'node:fs/promises';
 import { createGuestPlanDraft } from '../api/director-plan.mjs';
 import worker from '../api/index.js';
 
+test('template fallback is visibly distinct from a real Director result', async () => {
+    const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+    assert.match(html, /source === 'guest-rule-draft'/);
+    assert.match(html, /以下不是模型生成结果/);
+    assert.match(html, /模板草稿已保存（未连接 Director）/);
+});
+
 test('guest multi-person plan uses interaction-led shots without assuming romance', () => {
     const plan = createGuestPlanDraft({
         theme: '雨夜双人纪实',
