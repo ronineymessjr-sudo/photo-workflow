@@ -65,6 +65,16 @@ test('partial, duplicated, invalid and truncated model outputs fail instead of p
     assert.equal(r.status, 502);
 });
 
+test('invalid model fields identify the shot and problem without returning raw model content', async () => {
+    const bad = output();
+    bad.shot_plans[2].shot_size = 'private-CS';
+    const result = await handleAiPlan(request, {}, { fetchImpl: async () => response(bad) });
+    assert.equal(result.status, 502);
+    assert.equal(result.body.code, 'AI_SHOT_FIELDS_INVALID');
+    assert.match(result.body.error, /镜头3景别代号不支持/);
+    assert.doesNotMatch(JSON.stringify(result), /private-CS/);
+});
+
 test('provider errors never leak credentials and wrong provider key cannot log out the app account', async () => {
     for (const status of [401, 403, 429, 500]) {
         const r = await handleAiPlan(request, {}, { fetchImpl: async () => new Response(key, { status }) });

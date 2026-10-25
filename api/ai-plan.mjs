@@ -169,10 +169,19 @@ shot_language 是独特的镜头名称；model_pose 写具体动作口令；phot
             }
             if (!Array.isArray(result.shot_plans) || result.shot_plans.length !== count) throw new Error('AI_SHOT_COUNT_MISMATCH');
             const names = new Set();
-            for (const shot of result.shot_plans) {
-                if (!shot || requiredText.some(k => typeof shot[k] !== 'string' || !shot[k].trim() || shot[k].length > 2000)
-                    || !sizes.includes(shot.shot_size) || !angles.includes(shot.camera_angle)
-                    || names.has(shot.shot_language.trim())) throw new Error('AI_SHOT_FIELDS_INVALID');
+            for (const [index, shot] of result.shot_plans.entries()) {
+                const invalidFields = shot ? requiredText.filter(k => typeof shot[k] !== 'string' || !shot[k].trim() || shot[k].length > 2000) : requiredText;
+                const invalid = [
+                    invalidFields?.length && `镜头${index + 1}缺少或超长字段：${invalidFields.slice(0, 3).join('、')}`,
+                    shot && !sizes.includes(shot.shot_size) && `镜头${index + 1}景别代号不支持`,
+                    shot && !angles.includes(shot.camera_angle) && `镜头${index + 1}机位代号不支持`,
+                    shot && typeof shot.shot_language === 'string' && names.has(shot.shot_language.trim()) && `镜头${index + 1}名称重复`,
+                ].filter(Boolean);
+                if (invalid.length) {
+                    const error = new Error('AI_SHOT_FIELDS_INVALID');
+                    error.violations = invalid;
+                    throw error;
+                }
                 names.add(shot.shot_language.trim());
             }
             const hardConstraintViolations = validateHardConstraints(result.shot_plans, body.input);
@@ -195,7 +204,7 @@ shot_language 是独特的镜头名称；model_pose 写具体动作口令；phot
             AI_COMPLETION_INCOMPLETE: '模型没有正常完成本次生成，请稍后重试',
             AI_INVALID_JSON: '模型返回的内容不是有效 JSON，本次没有保存不完整方案',
             AI_SHOT_COUNT_MISMATCH: '模型没有返回要求数量的完整分镜，本次没有复制镜头补数',
-            AI_SHOT_FIELDS_INVALID: '分镜存在缺失字段、重复名称或不支持的景别/角度代号，本次没有保存',
+            AI_SHOT_FIELDS_INVALID: `本次没有保存：${(error.violations || []).join('；') || '分镜字段不完整或格式不正确'}。请重试或更换模型。`,
             AI_HARD_CONSTRAINTS_FAILED: `本次没有保存：硬性拍摄要求未通过。${(error.violations || []).slice(0, 8).join('；')}${error.violations?.length > 8 ? '；还有其他未通过项' : ''}。请调整要求或重新生成。`,
         };
         const message = invalid ? '拍摄需求格式不正确或超过长度限制'
