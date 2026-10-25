@@ -228,6 +228,6 @@ test('successful cloud login switches guest storage to authenticated server stor
     assert.equal(r.result.guest, false);
     assert.equal(r.result.browserStorage, false);
     assert.match(r.html, /const USE_LOCAL_MODE = IS_LOCAL_HOST && new URLSearchParams/);
-    assert.doesNotMatch(r.html, /onclick="continueAsGuest/);
+    assert.match(r.html, /onclick="continueAsGuest\(\)"/);
     assert.match(r.html, /!IS_LOCAL_HOST && localStorage\.getItem\(TOKEN_KEY\) === 'local-token'/);
 });

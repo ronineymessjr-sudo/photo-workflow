@@ -247,9 +247,9 @@ test('all inline scripts parse and submit awaits director, shot list reuses resp
     assert.match(html, /c\.poseStatus === 'blocked' \|\| c\.faceQualityStatus === 'blocked'/);
     assert.match(html, /const IS_LOCAL_HOST = \['127\.0\.0\.1', 'localhost', '\[::1\]'\]/);
     assert.match(html, /if \(USE_LOCAL_MODE\) \{/);
-    assert.doesNotMatch(html, /window\.continueAsGuest = function/);
+    assert.match(html, /window\.continueAsGuest = async function/);
     assert.match(html, /localStorage\.setItem\('pa_guest_mode', 'false'\)/);
-    assert.equal((html.match(/if \(USE_GUEST_MODE\) \{/g) || []).length, 0);
+    assert.equal((html.match(/if \(USE_GUEST_MODE\) \{/g) || []).length, 1);
     assert.match(html, /id="tab-role-home"/);
     assert.match(html, /function applyRoleExperience\(role\)/);
     assert.match(html, /function renderRoleHome\(role\)/);

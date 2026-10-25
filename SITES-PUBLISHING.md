@@ -16,4 +16,4 @@ Sites 保留同一份 `index.html` 和所有 `assets/` 界面文件，只把默�
 
 验证：`node --test tests/workspace-sync.test.mjs tests/web-discovery.test.mjs tests/cloud-director-routes.test.mjs tests/director-integration.test.mjs tests/jev-review.test.mjs tests/plan-print-export.test.mjs`。
 
-真实登录仍依赖当前主开发任务正在修复的服务端数据库接入。不能用访客模式或本地模拟登录作为跨站真实账号验收。
+2026-10-25：增加显式游客体验入口。游客不创建用户或令牌，不标记会话已验证；业务缓存隔离在本机 `__guest__` 档案，刷新可恢复，切换账号不自动上传。只有公开的文字方案生成允许远程调用；账号工作区与协作仍须真实登录。此前“云端不允许游客”描述由本段替代，后台认证合同不变。游客体验不能作为跨站真实账号验收。

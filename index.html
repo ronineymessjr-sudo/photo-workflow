@@ -2886,6 +2886,8 @@
                 <input type="password" id="loginPassword" placeholder="输入密码" data-i18n-placeholder="login.password" style="width:100%;padding:12px 16px;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;color:var(--t1);font-family:inherit;font-size:.95rem;transition:all .2s;">
             </div>
             <button onclick="handleLogin()" class="btn btn-p" style="width:100%;padding:12px;border-radius:8px;font-size:.95rem;font-weight:500;margin-top:.5rem;" data-i18n="login.button">登录</button>
+            <button onclick="continueAsGuest()" class="btn btn-s" style="width:100%;margin-top:.75rem;" data-i18n="login.guest">游客体验</button>
+            <p style="margin-top:.75rem;font-size:.8rem;color:var(--t2);text-align:center;" data-i18n="login.guestHint">游客方案仅保存在当前浏览器</p>
             <p style="margin-top:1.5rem;font-size:.8rem;color:var(--t3);text-align:center;" data-i18n="login.hint">首次登录将自动创建账号</p>
         </div>
         <div id="loginLoading" style="display:none;margin-top:1.5rem;">
@@ -3003,6 +3005,10 @@
         </header>
 
         <!-- Quick Actions Bar -->
+        <div id="guestModeNotice" hidden style="padding:.6rem 1rem;border-bottom:1px solid var(--bd);color:var(--t2);font-size:.8rem;">
+            <span data-i18n="login.guestHint">游客方案仅保存在当前浏览器</span>
+            <button class="btn btn-s btn-sm" onclick="logout()" data-i18n="login.button">登录</button>
+        </div>
         <div class="quick-actions" style="display:flex;gap:.5rem;margin:1rem 1.5rem 0 1.5rem;padding:.75rem 1rem;background:var(--bg3);border-radius:12px;border:1px solid var(--bd);">
             <button class="btn btn-s btn-sm" data-role="photographer,assistant" onclick="syncToFeishuBitable()" style="display:flex;align-items:center;gap:.4rem;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -3936,6 +3942,8 @@ const i18n = {
         'login.password': '密码',
         'login.button': '登录',
         'login.hint': '首次登录将自动创建账号',
+        'login.guest': '游客体验',
+        'login.guestHint': '游客方案仅保存在当前浏览器',
         'gen.title': '创意需求',
         'gen.theme': '拍摄主题（选填）',
         'gen.style': '风格偏好（选填）',
@@ -3967,6 +3975,8 @@ const i18n = {
         'login.password': 'Password',
         'login.button': 'Sign In',
         'login.hint': 'First login will auto-create account',
+        'login.guest': 'Try as guest',
+        'login.guestHint': 'Guest plans are saved only in this browser',
         'gen.title': 'Generate Plan',
         'gen.theme': 'Theme (optional)',
         'gen.style': 'Style preference (optional)',
@@ -4120,7 +4130,8 @@ if (document.getElementById('loginOverlay')) {
         localStorage.removeItem(USER_KEY);
     }
     const USE_LOCAL_MODE = IS_LOCAL_HOST && new URLSearchParams(location.search).get('offline') === '1';
-    let USE_GUEST_MODE = false;
+    let USE_GUEST_MODE = !USE_LOCAL_MODE && localStorage.getItem('pa_guest_mode') === 'true'
+        && !localStorage.getItem(TOKEN_KEY) && !localStorage.getItem(USER_KEY);
     let USE_BROWSER_STORAGE = USE_LOCAL_MODE || USE_GUEST_MODE;
     let SESSION_VERIFIED = USE_LOCAL_MODE;
     window.__PHOTOATELIER_SESSION_VERIFIED__ = SESSION_VERIFIED;
@@ -4175,6 +4186,9 @@ if (document.getElementById('loginOverlay')) {
     window.api = {
         base: API_BASE,
         request: async function(path, method, body, timeout = 10000) {
+            if (USE_GUEST_MODE && !['/api/director/plan', '/api/auth/login'].includes(path)) {
+                throw new Error('请登录后使用云端保存或团队协作');
+            }
             method = method || 'GET';
             body = body || null;
             const opts = { method: method, headers: { 'Content-Type': 'application/json' } };
@@ -4190,7 +4204,7 @@ if (document.getElementById('loginOverlay')) {
             try {
                 const r = await fetch(API_BASE + path, opts);
                 clearTimeout(timeoutId);
-                if (r.status === 401 && path !== '/api/auth/login' && localStorage.getItem(TOKEN_KEY) === token) lockSession();
+                if (r.status === 401 && !USE_GUEST_MODE && path !== '/api/auth/login' && localStorage.getItem(TOKEN_KEY) === token) lockSession();
                 if (!r.ok) { let errMsg = '请求失败'; try { const errData = await r.json(); errMsg = errData.error || errMsg; } catch(e) { errMsg = r.statusText || errMsg; } throw new Error(errMsg); }
                 const text = await r.text();
                 try { return JSON.parse(text); } catch(e) { throw new Error('响应格式错误'); }
@@ -4213,6 +4227,16 @@ if (document.getElementById('loginOverlay')) {
         createMessage(data) { return USE_BROWSER_STORAGE ? Promise.resolve(data) : this.request('/api/messages', 'POST', data); },
         updateMessageStatus(id, status) { return this.request(`/api/messages/${id}`, 'PATCH', { status }); },
         deleteMessage(id) { return this.request(`/api/messages/${id}`, 'DELETE'); }
+    };
+
+    window.continueAsGuest = async function() {
+        if (localStorage.getItem(TOKEN_KEY)) { toast('请先退出当前账号再使用游客体验', 'er'); return; }
+        try {
+            await window.PhotoAtelierAccountStorage.activate('__guest__');
+            localStorage.removeItem(USER_KEY);
+            localStorage.setItem('pa_guest_mode', 'true');
+            location.reload();
+        } catch (e) { toast('游客资料读取失败：' + e.message, 'er'); }
     };
 
     // Login handler
@@ -4277,7 +4301,7 @@ if (document.getElementById('loginOverlay')) {
         }
     };
     window.addEventListener('storage', function(e) {
-        if (![TOKEN_KEY, USER_KEY, 'pa_workspace_owner', null].includes(e.key)) return;
+        if (![TOKEN_KEY, USER_KEY, 'pa_workspace_owner', 'pa_guest_mode', null].includes(e.key)) return;
         document.getElementById('appLayout').style.display = 'none';
         window.__PHOTOATELIER_SESSION_VERIFIED__ = false;
         location.reload();
@@ -4491,7 +4515,7 @@ function closeShortcutsModal(e) {
 
     // Enter app with selected role
     window.enterApp = function(role) {
-        if (!SESSION_VERIFIED) return;
+        if (!SESSION_VERIFIED && !USE_GUEST_MODE) return;
         try { localStorage.setItem(ROLE_KEY, role); } catch(e) {}
         var overlay = document.getElementById('roleOverlay');
         var appLayout = document.getElementById('appLayout');
@@ -4544,6 +4568,16 @@ function closeShortcutsModal(e) {
         role = localStorage.getItem(ROLE_KEY);
     } catch (e) {
         /* localStorage not available, using session mode */
+    }
+
+    if (USE_GUEST_MODE) {
+        window.PhotoAtelierAccountStorage.activate('__guest__').then(function() {
+            if (window.__PHOTOATELIER_BOOT_OWNER__ !== '__guest__') { location.reload(); return; }
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('guestModeNotice').hidden = false;
+            window.enterApp('photographer');
+        }).catch(e => toast('游客资料读取失败：' + e.message, 'er'));
+        return;
     }
 
     if (USE_LOCAL_MODE) {
