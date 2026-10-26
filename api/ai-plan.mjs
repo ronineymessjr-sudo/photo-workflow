@@ -10,7 +10,7 @@ const angles = ['eye_level', 'high_angle', 'ground_level', 'overhead', 'low_angl
 const unconfirmedResources = [
     { name: '雨伞', pattern: /雨伞|撑伞|伞面|umbrella/i },
     { name: '手机', pattern: /手机|电话|phone/i },
-    { name: '橱窗或窗户', pattern: /橱窗|落地窗|窗边|window(?!less)/i },
+    { name: '橱窗或窗户', pattern: /窗|window(?!less)/i },
     { name: '椅子或凳子', pattern: /椅子|凳子|chair|stool/i },
     { name: '桌子', pattern: /桌子|桌面|table/i },
     { name: '花束', pattern: /花束|鲜花|bouquet/i },

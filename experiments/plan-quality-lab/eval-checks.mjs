@@ -40,11 +40,15 @@ export function evaluatePlan(shotPlans, input, validateHardConstraints) {
         if (shot?.shot_size && !sizes.includes(shot.shot_size)) add(`镜头${i + 1} 景别代号不支持：${shot.shot_size}`);
         if (shot?.camera_angle && !angles.includes(shot.camera_angle)) add(`镜头${i + 1} 机位代号不支持：${shot.camera_angle}`);
         const pose = String(shot?.model_pose || '').trim();
-        if (pose && pose.length < 8) add(`镜头${i + 1} 动作口令过短，无法指导执行：“${pose}”`);
+        // Product/landscape briefs legitimately have no-person shots.
+        const personless = /^(模特不入画|无人物)/.test(pose);
+        if (pose && pose.length < 8 && !personless) add(`镜头${i + 1} 动作口令过短，无法指导执行：“${pose}”`);
     }
 
     for (let i = 0; i < shots.length; i++) {
+        if (/^(模特不入画|无人物)/.test(String(shots[i]?.model_pose || '').trim())) continue;
         for (let j = i + 1; j < shots.length; j++) {
+            if (/^(模特不入画|无人物)/.test(String(shots[j]?.model_pose || '').trim())) continue;
             const sim = similarity(shots[i]?.model_pose, shots[j]?.model_pose);
             if (sim >= 0.7) add(`镜头${i + 1} 与镜头${j + 1} 动作实质相近（相似度 ${(sim * 100).toFixed(0)}%）：“${String(shots[i]?.model_pose).slice(0, 14)}…” vs “${String(shots[j]?.model_pose).slice(0, 14)}…”`);
         }

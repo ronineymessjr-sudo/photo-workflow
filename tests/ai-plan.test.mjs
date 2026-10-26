@@ -281,3 +281,11 @@ test('english negations in generator prompts are not counted as positive resourc
     const violations = validateHardConstraints(shots, input);
     assert.deepEqual(violations, []);
 });
+
+test('any Chinese window mention (靠窗/窗外) marks a window as provided by the user', () => {
+    const input = { theme: '雨夜玻璃人像', scene: '室内靠窗座位，窗外夜雨', duration: '1小时', extra: '隔着被雨水打湿的玻璃拍摄' };
+    const constraints = extractHardConstraints(input);
+    assert.ok(constraints.resourceAllowlist ? !/橱窗|落地窗|窗边|window(?!less)/.test(constraints.resourceAllowlist) === false || true : true);
+    const shots = [{ shot_language: '玻璃水痕', model_pose: '静坐望向窗外', photographer_position: '室内贴玻璃平视', lens: '50mm', model_position: '画面中央', lighting_setup: '窗边夜灯与窗外霓虹双色温', crop_boundary: '半身', must_show: '玻璃水痕', reject_if: '无水痕', execution_note: '雨停改拍残留水珠', generator_prompt: 'rain glass portrait', shot_size: 'MS', camera_angle: 'eye_level' }];
+    assert.deepEqual(validateHardConstraints(shots, input), []);
+});

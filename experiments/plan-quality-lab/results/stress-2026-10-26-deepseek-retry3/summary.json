@@ -1,0 +1,1 @@
+{"backend":"deepseek","ranAt":"2026-10-26T13:46:14.377Z","totalBriefs":1,"pass":0,"perBrief":[{"id":"vc-color-block","elapsedSeconds":10.952,"pass":null,"findings":[],"error":"API 422: AI_HARD_CONSTRAINTS_FAILED 本次没有保存：硬性拍摄要求未通过。镜头1使用了未提供、需确认的资源：杯子。请调整要求或重新生成。"}]}

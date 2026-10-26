@@ -10,6 +10,7 @@
 // offline unit test.
 
 import { mkdir, writeFile } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { createDirectorPlan } from '../../api/director-plan.mjs';
 import { handleAiPlan, validateHardConstraints, extractHardConstraints } from '../../api/ai-plan.mjs';
@@ -74,6 +75,14 @@ async function runDeepseek(input, apiKey) {
 }
 
 const backend = process.argv.includes('--backend') ? process.argv[process.argv.indexOf('--backend') + 1] : 'director';
+const briefsIdx = process.argv.indexOf('--briefs');
+if (briefsIdx > -1) {
+    const external = JSON.parse(readFileSync(resolve(import.meta.dirname, process.argv[briefsIdx + 1]), 'utf8'));
+    if (!Array.isArray(external) || !external.length || external.some(b => !b?.id || !b?.input)) throw new Error('--briefs 文件格式应为 [{id, input}]');
+    BRIEFS.length = 0;
+    BRIEFS.push(...external);
+    console.log(`已加载外部用例 ${BRIEFS.length} 组：${BRIEFS.map(b => b.id).join('、')}`);
+}
 const onlyIdx = process.argv.indexOf('--only');
 const only = onlyIdx > -1 ? process.argv[onlyIdx + 1] : null;
 const briefsToRun = only ? BRIEFS.filter(b => b.id === only) : BRIEFS;
