@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { runInNewContext } from 'node:vm';
-import { aiPlanProviders, handleAiPlan, extractHardConstraints } from '../api/ai-plan.mjs';
+import { aiPlanProviders, handleAiPlan, extractHardConstraints, validateHardConstraints } from '../api/ai-plan.mjs';
 import worker from '../api/index.js';
 
 const key = 'test-private-key-never-log';
@@ -50,6 +50,21 @@ test('real provider response is mapped to existing plan without keys or a templa
     assert.equal(r.body.shotList[0].angle, '俯拍');
     assert.equal(r.body.shotList[0].composition, '左下角');
     assert.doesNotMatch(JSON.stringify(r), new RegExp(key));
+});
+
+test('provider prompt names required shot codes and absent resources explicitly', async () => {
+    const requestWithLimitedResources = { ...request, input: {
+        theme: '手持香水的人像', scene: '室内白墙与现有桌面', modelDesc: '一名成年人',
+        extra: '只有一瓶香水、一张桌子和现场自然光', duration: '1小时', people: '1',
+    } };
+    const result = await handleAiPlan(requestWithLimitedResources, {}, { fetchImpl: async (_url, options) => {
+        const system = JSON.parse(options.body).messages[0].content;
+        assert.match(system, /"shot_size":"FS","camera_angle":"eye_level"/);
+        assert.match(system, /不得假设.*橱窗或窗户/);
+        assert.doesNotMatch(system, /不得假设[^\n]*桌子/);
+        return response(output());
+    } });
+    assert.equal(result.status, 200);
 });
 
 test('partial, duplicated, invalid and truncated model outputs fail instead of padding shots', async () => {
@@ -251,4 +266,18 @@ test('constraint extraction groups alternations so requested resources are not b
     const rooftop = { theme: '天台花园人像', duration: '1小时', extra: '在开放天台平台拍摄，无助手' };
     assert.ok(!extractHardConstraints(rooftop).prohibited.some(p => p.label === '屋顶或脚手架'),
         'a rooftop location the user requested must not be banned without a negation');
+});
+
+test('unconfirmed resource patterns catch compound bag names like backpack variants', () => {
+    const input = { theme: '校园纪实', duration: '1小时', extra: '无额外道具' };
+    const shots = [{ shot_language: '双肩包镜头', model_pose: '背着双肩包走过林荫道', photographer_position: '侧面平视', lens: '35mm', model_position: '中央', lighting_setup: '自然光', crop_boundary: '全身', must_show: '人物', reject_if: '模糊', execution_note: '改拍侧影', generator_prompt: 'backpack walk', shot_size: 'FS', camera_angle: 'eye_level' }];
+    const violations = validateHardConstraints(shots, input);
+    assert.ok(violations.some(v => v.includes('背包或手提包')), `双肩包 must be caught: ${JSON.stringify(violations)}`);
+});
+
+test('english negations in generator prompts are not counted as positive resource mentions', () => {
+    const input = { theme: '雨夜纪实', duration: '1小时', extra: '无闪光灯，无窗户场地' };
+    const shots = [{ shot_language: '夜景全身', model_pose: '静立', photographer_position: '高台阶俯拍', lens: '35mm', model_position: '左下角', lighting_setup: '路灯环境光', crop_boundary: '全身', must_show: '全身', reject_if: '模糊', execution_note: '改拍倒影', generator_prompt: 'moody night portrait, restrained mood, no flash, natural light only, windowless alley backdrop', shot_size: 'FS', camera_angle: 'high_angle' }];
+    const violations = validateHardConstraints(shots, input);
+    assert.deepEqual(violations, []);
 });
