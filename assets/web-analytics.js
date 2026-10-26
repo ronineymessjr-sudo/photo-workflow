@@ -1,5 +1,5 @@
 (() => {
-    if (location.hostname !== 'photo-workflow.pages.dev') return;
+    if (!['photo.ronineymessjrstudio.cn', 'photo-workflow.pages.dev'].includes(location.hostname)) return;
     if (new URLSearchParams(location.search).get('maintenance') === '1') return;
     const script = document.createElement('script');
     script.src = 'https://static.cloudflareinsights.com/beacon.min.js';

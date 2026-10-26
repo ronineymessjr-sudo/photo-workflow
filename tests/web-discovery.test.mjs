@@ -151,14 +151,14 @@ test('health probes and arbitrary request queries cannot pollute user or sensiti
     } finally { console.log = oldLog; }
 });
 
-test('production metadata and sitemap consistently identify the current Pages hostname', async () => {
+test('production metadata and sitemap consistently identify the current official domain', async () => {
     const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
     const robots = await readFile(new URL('../robots.txt', import.meta.url), 'utf8');
     const sitemap = await readFile(new URL('../sitemap.xml', import.meta.url), 'utf8');
-    assert.match(html, /rel="canonical" href="https:\/\/photo-workflow\.pages\.dev\/"/);
-    assert.match(html, /property="og:url" content="https:\/\/photo-workflow\.pages\.dev\/"/);
-    assert.match(robots, /Sitemap: https:\/\/photo-workflow\.pages\.dev\/sitemap\.xml/);
-    assert.match(sitemap, /<loc>https:\/\/photo-workflow\.pages\.dev\/<\/loc>/);
+    assert.match(html, /rel="canonical" href="https:\/\/photo\.ronineymessjrstudio\.cn\/"/);
+    assert.match(html, /property="og:url" content="https:\/\/photo\.ronineymessjrstudio\.cn\/"/);
+    assert.match(robots, /Sitemap: https:\/\/photo\.ronineymessjrstudio\.cn\/sitemap\.xml/);
+    assert.match(sitemap, /<loc>https:\/\/photo\.ronineymessjrstudio\.cn\/<\/loc>/);
     assert.ok(!(robots + sitemap + html.slice(0, 1500)).includes('ronineymessjr-sudo.github.io'));
     const verification = await readFile(new URL('../google67c093daaeda8997.html', import.meta.url), 'utf8');
     assert.equal(verification.trim(), 'google-site-verification: google67c093daaeda8997.html');
@@ -174,6 +174,9 @@ test('analytics only loads on production, with a maintenance opt-out', async () 
     const [beacon] = load('photo-workflow.pages.dev');
     assert.equal(beacon.src, 'https://static.cloudflareinsights.com/beacon.min.js');
     assert.equal(JSON.parse(beacon.dataset.cfBeacon).token, '89a1868d30784e858ece00474ede41fc');
+    const [officialBeacon] = load('photo.ronineymessjrstudio.cn');
+    assert.equal(officialBeacon.src, beacon.src);
+    assert.equal(JSON.parse(officialBeacon.dataset.cfBeacon).token, '89a1868d30784e858ece00474ede41fc');
     assert.equal(load('localhost').length, 0);
     assert.equal(load('preview.photo-workflow.pages.dev').length, 0);
     assert.equal(load('photo-workflow.pages.dev', '?maintenance=1').length, 0);

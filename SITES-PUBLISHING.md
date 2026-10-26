@@ -1,6 +1,6 @@
 # 当前正式站与 Sites 同步
 
-主站： https://photo-workflow.pages.dev/
+主站： https://photo.ronineymessjrstudio.cn/（2026-10-26 起为正式域名；Pages 默认域 photo-workflow.pages.dev 仍可用）
 
 Sites： https://photoatelier-workspace.lilacglobe7.chatgpt.site/
 

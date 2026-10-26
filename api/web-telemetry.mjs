@@ -10,7 +10,7 @@ export function recordWebRequest(request, result, env, body = {}) {
     let originHost = 'none';
     try {
         const host = new URL(request.headers.get('origin')).hostname;
-        originHost = ['photo-workflow.pages.dev', 'photoatelier.pages.dev', 'ronineymessjr-sudo.github.io', '127.0.0.1', 'localhost'].includes(host) ? host : 'other';
+        originHost = ['photo.ronineymessjrstudio.cn', 'photo-workflow.pages.dev', 'photoatelier.pages.dev', 'ronineymessjr-sudo.github.io', '127.0.0.1', 'localhost'].includes(host) ? host : 'other';
     } catch {}
     const requestId = randomUUID();
     const synthetic = path.startsWith('/api/auth/') && typeof body.email === 'string' && body.email.toLowerCase().endsWith('.invalid');
