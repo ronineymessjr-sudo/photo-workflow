@@ -77,8 +77,21 @@ const backend = process.argv.includes('--backend') ? process.argv[process.argv.i
 const outDir = resolve(import.meta.dirname, process.argv.includes('--out') ? process.argv[process.argv.indexOf('--out') + 1] : `results/real-model-${new Date().toISOString().slice(0, 10)}-${backend}`);
 await mkdir(outDir, { recursive: true });
 
-if (backend === 'deepseek' && typeof process.env.DEEPSEEK_API_KEY !== 'string') {
-    console.error('需要环境变量 DEEPSEEK_API_KEY（不要写入文件或命令行历史）');
+async function loadDeepseekKey() {
+    if (typeof process.env.DEEPSEEK_API_KEY === 'string' && process.env.DEEPSEEK_API_KEY) return process.env.DEEPSEEK_API_KEY;
+    // Fall back to the local key relay (user pasted the key at 127.0.0.1:8129).
+    try {
+        const response = await fetch('http://127.0.0.1:8129/key', { signal: AbortSignal.timeout(3000) });
+        if (!response.ok) return null;
+        const data = await response.json();
+        return typeof data.apiKey === 'string' && data.apiKey ? data.apiKey : null;
+    } catch {
+        return null;
+    }
+}
+
+if (backend === 'deepseek' && !await loadDeepseekKey()) {
+    console.error('未找到 DeepSeek 密钥：请设置环境变量 DEEPSEEK_API_KEY，或在本机密钥中转页 http://127.0.0.1:8129/ 粘贴密钥后重试');
     process.exit(2);
 }
 
@@ -87,7 +100,7 @@ for (const brief of BRIEFS) {
     const started = Date.now();
     let record = { id: brief.id, backend, startedAt: new Date().toISOString(), input: brief.input };
     try {
-        const run = backend === 'director' ? await runDirector(brief.input) : await runDeepseek(brief.input, process.env.DEEPSEEK_API_KEY);
+        const run = backend === 'director' ? await runDirector(brief.input) : await runDeepseek(brief.input, await loadDeepseekKey());
         const elapsed = ((Date.now() - started) / 1000).toFixed(3);
         const evaluation = evaluatePlan(run.shotPlans, brief.input, validateHardConstraints);
         record = { ...record, elapsedSeconds: Number(elapsed), shotCount: run.shotPlans.length, requestedShots: run.plan.director?.desiredShotCount, meta: run.meta, evaluation, shots: run.shotPlans, planTitle: run.plan.title, submittedBrief: run.plan.director?.submittedBrief };
