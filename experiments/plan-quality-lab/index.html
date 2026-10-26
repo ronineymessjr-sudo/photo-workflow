@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>摄影方案约束实验</title>
+<style>
+  :root { color-scheme: light; font-family: system-ui, "Microsoft YaHei", sans-serif; color: #1b2422; background: #f5f7f6; }
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  header { border-bottom: 1px solid #dbe1de; background: #fff; }
+  header > div, main { max-width: 1080px; margin: 0 auto; padding: 24px; }
+  h1 { font-size: 26px; margin: 0 0 8px; }
+  h2 { font-size: 18px; margin: 0 0 14px; }
+  p { line-height: 1.6; color: #53605b; margin: 0; }
+  main { display: grid; gap: 24px; }
+  section { border-top: 1px solid #dbe1de; padding-top: 20px; }
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; min-width: 800px; background: #fff; }
+  th, td { text-align: left; padding: 12px; border-bottom: 1px solid #e4eae7; vertical-align: top; font-size: 14px; }
+  th:first-child, td:first-child { min-width: 190px; }
+  th:nth-child(2), td:nth-child(2) { min-width: 230px; }
+  th { color: #53605b; font-weight: 600; }
+  .methods { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .method { padding: 16px; background: #fff; border: 1px solid #dbe1de; border-radius: 6px; }
+  .method strong { display: block; margin-bottom: 6px; }
+  @media (max-width: 700px) { .methods { grid-template-columns: 1fr; } header > div, main { padding: 18px; } h1 { font-size: 22px; } }
+</style>
+<header><div><h1>摄影方案约束实验</h1><p>本地固定样例测试。只读、不调用真实模型、不保存方案，也不触碰线上版本。</p></div></header>
+<main>
+  <section><h2>六个分镜样例</h2><div class="table-wrap"><table><thead><tr><th>样例</th><th>Ajv 结构校验</th><th>当前方案接口</th><th>结论</th></tr></thead><tbody id="results"><tr><td colspan="4">正在运行...</td></tr></tbody></table></div></section>
+  <section><h2>TypeChat 修复实验</h2><div class="table-wrap"><table><thead><tr><th>情形</th><th>模型调用次数</th><th>是否询问修复</th><th>观察</th></tr></thead><tbody id="repairs"><tr><td colspan="4">正在运行...</td></tr></tbody></table></div></section>
+  <section><h2>各工具实际作用</h2><div class="methods"><div class="method"><strong>Ajv</strong><p>约束字段、类型、景别和机位代号，不能理解摄影意图。</p></div><div class="method"><strong>TypeChat</strong><p>能根据校验错误请求第二次生成；仅有结构校验时不会发现错误拍法。</p></div><div class="method"><strong>Promptfoo</strong><p>2026-10-26 固定样例回归测试 6/6 通过；它不生成或修复分镜，也没有评价美感。</p></div></div></section>
+  <section><h2>当前判断</h2><p>优先补充明确的摄影语义校验和可解释错误；再将结构校验统一为 Schema。修复重试应设置上限并记录是否真的满足用户要求。没有真实模型实测之前，不以固定样例推断成片质量。</p></section>
+</main>
+<script>
+  const explain = error => error.replace(/must have required property '([^']+)'/, '缺少字段 $1')
+    .replace(/must be equal to one of the allowed values/, '不在允许的代号内');
+  fetch('/api/results').then(response => response.json()).then(data => {
+    const cell = value => { const td = document.createElement('td'); td.textContent = value; return td; };
+    const row = (...values) => { const tr = document.createElement('tr'); values.forEach(value => tr.append(cell(value))); return tr; };
+    const results = document.querySelector('#results'); results.replaceChildren();
+    data.results.forEach(item => results.append(row(item.label, item.schemaPass ? '通过' : `拒绝：${item.schemaErrors.map(explain).join('；')}`,
+      item.currentPass ? '通过' : `拒绝：${item.currentCode}`, item.expectation)));
+    const repairs = document.querySelector('#repairs'); repairs.replaceChildren();
+    data.translatorTests.forEach(item => repairs.append(row(item.label, String(item.calls), item.repairAsked ? '是' : '否', item.note)));
+  }).catch(() => { document.querySelector('#results').textContent = '测试服务未运行。'; document.querySelector('#repairs').textContent = '测试服务未运行。'; });
+</script>
+</html>

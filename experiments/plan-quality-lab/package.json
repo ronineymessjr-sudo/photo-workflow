@@ -1,0 +1,16 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test lab.test.mjs",
+    "test:eval": "promptfoo eval --config promptfooconfig.yaml --no-cache",
+    "start": "node server.mjs"
+  },
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "typechat": "^0.1.4"
+  },
+  "devDependencies": {
+    "promptfoo": "^0.125.1"
+  }
+}
