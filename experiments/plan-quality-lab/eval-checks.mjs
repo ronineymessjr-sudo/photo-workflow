@@ -2,7 +2,7 @@
 // Mirrors the production hard-constraint validator plus soft quality
 // findings (duplicate names, short action commands, near-duplicate actions).
 
-const requiredContract = ['shot_language', 'model_pose', 'photographer_position', 'lens', 'model_position', 'lighting_setup', 'crop_boundary', 'must_show', 'reject_if', 'execution_note', 'generator_prompt', 'shot_size', 'camera_angle'];
+const requiredContract = ['shot_language', 'model_pose', 'photographer_position', 'lens', 'model_position', 'wardrobe_styling', 'lighting_setup', 'shot_props', 'crop_boundary', 'must_show', 'reject_if', 'execution_note', 'generator_prompt', 'shot_size', 'camera_angle'];
 const sizes = ['ECU', 'CU', 'MCU', 'MS', 'MFS', 'FS', 'WS', 'EWS'];
 const angles = ['eye_level', 'high_angle', 'ground_level', 'overhead', 'low_angle'];
 

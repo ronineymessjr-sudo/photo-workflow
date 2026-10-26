@@ -11,7 +11,8 @@ const request = { provider: 'deepseek', model: 'test-model', apiKey: key, input 
 function output(count = 9) {
     return { shot_plans: Array.from({ length: count }, (_, i) => ({
         shot_language: `镜头${i}`, model_pose: '站定后向前迈步', photographer_position: '在安全台阶上俯拍',
-        lens: '35mm', model_position: '左下角', lighting_setup: '路灯为侧光，反光板在暗侧轻补',
+        lens: '35mm', model_position: '左下角', wardrobe_styling: '深色外套，自然淡妆',
+        lighting_setup: '路灯为侧光，反光板在暗侧轻补', shot_props: '无',
         crop_boundary: '完整全身', must_show: '脚部和路面', reject_if: '截脚或居中半身',
         execution_note: '不可达时换安全台阶', generator_prompt: 'high angle full body, lower left',
         shot_size: 'FS', camera_angle: 'high_angle',
@@ -144,7 +145,7 @@ test('anonymous free requests never forward supplied credentials and cannot swit
         assert.equal(url, 'https://text.pollinations.ai/openai');
         assert.equal(options.headers.Authorization, undefined);
         assert.doesNotMatch(options.body, new RegExp(key));
-        const fields = ['shot_language','model_pose','photographer_position','lens','model_position','lighting_setup','crop_boundary','must_show','reject_if','execution_note','generator_prompt','shot_size','camera_angle'];
+        const fields = ['shot_language','model_pose','photographer_position','lens','model_position','wardrobe_styling','lighting_setup','shot_props','crop_boundary','must_show','reject_if','execution_note','generator_prompt','shot_size','camera_angle'];
         return response({ shots: output().shot_plans.map(shot => fields.map(field => shot[field])) });
     } });
     assert.equal(result.status, 200);
@@ -270,14 +271,14 @@ test('constraint extraction groups alternations so requested resources are not b
 
 test('unconfirmed resource patterns catch compound bag names like backpack variants', () => {
     const input = { theme: '校园纪实', duration: '1小时', extra: '无额外道具' };
-    const shots = [{ shot_language: '双肩包镜头', model_pose: '背着双肩包走过林荫道', photographer_position: '侧面平视', lens: '35mm', model_position: '中央', lighting_setup: '自然光', crop_boundary: '全身', must_show: '人物', reject_if: '模糊', execution_note: '改拍侧影', generator_prompt: 'backpack walk', shot_size: 'FS', camera_angle: 'eye_level' }];
+    const shots = [{ shot_language: '双肩包镜头', model_pose: '背着双肩包走过林荫道', photographer_position: '侧面平视', lens: '35mm', model_position: '中央', wardrobe_styling: '休闲装', lighting_setup: '自然光', shot_props: '无', crop_boundary: '全身', must_show: '人物', reject_if: '模糊', execution_note: '改拍侧影', generator_prompt: 'backpack walk', shot_size: 'FS', camera_angle: 'eye_level' }];
     const violations = validateHardConstraints(shots, input);
     assert.ok(violations.some(v => v.includes('背包或手提包')), `双肩包 must be caught: ${JSON.stringify(violations)}`);
 });
 
 test('english negations in generator prompts are not counted as positive resource mentions', () => {
     const input = { theme: '雨夜纪实', duration: '1小时', extra: '无闪光灯，无窗户场地' };
-    const shots = [{ shot_language: '夜景全身', model_pose: '静立', photographer_position: '高台阶俯拍', lens: '35mm', model_position: '左下角', lighting_setup: '路灯环境光', crop_boundary: '全身', must_show: '全身', reject_if: '模糊', execution_note: '改拍倒影', generator_prompt: 'moody night portrait, restrained mood, no flash, natural light only, windowless alley backdrop', shot_size: 'FS', camera_angle: 'high_angle' }];
+    const shots = [{ shot_language: '夜景全身', model_pose: '静立', photographer_position: '高台阶俯拍', lens: '35mm', model_position: '左下角', wardrobe_styling: '深色外套', lighting_setup: '路灯环境光', shot_props: '无', crop_boundary: '全身', must_show: '全身', reject_if: '模糊', execution_note: '改拍倒影', generator_prompt: 'moody night portrait, restrained mood, no flash, natural light only, windowless alley backdrop', shot_size: 'FS', camera_angle: 'high_angle' }];
     const violations = validateHardConstraints(shots, input);
     assert.deepEqual(violations, []);
 });
@@ -286,6 +287,6 @@ test('any Chinese window mention (靠窗/窗外) marks a window as provided by t
     const input = { theme: '雨夜玻璃人像', scene: '室内靠窗座位，窗外夜雨', duration: '1小时', extra: '隔着被雨水打湿的玻璃拍摄' };
     const constraints = extractHardConstraints(input);
     assert.ok(constraints.resourceAllowlist ? !/橱窗|落地窗|窗边|window(?!less)/.test(constraints.resourceAllowlist) === false || true : true);
-    const shots = [{ shot_language: '玻璃水痕', model_pose: '静坐望向窗外', photographer_position: '室内贴玻璃平视', lens: '50mm', model_position: '画面中央', lighting_setup: '窗边夜灯与窗外霓虹双色温', crop_boundary: '半身', must_show: '玻璃水痕', reject_if: '无水痕', execution_note: '雨停改拍残留水珠', generator_prompt: 'rain glass portrait', shot_size: 'MS', camera_angle: 'eye_level' }];
+    const shots = [{ shot_language: '玻璃水痕', model_pose: '静坐望向窗外', photographer_position: '室内贴玻璃平视', lens: '50mm', model_position: '画面中央', wardrobe_styling: '针织衫', lighting_setup: '窗边夜灯与窗外霓虹双色温', shot_props: '无', crop_boundary: '半身', must_show: '玻璃水痕', reject_if: '无水痕', execution_note: '雨停改拍残留水珠', generator_prompt: 'rain glass portrait', shot_size: 'MS', camera_angle: 'eye_level' }];
     assert.deepEqual(validateHardConstraints(shots, input), []);
 });
