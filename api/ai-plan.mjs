@@ -30,7 +30,7 @@ function hasPositiveMention(text, pattern) {
     return false;
 }
 
-function extractHardConstraints(input = {}) {
+export function extractHardConstraints(input = {}) {
     const allText = ['theme', 'style', 'modelDesc', 'scene', 'mood', 'extra']
         .map(key => String(input[key] || '')).join('\n');
     const scopedText = allText.split(/[。！？；;\n]+/)
@@ -52,20 +52,23 @@ function extractHardConstraints(input = {}) {
         ['屋顶或脚手架', /屋顶|天台|脚手架|rooftop|scaffold/i], ['攀爬', /攀爬|爬上|climb/i],
     ];
     const clauses = allText.split(/[。！？；;，,\n]+/);
+    // Wrap each pattern in a group: otherwise "….{0,40}A|B|C" parses as
+    // "(….{0,40}A) | B | C" and bare B/C match without any negation word,
+    // prohibiting resources the user explicitly requested.
     for (const [label, pattern] of forbidden) {
-        if (clauses.some(clause => new RegExp(`(?:无|不要|不得|不能|禁止|不使用|不需要|不带).{0,40}${pattern.source}`, 'i').test(clause))) {
+        if (clauses.some(clause => new RegExp(`(?:无|不要|不得|不能|禁止|不使用|不需要|不带).{0,40}(?:${pattern.source})`, 'i').test(clause))) {
             constraints.prohibited.push({ label, pattern });
         }
     }
     for (const resource of unconfirmedResources) {
-        if (clauses.some(clause => new RegExp(`(?:无|不要|不得|不能|禁止|不使用|不需要|不带).{0,40}${resource.pattern.source}`, 'i').test(clause))) {
+        if (clauses.some(clause => new RegExp(`(?:无|不要|不得|不能|禁止|不使用|不需要|不带).{0,40}(?:${resource.pattern.source})`, 'i').test(clause))) {
             constraints.prohibited.push({ label: resource.name, pattern: resource.pattern });
         }
     }
     return constraints;
 }
 
-function validateHardConstraints(shots, input) {
+export function validateHardConstraints(shots, input) {
     const constraints = extractHardConstraints(input);
     const violations = [];
     const add = (index, reason) => violations.push(`镜头${index + 1}${reason}`);

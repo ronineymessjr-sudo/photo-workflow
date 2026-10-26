@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { runInNewContext } from 'node:vm';
-import { aiPlanProviders, handleAiPlan } from '../api/ai-plan.mjs';
+import { aiPlanProviders, handleAiPlan, extractHardConstraints } from '../api/ai-plan.mjs';
 import worker from '../api/index.js';
 
 const key = 'test-private-key-never-log';
@@ -240,4 +240,15 @@ test('ordinary creative preferences stay flexible and an allowed reflector is no
         fetchImpl: async () => response(flexible),
     });
     assert.equal(result.status, 200);
+});
+
+test('constraint extraction groups alternations so requested resources are not banned without a negation', () => {
+    const windowLight = { theme: '窗边人像', scene: '室内窗边，窗帘可调', duration: '1小时', extra: '仅50mm；只用窗户自然光；无闪光灯、反光板或助手；不爬窗、不拍摄床铺。' };
+    const constraints = extractHardConstraints(windowLight);
+    const labels = constraints.prohibited.map(p => p.label);
+    assert.ok(labels.includes('闪光灯') && labels.includes('反光板') && labels.includes('助手或助理'));
+    assert.ok(!labels.includes('橱窗或窗户'), 'explicitly requested window light must not be prohibited');
+    const rooftop = { theme: '天台花园人像', duration: '1小时', extra: '在开放天台平台拍摄，无助手' };
+    assert.ok(!extractHardConstraints(rooftop).prohibited.some(p => p.label === '屋顶或脚手架'),
+        'a rooftop location the user requested must not be banned without a negation');
 });
