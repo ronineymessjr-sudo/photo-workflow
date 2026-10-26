@@ -13,6 +13,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { createDirectorPlan } from '../../api/director-plan.mjs';
 import { handleAiPlan, validateHardConstraints, extractHardConstraints } from '../../api/ai-plan.mjs';
+import { evaluatePlan } from './eval-checks.mjs';
 
 const DIRECTOR_BASE = process.env.DIRECTOR_BASE || 'http://127.0.0.1:8004';
 
@@ -57,72 +58,6 @@ const BRIEFS = [
     },
 ];
 
-const requiredContract = ['shot_language', 'model_pose', 'photographer_position', 'lens', 'model_position', 'lighting_setup', 'crop_boundary', 'must_show', 'reject_if', 'execution_note', 'generator_prompt', 'shot_size', 'camera_angle'];
-const sizes = ['ECU', 'CU', 'MCU', 'MS', 'MFS', 'FS', 'WS', 'EWS'];
-const angles = ['eye_level', 'high_angle', 'ground_level', 'overhead', 'low_angle'];
-
-function bigrams(text) {
-    const clean = String(text || '').replace(/\s+/g, '');
-    const set = new Set();
-    for (let i = 0; i < clean.length - 1; i++) set.add(clean.slice(i, i + 2));
-    return set;
-}
-
-function similarity(a, b) {
-    const sa = bigrams(a); const sb = bigrams(b);
-    if (!sa.size || !sb.size) return 0;
-    let overlap = 0;
-    for (const g of sa) if (sb.has(g)) overlap++;
-    return overlap / Math.max(sa.size, sb.size);
-}
-
-export function evaluatePlan(shotPlans, input) {
-    const findings = [];
-    const add = msg => findings.push(msg);
-    const shots = Array.isArray(shotPlans) ? shotPlans : [];
-    if (shots.length < 2) add(`返回镜头数不足（${shots.length}）`);
-
-    const names = shots.map(s => String(s?.shot_language || '').trim());
-    const dupNames = names.filter((n, i) => n && names.indexOf(n) !== i);
-    if (dupNames.length) add(`镜头名称重复：${[...new Set(dupNames)].join('、')}`);
-
-    for (const [i, shot] of shots.entries()) {
-        const missing = requiredContract.filter(k => {
-            if (k === 'photographer_position') return !(String(shot?.photographer_position || '').trim() || String(shot?.photographer_position || '').trim());
-            return typeof shot?.[k] !== 'string' || !shot[k].trim();
-        });
-        if (missing.length) add(`镜头${i + 1} 缺字段：${missing.join('、')}`);
-        if (shot?.shot_size && !sizes.includes(shot.shot_size)) add(`镜头${i + 1} 景别代号不支持：${shot.shot_size}`);
-        if (shot?.camera_angle && !angles.includes(shot.camera_angle)) add(`镜头${i + 1} 机位代号不支持：${shot.camera_angle}`);
-        const pose = String(shot?.model_pose || '').trim();
-        if (pose && pose.length < 8) add(`镜头${i + 1} 动作口令过短，无法指导执行：“${pose}”`);
-    }
-
-    // Substantively similar actions despite different names.
-    for (let i = 0; i < shots.length; i++) {
-        for (let j = i + 1; j < shots.length; j++) {
-            const sim = similarity(shots[i]?.model_pose, shots[j]?.model_pose);
-            if (sim >= 0.7) add(`镜头${i + 1} 与镜头${j + 1} 动作实质相近（相似度 ${(sim * 100).toFixed(0)}%）：“${String(shots[i]?.model_pose).slice(0, 14)}…” vs “${String(shots[j]?.model_pose).slice(0, 14)}…”`);
-        }
-    }
-
-    // Production hard-constraint validator (same code as the Worker route).
-    const violations = validateHardConstraints(shots, input);
-    findings.push(...violations.map(v => `硬约束：${v}`));
-
-    const constraints = extractHardConstraints(input);
-    return {
-        findings: [...new Set(findings)],
-        hardConstraintCount: violations.length,
-        activeConstraints: {
-            fullBodyAll: constraints.fullBodyAll, downwardAll: constraints.downwardAll,
-            lowerLeftAll: constraints.lowerLeftAll, focalLengthOnly: constraints.focalLengthOnly,
-            prohibited: constraints.prohibited.map(p => p.label),
-        },
-        pass: findings.length === 0,
-    };
-}
-
 function extractShotPlans(plan) {
     return (plan?.shotList || []).map(s => s.directorContract || {});
 }
@@ -154,7 +89,7 @@ for (const brief of BRIEFS) {
     try {
         const run = backend === 'director' ? await runDirector(brief.input) : await runDeepseek(brief.input, process.env.DEEPSEEK_API_KEY);
         const elapsed = ((Date.now() - started) / 1000).toFixed(3);
-        const evaluation = evaluatePlan(run.shotPlans, brief.input);
+        const evaluation = evaluatePlan(run.shotPlans, brief.input, validateHardConstraints);
         record = { ...record, elapsedSeconds: Number(elapsed), shotCount: run.shotPlans.length, requestedShots: run.plan.director?.desiredShotCount, meta: run.meta, evaluation, shots: run.shotPlans, planTitle: run.plan.title, submittedBrief: run.plan.director?.submittedBrief };
         console.log(`[${brief.id}] ${backend} ${elapsed}s, ${run.shotPlans.length} 镜头, ${evaluation.findings.length} 项问题${evaluation.pass ? '（全部通过）' : ''}`);
     } catch (error) {
