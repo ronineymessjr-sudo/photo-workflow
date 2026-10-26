@@ -74,6 +74,10 @@ async function runDeepseek(input, apiKey) {
 }
 
 const backend = process.argv.includes('--backend') ? process.argv[process.argv.indexOf('--backend') + 1] : 'director';
+const onlyIdx = process.argv.indexOf('--only');
+const only = onlyIdx > -1 ? process.argv[onlyIdx + 1] : null;
+const briefsToRun = only ? BRIEFS.filter(b => b.id === only) : BRIEFS;
+if (only && !briefsToRun.length) { console.error(`未知用例：${only}`); process.exit(2); }
 const outDir = resolve(import.meta.dirname, process.argv.includes('--out') ? process.argv[process.argv.indexOf('--out') + 1] : `results/real-model-${new Date().toISOString().slice(0, 10)}-${backend}`);
 await mkdir(outDir, { recursive: true });
 
@@ -96,7 +100,7 @@ if (backend === 'deepseek' && !await loadDeepseekKey()) {
 }
 
 const summary = [];
-for (const brief of BRIEFS) {
+for (const brief of briefsToRun) {
     const started = Date.now();
     let record = { id: brief.id, backend, startedAt: new Date().toISOString(), input: brief.input };
     try {
@@ -114,7 +118,7 @@ for (const brief of BRIEFS) {
 }
 
 await writeFile(resolve(outDir, 'summary.json'), JSON.stringify({
-    backend, ranAt: new Date().toISOString(), totalBriefs: BRIEFS.length,
+    backend, ranAt: new Date().toISOString(), totalBriefs: briefsToRun.length,
     pass: summary.filter(r => r.evaluation?.pass).length,
     perBrief: summary.map(r => ({ id: r.id, shotCount: r.shotCount, elapsedSeconds: r.elapsedSeconds, pass: r.evaluation?.pass ?? null, findings: r.evaluation?.findings ?? [], error: r.error })),
 }), null, 2);
