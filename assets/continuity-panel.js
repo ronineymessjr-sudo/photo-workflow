@@ -122,7 +122,7 @@ function renderReferences() {
             thumb ? el('img', { src: thumb, class: 'thumb', alt: definition.label }) : el('div', { class: 'thumb empty', text: '未选图' }),
             el('div', { class: 'ref-actions' }, [
                 el('input', {
-                    type: 'file', accept: 'image/*',
+                    type: 'file', accept: 'image/jpeg,image/png,image/webp',
                     onchange: async event => {
                         const file = event.target.files?.[0];
                         if (!file) return;
@@ -131,8 +131,7 @@ function renderReferences() {
                             reader.onload = () => resolve(String(reader.result));
                             reader.readAsDataURL(file);
                         });
-                        state.thumbs = { ...(state.thumbs || {}), [definition.role]: dataUrl };
-                        await updateReference(definition.role, file.name.replace(/\.[^.]+$/, ''), 'confirmed');
+                        await uploadReference(definition.role, dataUrl, file.name);
                     },
                 }),
                 el('button', {
@@ -146,6 +145,26 @@ function renderReferences() {
             ]),
         ]));
     }
+}
+
+// Upload first, confirm second: a reference only counts once the bytes are
+// actually stored, so the contract never points at a filename that does not
+// exist on the server.
+async function uploadReference(role, dataUrl, fileName) {
+    const { ok, status, payload } = await api('/api/continuity/asset', { dataUrl, role });
+    if (!ok) { toast(`${status} ${payload.code || ''} ${payload.error || '上传失败'}`, 'error'); return; }
+    if (payload.durable === false) toast('注意：当前存储是临时的，重启后参考图会丢失', 'warn');
+    state.thumbs = { ...(state.thumbs || {}), [role]: payload.path };
+    const updated = await api('/api/continuity/reference', {
+        group: state.group,
+        reference: { role, assetId: payload.assetId, status: 'confirmed', path: payload.path },
+    });
+    if (!updated.ok) { toast(updated.payload.error || '写入契约失败', 'error'); return; }
+    state.group = updated.payload.group;
+    state.assets = { ...(state.assets || {}), [role]: { ...payload, fileName } };
+    save();
+    render();
+    toast(`${ROLES.find(item => item.role === role).label}已入库：${payload.assetId}（${Math.round(payload.bytes / 1024)}KB）`, 'ok');
 }
 
 async function updateReference(role, assetId, status) {

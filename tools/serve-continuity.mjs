@@ -5,17 +5,33 @@
 //
 //   node tools/serve-continuity.mjs --port 8123
 import http from 'node:http';
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
     createGroup, setReference, confirmMaster, buildShotRequests,
     recordQc, continuitySummary, continuitySchema, ContinuityError,
 } from '../api/continuity.mjs';
+import { storeAsset, readAsset, AssetError, ASSET_LIMITS } from '../api/continuity-assets.mjs';
 
 const root = path.resolve(fileURLToPath(new URL('../', import.meta.url)));
 const portArgIndex = process.argv.indexOf('--port');
 const port = Number(portArgIndex >= 0 ? process.argv[portArgIndex + 1] : 8123) || 8123;
+
+// Local assets live on disk so a restart does not break the stored references.
+const assetRoot = path.resolve(process.env.CONTINUITY_ASSET_ROOT || path.join(root, 'runtime', 'continuity-assets'));
+await mkdir(assetRoot, { recursive: true });
+const diskStore = {
+    durable: true,
+    async put(key, buffer) {
+        const target = path.join(assetRoot, key.replace(/^continuity\//, '').replace(/\//g, '__'));
+        await writeFile(target, buffer);
+    },
+    async get(key) {
+        const target = path.join(assetRoot, key.replace(/^continuity\//, '').replace(/\//g, '__'));
+        try { return { buffer: await readFile(target), meta: {} }; } catch { return null; }
+    },
+};
 
 const MIME = {
     '.html': 'text/html; charset=utf-8',
@@ -48,6 +64,17 @@ const server = http.createServer(async (request, response) => {
 
     try {
         if (pathname === '/api/continuity/schema' && request.method === 'GET') return json(200, continuitySchema());
+        if (pathname === '/api/continuity/asset' && request.method === 'POST') {
+            const body = await readBody(request);
+            const asset = await storeAsset({ dataUrl: body?.dataUrl, role: body?.role, store: diskStore });
+            return json(201, asset);
+        }
+        if (pathname.startsWith('/api/continuity/asset/') && request.method === 'GET') {
+            const asset = await readAsset(pathname, { store: diskStore });
+            if (!asset) return json(404, { error: 'ASSET_NOT_FOUND' });
+            response.writeHead(200, { 'Content-Type': asset.mime, 'Cache-Control': 'private, max-age=86400' });
+            return response.end(asset.buffer);
+        }
         if (pathname.startsWith('/api/continuity/') && request.method === 'POST') {
             const body = await readBody(request);
             if (pathname === '/api/continuity/init') return json(200, { group: createGroup(body || {}) });
@@ -80,6 +107,7 @@ const server = http.createServer(async (request, response) => {
         response.end(content);
     } catch (error) {
         if (error instanceof ContinuityError) return json(error.status, { error: error.message, code: error.code });
+        if (error instanceof AssetError) return json(error.status, { error: error.message, code: error.code });
         if (error?.code === 'ENOENT') return json(404, { error: 'NOT_FOUND' });
         return json(500, { error: '服务器暂时不可用', detail: String(error?.message || error) });
     }

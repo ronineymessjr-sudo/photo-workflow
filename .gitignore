@@ -1,1 +1,4 @@
 .wrangler/
+
+# Local continuity reference assets (dev server writes here; never commit photos)
+runtime/continuity-assets/
