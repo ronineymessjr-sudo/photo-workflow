@@ -13,6 +13,8 @@ import {
     recordQc, continuitySummary, continuitySchema, ContinuityError,
 } from '../api/continuity.mjs';
 import { storeAsset, readAsset, AssetError, ASSET_LIMITS } from '../api/continuity-assets.mjs';
+import { generateShot } from '../api/continuity-generation.mjs';
+import { prescreen, mergeScores, summariseVision } from '../api/continuity-vision.mjs';
 
 const root = path.resolve(fileURLToPath(new URL('../', import.meta.url)));
 const portArgIndex = process.argv.indexOf('--port');
@@ -88,6 +90,20 @@ const server = http.createServer(async (request, response) => {
                 });
                 return json(200, { requests, count: requests.length });
             }
+            if (pathname === '/api/continuity/generate') {
+                return json(200, await generateShot({ group: body?.group, shotId: body?.shotId, providerId: body?.providerId, store: diskStore }));
+            }
+            if (pathname === '/api/continuity/prescreen') {
+                const shot = (body?.group?.shots || []).find(item => item.shotId === body?.shotId);
+                if (!shot) return json(404, { error: '没有这个镜头', code: 'CONTINUITY_SHOT_UNKNOWN' });
+                let imageDataUrl = body?.imageDataUrl || '';
+                if (!imageDataUrl && body?.imagePath) {
+                    const asset = await readAsset(body.imagePath, { store: diskStore });
+                    if (asset) imageDataUrl = `data:${asset.mime};base64,${Buffer.from(asset.buffer).toString('base64')}`;
+                }
+                const vision = await prescreen({ imageDataUrl, shot, locked: body.group.locked });
+                return json(200, { ...vision, summary: summariseVision(vision), merged: mergeScores(body?.scores || {}, vision.scores) });
+            }
             if (pathname === '/api/continuity/qc') {
                 return json(200, recordQc(body?.group, {
                     shotId: body?.shotId, scores: body?.scores,
@@ -108,6 +124,11 @@ const server = http.createServer(async (request, response) => {
     } catch (error) {
         if (error instanceof ContinuityError) return json(error.status, { error: error.message, code: error.code });
         if (error instanceof AssetError) return json(error.status, { error: error.message, code: error.code });
+        // Generation/vision errors carry their own status so the UI can show
+        // "少了哪个环境变量" instead of a generic 500.
+        if (error?.name === 'GenerationError' || error?.name === 'VisionError') {
+            return json(error.status || 502, { error: error.message, code: error.code, details: error.details });
+        }
         if (error?.code === 'ENOENT') return json(404, { error: 'NOT_FOUND' });
         return json(500, { error: '服务器暂时不可用', detail: String(error?.message || error) });
     }

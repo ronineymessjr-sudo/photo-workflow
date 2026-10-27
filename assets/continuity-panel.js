@@ -215,6 +215,7 @@ function renderShots() {
             })),
             el('td', {}, [
                 el('button', { class: 'ghost', text: '取请求', onclick: () => requestShot(shot.shotId) }),
+                el('button', { text: '生成这张', onclick: () => generateShot(shot.shotId) }),
                 el('button', { class: 'ghost', text: '质检', onclick: () => openQc(shot.shotId) }),
             ]),
         ]));
@@ -235,6 +236,41 @@ async function requestShot(shotId) {
     const request = payload.requests[0];
     output.textContent = JSON.stringify(request, null, 2);
     toast(`${shotId} 请求已生成：seed ${request.seed}`, 'ok');
+}
+
+// One click = one shot. If the service is not configured the server answers 503
+// with the exact missing env vars; we show that verbatim instead of inventing a
+// placeholder image.
+async function generateShot(shotId) {
+    const providerId = document.getElementById('f-provider').value;
+    const output = document.getElementById('request-output');
+    output.textContent = `${shotId} 生成中…`;
+    const { ok, status, payload } = await api('/api/continuity/generate', { group: state.group, shotId, providerId });
+    if (!ok) {
+        const missing = payload?.details?.missing?.join('、') || '';
+        output.textContent = `${status} ${payload.code || ''}\n${payload.error || ''}${missing ? `\n缺少环境变量：${missing}` : ''}`;
+        toast(`${payload.code || status}${missing ? '：缺 ' + missing : ''}`, 'error');
+        return;
+    }
+    state.results = { ...(state.results || {}), [shotId]: payload };
+    output.textContent = JSON.stringify(payload, null, 2);
+    save();
+    toast(`${shotId} 已生成：${payload.image.assetId}`, 'ok');
+}
+
+async function prescreenShot(shotId) {
+    const result = state.results?.[shotId];
+    const scores = state.qc?.[shotId]?.scores || {};
+    const { ok, payload } = await api('/api/continuity/prescreen', {
+        group: state.group, shotId,
+        imagePath: result?.image?.path || '',
+        scores,
+    });
+    if (!ok) { toast(payload.error || '初筛失败', 'error'); return; }
+    state.qc = { ...(state.qc || {}), [shotId]: { ...(state.qc?.[shotId] || {}), scores: payload.merged, vision: payload.summary } };
+    save();
+    openQc(shotId);
+    toast(payload.summary, payload.available ? 'warn' : 'info');
 }
 
 // ---- qc --------------------------------------------------------------------
@@ -260,6 +296,7 @@ function openQc(shotId) {
     const human = el('input', { type: 'checkbox', id: 'qc-human' });
     host.append(grid, el('label', { class: 'inline' }, [human, el('span', { text: '我已人工核对（关键项需人眼）' })]),
         el('div', { class: 'row' }, [
+            el('button', { class: 'ghost', text: '视觉初筛', onclick: () => prescreenShot(shotId) }),
             el('button', {
                 text: '提交质检',
                 onclick: async () => {
