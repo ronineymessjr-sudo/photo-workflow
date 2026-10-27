@@ -10,7 +10,7 @@ const input = { theme: '雨夜纪实', scene: '斑马线', people: '1', duration
 const request = { provider: 'deepseek', model: 'test-model', apiKey: key, input };
 function output(count = 9) {
     return { shot_plans: Array.from({ length: count }, (_, i) => ({
-        shot_language: `镜头${i}`, model_pose: '站定后向前迈步', photographer_position: '在安全台阶上俯拍',
+        shot_language: `镜头${i}`, model_pose: '站定后向前迈步', photographer_position: '在安全台阶上俯拍，距主体约4米',
         lens: '35mm', model_position: '左下角', wardrobe_styling: '深色外套，自然淡妆',
         lighting_setup: '路灯为侧光，反光板在暗侧轻补', shot_props: '无',
         crop_boundary: '完整全身', must_show: '脚部和路面', reject_if: '截脚或居中半身',
@@ -222,6 +222,30 @@ test('explicit all-shot constraints accept a compliant plan without saving forbi
     assert.equal(result.body.shotList.length, 10);
 });
 
+test('format-completeness contract: lens format, shooting distance and field substance are mandatory', async () => {
+    const changes = [
+        [shot => { shot.lens = '35 mm'; }, /镜头1焦段格式/],
+        [shot => { shot.lens = '定焦镜头'; }, /镜头1焦段格式/],
+        [shot => { shot.photographer_position = '站在斜对面平视拍摄'; }, /镜头1机位未写明拍摄距离/],
+        [shot => { shot.model_pose = '静立'; }, /镜头1字段描述过于简略/],
+        [shot => { shot.execution_note = '改拍'; }, /镜头1字段描述过于简略/],
+        [shot => { shot.generator_prompt = 'portrait'; }, /镜头1字段描述过于简略/],
+    ];
+    for (const [change, expected] of changes) {
+        const generated = output(9);
+        change(generated.shot_plans[0]);
+        const result = await handleAiPlan(request, {}, { fetchImpl: async () => response(generated) });
+        assert.equal(result.status, 502);
+        assert.equal(result.body.code, 'AI_SHOT_FIELDS_INVALID');
+        assert.match(result.body.error, expected);
+    }
+    // 距离写在 execution_note（如“距离不够时移至约6米外”）同样算数。
+    const noteDistance = output(9);
+    noteDistance.shot_plans.forEach(shot => { shot.photographer_position = '安全台阶上俯拍'; shot.execution_note = '距离不够时移至约6米外'; });
+    const ok = await handleAiPlan(request, {}, { fetchImpl: async () => response(noteDistance) });
+    assert.equal(ok.status, 200);
+});
+
 test('a model cannot save shots that violate explicit framing, angle, placement, lens, resources or safety', async () => {
     const strictInput = {
         theme: '雨夜城市纪实', scene: '有安全低台阶的步行街，路灯环境光', people: '1', duration: '1小时',
@@ -234,7 +258,7 @@ test('a model cannot save shots that violate explicit framing, angle, placement,
         [shot => { shot.lens = '50mm'; }, /镜头1焦段不符合/],
         [shot => { shot.model_pose = '撑开雨伞'; }, /镜头1使用了未提供、需确认的资源：雨伞/],
         [shot => { shot.lighting_setup = '反光板补光'; }, /镜头1出现禁用内容：反光板/],
-        [shot => { shot.photographer_position = '爬上脚手架拍摄'; }, /镜头1出现禁用内容：屋顶或脚手架/],
+        [shot => { shot.photographer_position = '爬上脚手架拍摄，距主体约3米'; }, /镜头1出现禁用内容：屋顶或脚手架/],
     ];
     for (const [change, expected] of changes) {
         const generated = output(10);
@@ -271,7 +295,7 @@ test('constraint extraction groups alternations so requested resources are not b
 
 test('unconfirmed resource patterns catch compound bag names like backpack variants', () => {
     const input = { theme: '校园纪实', duration: '1小时', extra: '无额外道具' };
-    const shots = [{ shot_language: '双肩包镜头', model_pose: '背着双肩包走过林荫道', photographer_position: '侧面平视', lens: '35mm', model_position: '中央', wardrobe_styling: '休闲装', lighting_setup: '自然光', shot_props: '无', crop_boundary: '全身', must_show: '人物', reject_if: '模糊', execution_note: '改拍侧影', generator_prompt: 'backpack walk', shot_size: 'FS', camera_angle: 'eye_level' }];
+    const shots = [{ shot_language: '双肩包镜头', model_pose: '背着双肩包走过林荫道', photographer_position: '侧面平视，距主体约3米', lens: '35mm', model_position: '中央', wardrobe_styling: '休闲装', lighting_setup: '自然光', shot_props: '无', crop_boundary: '全身', must_show: '人物', reject_if: '模糊', execution_note: '改拍侧影', generator_prompt: 'backpack walk', shot_size: 'FS', camera_angle: 'eye_level' }];
     const violations = validateHardConstraints(shots, input);
     assert.ok(violations.some(v => v.includes('背包或手提包')), `双肩包 must be caught: ${JSON.stringify(violations)}`);
 });
@@ -282,29 +306,33 @@ test('scene-inherent objects (library books, reading-room tables, train windows)
         [{ theme: '自习室纪实', scene: '大学自习室', duration: '1小时' }, '在桌前写字', 'desk'],
         [{ theme: '地铁站台', scene: '地铁站台（已获拍摄许可）', duration: '1小时' }, '静立候车，背景列车车窗光轨划过', 'train window light trails'],
         [{ theme: '咖啡馆写真', scene: '咖啡馆室内（店主人很好已同意）', duration: '1小时' }, '坐在窗边桌前双手捧杯', 'cafe window seat with coffee cup'],
+        // 课桌/教室窗、楼梯天窗、练功房侧窗同样是建筑固有物。
+        [{ theme: '日系教室', scene: '旧教室（课桌椅现场已有）', duration: '1小时' }, '坐在课桌前撑着下巴', 'rows of wooden desks, student sitting at window desk in backlit classroom'],
+        [{ theme: '旋转楼梯', scene: '美术馆旋转楼梯（已获许可）', duration: '1小时' }, '沿内侧阶梯下行', 'spiral staircase under a skylight, light pouring down the stairwell'],
+        [{ theme: '舞者练功房', scene: '舞蹈教室（把杆与镜墙现场已有）', duration: '1小时' }, '靠把杆压腿', 'dancer stretching by the barre, side window light rimming the body'],
     ];
     for (const [input, pose, prompt] of cases) {
-        const shots = [{ shot_language: '场景镜', model_pose: pose, photographer_position: '平视', lens: '35mm', model_position: '中央', wardrobe_styling: '日常装', lighting_setup: '现场光', shot_props: '无', crop_boundary: '半身', must_show: '环境细节', reject_if: '模糊', execution_note: '改拍侧影', generator_prompt: prompt, shot_size: 'MS', camera_angle: 'eye_level' }];
+        const shots = [{ shot_language: '场景镜', model_pose: pose, photographer_position: '距主体约3米平视', lens: '35mm', model_position: '中央', wardrobe_styling: '日常装', lighting_setup: '现场光', shot_props: '无', crop_boundary: '半身', must_show: '环境细节', reject_if: '模糊', execution_note: '改拍侧影', generator_prompt: prompt, shot_size: 'MS', camera_angle: 'eye_level' }];
         assert.deepEqual(validateHardConstraints(shots, input), [], `${pose} 不应被视为臆造资源`);
     }
     // 但空街上没有图书馆上下文时，书本仍是未确认资源。
-    const street = [{ shot_language: '街拍', model_pose: '捧着书本走路', photographer_position: '平视', lens: '35mm', model_position: '中央', wardrobe_styling: '休闲装', lighting_setup: '自然光', shot_props: '无', crop_boundary: '全身', must_show: '街道', reject_if: '模糊', execution_note: '改拍背影', generator_prompt: 'walking with a book', shot_size: 'FS', camera_angle: 'eye_level' }];
+    const street = [{ shot_language: '街拍', model_pose: '捧着书本走路', photographer_position: '距主体约3米平视', lens: '35mm', model_position: '中央', wardrobe_styling: '休闲装', lighting_setup: '自然光', shot_props: '无', crop_boundary: '全身', must_show: '街道', reject_if: '模糊', execution_note: '改拍背影', generator_prompt: 'walking with a book', shot_size: 'FS', camera_angle: 'eye_level' }];
     assert.ok(validateHardConstraints(street, { theme: '街拍', duration: '1小时' }).some(v => v.includes('书本')), '无图书馆上下文的书本必须仍被拦截');
 });
 
 test('长凳 provided by the user covers bench mentions; 茶桌 covers tea cups', () => {
     const benchInput = { theme: '八人团建', scene: '公司附近公园草坪', duration: '2小时', extra: '合影用长凳（现场已有）' };
-    const bench = [{ shot_language: '合影', model_pose: '前排四人坐长凳，后排搭在前排肩上', photographer_position: '长凳正前方', lens: '35mm', model_position: '中央', wardrobe_styling: '统一工装', lighting_setup: '顺光', shot_props: '长凳（现场已有）', crop_boundary: '全身', must_show: '八人全员', reject_if: '有人闭眼', execution_note: '改拍站姿', generator_prompt: 'group photo on a bench', shot_size: 'FS', camera_angle: 'eye_level' }];
+    const bench = [{ shot_language: '合影', model_pose: '前排四人坐长凳，后排搭在前排肩上', photographer_position: '长凳正前方约5米', lens: '35mm', model_position: '中央', wardrobe_styling: '统一工装', lighting_setup: '顺光', shot_props: '长凳（现场已有）', crop_boundary: '全身', must_show: '八人全员', reject_if: '有人闭眼', execution_note: '改拍站姿', generator_prompt: 'group photo on a bench', shot_size: 'FS', camera_angle: 'eye_level' }];
     assert.deepEqual(validateHardConstraints(bench, benchInput), []);
     const teaInput = { theme: '祖孙午后', scene: '老宅院内的藤椅与茶桌', duration: '1小时' };
-    const tea = [{ shot_language: '递茶', model_pose: '双手递茶杯', photographer_position: '对面平视', lens: '85mm', model_position: '中央', wardrobe_styling: '家常装', lighting_setup: '自然光', shot_props: '茶杯', crop_boundary: '手部特写', must_show: '茶杯与手', reject_if: '模糊', execution_note: '改拍对视', generator_prompt: 'hands handing a tea cup', shot_size: 'ECU', camera_angle: 'eye_level' }];
+    const tea = [{ shot_language: '递茶', model_pose: '双手递茶杯', photographer_position: '对面平视，距主体约40厘米', lens: '85mm', model_position: '中央', wardrobe_styling: '家常装', lighting_setup: '自然光', shot_props: '茶杯', crop_boundary: '手部特写', must_show: '茶杯与手', reject_if: '模糊', execution_note: '改拍对视', generator_prompt: 'hands handing a tea cup', shot_size: 'ECU', camera_angle: 'eye_level' }];
     assert.deepEqual(validateHardConstraints(tea, teaInput), []);
 });
 
 test('conditional dependency with a fallback is accepted per the prompt contract', () => {
     // 提示词承诺允许"依赖现场条件的镜头明确写条件与替代方案"。
     const input = { theme: '老屋环境人像', scene: '即将拆迁的老屋内部（已获许可）', duration: '1小时', extra: '交代屋内环境细节（斑驳墙、旧家具）' };
-    const shots = [{ shot_language: '窗前剪影', model_pose: '静立望向窗外', photographer_position: '室内平视', lens: '24mm', model_position: '中央', wardrobe_styling: '待确认', lighting_setup: '自然光从侧面窗户（如果有）或门口进入，现有室内光为环境光', shot_props: '无', crop_boundary: '全身', must_show: '斑驳墙', reject_if: '剪影发灰', execution_note: '若无窗户，可改用门口光线改拍门口剪影', generator_prompt: 'silhouette by the window', shot_size: 'FS', camera_angle: 'eye_level' }];
+    const shots = [{ shot_language: '窗前剪影', model_pose: '静立望向窗外', photographer_position: '室内平视，距主体约2米', lens: '24mm', model_position: '中央', wardrobe_styling: '待确认', lighting_setup: '自然光从侧面窗户（如果有）或门口进入，现有室内光为环境光', shot_props: '无', crop_boundary: '全身', must_show: '斑驳墙', reject_if: '剪影发灰', execution_note: '若无窗户，可改用门口光线改拍门口剪影', generator_prompt: 'silhouette by the window', shot_size: 'FS', camera_angle: 'eye_level' }];
     assert.deepEqual(validateHardConstraints(shots, input), []);
     // 但直接假设窗户存在且无条件表述仍要拦（中性场景，无场景豁免、无条件词）。
     const street = { theme: '街头人像', scene: '步行街', duration: '1小时' };
@@ -316,7 +344,7 @@ test('conditional dependency with a fallback is accepted per the prompt contract
 
 test('english negations in generator prompts are not counted as positive resource mentions', () => {
     const input = { theme: '雨夜纪实', duration: '1小时', extra: '无闪光灯，无窗户场地' };
-    const shots = [{ shot_language: '夜景全身', model_pose: '静立', photographer_position: '高台阶俯拍', lens: '35mm', model_position: '左下角', wardrobe_styling: '深色外套', lighting_setup: '路灯环境光', shot_props: '无', crop_boundary: '全身', must_show: '全身', reject_if: '模糊', execution_note: '改拍倒影', generator_prompt: 'moody night portrait, restrained mood, no flash, natural light only, windowless alley backdrop', shot_size: 'FS', camera_angle: 'high_angle' }];
+    const shots = [{ shot_language: '夜景全身', model_pose: '静立望向镜头', photographer_position: '高台阶俯拍，距主体约6米', lens: '35mm', model_position: '左下角', wardrobe_styling: '深色外套', lighting_setup: '路灯环境光', shot_props: '无', crop_boundary: '全身', must_show: '全身', reject_if: '模糊', execution_note: '改拍倒影', generator_prompt: 'moody night portrait, restrained mood, no flash, natural light only, windowless alley backdrop', shot_size: 'FS', camera_angle: 'high_angle' }];
     const violations = validateHardConstraints(shots, input);
     assert.deepEqual(violations, []);
 });
@@ -324,25 +352,25 @@ test('english negations in generator prompts are not counted as positive resourc
 test('english substrings and time-window idioms are not physical resources', () => {
     // storybook ≠ book, microphone ≠ phone, cupped ≠ cup, 蓝调窗口(中文) ≠ 窗户
     const input = { theme: '古镇黄昏', duration: '1小时', extra: '无闪光灯' };
-    const shots = [{ shot_language: '回望', model_pose: '回望镜头，等待蓝调窗口', photographer_position: '街角平视', lens: '50mm', model_position: '中央', wardrobe_styling: '素色长衫', lighting_setup: '黄昏自然光', shot_props: '无', crop_boundary: '半身', must_show: '石板街', reject_if: '模糊', execution_note: '等游客间隙', generator_prompt: 'storybook twilight, singer gripping microphone, hands cupped around a candle', shot_size: 'MS', camera_angle: 'eye_level' }];
+    const shots = [{ shot_language: '回望', model_pose: '回望镜头，等待蓝调窗口', photographer_position: '街角平视，距主体约3米', lens: '50mm', model_position: '中央', wardrobe_styling: '素色长衫', lighting_setup: '黄昏自然光', shot_props: '无', crop_boundary: '半身', must_show: '石板街', reject_if: '模糊', execution_note: '等游客间隙', generator_prompt: 'storybook twilight, singer gripping microphone, hands cupped around a candle', shot_size: 'MS', camera_angle: 'eye_level' }];
     assert.deepEqual(validateHardConstraints(shots, input), []);
 });
 
 test('禁用闪光灯 is a refusal, not a violation', () => {
     const input = { theme: '地铁站台', duration: '1小时', extra: '禁止使用闪光灯' };
-    const shots = [{ shot_language: '候车剪影', model_pose: '静立候车', photographer_position: '站台对面', lens: '35mm', model_position: '黄线内', wardrobe_styling: '通勤装', lighting_setup: '全程禁用闪光灯，仅用灯带照明', shot_props: '无', crop_boundary: '全身', must_show: '灯带', reject_if: '模糊', execution_note: '改拍剪影', generator_prompt: 'subway platform silhouette', shot_size: 'FS', camera_angle: 'eye_level' }];
+    const shots = [{ shot_language: '候车剪影', model_pose: '静立候车', photographer_position: '站台对面约4米', lens: '35mm', model_position: '黄线内', wardrobe_styling: '通勤装', lighting_setup: '全程禁用闪光灯，仅用灯带照明', shot_props: '无', crop_boundary: '全身', must_show: '灯带', reject_if: '模糊', execution_note: '改拍剪影', generator_prompt: 'subway platform silhouette', shot_size: 'FS', camera_angle: 'eye_level' }];
     assert.deepEqual(validateHardConstraints(shots, input), []);
 });
 
 test('a parent word like 旧家具 covers specific furniture the user provided', () => {
     const input = { theme: '老屋环境人像', scene: '即将拆迁的老屋内部（已获许可）', duration: '1小时', extra: '每个镜头都必须交代屋内环境细节（斑驳墙、旧家具）' };
-    const shots = [{ shot_language: '方桌与墙', model_pose: '倚墙静立', photographer_position: '门框侧平视', lens: '24mm', model_position: '中央', wardrobe_styling: '素色衣', lighting_setup: '现有室内光', shot_props: '旧方桌（屋内原有旧家具）', crop_boundary: '全身', must_show: '斑驳墙与旧八仙桌', reject_if: '家具不清晰', execution_note: '改拍门框剪影', generator_prompt: 'old worn wooden table, peeling walls', shot_size: 'WS', camera_angle: 'eye_level' }];
+    const shots = [{ shot_language: '方桌与墙', model_pose: '倚墙静立', photographer_position: '门框侧平视，距主体约2米', lens: '24mm', model_position: '中央', wardrobe_styling: '素色衣', lighting_setup: '现有室内光', shot_props: '旧方桌（屋内原有旧家具）', crop_boundary: '全身', must_show: '斑驳墙与旧八仙桌', reject_if: '家具不清晰', execution_note: '改拍门框剪影', generator_prompt: 'old worn wooden table, peeling walls', shot_size: 'WS', camera_angle: 'eye_level' }];
     assert.deepEqual(validateHardConstraints(shots, input), []);
 });
 
 test('chinese negations like 不开/关闭/切勿/严禁 are not counted as positive mentions', () => {
     const input = { theme: '午夜便利店', duration: '1小时', extra: '只利用便利店灯光与街灯；无闪光灯。' };
-    const base = { photographer_position: '街对面平视', lens: '35mm', model_position: '灯光边界', wardrobe_styling: '深色风衣', shot_props: '无', crop_boundary: '全身', must_show: '便利店灯光', reject_if: '模糊', execution_note: '店员出画', shot_size: 'FS', camera_angle: 'eye_level' };
+    const base = { photographer_position: '街对面平视，距主体约5米', lens: '35mm', model_position: '灯光边界', wardrobe_styling: '深色风衣', shot_props: '无', crop_boundary: '全身', must_show: '便利店灯光', reject_if: '模糊', execution_note: '店员出画', shot_size: 'FS', camera_angle: 'eye_level' };
     const phrasings = [
         '不开闪光灯，仅靠店招灯箱照明',
         '全程不开启闪光灯，快门放慢',
@@ -363,7 +391,7 @@ test('chinese negations like 不开/关闭/切勿/严禁 are not counted as posi
 
 test('rejected plans expose raw model output only when the eval flag is set', async () => {
     const input = { theme: '午夜便利店', duration: '1小时', extra: '无闪光灯。' };
-    const bad = { shot_plans: Array.from({ length: 9 }, (_, i) => ({ shot_language: `镜${i}`, model_pose: '静立', photographer_position: '平视', lens: '35mm', model_position: '中央', wardrobe_styling: '便装', lighting_setup: i === 0 ? '机顶闪光灯补光' : '街灯', shot_props: '无', crop_boundary: '全身', must_show: '灯光', reject_if: '模糊', execution_note: '改拍', generator_prompt: 'night storefront', shot_size: 'FS', camera_angle: 'eye_level' })) };
+    const bad = { shot_plans: Array.from({ length: 9 }, (_, i) => ({ shot_language: `镜${i}`, model_pose: '静立望向镜头', photographer_position: '平视，距主体约3米', lens: '35mm', model_position: '中央', wardrobe_styling: '便装', lighting_setup: i === 0 ? '机顶闪光灯补光' : '街灯', shot_props: '无', crop_boundary: '全身', must_show: '灯光', reject_if: '模糊', execution_note: '改拍侧影', generator_prompt: 'night storefront', shot_size: 'FS', camera_angle: 'eye_level' })) };
     const fetchImpl = async () => response(bad);
     const request = { provider: 'deepseek', apiKey: 'test-key-123456', model: 'deepseek-flash' };
     const withFlag = await handleAiPlan({ ...request, input }, {}, { fetchImpl, debugKeepRejected: true });
@@ -379,6 +407,6 @@ test('any Chinese window mention (靠窗/窗外) marks a window as provided by t
     const input = { theme: '雨夜玻璃人像', scene: '室内靠窗座位，窗外夜雨', duration: '1小时', extra: '隔着被雨水打湿的玻璃拍摄' };
     const constraints = extractHardConstraints(input);
     assert.ok(constraints.resourceAllowlist ? !/橱窗|落地窗|窗边|window(?!less)/.test(constraints.resourceAllowlist) === false || true : true);
-    const shots = [{ shot_language: '玻璃水痕', model_pose: '静坐望向窗外', photographer_position: '室内贴玻璃平视', lens: '50mm', model_position: '画面中央', wardrobe_styling: '针织衫', lighting_setup: '窗边夜灯与窗外霓虹双色温', shot_props: '无', crop_boundary: '半身', must_show: '玻璃水痕', reject_if: '无水痕', execution_note: '雨停改拍残留水珠', generator_prompt: 'rain glass portrait', shot_size: 'MS', camera_angle: 'eye_level' }];
+    const shots = [{ shot_language: '玻璃水痕', model_pose: '静坐望向窗外', photographer_position: '室内贴玻璃平视，距主体约40厘米', lens: '50mm', model_position: '画面中央', wardrobe_styling: '针织衫', lighting_setup: '窗边夜灯与窗外霓虹双色温', shot_props: '无', crop_boundary: '半身', must_show: '玻璃水痕', reject_if: '无水痕', execution_note: '雨停改拍残留水珠', generator_prompt: 'rain glass portrait', shot_size: 'MS', camera_angle: 'eye_level' }];
     assert.deepEqual(validateHardConstraints(shots, input), []);
 });
