@@ -1,0 +1,327 @@
+[
+  {
+    "id": "time-bluetone-window",
+    "input": {
+      "theme": "蓝调时刻的窗前人像",
+      "style": "安静、清冷",
+      "modelDesc": "一名成年人",
+      "scene": "室内窗边（室内有暖色台灯，台灯已备）",
+      "mood": "沉静",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "利用日落后二十分钟的天空冷色与室内暖灯做冷暖对比；人物面部双色温过渡要写清楚。"
+    }
+  },
+  {
+    "id": "time-midnight-street",
+    "input": {
+      "theme": "午夜便利店的孤独感",
+      "style": "都市纪实",
+      "modelDesc": "一名成年人",
+      "scene": "24小时便利店门口",
+      "mood": "疏离",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "只利用便利店灯光与街灯；人物在灯光边界进出；保持与店员的距离不打扰营业；无闪光灯。"
+    }
+  },
+  {
+    "id": "light-backlit-hair",
+    "input": {
+      "theme": "全逆光发丝轮廓",
+      "style": "唯美人像",
+      "modelDesc": "一名长发成年人",
+      "scene": "开阔草地，日落方向无遮挡",
+      "mood": "柔和",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "全部镜头正逆光，按人脸点测曝光保面部细节；发丝轮廓光是重点；镜头遮光罩已备防眩光。"
+    }
+  },
+  {
+    "id": "light-dappled-leaves",
+    "input": {
+      "theme": "树影光斑人像",
+      "style": "夏日、慵懒",
+      "modelDesc": "一名成年人",
+      "scene": "大树下的斑驳光影",
+      "mood": "慵懒",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "光斑可落在肩背但绝不能切眼睛；写明走位选光的口令；无反光板。"
+    }
+  },
+  {
+    "id": "light-candle-indoor",
+    "input": {
+      "theme": "烛光单光源室内人像",
+      "style": "古典、静谧",
+      "modelDesc": "一名成年人",
+      "scene": "昏暗室内餐桌",
+      "mood": "安宁",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "已备三支蜡烛作唯一光源；高ISO大光圈拍烛光面部；写明防火口令与蜡烛摆放位置；不用任何电光源。"
+    }
+  },
+  {
+    "id": "light-moon-balcony",
+    "input": {
+      "theme": "月光下的阳台剪影",
+      "style": "静谧",
+      "modelDesc": "一名成年人",
+      "scene": "自家阳台（月光可见）",
+      "mood": "平和",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "以月光为唯一光源拍半剪影；人物不做大幅度动作；长曝光用三脚架（已备）；室内灯全关。"
+    }
+  },
+  {
+    "id": "light-single-studio-lamp",
+    "input": {
+      "theme": "单灯伦勃朗光人像",
+      "style": "经典肖像",
+      "modelDesc": "一名成年人",
+      "scene": "室内深色背景墙前",
+      "mood": "沉稳",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "已备一盏LED灯和柔光罩；摆伦勃朗光位（45度侧上）；背景保持暗部；写明灯位高度与距离。"
+    }
+  },
+  {
+    "id": "light-neon-reflection",
+    "input": {
+      "theme": "霓虹灯牌反光人像",
+      "style": "都市色彩",
+      "modelDesc": "一名成年人",
+      "scene": "夜晚有灯箱的街角",
+      "mood": "迷离",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "让灯箱色光反射在人物面部与墨镜镜片上；高饱和；人物站位不遮挡行人通行。"
+    }
+  },
+  {
+    "id": "ppl-couple-intimate",
+    "input": {
+      "theme": "情侣纪念日的亲密写真",
+      "style": "温柔、浪漫",
+      "modelDesc": "两名成年情侣（自愿拍摄亲密内容）",
+      "scene": "黄昏的湖边长椅与草地",
+      "mood": "甜蜜",
+      "duration": "2小时",
+      "people": "2",
+      "extra": "本次允许牵手、拥抱、额头相抵等亲密动作，但要自然不摆拍；全部自然光；写明两人互动的起承转合。"
+    }
+  },
+  {
+    "id": "ppl-grandparent",
+    "input": {
+      "theme": "祖孙二人的午后",
+      "style": "温情纪实",
+      "modelDesc": "一位老人与一名成年子女",
+      "scene": "老宅院内的藤椅与茶桌",
+      "mood": "温情",
+      "duration": "1小时",
+      "people": "2",
+      "extra": "老人动作幅度小，多拍手部特写与对视；节奏放慢，每镜头给老人休息间隔；自然光。"
+    }
+  },
+  {
+    "id": "ppl-dog-companion",
+    "input": {
+      "theme": "女孩与柯基的公园午后",
+      "style": "活力治愈",
+      "modelDesc": "一名成年人与一只柯基犬（犬只已备，性格温顺）",
+      "scene": "公园草坪与步道",
+      "mood": "治愈",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "宠物零食与牵引绳已备；抓拍互动瞬间，写明引导员（犬主）的站位与口令；狗不入水。"
+    }
+  },
+  {
+    "id": "ppl-maternity-gentle",
+    "input": {
+      "theme": "孕晚期的柔光写真",
+      "style": "温柔、圣洁",
+      "modelDesc": "一名孕晚期成年人（动作需轻缓）",
+      "scene": "室内纱帘窗边",
+      "mood": "期待",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "动作全部轻缓，不安排弯腰或大幅度转身；侧逆光突出轮廓；每次拍摄间隔让模特休息。"
+    }
+  },
+  {
+    "id": "ppl-band-rehearsal",
+    "input": {
+      "theme": "四人乐队排练纪实",
+      "style": "摇滚纪实",
+      "modelDesc": "四名成年人（主唱/吉他/贝斯/鼓）",
+      "scene": "排练室（现有灯光）",
+      "mood": "热烈",
+      "duration": "2小时",
+      "people": "4",
+      "extra": "排练室空间狭小，写明机位与乐手间距；每个成员至少一个独立镜头与一个互动镜头；不打断排练。"
+    }
+  },
+  {
+    "id": "ppl-team-8-park",
+    "input": {
+      "theme": "八人团建的集体与分组",
+      "style": "企业纪实",
+      "modelDesc": "八名成年人",
+      "scene": "公司附近公园草坪",
+      "mood": "协作",
+      "duration": "2小时",
+      "people": "8",
+      "extra": "需覆盖：八人合影、4+4分组、单人特写各至少两组；合影用长凳（现场已有）；点名制度防止漏人。"
+    }
+  },
+  {
+    "id": "place-library-quiet",
+    "input": {
+      "theme": "图书馆里的阅读时光",
+      "style": "安静、书卷气",
+      "modelDesc": "一名成年人",
+      "scene": "市图书馆阅览区（已获拍摄许可）",
+      "mood": "专注",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "全程静音快门；不打扰其他读者；利用书架间漫反射光；机位固定不游走。"
+    }
+  },
+  {
+    "id": "place-subway-platform",
+    "input": {
+      "theme": "地铁站台的人流与驻足",
+      "style": "都市节奏",
+      "modelDesc": "一名成年人",
+      "scene": "地铁站台（已获拍摄许可，非高峰时段）",
+      "mood": "匆忙与停顿",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "人物站在黄线内候车区；利用站台灯带做引导线；不拍摄其他乘客面部特写；禁止使用闪光灯。"
+    }
+  },
+  {
+    "id": "place-bamboo-path",
+    "input": {
+      "theme": "竹林小径的绿意人像",
+      "style": "清雅",
+      "modelDesc": "一名穿素色衣服的成年人",
+      "scene": "竹林步道",
+      "mood": "清幽",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "竹林绿色环境光会污染肤色，写明白平衡处理方法；人物穿素色与竹林区分；仅自然光。"
+    }
+  },
+  {
+    "id": "place-ancient-town",
+    "input": {
+      "theme": "古镇黄昏的回望",
+      "style": "古典、故事感",
+      "modelDesc": "一名穿素色长衫的成年人",
+      "scene": "江南古镇石板街与石桥",
+      "mood": "悠远",
+      "duration": "2小时",
+      "people": "1",
+      "extra": "利用马头墙与灯笼做前景框架；游客多时等间隙；石板路湿滑注意站位。"
+    }
+  },
+  {
+    "id": "place-market-night",
+    "input": {
+      "theme": "夜市摊位前的烟火气",
+      "style": "烟火纪实",
+      "modelDesc": "一名成年人",
+      "scene": "夜市小吃街（已获摊主同意）",
+      "mood": "热闹",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "利用摊位暖光灯与蒸汽做氛围；人物在摊位前购买与回眸；不拍摄其他顾客正面。"
+    }
+  },
+  {
+    "id": "place-rooftop-legal",
+    "input": {
+      "theme": "合法天台的城市暮色",
+      "style": "都市文艺",
+      "modelDesc": "一名成年人",
+      "scene": "用户拥有使用权的住宅楼天台平台",
+      "mood": "自由",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "天台已获物业书面许可；人物全程在平台中央远离边缘两米以上；黄昏城市天际线做背景；仅自然光。"
+    }
+  },
+  {
+    "id": "comp-vertical-all",
+    "input": {
+      "theme": "全套竖构图的人像组照",
+      "style": "杂志内页",
+      "modelDesc": "一名成年人",
+      "scene": "咖啡馆室内（店主人很好已同意）",
+      "mood": "文艺",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "全部镜头统一竖构图（2:3竖幅），横竖不得混排；景别从环境竖幅到特写竖幅递进；写明每镜竖构图的画面分配。"
+    }
+  },
+  {
+    "id": "comp-frame-door",
+    "input": {
+      "theme": "门框做画框的框架构图",
+      "style": "古典、聚焦",
+      "modelDesc": "一名成年人",
+      "scene": "老宅院的多重门洞",
+      "mood": "幽深",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "全部镜头利用门洞/窗棂做前景画框；至少三重框套框一组；仅自然光。"
+    }
+  },
+  {
+    "id": "comp-lens-135",
+    "input": {
+      "theme": "135mm长焦压缩的街拍",
+      "style": "电影感",
+      "modelDesc": "一名成年人",
+      "scene": "有纵深的老街",
+      "mood": "疏离",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "仅使用135mm；全部在十米外拍摄，用压缩感叠合人物与街景层次；沟通靠喊话或手势，写明沟通方式。"
+    }
+  },
+  {
+    "id": "comp-lens-200-tight",
+    "input": {
+      "theme": "200mm远距离自然状态捕捉",
+      "style": "真实、不打扰",
+      "modelDesc": "一名成年人",
+      "scene": "河堤步道",
+      "mood": "平静",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "仅使用200mm端；摄影师距离人物十五米以上，捕捉完全未被干扰的自然状态；手持需写明稳定措施（已备独脚架）。"
+    }
+  },
+  {
+    "id": "comp-lens-24-env",
+    "input": {
+      "theme": "24mm环境人像：人与老屋",
+      "style": "环境叙事",
+      "modelDesc": "一名成年人",
+      "scene": "即将拆迁的老屋内部（已获许可）",
+      "mood": "告别",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "仅24mm；每个镜头都必须交代屋内环境细节（斑驳墙、旧家具）；人物小而环境大；自然光与现有室内光。"
+    }
+  }
+]

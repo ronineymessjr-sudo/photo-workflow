@@ -10,6 +10,7 @@
 // No network calls: the "provider" is whatever text is placed in raw-<id>.txt.
 
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { handleAiPlan, validateHardConstraints, extractHardConstraints } from '../../api/ai-plan.mjs';
 import { evaluatePlan } from './eval-checks.mjs';
@@ -68,11 +69,24 @@ async function captureProviderRequest(input) {
 }
 
 const mode = process.argv[2] || 'capture';
-const outDir = resolve(import.meta.dirname, `results/real-model-2026-10-26-subagent`);
+const briefsIdx = process.argv.indexOf('--briefs');
+if (briefsIdx > -1) {
+    const external = JSON.parse(readFileSync(resolve(import.meta.dirname, process.argv[briefsIdx + 1]), 'utf8'));
+    if (!Array.isArray(external) || !external.length || external.some(b => !b?.id || !b?.input)) throw new Error('--briefs 文件格式应为 [{id, input}]');
+    BRIEFS.length = 0;
+    BRIEFS.push(...external);
+    console.log(`已加载外部用例 ${BRIEFS.length} 组：${BRIEFS.map(b => b.id).join('、')}`);
+}
+const onlyIdx = process.argv.indexOf('--only');
+const only = onlyIdx > -1 ? process.argv[onlyIdx + 1] : null;
+const briefsToRun = only ? BRIEFS.filter(b => b.id === only) : BRIEFS;
+if (only && !briefsToRun.length) { console.error(`未知用例：${only}`); process.exit(2); }
+const runTag = process.argv.includes('--out') ? process.argv[process.argv.indexOf('--out') + 1] : 'real-model-2026-10-26-subagent';
+const outDir = resolve(import.meta.dirname, runTag);
 await mkdir(resolve(outDir, 'prompts'), { recursive: true });
 
 if (mode === 'capture') {
-    for (const brief of BRIEFS) {
+    for (const brief of briefsToRun) {
         const captured = await captureProviderRequest(brief.input);
         const system = captured.messages.find(m => m.role === 'system')?.content || '';
         const user = captured.messages.find(m => m.role === 'user')?.content || '';
@@ -83,7 +97,7 @@ if (mode === 'capture') {
     console.log(`\n请把模型按提示词生成的纯 JSON 保存为 ${resolve(outDir, 'raw-<brief-id>.txt')}，然后运行 replay。`);
 } else if (mode === 'replay') {
     const summary = [];
-    for (const brief of BRIEFS) {
+    for (const brief of briefsToRun) {
         const started = Date.now();
         let raw;
         try {
@@ -123,6 +137,6 @@ if (mode === 'capture') {
     }), null, 2);
     console.log(`\n结果目录：${outDir}`);
 } else {
-    console.error('用法：node subagent-harness.mjs capture|replay');
+    console.error('用法：node subagent-harness.mjs capture|replay [--briefs <file>] [--only <id>] [--out <dir>]');
     process.exit(2);
 }

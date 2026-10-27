@@ -9,27 +9,47 @@ const sizes = ['ECU', 'CU', 'MCU', 'MS', 'MFS', 'FS', 'WS', 'EWS'];
 const angles = ['eye_level', 'high_angle', 'ground_level', 'overhead', 'low_angle'];
 const unconfirmedResources = [
     { name: '雨伞', pattern: /雨伞|撑伞|伞面|umbrella/i },
-    { name: '手机', pattern: /手机|电话|phone/i },
-    { name: '橱窗或窗户', pattern: /窗|window(?!less)/i },
-    { name: '椅子或凳子', pattern: /椅子|凳子|chair|stool/i },
-    { name: '桌子', pattern: /桌子|桌面|table/i },
+    { name: '手机', pattern: /手机|电话|\bphones?\b/i },
+    // 窗 excludes 窗口 (a time window, e.g. 蓝调窗口), which is not a physical window.
+    // 场景固有附属物：列车车窗之于地铁站台，不因场景文本未写"窗"而视为臆造。
+    { name: '橱窗或窗户', pattern: /窗(?!口)|window(?!less)/i, parents: [/车窗|站台|列车|地铁|车窗外/] },
+    { name: '椅子或凳子', pattern: /椅子|凳子|藤椅|木椅|竹椅|摇椅|长椅|椅背|\bchairs?\b|\bstools?\b/i, parents: [/家具/, /\bfurniture\b/i, /阅览/ ] },
+    // 家具 is a parent word: 旧家具 provided by the user covers 旧方桌/八仙桌 etc.
+    // 阅览区/自习室自带桌椅，如同公园自带长椅。
+    // "table lamp" is a lamp, not a table — excluded by lookahead.
+    { name: '桌子', pattern: /桌子|桌面|餐桌|茶桌|方桌|八仙桌|\btables?\b(?! lamps?)|\bdesks?\b/i, parents: [/家具/, /\bfurniture\b/i, /阅览|自习/] },
     { name: '花束', pattern: /花束|鲜花|bouquet/i },
-    { name: '背包或手提包', pattern: /双肩包|单肩包|背包|手提包|包袋|backpack|handbag/i },
-    { name: '书本', pattern: /书本|书籍|book/i },
-    { name: '自行车', pattern: /自行车|单车|bicycle|bike/i },
-    { name: '杯子', pattern: /杯子|咖啡杯|水杯|cup/i },
-    { name: '气球', pattern: /气球|balloon/i },
+    { name: '背包或手提包', pattern: /双肩包|单肩包|背包|手提包|包袋|\bbackpacks?\b|\bhandbags?\b/i },
+    // Word boundaries: storybook is an adjective, not a physical book.
+    // 图书馆/书店场景的书是场景固有物。
+    { name: '书本', pattern: /书本|书籍|\bbooks?\b/i, parents: [/图书馆|书店|书架|书城|阅览/] },
+    { name: '自行车', pattern: /自行车|单车|\bbicycles?\b|\bbikes?\b/i },
+    // Word boundaries: "hands cupped around" is not a cup; cupboard is not a cup.
+    { name: '杯子', pattern: /杯子|咖啡杯|水杯|\bcups?\b|\bmugs?\b/i },
+    { name: '气球', pattern: /气球|\bballoons?\b/i },
 ];
 
 function hasPositiveMention(text, pattern) {
     const matches = text.matchAll(new RegExp(pattern.source, 'gi'));
     for (const match of matches) {
-        const prefix = text.slice(Math.max(0, match.index - 20), match.index).split(/[，,。；;\n]|但|不过|然而/).at(-1);
+        const negation = /(?:无|没有|无需|不用|不要|不带|不需要|不使用|未使用|不开|未开|关闭|关掉|禁用|别用|别开|切勿|严禁|莫用|不得|禁止(?:使用|开启)?|拒绝(?:使用)?|避免(?:使用)?|\b(?:no|without|not|never|avoid|forbid|excluded?|free of)\b)/;
         // Negations include English forms because generator_prompt is English:
         // "no flash", "without a reflector" are refusals, not violations.
-        if (!/(?:无|没有|无需|不用|不要|不带|不需要|不使用|未使用|不得|禁止(?:使用)?|拒绝(?:使用)?|避免(?:使用)?|\b(?:no|without|not|never|avoid|forbid|excluded?|free of)\b)/.test(prefix)) return true;
+        // Both sides are checked within the same clause: "不开闪光灯" (before)
+        // and "闪光灯保持关闭" (after) are both refusals.
+        const prefix = text.slice(Math.max(0, match.index - 20), match.index).split(/[，,。；;\n]|但|不过|然而/).at(-1);
+        if (negation.test(prefix)) continue;
+        const suffix = text.slice(match.index + match[0].length, match.index + match[0].length + 20).split(/[，,。；;\n]|但|不过|然而/)[0];
+        if (negation.test(suffix)) continue;
+        return true;
     }
     return false;
+}
+
+// A resource counts as provided when the user text names it directly or uses a
+// parent word that covers it (旧家具 covers 旧方桌/八仙桌).
+function isProvided(resource, allowlistText) {
+    return resource.pattern.test(allowlistText) || (resource.parents || []).some(p => p.test(allowlistText));
 }
 
 export function extractHardConstraints(input = {}) {
@@ -75,8 +95,11 @@ export function validateHardConstraints(shots, input) {
     const violations = [];
     const add = (index, reason) => violations.push(`镜头${index + 1}${reason}`);
     shots.forEach((shot, index) => {
+        // Join with a clause separator so negation look-around in
+        // hasPositiveMention stays inside one field: an English "no" in
+        // generator_prompt must never excuse a bare 反光板 in lighting_setup.
         const shotText = [...requiredText.filter(key => key !== 'reject_if'), 'shot_size', 'camera_angle']
-            .map(key => String(shot[key] || '')).join(' ');
+            .map(key => String(shot[key] || '')).join('，');
         if (constraints.fullBodyAll) {
             if (!['FS', 'WS', 'EWS'].includes(shot.shot_size)) add(index, '景别不是全身或更宽');
             if (/半身|膝上|腰部以上|胸像|近景|特写|裁掉脚|不含脚|不包含脚/i.test(`${shot.crop_boundary} ${shot.must_show}`)) add(index, '画面边界与完整全身要求冲突');
@@ -88,7 +111,7 @@ export function validateHardConstraints(shots, input) {
         if (constraints.focalLengthOnly && !new RegExp(`^\\s*${constraints.focalLengthOnly.replace('mm', '')}\\s*mm\\b`, 'i').test(shot.lens)) add(index, `焦段不符合仅用${constraints.focalLengthOnly}的要求`);
         for (const item of constraints.prohibited) if (hasPositiveMention(shotText, item.pattern)) add(index, `出现禁用内容：${item.label}`);
         for (const resource of unconfirmedResources) {
-            if (!resource.pattern.test(constraints.resourceAllowlist) && hasPositiveMention(shotText, resource.pattern)) add(index, `使用了未提供、需确认的资源：${resource.name}`);
+            if (!isProvided(resource, constraints.resourceAllowlist) && hasPositiveMention(shotText, resource.pattern)) add(index, `使用了未提供、需确认的资源：${resource.name}`);
         }
     });
     return [...new Set(violations)];
@@ -112,7 +135,7 @@ export function aiPlanProviders(env = {}) {
     return result;
 }
 
-export async function handleAiPlan(body, env = {}, { fetchImpl = fetch } = {}) {
+export async function handleAiPlan(body, env = {}, { fetchImpl = fetch, debugKeepRejected = false } = {}) {
     const provider = aiPlanProviders(env).find(p => p.id === body?.provider);
     if (!provider || (provider.requiresKey !== false && (typeof body.apiKey !== 'string' || !/^[\x21-\x7e]{8,512}$/.test(body.apiKey)))
         || typeof body.model !== 'string' || !/^[a-z0-9][a-z0-9._:/-]{0,119}$/i.test(body.model)) {
@@ -136,7 +159,7 @@ export async function handleAiPlan(body, env = {}, { fetchImpl = fetch } = {}) {
 shot_language 是独特的镜头名称；model_pose 写具体动作口令；photographer_position 写站位和机位高度；lens 写焦段；model_position 写人物在画面的位置；wardrobe_styling 写本镜头的服装与妆发要点，用户未提供的部分写待确认，不得编造品牌或具体款式来源；lighting_setup 写现场光、补光位置与做法；shot_props 列出本镜头实际用到的道具，只能来自用户已提供或现场自然存在的物品，没有则写 无；crop_boundary 写裁切范围；must_show 写必须看见的内容；reject_if 写废片判据；execution_note 写不适用时的替代拍法；generator_prompt 是对应此镜头的英文生图提示词（只编写，不执行）。
 严格遵守用户明确要求的角度、人物位置、完整性和禁用项，不要只把限制抄进备注。未提供的设备、地址、服装、人物关系不得编造；依赖现场条件的镜头明确写条件与替代方案。按拍摄动线排序，兼顾安全、时间、环境交代、主体、动作和细节。`;
             const constraints = extractHardConstraints(body.input);
-            const absentResources = unconfirmedResources.filter(item => !item.pattern.test(constraints.resourceAllowlist));
+            const absentResources = unconfirmedResources.filter(item => !isProvided(item, constraints.resourceAllowlist));
             const hardRules = [
                 constraints.fullBodyAll && '全组硬性规则：每个镜头 shot_size 只能是 FS、WS 或 EWS；裁切边界不得写半身、膝上或截脚。',
                 constraints.downwardAll && `全组硬性规则：每个镜头机位必须${constraints.highAngleOnly ? '为 high_angle' : '为 high_angle 或 overhead'}，摄影师站位说明也必须与俯拍一致。`,
@@ -187,6 +210,9 @@ shot_language 是独特的镜头名称；model_pose 写具体动作口令；phot
                 if (invalid.length) {
                     const error = new Error('AI_SHOT_FIELDS_INVALID');
                     error.violations = invalid;
+                    // Evaluation harnesses read this to diagnose false kills;
+                    // the HTTP error path below never returns it.
+                    error.rawShotPlans = result.shot_plans;
                     throw error;
                 }
                 names.add(shot.shot_language.trim());
@@ -195,6 +221,8 @@ shot_language 是独特的镜头名称；model_pose 写具体动作口令；phot
             if (hardConstraintViolations.length) {
                 const error = new Error('AI_HARD_CONSTRAINTS_FAILED');
                 error.violations = hardConstraintViolations;
+                // Same as above: for offline evaluation only, never returned over HTTP.
+                error.rawShotPlans = result.shot_plans;
                 throw error;
             }
             return Response.json({ shot_plans: result.shot_plans });
@@ -225,6 +253,10 @@ shot_language 是独特的镜头名称；model_pose 写具体动作口令；phot
                 : upstreamStatus === 0 ? '网站后端无法连接 AI 供应商，请稍后重试；本次没有使用模板替代'
                 : 'AI 未返回合格的完整分镜，请重试或更换模型；没有使用模板替代');
         const code = reasons[error.message] ? error.message : upstreamStatus >= 400 ? `AI_UPSTREAM_HTTP_${upstreamStatus}` : upstreamStatus === 0 ? 'AI_NETWORK_ERROR' : 'AI_REQUEST_FAILED';
-        return { status, body: { error: message, code } };
+        const responseBody = { error: message, code };
+        // Opt-in for offline evaluation harnesses only: production callers never
+        // set this flag, so raw model output is not exposed over HTTP.
+        if (debugKeepRejected && error.rawShotPlans) responseBody.rawShotPlans = error.rawShotPlans;
+        return { status, body: responseBody };
     }
 }

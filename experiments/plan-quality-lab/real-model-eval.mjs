@@ -69,8 +69,15 @@ async function runDirector(input) {
 }
 
 async function runDeepseek(input, apiKey) {
-    const result = await handleAiPlan({ provider: 'deepseek', apiKey, model: 'deepseek-flash', input }, {}, { fetchImpl: fetch });
-    if (result.status !== 200) throw new Error(`API ${result.status}: ${result.body?.code || ''} ${result.body?.error || ''}`);
+    // debugKeepRejected: when production validation rejects the plan, the raw
+    // model output is returned in body.rawShotPlans so we can diagnose possible
+    // false kills (e.g. negated mentions). Production UI never sets this flag.
+    const result = await handleAiPlan({ provider: 'deepseek', apiKey, model: 'deepseek-flash', input }, {}, { fetchImpl: fetch, debugKeepRejected: true });
+    if (result.status !== 200) {
+        const wrapped = new Error(`API ${result.status}: ${result.body?.code || ''} ${result.body?.error || ''}`);
+        if (result.body?.rawShotPlans) wrapped.rawShotPlans = result.body.rawShotPlans;
+        throw wrapped;
+    }
     return { plan: result.body, shotPlans: extractShotPlans(result.body), meta: { source: result.body.director?.source, provider: result.body.director?.provider } };
 }
 
@@ -120,6 +127,7 @@ for (const brief of briefsToRun) {
         console.log(`[${brief.id}] ${backend} ${elapsed}s, ${run.shotPlans.length} 镜头, ${evaluation.findings.length} 项问题${evaluation.pass ? '（全部通过）' : ''}`);
     } catch (error) {
         record = { ...record, error: String(error.message || error), elapsedSeconds: Number(((Date.now() - started) / 1000).toFixed(3)) };
+        if (error.rawShotPlans) record.rejectedShots = error.rawShotPlans;
         console.log(`[${brief.id}] ${backend} 失败：${record.error}`);
     }
     summary.push(record);
