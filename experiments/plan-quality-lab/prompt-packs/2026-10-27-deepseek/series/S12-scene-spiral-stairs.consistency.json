@@ -1,6 +1,7 @@
 {
   "series": "S12",
   "briefId": "scene-spiral-stairs",
+  "theme": "旋转楼梯俯瞰",
   "refFile": "scene-spiral-stairs__REF-A.png",
   "identityLock": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames",
   "styleLock": "[STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look",
@@ -23,6 +24,23 @@
       "no flash"
     ]
   },
+  "refs": [
+    {
+      "name": "参考帧 A · 正面胸像",
+      "file": "scene-spiral-stairs__REF-A.png",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, , adult walking down the inner side of a museum spiral staircase, hand sliding on the inner handrail, camera 3 meters ahead at chest height, natural side window light, no flash, clean architectural curve, shallow depth, gray concrete and white walls, no props, head-and-shoulders front view, neutral expression, looking slightly off camera, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame."
+    },
+    {
+      "name": "参考帧 B · 45° 侧脸",
+      "file": "scene-spiral-stairs__REF-B.png",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, , adult walking down the inner side of a museum spiral staircase, hand sliding on the inner handrail, camera 3 meters ahead at chest height, natural side window light, no flash, clean architectural curve, shallow depth, gray concrete and white walls, no props, head-and-shoulders three-quarter 45 degree view, soft side light, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame."
+    },
+    {
+      "name": "参考帧 C · 全身定妆",
+      "file": "scene-spiral-stairs__REF-C.png",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, , adult walking down the inner side of a museum spiral staircase, hand sliding on the inner handrail, camera 3 meters ahead at chest height, natural side window light, no flash, clean architectural curve, shallow depth, gray concrete and white walls, no props, full body standing, relaxed natural stance, whole outfit visible head to toe, 50mm lens at f/4, photorealistic editorial photograph, clean unmarked frame."
+    }
+  ],
   "frames": [
     {
       "id": "S12-01",

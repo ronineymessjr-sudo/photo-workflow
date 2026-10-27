@@ -1,0 +1,2471 @@
+# 全部提示词 · 单一交付文件
+
+系列 28 个　参考帧 84 张　分镜帧 259 张　合计 343 条提示词
+
+## 怎么用（三步，不用再翻别的文件）
+
+1. **每个系列先出 3 张参考帧**（REF-A 正面 / REF-B 45°侧脸 / REF-C 全身），挑一张脸最稳的存成该系列的 `__REF-A.png`。
+2. **再按顺序出分镜帧**：每条提示词都自带 `[IDENTITY LOCK]` 与 `[STYLE LOCK]`（同一系列逐字相同），用参考图走编辑模式，只改机位与姿势。
+3. 全部出完按系列拼 3×3 接触印样，**标签后期加，图里不许有字**。
+
+## 铁律
+
+- 同一系列内：**不许换人、不许换衣服、不许换场地、不许换画幅、不许换调色**。
+- 提示词里那两段锁**原样复制**，一个字都别改。
+- 每张图按下面写的文件名存盘，我才能对回方案审。
+
+## 系列索引
+
+| 系列 | 用例 | 主题 | 帧数 | 画幅 | 服装（锁定） |
+|---|---|---|---|---|---|
+| S01 | `style-hanfu-court` | 古风汉服庭院人像 | 9 | 2:3 vertical | 汉服裙摆自然垂落，妆发整洁 |
+| S02 | `style-cyberpunk-rain` | 赛博朋克雨夜霓虹 | 9 | 2:3 vertical | 建议深色系防水外套，避免反光材质。 |
+| S03 | `style-minimal-white` | 极简白墙人像 | 9 | 2:3 vertical | 建议纯色无图案的简约款式；妆发自然，不佩戴显眼饰品。 |
+| S04 | `style-film-classroom` | 日系胶片教室午后 | 9 | 2:3 vertical | 学生打扮：白色短袖衬衫与深色长裤，发型整齐低马尾；无浓妆，保 |
+| S05 | `style-french-cafe` | 法式复古咖啡馆 | 9 | 2:3 vertical | 复古风格服装，妆容自然，发型蓬松微乱 |
+| S06 | `style-cinema-rooftop` | 电影感青橙调天台 | 9 | 2:3 vertical | 建议深色外套以突出青橙对比，妆发自然 |
+| S07 | `style-gothic-ruin` | 暗黑哥特废墟人像 | 10 | 2:3 vertical | 深色长外套、黑色长裤、深色靴子；发型，妆容 |
+| S08 | `style-flower-field` | 花田少女感 | 9 | 2:3 vertical | 浅色棉麻连衣裙，草帽，自然披发，淡妆 |
+| S09 | `style-bw-street` | 黑白街头纪实 | 9 | 2:3 vertical | 深色棉麻长袖衬衫与直筒长裤，发型自然，妆面 |
+| S10 | `style-newchinese-tea` | 新中式茶室人像 | 10 | 2:3 vertical | 建议素色宽松上衣与长裤，发型简洁低束，淡妆，不戴亮面饰品 |
+| S11 | `scene-museum-quiet` | 美术馆看展的人 | 9 | 2:3 vertical | 保持日常看展装束，避免反光面料与大面积亮色，发型整洁不被风扰 |
+| S12 | `scene-spiral-stairs` | 旋转楼梯俯瞰 | 9 | 2:3 vertical | 拍摄前确认鞋底防滑、衣摆不拖地、无松散饰品垂到扶手外侧 |
+| S13 | `scene-underpass-light` | 桥洞隧道光 | 9 | 2:3 vertical | 建议深色硬挺外套与长裤，避免反光材质，妆发自然冷峻。 |
+| S14 | `scene-glass-facade` | 玻璃幕墙反光街拍 | 9 | 2:3 vertical | （建议都市现代风格，深色或中性色服装，避免图案），妆发干净利 |
+| S15 | `scene-bookstore-aisle` | 书店书架间的人 | 9 | 2:3 vertical | 日常休闲装，发型自然，淡妆 |
+| S16 | `scene-laundry-night` | 自助洗衣店之夜 | 9 | 2:3 vertical | 美式复古休闲装：牛仔夹克、白色T恤、深色直筒裤、帆布鞋；发型 |
+| S17 | `scene-parking-garage` | 地下车库冷调人像 | 9 | 2:3 vertical | （建议深色系服装），妆发 |
+| S18 | `scene-greenhouse-humid` | 温室植物园人像 | 10 | 2:3 vertical | 建议浅色亚麻类长袖上衣与长裤，避免绿色与背景粘连，妆发自然微 |
+| S19 | `scene-overpass-night` | 立交桥车流夜景 | 9 | 2:3 vertical | 深色外套，长发自然披散，妆面 |
+| S20 | `scene-pool-dusk` | 天台泳池黄昏 | 10 | 2:3 vertical | 度假风服装（建议浅色长裙或宽松衬衫），自然披发，淡妆 |
+| S21 | `ppl-kids-sportsday` | 儿童运动会抓拍 | 9 | 2:3 vertical | 运动短袖与运动短裤、运动鞋，发型清爽，无夸张配饰 |
+| S22 | `ppl-cat-home` | 猫与主人的居家午后 | 9 | 2:3 vertical | 主人穿浅色棉质家居服，头发松散，妆面清淡；猫自然毛发，无需装 |
+| S23 | `ppl-business-portrait` | 商务人士办公室肖像 | 10 | 2:3 vertical | 商务正装（深色西装外套、浅色衬衫），妆发干净利落 |
+| S24 | `ppl-dancer-studio` | 舞者练功房 | 9 | 2:3 vertical | 舞者穿着深色紧身练功服（头发扎起，无饰品。 |
+| S25 | `ppl-chef-kitchen` | 厨师后厨的火焰 | 10 | 2:3 vertical | 白色厨师服、深色围裙，袖口自然；厨师帽与 |
+| S26 | `ppl-skater-dusk` | 滑板少年的黄昏 | 9 | 2:3 vertical | 青年滑板者穿着；现场确认是否佩戴头盔与护具，发型自然随风 |
+| S27 | `ppl-elder-hands` | 老人的手作时光 | 9 | 2:3 vertical | 素色棉质长袖上衣，袖口自然放下，妆发，保持整洁朴素 |
+| S28 | `ppl-swimmer-poolside` | 游泳者出水瞬间 | 10 | 2:3 vertical | 泳帽与泳镜按现场既有装备，款式颜色；无额外妆发 |
+
+---
+
+## S01 古风汉服庭院人像（`style-hanfu-court`）
+
+- 画幅：2:3 vertical（1024x1536）｜调色：low-saturation warm-neutral with jade and ivory tones, soft film rolloff, no digital oversharpening
+- 人物：adult，long hair worn loose｜场地：江南园林庭院（白天）
+- 光线：自然光，模特面朝门洞光源，正面用白色反光板补光，光比1:2
+- 参考帧：`style-hanfu-court__REF-A.png`（三选一）
+
+### 参考帧（先出这 3 张）
+
+**参考帧 A · 正面胸像** → `style-hanfu-court__REF-A.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-saturation warm-neutral with jade and ivory tones, soft film rolloff, no digital oversharpening, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Chinese ancient style, a lady in hanfu standing inside a moon gate in a Jiangnan garden, side pose, hands folded, eyes looking down, natural daylight, elegant and restrained mood, flowing skirt, head-and-shoulders front view, neutral expression, looking slightly off camera, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 B · 45° 侧脸** → `style-hanfu-court__REF-B.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-saturation warm-neutral with jade and ivory tones, soft film rolloff, no digital oversharpening, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Chinese ancient style, a lady in hanfu standing inside a moon gate in a Jiangnan garden, side pose, hands folded, eyes looking down, natural daylight, elegant and restrained mood, flowing skirt, head-and-shoulders three-quarter 45 degree view, soft side light, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 C · 全身定妆** → `style-hanfu-court__REF-C.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-saturation warm-neutral with jade and ivory tones, soft film rolloff, no digital oversharpening, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Chinese ancient style, a lady in hanfu standing inside a moon gate in a Jiangnan garden, side pose, hands folded, eyes looking down, natural daylight, elegant and restrained mood, flowing skirt, full body standing, relaxed natural stance, whole outfit visible head to toe, 50mm lens at f/4, photorealistic editorial photograph, clean unmarked frame.
+```
+
+### 分镜帧（按顺序出，用参考图）
+
+**S01-01 FS/eye_level/85mm/f4** → `style-hanfu-court__01.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-saturation warm-neutral with jade and ivory tones, soft film rolloff, no digital oversharpening, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/9] 2:3 vertical, Chinese ancient style, a lady in hanfu standing inside a moon gate in a Jiangnan garden, side pose, hands folded, eyes looking down, natural daylight, full body shot, elegant and restrained mood, flowing skirt, 85mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S01-02 FS/eye_level/85mm/f4** → `style-hanfu-court__02.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-saturation warm-neutral with jade and ivory tones, soft film rolloff, no digital oversharpening, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/9] 2:3 vertical, Chinese ancient style, a lady in hanfu walking slowly on a garden path, hands folded, eyes down, side view, natural daylight, full body, elegant and restrained, 85mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S01-03 MCU/eye_level/85mm/f2** → `style-hanfu-court__03.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-saturation warm-neutral with jade and ivory tones, soft film rolloff, no digital oversharpening, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/9] 2:3 vertical, Chinese ancient style, a lady in hanfu half-body inside a moon gate, side pose, one hand raised to chest, looking at camera, soft natural light, gentle expression, 85mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S01-04 FS/eye_level/85mm/f4** → `style-hanfu-court__04.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-saturation warm-neutral with jade and ivory tones, soft film rolloff, no digital oversharpening, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/9] 2:3 vertical, Chinese ancient style, a lady in hanfu leaning against a wooden pillar in a garden corridor, side view, one hand on pillar, looking outside, soft reflected light, full body, 85mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S01-05 FS/eye_level/85mm/f4** → `style-hanfu-court__05.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-saturation warm-neutral with jade and ivory tones, soft film rolloff, no digital oversharpening, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/9] 2:3 vertical, Chinese ancient style, a lady in hanfu sitting on a stone step, skirt spread out, hands folded on lap, natural side light, full body, dignified pose, 85mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S01-06 CU/eye_level/85mm/f1.8** → `style-hanfu-court__06.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-saturation warm-neutral with jade and ivory tones, soft film rolloff, no digital oversharpening, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/9] 2:3 vertical, Chinese ancient style, close-up of a lady's face in hanfu, eyes downcast, gentle smile, soft light, detailed skin texture, 85mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S01-07 ECU/high_angle/85mm/f1.8** → `style-hanfu-court__07.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-saturation warm-neutral with jade and ivory tones, soft film rolloff, no digital oversharpening, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/9] 2:3 vertical, Chinese ancient style, close-up of hands folded in hanfu sleeves, delicate fingers, soft side light, detail shot, 85mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S01-08 WS/eye_level/85mm/f5.6** → `style-hanfu-court__08.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-saturation warm-neutral with jade and ivory tones, soft film rolloff, no digital oversharpening, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/9] 2:3 vertical, Chinese ancient style, a lady in hanfu standing in a Jiangnan garden, back to camera, head slightly turned, full body, environmental portrait, natural daylight, 85mm lens at f/5.6, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S01-09 MCU/eye_level/85mm/f2** → `style-hanfu-court__09.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-saturation warm-neutral with jade and ivory tones, soft film rolloff, no digital oversharpening, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/9] 2:3 vertical, Chinese ancient style, a lady in hanfu walking then looking back over shoulder, half-body, dynamic skirt, side backlight, graceful moment, 85mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+---
+
+## S02 赛博朋克雨夜霓虹（`style-cyberpunk-rain`）
+
+- 画幅：2:3 vertical（1024x1536）｜调色：high-saturation cyan and magenta neon, deep blacks, wet reflective highlights
+- 人物：adult，hairstyle fixed at the reference frame｜场地：霓虹招牌密集的夜市街道
+- 光线：仅环境光：利用街道两侧密集霓虹招牌的混合色光，不补光，确保模特面部受一侧招牌色光照射。
+- 参考帧：`style-cyberpunk-rain__REF-A.png`（三选一）
+
+### 参考帧（先出这 3 张）
+
+**参考帧 A · 正面胸像** → `style-cyberpunk-rain__REF-A.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], high-saturation cyan and magenta neon, deep blacks, wet reflective highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Cyberpunk night market street, neon signs dense, wet ground with puddles reflecting colorful lights, an adult walking away from camera, back view, dark waterproof jacket, face lit by a neon sign from the side, no flash, high saturation, eye level, full shot, cinematic, atmospheric, head-and-shoulders front view, neutral expression, looking slightly off camera, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 B · 45° 侧脸** → `style-cyberpunk-rain__REF-B.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], high-saturation cyan and magenta neon, deep blacks, wet reflective highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Cyberpunk night market street, neon signs dense, wet ground with puddles reflecting colorful lights, an adult walking away from camera, back view, dark waterproof jacket, face lit by a neon sign from the side, no flash, high saturation, eye level, full shot, cinematic, atmospheric, head-and-shoulders three-quarter 45 degree view, soft side light, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 C · 全身定妆** → `style-cyberpunk-rain__REF-C.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], high-saturation cyan and magenta neon, deep blacks, wet reflective highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Cyberpunk night market street, neon signs dense, wet ground with puddles reflecting colorful lights, an adult walking away from camera, back view, dark waterproof jacket, face lit by a neon sign from the side, no flash, high saturation, eye level, full shot, cinematic, atmospheric, full body standing, relaxed natural stance, whole outfit visible head to toe, 50mm lens at f/4, photorealistic editorial photograph, clean unmarked frame.
+```
+
+### 分镜帧（按顺序出，用参考图）
+
+**S02-01 FS/eye_level/35mm/f4** → `style-cyberpunk-rain__01.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], high-saturation cyan and magenta neon, deep blacks, wet reflective highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/9] 2:3 vertical, Cyberpunk night market street, neon signs dense, wet ground with puddles reflecting colorful lights, an adult walking away from camera, back view, dark waterproof jacket, face lit by a neon sign from the side, no flash, high saturation, eye level, full shot, cinematic, atmospheric, 35mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S02-02 MFS/ground_level/35mm/f3.5** → `style-cyberpunk-rain__02.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], high-saturation cyan and magenta neon, deep blacks, wet reflective highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/9] 2:3 vertical, Low angle shot of an adult standing at edge of puddle, looking down, hands in pockets, reflection in puddle, cyberpunk neon lights, wet ground, face illuminated by neon sign, no flash, high saturation, ground level, medium full shot, moody, 35mm lens at f/3.5, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S02-03 MCU/eye_level/50mm/f2** → `style-cyberpunk-rain__03.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], high-saturation cyan and magenta neon, deep blacks, wet reflective highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/9] 2:3 vertical, Side backlit medium close-up of an adult, side profile, head slightly down, dreamy eyes, hand touching neck, neon signs behind creating rim light, face lit by front neon sign, cyberpunk night street, no flash, high saturation, eye level, medium shot, cinematic, 50mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S02-04 CU/eye_level/50mm/f1.8** → `style-cyberpunk-rain__04.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], high-saturation cyan and magenta neon, deep blacks, wet reflective highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/9] 2:3 vertical, Over-the-shoulder close-up of an adult looking up at neon sign, lips slightly parted, dreamy eyes, face illuminated by colored neon light, cyberpunk night market, background neon signs, no flash, high saturation, eye level, close-up, cinematic, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S02-05 MS/eye_level/35mm/f2.8** → `style-cyberpunk-rain__05.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], high-saturation cyan and magenta neon, deep blacks, wet reflective highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/9] 2:3 vertical, Medium shot of an adult walking towards camera, head down, slow pace, neon lights on both sides, face lit by side neon sign, wet street reflecting lights, cyberpunk night market, no flash, high saturation, eye level, medium shot, dynamic, 35mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S02-06 CU/overhead/50mm/f1.8** → `style-cyberpunk-rain__06.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], high-saturation cyan and magenta neon, deep blacks, wet reflective highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/9] 2:3 vertical, Overhead close-up of an adult crouching by puddle, finger touching water surface, ripples, reflection of neon lights in water, cyberpunk night, wet ground, face partially visible, neon light on face, no flash, high saturation, overhead, close-up, detailed, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S02-07 MCU/eye_level/50mm/f2** → `style-cyberpunk-rain__07.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], high-saturation cyan and magenta neon, deep blacks, wet reflective highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/9] 2:3 vertical, Half-body shot of an adult facing camera, head slightly tilted up, dreamy eyes, lips parted, neon light strings as blurred foreground, face illuminated by neon sign, cyberpunk night street, no flash, high saturation, eye level, medium close-up, bokeh, 50mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S02-08 WS/eye_level/35mm/f5.6** → `style-cyberpunk-rain__08.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], high-saturation cyan and magenta neon, deep blacks, wet reflective highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/9] 2:3 vertical, Wide shot of an adult standing in narrow alley, back against wall, one leg bent, looking up at neon sign, neon signs both sides, wet ground reflecting lights, cyberpunk night market, face lit by side neon, no flash, high saturation, eye level, wide shot, atmospheric, 35mm lens at f/5.6, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S02-09 ECU/eye_level/50mm/f1.8** → `style-cyberpunk-rain__09.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], high-saturation cyan and magenta neon, deep blacks, wet reflective highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/9] 2:3 vertical, Extreme close-up of an adult face, head slightly down, eyes looking up at camera, dreamy expression, neon light illuminating one side of face, catchlight in eyes, cyberpunk night, high saturation, no flash, eye level, extreme close-up, detailed skin, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+---
+
+## S03 极简白墙人像（`style-minimal-white`）
+
+- 画幅：2:3 vertical（1024x1536）｜调色：high-key near-monochrome, clean whites, low contrast, no colour cast
+- 人物：adult，hairstyle fixed at the reference frame｜场地：纯白墙面与单把椅子（椅子现场已有）
+- 光线：仅使用现场自然光，关闭所有人工光源，利用白墙漫反射补光，确保光线柔和均匀。
+- 参考帧：`style-minimal-white__REF-A.png`（三选一）
+
+### 参考帧（先出这 3 张）
+
+**参考帧 A · 正面胸像** → `style-minimal-white__REF-A.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], high-key near-monochrome, clean whites, low contrast, no colour cast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Minimalist portrait, an adult sitting on a single chair against a pure white wall, side profile, body upright, hands on thighs, calm and restrained expression, natural light only, large negative space, full shot, eye level, white wall background, no artificial lighting, head-and-shoulders front view, neutral expression, looking slightly off camera, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 B · 45° 侧脸** → `style-minimal-white__REF-B.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], high-key near-monochrome, clean whites, low contrast, no colour cast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Minimalist portrait, an adult sitting on a single chair against a pure white wall, side profile, body upright, hands on thighs, calm and restrained expression, natural light only, large negative space, full shot, eye level, white wall background, no artificial lighting, head-and-shoulders three-quarter 45 degree view, soft side light, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 C · 全身定妆** → `style-minimal-white__REF-C.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], high-key near-monochrome, clean whites, low contrast, no colour cast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Minimalist portrait, an adult sitting on a single chair against a pure white wall, side profile, body upright, hands on thighs, calm and restrained expression, natural light only, large negative space, full shot, eye level, white wall background, no artificial lighting, full body standing, relaxed natural stance, whole outfit visible head to toe, 50mm lens at f/4, photorealistic editorial photograph, clean unmarked frame.
+```
+
+### 分镜帧（按顺序出，用参考图）
+
+**S03-01 FS/eye_level/50mm/f4** → `style-minimal-white__01.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], high-key near-monochrome, clean whites, low contrast, no colour cast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/9] 2:3 vertical, Minimalist portrait, an adult sitting on a single chair against a pure white wall, side profile, body upright, hands on thighs, calm and restrained expression, natural light only, large negative space, full shot, eye level, white wall background, no artificial lighting, 50mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S03-02 MS/eye_level/50mm/f2.8** → `style-minimal-white__02.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], high-key near-monochrome, clean whites, low contrast, no colour cast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/9] 2:3 vertical, Minimalist portrait, an adult sitting on a chair, leaning forward with elbows on knees, hands clasped, looking down, restrained expression, pure white wall background, natural light, medium shot, eye level, large negative space, no artificial lighting, 50mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S03-03 CU/eye_level/50mm/f1.8** → `style-minimal-white__03.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], high-key near-monochrome, clean whites, low contrast, no colour cast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/9] 2:3 vertical, Minimalist portrait, an adult sitting on a chair, side profile, head slightly tilted up, looking into distance, calm restrained expression, pure white wall background, natural side light, close-up, eye level, large negative space, no artificial lighting, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S03-04 ECU/high_angle/50mm/f1.8** → `style-minimal-white__04.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], high-key near-monochrome, clean whites, low contrast, no colour cast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/9] 2:3 vertical, Minimalist portrait, close-up of hands resting on thighs, fingers slightly intertwined, relaxed, pure white wall background, natural light, extreme close-up, high angle, large negative space, no artificial lighting, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S03-05 FS/low_angle/50mm/f4** → `style-minimal-white__05.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], high-key near-monochrome, clean whites, low contrast, no colour cast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/9] 2:3 vertical, Minimalist portrait, an adult sitting on a chair, legs hanging naturally, back straight, hands on knees, looking forward, restrained expression, pure white wall background, natural light, full shot, low angle, large negative space, no artificial lighting, 50mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S03-06 MCU/high_angle/50mm/f2** → `style-minimal-white__06.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], high-key near-monochrome, clean whites, low contrast, no colour cast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/9] 2:3 vertical, Minimalist portrait, an adult sitting on a chair, leaning back slightly, head raised looking at camera, calm restrained expression, pure white wall background, natural light, medium close-up, high angle, large negative space, no artificial lighting, 50mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S03-07 FS/ground_level/50mm/f4** → `style-minimal-white__07.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], high-key near-monochrome, clean whites, low contrast, no colour cast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/9] 2:3 vertical, Minimalist portrait, an adult sitting on a chair, feet flat on floor, hands resting on sides, looking down, restrained expression, pure white wall background, natural light, full shot, ground level, large negative space, no artificial lighting, 50mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S03-08 MCU/eye_level/50mm/f2** → `style-minimal-white__08.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], high-key near-monochrome, clean whites, low contrast, no colour cast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/9] 2:3 vertical, Minimalist portrait, an adult sitting on a chair, body slightly turned, one hand resting on chair back, looking at camera, restrained expression, pure white wall background, natural light, medium close-up, eye level, large negative space, no artificial lighting, 50mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S03-09 MCU/high_angle/50mm/f2** → `style-minimal-white__09.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], high-key near-monochrome, clean whites, low contrast, no colour cast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/9] 2:3 vertical, Minimalist portrait, an adult sitting on a chair, hands on knees, fingers naturally curved, head slightly lowered looking at hands, restrained expression, pure white wall background, natural light, medium close-up, high angle, large negative space, no artificial lighting, 50mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+---
+
+## S04 日系胶片教室午后（`style-film-classroom`）
+
+- 画幅：2:3 vertical（1024x1536）｜调色：low-contrast pastel with faint green shadows and fine 400-speed grain
+- 人物：adult，hair tied back in a low bun｜场地：旧教室（课桌椅现场已有）
+- 光线：关闭室内灯，仅靠窗帘透入的午后侧逆光；让窗光从画面右侧照亮课桌与人物轮廓，不补人工光
+- 参考帧：`style-film-classroom__REF-A.png`（三选一）
+
+### 参考帧（先出这 3 张）
+
+**参考帧 A · 正面胸像** → `style-film-classroom__REF-A.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Japanese film photography, old classroom, adult student seated at window-side desk, body turned 30 degrees toward aisle, elbow on desk, fingers lightly touching cheek, eyes lowered, soft side light through sheer curtain from right window, white shirt and dark trousers, low ponytail, eye-level , natural grain, gentle shadows, no flash, head-and-shoulders front view, neutral expression, looking slightly off camera, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 B · 45° 侧脸** → `style-film-classroom__REF-B.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Japanese film photography, old classroom, adult student seated at window-side desk, body turned 30 degrees toward aisle, elbow on desk, fingers lightly touching cheek, eyes lowered, soft side light through sheer curtain from right window, white shirt and dark trousers, low ponytail, eye-level , natural grain, gentle shadows, no flash, head-and-shoulders three-quarter 45 degree view, soft side light, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 C · 全身定妆** → `style-film-classroom__REF-C.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Japanese film photography, old classroom, adult student seated at window-side desk, body turned 30 degrees toward aisle, elbow on desk, fingers lightly touching cheek, eyes lowered, soft side light through sheer curtain from right window, white shirt and dark trousers, low ponytail, eye-level , natural grain, gentle shadows, no flash, full body standing, relaxed natural stance, whole outfit visible head to toe, 50mm lens at f/4, photorealistic editorial photograph, clean unmarked frame.
+```
+
+### 分镜帧（按顺序出，用参考图）
+
+**S04-01 WS/eye_level/35mm/f5.6** → `style-film-classroom__01.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/9] 2:3 vertical, Japanese film photography, old classroom afternoon, one adult student sitting at a desk by the window in the right third of frame, white short-sleeve shirt and dark trousers, low ponytail, soft curtain-diffused side-backlight from the right window, no indoor lights, no flash, wooden desks and chairs, quiet youthful mood, natural grain, muted colors, eye-level wide establishing shot, 35mm lens at f/5.6, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S04-02 MS/eye_level/35mm/f2.8** → `style-film-classroom__02.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/9] 2:3 vertical, Japanese film photography, old classroom, adult student seated at window-side desk, body turned 30 degrees toward aisle, elbow on desk, fingers lightly touching cheek, eyes lowered, soft side light through sheer curtain from right window, white shirt and dark trousers, low ponytail, eye-level medium shot, natural grain, gentle shadows, no flash, 35mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S04-03 MFS/eye_level/35mm/f3.5** → `style-film-classroom__03.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/9] 2:3 vertical, Japanese film photography, old classroom afternoon, adult student standing by window facing the light, backlit by soft curtain-diffused sunlight, white shirt and dark trousers, low ponytail, hands at sides, head slightly lowered, gentle rim light on hair and shoulders, eye-level medium full shot, natural grain, no flash, 35mm lens at f/3.5, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S04-04 MCU/high_angle/35mm/f2** → `style-film-classroom__04.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/9] 2:3 vertical, Japanese film photography, old classroom, adult student leaning forward at desk, forearms on tabletop, hands softly posed as if writing, head slightly down, soft window light from back right through curtain, white shirt and dark trousers, low ponytail, slightly high angle close medium shot, natural grain, no flash, 35mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S04-05 MFS/ground_level/35mm/f3.5** → `style-film-classroom__05.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/9] 2:3 vertical, Japanese film photography, old classroom, adult student seated at first window-side desk, legs together and angled, hands folded on lap, relaxed shoulders, looking toward aisle, soft side light from right curtain, white shirt and dark trousers, low ponytail, ground-level low angle medium full shot, wooden desk legs in foreground, natural grain, no flash, 35mm lens at f/3.5, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S04-06 FS/eye_level/35mm/f4** → `style-film-classroom__06.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/9] 2:3 vertical, Japanese film photography, old classroom afternoon, adult student standing between window-side desks with back to camera, hands resting on chair back, head slightly tilted up toward curtain light, soft backlight, white shirt and dark trousers, low ponytail, eye-level full shot from back of room, natural grain, no flash, 35mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S04-07 CU/high_angle/35mm/f1.8** → `style-film-classroom__07.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/9] 2:3 vertical, Japanese film photography, old classroom, close-up of adult student hands on wooden desk, one hand flat with softly curled fingertips, other hand resting on desk edge, white shirt cuff visible, soft curtain light from upper right, natural wood grain, high angle detail close-up, natural grain, no flash, 35mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S04-08 CU/eye_level/35mm/f1.8** → `style-film-classroom__08.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/9] 2:3 vertical, Japanese film photography, old classroom, adult student crouching between two rows of desks, knees together, arms around lower legs, chin resting on knees, looking straight ahead, soft side light through curtain from right, white shirt and dark trousers, low ponytail, eye-level close shot between desks, natural grain, no flash, 35mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S04-09 MCU/eye_level/35mm/f2** → `style-film-classroom__09.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/9] 2:3 vertical, Japanese film photography, old classroom afternoon, adult student standing by window-side desk, body angled to window, one hand on chair back, turning head to look back toward camera, calm youthful expression, soft side-backlight through curtain from right rear, white shirt and dark trousers, low ponytail, eye-level medium close shot, natural grain, no flash, 35mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+---
+
+## S05 法式复古咖啡馆（`style-french-cafe`）
+
+- 画幅：2:3 vertical（1024x1536）｜调色：warm amber highlights, muted browns, gentle contrast, vintage lens character
+- 人物：adult，long hair worn loose｜场地：临街咖啡馆（桌椅与杯具现场已有）
+- 光线：利用窗外自然光与店内暖黄吊灯，无闪光灯，必要时用反光板从模特正面补光
+- 参考帧：`style-french-cafe__REF-A.png`（三选一）
+
+### 参考帧（先出这 3 张）
+
+**参考帧 A · 正面胸像** → `style-french-cafe__REF-A.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Full shot of an adult model standing sideways in a French vintage cafe window, one hand resting on a chair back, gazing out, soft daylight and warm interior lighting, no flash, shot with, no photographer reflection, natural lazy mood, eye level, head-and-shoulders front view, neutral expression, looking slightly off camera, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 B · 45° 侧脸** → `style-french-cafe__REF-B.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Full shot of an adult model standing sideways in a French vintage cafe window, one hand resting on a chair back, gazing out, soft daylight and warm interior lighting, no flash, shot with, no photographer reflection, natural lazy mood, eye level, head-and-shoulders three-quarter 45 degree view, soft side light, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 C · 全身定妆** → `style-french-cafe__REF-C.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Full shot of an adult model standing sideways in a French vintage cafe window, one hand resting on a chair back, gazing out, soft daylight and warm interior lighting, no flash, shot with, no photographer reflection, natural lazy mood, eye level, full body standing, relaxed natural stance, whole outfit visible head to toe, 50mm lens at f/4, photorealistic editorial photograph, clean unmarked frame.
+```
+
+### 分镜帧（按顺序出，用参考图）
+
+**S05-01 FS/eye_level/28mm/f4** → `style-french-cafe__01.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/9] 2:3 vertical, Full shot of an adult model standing sideways in a French vintage cafe window, one hand resting on a chair back, gazing out, soft daylight and warm interior lighting, no flash, shot with, no photographer reflection, natural lazy mood, eye level, 28mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S05-02 MCU/eye_level/50mm/f2** → `style-french-cafe__02.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/9] 2:3 vertical, Medium close-up of an adult model sitting sideways by a cafe window, resting chin on hand, soft window light from left, warm interior fill, vintage French cafe, lazy mood, no flash, 50mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S05-03 ECU/eye_level/50mm/f1.8** → `style-french-cafe__03.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/9] 2:3 vertical, Extreme close-up of a hand gently holding a coffee cup in a French vintage cafe, soft window light, natural skin texture, no flash, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S05-04 CU/high_angle/50mm/f1.8** → `style-french-cafe__04.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/9] 2:3 vertical, Close-up of an adult model resting head on crossed arms at a cafe table, eyes half closed, soft window light from above right, vintage French style, lazy mood, no flash, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S05-05 MCU/eye_level/50mm/f2** → `style-french-cafe__05.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/9] 2:3 vertical, Medium close-up of an adult model standing behind a cafe window, touching glass, side profile, soft reflections on glass, French vintage cafe, no photographer reflection, no flash, 50mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S05-06 CU/eye_level/50mm/f1.8** → `style-french-cafe__06.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/9] 2:3 vertical, Close-up of an adult model sitting at a window, leaning forward, chin on hands, looking into glass, soft reflections, French vintage cafe, no photographer reflection, no flash, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S05-07 WS/eye_level/50mm/f5.6** → `style-french-cafe__07.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/9] 2:3 vertical, Wide shot of a French vintage cafe interior, an adult model sitting in the background near window, foreground empty tables and chairs, warm ambient light, no flash, 50mm lens at f/5.6, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S05-08 CU/eye_level/50mm/f1.8** → `style-french-cafe__08.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/9] 2:3 vertical, Close-up side profile of an adult model in a cafe, face turned to window light, eyes gently closed, soft light and shadow, French vintage, no flash, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S05-09 FS/low_angle/28mm/f4** → `style-french-cafe__09.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/9] 2:3 vertical, Full shot from low angle of an adult model lounging on a chair in a French vintage cafe, lazy gaze, window light backlight, no flash, 28mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+---
+
+## S06 电影感青橙调天台（`style-cinema-rooftop`）
+
+- 画幅：2:3 vertical（1024x1536）｜调色：teal shadows and warm skin tones, cinematic contrast, subtle halation
+- 人物：adult，hairstyle fixed at the reference frame｜场地：住宅楼天台（已获物业书面许可）
+- 光线：现场天光，蓝调时刻，无补光，利用天空余晖和远处城市灯光
+- 参考帧：`style-cinema-rooftop__REF-A.png`（三选一）
+
+### 参考帧（先出这 3 张）
+
+**参考帧 A · 正面胸像** → `style-cinema-rooftop__REF-A.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], teal shadows and warm skin tones, cinematic contrast, subtle halation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Cinematic  of an adult standing alone on a residential rooftop during blue hour, back to camera, looking at the sky, dark jacket, teal and orange color grading, distant city lights, eye level, atmospheric, head-and-shoulders front view, neutral expression, looking slightly off camera, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 B · 45° 侧脸** → `style-cinema-rooftop__REF-B.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], teal shadows and warm skin tones, cinematic contrast, subtle halation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Cinematic  of an adult standing alone on a residential rooftop during blue hour, back to camera, looking at the sky, dark jacket, teal and orange color grading, distant city lights, eye level, atmospheric, head-and-shoulders three-quarter 45 degree view, soft side light, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 C · 全身定妆** → `style-cinema-rooftop__REF-C.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], teal shadows and warm skin tones, cinematic contrast, subtle halation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Cinematic  of an adult standing alone on a residential rooftop during blue hour, back to camera, looking at the sky, dark jacket, teal and orange color grading, distant city lights, eye level, atmospheric, full body standing, relaxed natural stance, whole outfit visible head to toe, 50mm lens at f/4, photorealistic editorial photograph, clean unmarked frame.
+```
+
+### 分镜帧（按顺序出，用参考图）
+
+**S06-01 FS/eye_level/35mm/f4** → `style-cinema-rooftop__01.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], teal shadows and warm skin tones, cinematic contrast, subtle halation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/9] 2:3 vertical, Cinematic wide shot of an adult standing alone on a residential rooftop during blue hour, back to camera, looking at the sky, dark jacket, teal and orange color grading, distant city lights, eye level, full body, atmospheric, 35mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S06-02 MS/eye_level/35mm/f2.8** → `style-cinema-rooftop__02.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], teal shadows and warm skin tones, cinematic contrast, subtle halation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/9] 2:3 vertical, Cinematic medium shot of an adult in profile on a rooftop, looking ahead with determination, dark jacket, teal and orange color grading, blue hour sky, distant city lights, eye level, half body, 35mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S06-03 ECU/high_angle/35mm/f1.8** → `style-cinema-rooftop__03.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], teal shadows and warm skin tones, cinematic contrast, subtle halation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/9] 2:3 vertical, Cinematic extreme close-up of a clenched fist on a rooftop, teal and orange color grading, blue hour light, high angle, detailed skin texture, 35mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S06-04 FS/eye_level/35mm/f4** → `style-cinema-rooftop__04.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], teal shadows and warm skin tones, cinematic contrast, subtle halation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/9] 2:3 vertical, Cinematic full shot of an adult standing on a rooftop pointing towards distant city lights, teal and orange color grading, blue hour, eye level, composition with subject on left third, 35mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S06-05 MCU/eye_level/35mm/f2** → `style-cinema-rooftop__05.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], teal shadows and warm skin tones, cinematic contrast, subtle halation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/9] 2:3 vertical, Cinematic medium close-up of an adult standing on a rooftop facing camera, hands in pockets, calm determined expression, teal and orange color grading, blue hour, eye level, half body, 35mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S06-06 MS/low_angle/35mm/f2.8** → `style-cinema-rooftop__06.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], teal shadows and warm skin tones, cinematic contrast, subtle halation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/9] 2:3 vertical, Cinematic low angle shot of an adult standing on a rooftop looking up at the sky, arms slightly open, teal and orange color grading, blue hour, low angle, dramatic, 35mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S06-07 CU/overhead/35mm/f1.8** → `style-cinema-rooftop__07.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], teal shadows and warm skin tones, cinematic contrast, subtle halation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/9] 2:3 vertical, Cinematic close-up of feet standing on a rooftop floor, teal and orange color grading, blue hour light, overhead, ground texture, 35mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S06-08 WS/eye_level/35mm/f5.6** → `style-cinema-rooftop__08.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], teal shadows and warm skin tones, cinematic contrast, subtle halation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/9] 2:3 vertical, Cinematic silhouette of an adult standing on a rooftop facing city lights, teal and orange color grading, night, eye level, full body, atmospheric, 35mm lens at f/5.6, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S06-09 CU/eye_level/35mm/f1.8** → `style-cinema-rooftop__09.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], teal shadows and warm skin tones, cinematic contrast, subtle halation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/9] 2:3 vertical, Cinematic close-up of an adult's face on a rooftop, determined expression, teal and orange color grading, city lights in eyes, eye level, detailed skin, 35mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+---
+
+## S07 暗黑哥特废墟人像（`style-gothic-ruin`）
+
+- 画幅：2:3 vertical（1024x1536）｜调色：desaturated cool grey, crushed blacks, one warm accent light
+- 人物：adult，hairstyle fixed at the reference frame｜场地：废弃厂房外部围栏内安全区（已获许可，不进入建筑本体）
+- 光线：自然光，阴天漫射光，无补光；避免闪光灯
+- 参考帧：`style-gothic-ruin__REF-A.png`（三选一）
+
+### 参考帧（先出这 3 张）
+
+**参考帧 A · 正面胸像** → `style-gothic-ruin__REF-A.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], desaturated cool grey, crushed blacks, one warm accent light, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Wide environmental portrait, adult model in profile facing left, standing near a fence with derelict factory wall on right, dark gothic style, overcast side light, subtle fill from white board, no flash, eye level, head-and-shoulders front view, neutral expression, looking slightly off camera, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 B · 45° 侧脸** → `style-gothic-ruin__REF-B.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], desaturated cool grey, crushed blacks, one warm accent light, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Wide environmental portrait, adult model in profile facing left, standing near a fence with derelict factory wall on right, dark gothic style, overcast side light, subtle fill from white board, no flash, eye level, head-and-shoulders three-quarter 45 degree view, soft side light, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 C · 全身定妆** → `style-gothic-ruin__REF-C.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], desaturated cool grey, crushed blacks, one warm accent light, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Wide environmental portrait, adult model in profile facing left, standing near a fence with derelict factory wall on right, dark gothic style, overcast side light, subtle fill from white board, no flash, eye level, full body standing, relaxed natural stance, whole outfit visible head to toe, 50mm lens at f/4, photorealistic editorial photograph, clean unmarked frame.
+```
+
+### 分镜帧（按顺序出，用参考图）
+
+**S07-01 WS/eye_level/24mm/f5.6** → `style-gothic-ruin__01.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], desaturated cool grey, crushed blacks, one warm accent light, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/10] 2:3 vertical, Wide shot of an adult model standing with back to camera, facing a derelict factory exterior, inside a fenced safe zone, dark gothic style, overcast diffuse light, no flash, eye level, desolate atmosphere, 24mm lens at f/5.6, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S07-02 FS/eye_level/24mm/f4** → `style-gothic-ruin__02.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], desaturated cool grey, crushed blacks, one warm accent light, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/10] 2:3 vertical, Wide environmental portrait, adult model in profile facing left, standing near a fence with derelict factory wall on right, dark gothic style, overcast side light, subtle fill from white board, no flash, eye level, 24mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S07-03 MS/eye_level/85mm/f2.8** → `style-gothic-ruin__03.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], desaturated cool grey, crushed blacks, one warm accent light, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/10] 2:3 vertical, Medium shot of an adult model standing in front of a broken window frame, backlit silhouette, side profile, dark gothic atmosphere, natural backlight, subtle fill, no flash, eye level, 85mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S07-04 CU/eye_level/85mm/f1.8** → `style-gothic-ruin__04.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], desaturated cool grey, crushed blacks, one warm accent light, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/10] 2:3 vertical, Close-up of an adult model's face near a broken window frame, closed eyes, solemn expression, dark gothic style, backlit rim light, subtle fill, no flash, eye level, 85mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S07-05 MS/ground_level/24mm/f2.8** → `style-gothic-ruin__05.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], desaturated cool grey, crushed blacks, one warm accent light, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/10] 2:3 vertical, Low angle shot of an adult model leaning against a derelict wall, arms crossed, looking forward, dark gothic style, side light emphasizing wall texture, no flash, ground level, 24mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S07-06 ECU/high_angle/85mm/f1.8** → `style-gothic-ruin__06.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], desaturated cool grey, crushed blacks, one warm accent light, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/10] 2:3 vertical, Extreme close-up of a hand touching a rough derelict wall, fingers slightly spread, dark gothic style, side light, subtle fill, no flash, high angle, 85mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S07-07 FS/eye_level/85mm/f4** → `style-gothic-ruin__07.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], desaturated cool grey, crushed blacks, one warm accent light, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/10] 2:3 vertical, Full body silhouette of an adult model standing in front of a derelict factory, backlit, dark gothic style, natural backlight, no flash, eye level, 85mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S07-08 CU/eye_level/85mm/f1.8** → `style-gothic-ruin__08.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], desaturated cool grey, crushed blacks, one warm accent light, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/10] 2:3 vertical, Close-up face portrait of an adult model, solemn expression, looking at camera, dark gothic style, side light, subtle fill, no flash, eye level, 85mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S07-09 MS/high_angle/24mm/f2.8** → `style-gothic-ruin__09.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], desaturated cool grey, crushed blacks, one warm accent light, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/10] 2:3 vertical, High angle shot of an adult model crouching on the ground in a fenced safe zone, holding knees, dark gothic style, overcast light, no flash, high angle, 24mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S07-10 WS/eye_level/24mm/f5.6** → `style-gothic-ruin__10.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], desaturated cool grey, crushed blacks, one warm accent light, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 10/10] 2:3 vertical, Wide shot of an adult model walking away towards a fence exit, back view, dark gothic style, natural backlight, no flash, eye level, 24mm lens at f/5.6, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+---
+
+## S08 花田少女感（`style-flower-field`）
+
+- 画幅：2:3 vertical（1024x1536）｜调色：bright airy pastel, golden backlight bloom, clean highlights
+- 人物：adult，long hair worn loose｜场地：油菜花田田埂
+- 光线：自然光，顺光拍摄，利用现场光，无补光
+- 参考帧：`style-flower-field__REF-A.png`（三选一）
+
+### 参考帧（先出这 3 张）
+
+**参考帧 A · 正面胸像** → `style-flower-field__REF-A.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], bright airy pastel, golden backlight bloom, clean highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, A young woman in a light cotton dress and straw hat walking naturally along a dirt path between blooming rapeseed fields, bright and fresh atmosphere, rural pastoral style, soft sunlight, eye level, environment context, head-and-shoulders front view, neutral expression, looking slightly off camera, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 B · 45° 侧脸** → `style-flower-field__REF-B.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], bright airy pastel, golden backlight bloom, clean highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, A young woman in a light cotton dress and straw hat walking naturally along a dirt path between blooming rapeseed fields, bright and fresh atmosphere, rural pastoral style, soft sunlight, eye level, environment context, head-and-shoulders three-quarter 45 degree view, soft side light, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 C · 全身定妆** → `style-flower-field__REF-C.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], bright airy pastel, golden backlight bloom, clean highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, A young woman in a light cotton dress and straw hat walking naturally along a dirt path between blooming rapeseed fields, bright and fresh atmosphere, rural pastoral style, soft sunlight, eye level, environment context, full body standing, relaxed natural stance, whole outfit visible head to toe, 50mm lens at f/4, photorealistic editorial photograph, clean unmarked frame.
+```
+
+### 分镜帧（按顺序出，用参考图）
+
+**S08-01 FS/eye_level/35mm/f4** → `style-flower-field__01.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], bright airy pastel, golden backlight bloom, clean highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/9] 2:3 vertical, A young woman in a light cotton dress and straw hat walking naturally along a dirt path between blooming rapeseed fields, wide shot, bright and fresh atmosphere, rural pastoral style, soft sunlight, eye level, full body, environment context, 35mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S08-02 MS/eye_level/50mm/f2.8** → `style-flower-field__02.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], bright airy pastel, golden backlight bloom, clean highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/9] 2:3 vertical, Medium shot of a young woman standing on a field path, turning head back to camera with a bright smile, wearing a light cotton dress and straw hat, rapeseed flowers around, soft side backlight, reflector fill, fresh and pastoral mood, eye level, 50mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S08-03 MS/eye_level/135mm/f2.8** → `style-flower-field__03.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], bright airy pastel, golden backlight bloom, clean highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/9] 2:3 vertical, Telephoto portrait of a young woman standing on a dirt path, side view, eyes closed, feeling the breeze, surrounded by blurred rapeseed flowers, compressed background, backlight rim light on hair, light cotton dress and straw hat, eye level, medium shot, 135mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S08-04 MCU/eye_level/135mm/f2** → `style-flower-field__04.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], bright airy pastel, golden backlight bloom, clean highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/9] 2:3 vertical, Telephoto shot of a young woman walking on a field path and turning back to camera, hair flowing, bright expression, compressed rapeseed flower background, backlight rim light, light cotton dress and straw hat, eye level, medium shot, 135mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S08-05 CU/eye_level/85mm/f1.8** → `style-flower-field__05.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], bright airy pastel, golden backlight bloom, clean highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/9] 2:3 vertical, Close-up of a young woman's hand gently touching rapeseed flowers, side face partially visible, backlit petals showing translucent outlines, hair rim light, light cotton dress, eye level, fresh pastoral style, 85mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S08-06 ECU/eye_level/100mm/f1.8** → `style-flower-field__06.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], bright airy pastel, golden backlight bloom, clean highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/9] 2:3 vertical, Extreme close-up of a young woman's face smelling rapeseed flowers, eyes closed, blissful expression, backlight creating golden rim light on hair, flower details, light cotton dress, eye level, soft and fresh, 100mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S08-07 MS/ground_level/35mm/f2.8** → `style-flower-field__07.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], bright airy pastel, golden backlight bloom, clean highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/9] 2:3 vertical, Low angle shot of a young woman standing on a field path, looking up slightly, arms relaxed, surrounded by rapeseed flowers and open sky, light cotton dress and straw hat, fresh and bright, ground level, medium shot, 35mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S08-08 MS/eye_level/50mm/f2.8** → `style-flower-field__08.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], bright airy pastel, golden backlight bloom, clean highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/9] 2:3 vertical, Medium shot of a young woman walking slowly in a narrow path through rapeseed flowers, gently touching flowers on both sides, gentle expression, side light, light cotton dress and straw hat, fresh pastoral atmosphere, eye level, 50mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S08-09 MCU/eye_level/85mm/f2** → `style-flower-field__09.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], bright airy pastel, golden backlight bloom, clean highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/9] 2:3 vertical, Close-up of a young woman squatting on a dirt path, hands on cheeks, smiling at camera, surrounded by rapeseed flowers, backlight with reflector fill, light cotton dress and straw hat, eye level, fresh and bright, 85mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+---
+
+## S09 黑白街头纪实（`style-bw-street`）
+
+- 画幅：2:3 vertical（1024x1536）｜调色：black and white with strong grain and high micro-contrast
+- 人物：adult，hairstyle fixed at the reference frame｜场地：老城区骑楼街道
+- 光线：现场自然光，利用骑楼柱列间透入的侧光，不使用补光设备
+- 参考帧：`style-bw-street__REF-A.png`（三选一）
+
+### 参考帧（先出这 3 张）
+
+**参考帧 A · 正面胸像** → `style-bw-street__REF-A.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Black and white street documentary, an adult walking away down an old arcade corridor, columns receding in perspective, natural side light, no flash, candid atmosphere, deep depth of field, head-and-shoulders front view, neutral expression, looking slightly off camera, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 B · 45° 侧脸** → `style-bw-street__REF-B.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Black and white street documentary, an adult walking away down an old arcade corridor, columns receding in perspective, natural side light, no flash, candid atmosphere, deep depth of field, head-and-shoulders three-quarter 45 degree view, soft side light, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 C · 全身定妆** → `style-bw-street__REF-C.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Black and white street documentary, an adult walking away down an old arcade corridor, columns receding in perspective, natural side light, no flash, candid atmosphere, deep depth of field, full body standing, relaxed natural stance, whole outfit visible head to toe, 50mm lens at f/4, photorealistic editorial photograph, clean unmarked frame.
+```
+
+### 分镜帧（按顺序出，用参考图）
+
+**S09-01 FS/eye_level/28mm/f4** → `style-bw-street__01.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/9] 2:3 vertical, Black and white street documentary, an adult walking away down an old arcade corridor, columns receding in perspective, natural side light, no flash, candid atmosphere, deep depth of field, 28mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S09-02 MS/eye_level/28mm/f2.8** → `style-bw-street__02.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/9] 2:3 vertical, Black and white documentary portrait, adult standing sideways in old arcade, strong light band cutting across frame from columns, natural side light, no flash, candid expression, 28mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S09-03 FS/eye_level/28mm/f4** → `style-bw-street__03.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/9] 2:3 vertical, Black and white street documentary, adult standing still beside arcade column, blurred pedestrians moving in background, natural light, no flash, candid city life, 28mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S09-04 CU/ground_level/28mm/f1.8** → `style-bw-street__04.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/9] 2:3 vertical, Black and white documentary, low angle ground level shot of adult walking, focus on footstep and textured pavement, old arcade column base, natural light, no flash, 28mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S09-05 WS/eye_level/28mm/f5.6** → `style-bw-street__05.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/9] 2:3 vertical, Black and white street documentary, adult standing in middle of old arcade street, showing both sides of shophouses, bustling market atmosphere, natural light, no flash, candid scene, 28mm lens at f/5.6, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S09-06 MS/eye_level/28mm/f2.8** → `style-bw-street__06.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/9] 2:3 vertical, Black and white documentary, adult leaning against arcade column, diagonal shadow line cutting wall, strong contrast, natural light, no flash, candid, 28mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S09-07 CU/eye_level/28mm/f1.8** → `style-bw-street__07.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/9] 2:3 vertical, Black and white documentary portrait, adult peeking from behind arcade column, framed by two columns, natural soft light, no flash, candid expression, shallow depth of field, 28mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S09-08 FS/high_angle/28mm/f4** → `style-bw-street__08.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/9] 2:3 vertical, Black and white documentary, high angle shot of adult walking under arcade, diagonal path, shadow on ground, natural light, no flash, street life, 28mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S09-09 EWS/eye_level/28mm/f8** → `style-bw-street__09.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/9] 2:3 vertical, Black and white documentary, adult walking away into old arcade, backlit silhouette, natural light, no flash, atmospheric street scene, 28mm lens at f/8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+---
+
+## S10 新中式茶室人像（`style-newchinese-tea`）
+
+- 画幅：2:3 vertical（1024x1536）｜调色：low-saturation warm-neutral with jade and ivory tones, soft film rolloff, no digital oversharpening
+- 人物：adult，hair tied back in a low bun｜场地：茶室（茶桌、茶具现场已有）
+- 光线：只开室内现有暖灯，主灯位于画面右上方，关闭闪光灯，用反光板在左侧墙面柔补暗部，不做正面补光
+- 参考帧：`style-newchinese-tea__REF-A.png`（三选一）
+
+### 参考帧（先出这 3 张）
+
+**参考帧 A · 正面胸像** → `style-newchinese-tea__REF-A.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-saturation warm-neutral with jade and ivory tones, soft film rolloff, no digital oversharpening, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, An adult standing sideways in front of a Chinese folding screen in a tea room, hands relaxed, gaze toward the tea table, warm indoor lamp lighting, calm expression, chest-level eye view, muted wardrobe, no flash, head-and-shoulders front view, neutral expression, looking slightly off camera, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 B · 45° 侧脸** → `style-newchinese-tea__REF-B.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-saturation warm-neutral with jade and ivory tones, soft film rolloff, no digital oversharpening, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, An adult standing sideways in front of a Chinese folding screen in a tea room, hands relaxed, gaze toward the tea table, warm indoor lamp lighting, calm expression, chest-level eye view, muted wardrobe, no flash, head-and-shoulders three-quarter 45 degree view, soft side light, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 C · 全身定妆** → `style-newchinese-tea__REF-C.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-saturation warm-neutral with jade and ivory tones, soft film rolloff, no digital oversharpening, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, An adult standing sideways in front of a Chinese folding screen in a tea room, hands relaxed, gaze toward the tea table, warm indoor lamp lighting, calm expression, chest-level eye view, muted wardrobe, no flash, full body standing, relaxed natural stance, whole outfit visible head to toe, 50mm lens at f/4, photorealistic editorial photograph, clean unmarked frame.
+```
+
+### 分镜帧（按顺序出，用参考图）
+
+**S10-01 EWS/eye_level/50mm/f8** → `style-newchinese-tea__01.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-saturation warm-neutral with jade and ivory tones, soft film rolloff, no digital oversharpening, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/10] 2:3 vertical, Chinese-style tea room interior, an adult sitting quietly at a tea table in the right third of the frame, back three-quarter to camera, hands resting on knees, warm indoor lamp light only, tea table and tea set in foreground, folding screen in background, calm zen mood, eye level, full scene, no flash, 50mm lens at f/8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S10-02 MS/eye_level/50mm/f2.8** → `style-newchinese-tea__02.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-saturation warm-neutral with jade and ivory tones, soft film rolloff, no digital oversharpening, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/10] 2:3 vertical, An adult standing sideways in front of a Chinese folding screen in a tea room, hands relaxed, gaze toward the tea table, warm indoor lamp lighting, calm expression, chest-level eye view, half body, muted wardrobe, no flash, 50mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S10-03 FS/eye_level/50mm/f4** → `style-newchinese-tea__03.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-saturation warm-neutral with jade and ivory tones, soft film rolloff, no digital oversharpening, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/10] 2:3 vertical, An adult seated upright at a tea table, legs together, one hand on table and one on knee, warm indoor lamp light, Chinese tea room, full body, camera at 0.9 meter eye level, calm zen atmosphere, no flash, 50mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S10-04 FS/eye_level/50mm/f4** → `style-newchinese-tea__04.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-saturation warm-neutral with jade and ivory tones, soft film rolloff, no digital oversharpening, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/10] 2:3 vertical, An adult seated sideways framed by a Chinese folding screen opening, hands folded on tea table edge, eyes lowered, warm indoor lamp light, zen tea room, eye level from 3.5 meters, screen acting as natural frame, no flash, 50mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S10-05 ECU/eye_level/50mm/f1.8** → `style-newchinese-tea__05.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-saturation warm-neutral with jade and ivory tones, soft film rolloff, no digital oversharpening, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/10] 2:3 vertical, Close-up of hands pouring water from a teapot into a cup on a tea tray, warm indoor lamp light, camera 40cm from tea table at surface height, calm precise motion, Chinese tea room, no flash, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S10-06 CU/eye_level/50mm/f1.8** → `style-newchinese-tea__06.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-saturation warm-neutral with jade and ivory tones, soft film rolloff, no digital oversharpening, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/10] 2:3 vertical, Close-up of two hands gently offering a tea cup, warm indoor lamp light, tea table surface, camera 40cm away at low table height, calm gesture, Chinese tea room, no flash, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S10-07 MCU/eye_level/50mm/f2** → `style-newchinese-tea__07.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-saturation warm-neutral with jade and ivory tones, soft film rolloff, no digital oversharpening, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/10] 2:3 vertical, An adult holding a tea cup near chest, other hand resting on tea table, tea set in foreground, warm indoor lamp light, calm gaze, medium shot, eye level 1.5 meters away, Chinese zen tea room, no flash, 50mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S10-08 CU/eye_level/50mm/f1.8** → `style-newchinese-tea__08.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-saturation warm-neutral with jade and ivory tones, soft film rolloff, no digital oversharpening, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/10] 2:3 vertical, A close-up of an adult looking down at a tea cup held with both hands, warm indoor lamp side light, calm quiet expression, camera one meter away at eye level, Chinese tea room, no flash, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S10-09 MS/overhead/50mm/f2.8** → `style-newchinese-tea__09.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-saturation warm-neutral with jade and ivory tones, soft film rolloff, no digital oversharpening, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/10] 2:3 vertical, Overhead view of an adult sitting at a Chinese tea table arranging tea set with both hands, warm indoor lamp light from upper side, calm atmosphere, camera 1.8 meters high, medium shot, no flash, 50mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S10-10 CU/eye_level/50mm/f1.8** → `style-newchinese-tea__10.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-saturation warm-neutral with jade and ivory tones, soft film rolloff, no digital oversharpening, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 10/10] 2:3 vertical, Close-up side profile of an adult in a warm-lit Chinese tea room, gaze toward distant tea set, quiet expression, rim light from indoor lamp behind, deep calm tones, camera 80cm away at eye level, no flash, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+---
+
+## S11 美术馆看展的人（`scene-museum-quiet`）
+
+- 画幅：2:3 vertical（1024x1536）｜调色：black and white with strong grain and high micro-contrast
+- 人物：adult，long hair worn loose｜场地：市美术馆展厅（已获拍摄许可）
+- 光线：仅用展厅现有顶灯与展墙基础照明，关闭闪光灯；不补光，必要时用反光板以外的现场白墙反射光，但本镜不额外加设备
+- 参考帧：`scene-museum-quiet__REF-A.png`（三选一）
+
+### 参考帧（先出这 3 张）
+
+**参考帧 A · 正面胸像** → `scene-museum-quiet__REF-A.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, documentary photograph, one adult visitor standing at the entrance of an art museum gallery seen from behind, hands relaxed at sides, looking into the exhibition hall,  with entrance frame and deep gallery space, existing ceiling lights only, no flash, natural quiet mood, eye level, candid reportage style, head-and-shoulders front view, neutral expression, looking slightly off camera, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 B · 45° 侧脸** → `scene-museum-quiet__REF-B.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, documentary photograph, one adult visitor standing at the entrance of an art museum gallery seen from behind, hands relaxed at sides, looking into the exhibition hall,  with entrance frame and deep gallery space, existing ceiling lights only, no flash, natural quiet mood, eye level, candid reportage style, head-and-shoulders three-quarter 45 degree view, soft side light, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 C · 全身定妆** → `scene-museum-quiet__REF-C.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, documentary photograph, one adult visitor standing at the entrance of an art museum gallery seen from behind, hands relaxed at sides, looking into the exhibition hall,  with entrance frame and deep gallery space, existing ceiling lights only, no flash, natural quiet mood, eye level, candid reportage style, full body standing, relaxed natural stance, whole outfit visible head to toe, 50mm lens at f/4, photorealistic editorial photograph, clean unmarked frame.
+```
+
+### 分镜帧（按顺序出，用参考图）
+
+**S11-01 FS/eye_level/35mm/f4** → `scene-museum-quiet__01.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/9] 2:3 vertical, documentary photograph, one adult visitor standing at the entrance of an art museum gallery seen from behind, hands relaxed at sides, looking into the exhibition hall, full body with entrance frame and deep gallery space, existing ceiling lights only, no flash, natural quiet mood, eye level, candid reportage style, 35mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S11-02 MS/eye_level/35mm/f2.8** → `scene-museum-quiet__02.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/9] 2:3 vertical, documentary art museum scene, one adult visitor in side profile quietly looking at a painting on the gallery wall, hands relaxed, natural expression, wall spotlight blossoms in background, no flash, existing ambient light, eye level, muted realistic tones, candid photography, 35mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S11-03 MCU/eye_level/50mm/f2** → `scene-museum-quiet__03.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/9] 2:3 vertical, over the shoulder documentary shot, adult visitor standing in front of a framed painting in an art gallery, head tilted slightly up, quiet observation, painting fully visible, soft gallery spotlight, no flash, handheld, eye level behind subject, realistic candid reportage, 50mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S11-04 CU/eye_level/50mm/f1.8** → `scene-museum-quiet__04.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/9] 2:3 vertical, close-up documentary portrait, adult visitor in side profile quietly observing art in a museum gallery, soft ambient light on face, warm wall spotlight bokeh in background, natural calm expression, no flash, eye level, muted realistic film look, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S11-05 FS/eye_level/35mm/f4** → `scene-museum-quiet__05.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/9] 2:3 vertical, documentary photograph, adult visitor slowly walking along a museum gallery wall, small steps, head slightly turned toward artworks, hands naturally swinging, full body visible, polished floor reflection, existing gallery lighting, no flash, handheld, low eye level, candid motion, 35mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S11-06 FS/ground_level/35mm/f4** → `scene-museum-quiet__06.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/9] 2:3 vertical, low angle full body documentary photo, adult visitor pausing in front of a painting in an art museum, feet staggered, hands relaxed in front, looking up at artwork, gallery wall and polished floor visible, existing spotlight, no flash, handheld, ground level perspective, quiet mood, 35mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S11-07 MCU/eye_level/50mm/f2** → `scene-museum-quiet__07.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/9] 2:3 vertical, documentary detail shot, over the shoulder of an adult visitor looking at a painting, painting texture and brushwork in focus, visitor shoulder and back of head as soft foreground, gallery spotlight on artwork, no flash, eye level, realistic museum atmosphere, 50mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S11-08 WS/eye_level/35mm/f5.6** → `scene-museum-quiet__08.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/9] 2:3 vertical, wide documentary shot of an art museum gallery corridor, one adult visitor standing in the middle facing the depth of the hall seen from behind, gallery walls and ceiling lights forming leading lines, full body, existing lighting only, no flash, handheld, eye level, quiet contemplative atmosphere, 35mm lens at f/5.6, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S11-09 MS/eye_level/35mm/f2.8** → `scene-museum-quiet__09.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/9] 2:3 vertical, documentary photograph, adult visitor pausing near the exit of a museum gallery, turning head back toward the exhibition wall, calm expression, side profile visible, gallery space and wall lights in background, existing lighting only, no flash, handheld, eye level, quiet ending mood, 35mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+---
+
+## S12 旋转楼梯俯瞰（`scene-spiral-stairs`）
+
+- 画幅：2:3 vertical（1024x1536）｜调色：natural colour with a gentle film curve and consistent white balance
+- 人物：adult，hairstyle fixed at the reference frame｜场地：美术馆旋转楼梯（已获许可）
+- 光线：使用现场美术馆顶光与楼梯间侧窗自然光，禁用闪光灯；若内圈偏暗，由助手在顶层内侧安全位置以常亮灯加柔光箱低功率补内圈，不直射镜头
+- 参考帧：`scene-spiral-stairs__REF-A.png`（三选一）
+
+### 参考帧（先出这 3 张）
+
+**参考帧 A · 正面胸像** → `scene-spiral-stairs__REF-A.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, , adult walking down the inner side of a museum spiral staircase, hand sliding on the inner handrail, camera 3 meters ahead at chest height, natural side window light, no flash, clean architectural curve, shallow depth, gray concrete and white walls, no props, head-and-shoulders front view, neutral expression, looking slightly off camera, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 B · 45° 侧脸** → `scene-spiral-stairs__REF-B.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, , adult walking down the inner side of a museum spiral staircase, hand sliding on the inner handrail, camera 3 meters ahead at chest height, natural side window light, no flash, clean architectural curve, shallow depth, gray concrete and white walls, no props, head-and-shoulders three-quarter 45 degree view, soft side light, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 C · 全身定妆** → `scene-spiral-stairs__REF-C.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, , adult walking down the inner side of a museum spiral staircase, hand sliding on the inner handrail, camera 3 meters ahead at chest height, natural side window light, no flash, clean architectural curve, shallow depth, gray concrete and white walls, no props, full body standing, relaxed natural stance, whole outfit visible head to toe, 50mm lens at f/4, photorealistic editorial photograph, clean unmarked frame.
+```
+
+### 分镜帧（按顺序出，用参考图）
+
+**S12-01 EWS/overhead/16mm/f8** → `scene-spiral-stairs__01.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/9] 2:3 vertical, ultra wide angle architectural photo, spiral staircase interior of an art museum, adult walking down along the inner handrail, top floor overhead vantage, camera about 1.2 meters horizontally from the staircase central axis, standing inside the railing, no flash, soft natural skylight, geometric flowing curves, white and gray concrete, deep spiral center, full body visible, no props, 16mm lens at f/8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S12-02 FS/overhead/16mm/f4** → `scene-spiral-stairs__02.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/9] 2:3 vertical, vertical top down view of a spiral staircase in an art museum, adult standing on an inner step looking up at camera, hand on inner handrail, camera inside the railing about 0.8 meters from the central axis, concentric curved handrails, no flash, soft reflected skylight on face, geometric abstract architecture, no props, 16mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S12-03 MS/eye_level/50mm/f2.8** → `scene-spiral-stairs__03.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/9] 2:3 vertical, medium shot, adult walking down the inner side of a museum spiral staircase, hand sliding on the inner handrail, camera 3 meters ahead at chest height, natural side window light, no flash, clean architectural curve, shallow depth, gray concrete and white walls, no props, 50mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S12-04 MCU/low_angle/16mm/f2** → `scene-spiral-stairs__04.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/9] 2:3 vertical, low angle shot from lower inner step of a museum spiral staircase, adult standing on inner step with hand on inner railing, camera 1.5 meters away at 0.8 meter height, skylight rim light, no flash, upward view of spiral architecture, clean geometric lines, no props, 16mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S12-05 MS/eye_level/50mm/f2.8** → `scene-spiral-stairs__05.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/9] 2:3 vertical, medium shot through curved balcony opening of a museum spiral staircase, adult walking along the inner side, hand on inner handrail, face visible through the gap, camera 4 meters away at 1.2 meter height, natural light only no flash, architectural framing, gray concrete and white walls, no props, 50mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S12-06 FS/high_angle/16mm/f4** → `scene-spiral-stairs__06.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/9] 2:3 vertical, high angle back view of an adult walking down the inner side of a museum spiral staircase, hand on inner handrail, camera on top floor inside the railing about 1 meter from the central axis, no flash, top skylight rim light, deep spiral geometry, flowing curves, no props, 16mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S12-07 FS/eye_level/50mm/f4** → `scene-spiral-stairs__07.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/9] 2:3 vertical, symmetrical eye level portrait of an adult standing on an inner step of a museum spiral staircase, hands relaxed with back of hand touching inner handrail, camera 5 meters away at chest height, natural soft light, no flash, geometric symmetric curves behind, clean minimal wardrobe, no props, 50mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S12-08 CU/eye_level/50mm/f1.8** → `scene-spiral-stairs__08.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/9] 2:3 vertical, close up of an adult hand sliding along the inner handrail of a museum spiral staircase, camera 40 centimeters away at 1.1 meter height, natural grazing side light, no flash, smooth curved handrail texture, blurred body at frame edge, no props, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S12-09 WS/high_angle/16mm/f5.6** → `scene-spiral-stairs__09.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/9] 2:3 vertical, wide high angle shot from top floor inside the railing of a museum spiral staircase, adult standing on lower inner landing looking up, hand on inner handrail, camera about 1.1 meters from the central axis, no flash, skylight illumination, full spiral geometry, small figure in large architectural space, no props, 16mm lens at f/5.6, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+---
+
+## S13 桥洞隧道光（`scene-underpass-light`）
+
+- 画幅：2:3 vertical（1024x1536）｜调色：natural colour with a gentle film curve and consistent white balance
+- 人物：adult，hairstyle fixed at the reference frame｜场地：人行桥洞（非机动车道外安全区）
+- 光线：自然光，洞口逆光形成剪影，无补光，利用洞内暗部与外部亮部对比。
+- 参考帧：`scene-underpass-light__REF-A.png`（三选一）
+
+### 参考帧（先出这 3 张）
+
+**参考帧 A · 正面胸像** → `scene-underpass-light__REF-A.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Urban hard-edged style, a lone adult standing at the entrance of a pedestrian underpass, back to camera, silhouetted against bright tunnel exit, eye level, natural backlight, no flash, dark clothing, cool mood, architectural arch framing, safe zone beside non-motorized lane, no vehicles in frame, head-and-shoulders front view, neutral expression, looking slightly off camera, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 B · 45° 侧脸** → `scene-underpass-light__REF-B.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Urban hard-edged style, a lone adult standing at the entrance of a pedestrian underpass, back to camera, silhouetted against bright tunnel exit, eye level, natural backlight, no flash, dark clothing, cool mood, architectural arch framing, safe zone beside non-motorized lane, no vehicles in frame, head-and-shoulders three-quarter 45 degree view, soft side light, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 C · 全身定妆** → `scene-underpass-light__REF-C.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Urban hard-edged style, a lone adult standing at the entrance of a pedestrian underpass, back to camera, silhouetted against bright tunnel exit, eye level, natural backlight, no flash, dark clothing, cool mood, architectural arch framing, safe zone beside non-motorized lane, no vehicles in frame, full body standing, relaxed natural stance, whole outfit visible head to toe, 50mm lens at f/4, photorealistic editorial photograph, clean unmarked frame.
+```
+
+### 分镜帧（按顺序出，用参考图）
+
+**S13-01 FS/eye_level/35mm/f4** → `scene-underpass-light__01.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/9] 2:3 vertical, Urban hard-edged style, a lone adult standing at the entrance of a pedestrian underpass, back to camera, silhouetted against bright tunnel exit, wide shot, eye level, natural backlight, no flash, dark clothing, cool mood, architectural arch framing, safe zone beside non-motorized lane, no vehicles in frame, 35mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S13-02 MS/eye_level/35mm/f2.8** → `scene-underpass-light__02.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/9] 2:3 vertical, Medium shot, side profile of an adult standing at tunnel exit, backlit silhouette with rim light, eye level, cool urban style, no flash, natural light, dark clothing, hard outline, bright exit background, safe zone, no vehicles, 35mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S13-03 MFS/eye_level/35mm/f3.5** → `scene-underpass-light__03.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/9] 2:3 vertical, Medium full shot, adult walking towards camera inside pedestrian underpass, eye level, overhead tunnel lights creating light pools and depth, hard urban style, dark clothing, cool mood, no flash, safe zone, no vehicles, 35mm lens at f/3.5, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S13-04 CU/eye_level/35mm/f1.8** → `scene-underpass-light__04.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/9] 2:3 vertical, Close-up shot, adult with cold expression inside pedestrian underpass, eye level, overhead tunnel light casting subtle shadows, hard urban style, dark clothing, no flash, detailed skin texture, background wall with light patterns, safe zone, 35mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S13-05 MS/low_angle/35mm/f2.8** → `scene-underpass-light__05.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/9] 2:3 vertical, Low angle shot, adult standing inside underpass looking up, ground level, arch structure converging above, urban hard style, dark clothing, mixed natural and tunnel light, no flash, safe zone, no vehicles, 35mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S13-06 FS/eye_level/35mm/f4** → `scene-underpass-light__06.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/9] 2:3 vertical, Full shot, adult walking away into pedestrian underpass, eye level, tunnel lights creating depth, urban hard style, dark clothing, backlit, no flash, safe zone, no vehicles, cool mood, 35mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S13-07 ECU/ground_level/35mm/f1.8** → `scene-underpass-light__07.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/9] 2:3 vertical, Close-up shot of feet and lower legs standing on tunnel floor, ground level, light patterns on concrete floor, hard urban style, dark pants and shoes, no flash, cool mood, safe zone, 35mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S13-08 MCU/eye_level/35mm/f2** → `scene-underpass-light__08.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/9] 2:3 vertical, Medium close-up, side profile of adult inside tunnel, eye level, tunnel lights as side light, half face lit, hard urban style, dark clothing, no flash, background with bokeh lights, safe zone, 35mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S13-09 EWS/eye_level/35mm/f8** → `scene-underpass-light__09.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/9] 2:3 vertical, Extreme wide shot, adult standing at tunnel exit with city background, eye level, backlit silhouette, urban hard style, dark clothing, natural light, no flash, safe zone, no vehicles, cool mood, 35mm lens at f/8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+---
+
+## S14 玻璃幕墙反光街拍（`scene-glass-facade`）
+
+- 画幅：2:3 vertical（1024x1536）｜调色：neutral daylight, clean whites, restrained saturation
+- 人物：adult，hairstyle fixed at the reference frame｜场地：商务楼玻璃幕墙前广场
+- 光线：利用下午侧光，避免正午顶光。若阳光过强，在模特左前方45度放置白色反光板补光，降低反差
+- 参考帧：`scene-glass-facade__REF-A.png`（三选一）
+
+### 参考帧（先出这 3 张）
+
+**参考帧 A · 正面胸像** → `scene-glass-facade__REF-A.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], neutral daylight, clean whites, restrained saturation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Fashion street photography,  of an adult model standing confidently in front of a glass curtain wall office building, wearing modern urban outfit (unspecified), natural pose with one hand on hip, side lighting, sharp details, clear reflection on glass, modern city vibe, head-and-shoulders front view, neutral expression, looking slightly off camera, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 B · 45° 侧脸** → `scene-glass-facade__REF-B.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], neutral daylight, clean whites, restrained saturation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Fashion street photography,  of an adult model standing confidently in front of a glass curtain wall office building, wearing modern urban outfit (unspecified), natural pose with one hand on hip, side lighting, sharp details, clear reflection on glass, modern city vibe, head-and-shoulders three-quarter 45 degree view, soft side light, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 C · 全身定妆** → `scene-glass-facade__REF-C.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], neutral daylight, clean whites, restrained saturation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Fashion street photography,  of an adult model standing confidently in front of a glass curtain wall office building, wearing modern urban outfit (unspecified), natural pose with one hand on hip, side lighting, sharp details, clear reflection on glass, modern city vibe, full body standing, relaxed natural stance, whole outfit visible head to toe, 50mm lens at f/4, photorealistic editorial photograph, clean unmarked frame.
+```
+
+### 分镜帧（按顺序出，用参考图）
+
+**S14-01 FS/eye_level/24mm/f4** → `scene-glass-facade__01.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], neutral daylight, clean whites, restrained saturation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/9] 2:3 vertical, Fashion street photography, full body shot of an adult model standing confidently in front of a glass curtain wall office building, wearing modern urban outfit (unspecified), natural pose with one hand on hip, side lighting, sharp details, clear reflection on glass, modern city vibe, 24mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S14-02 FS/low_angle/24mm/f4** → `scene-glass-facade__02.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], neutral daylight, clean whites, restrained saturation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/9] 2:3 vertical, Urban street fashion, low angle full body shot of an adult model walking confidently in front of a glass curtain wall, modern outfit (unspecified), dynamic pose, strong lines of building reflectingwide angle, side backlight with reflector, clear details, 24mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S14-03 MCU/eye_level/85mm/f2** → `scene-glass-facade__03.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], neutral daylight, clean whites, restrained saturation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/9] 2:3 vertical, Mirror reflection composition, medium shot of an adult model walking sideways in front of a glass curtain wall, modern outfit (unspecified), clear reflection on glass, side lighting with reflector, sharp focus on model, urban setting, 85mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S14-04 MCU/eye_level/85mm/f2** → `scene-glass-facade__04.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], neutral daylight, clean whites, restrained saturation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/9] 2:3 vertical, Mirror reflection close-up, adult model leaning sideways against glass curtain wall, modern outfit (unspecified), clear reflection in glass, soft lighting with reflector, sharp facial details, urban fashion, 85mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S14-05 ECU/eye_level/85mm/f1.8** → `scene-glass-facade__05.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], neutral daylight, clean whites, restrained saturation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/9] 2:3 vertical, Extreme close-up of a hand touching glass curtain wall, reflection visible, sharp details, side lighting, urban texture, 85mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S14-06 MS/eye_level/24mm/f2.8** → `scene-glass-facade__06.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], neutral daylight, clean whites, restrained saturation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/9] 2:3 vertical, Medium shot of an adult model framed by glass curtain wall structures, modern outfit (unspecified), direct gaze, natural lighting with reflector, urban setting, sharp focus, 24mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S14-07 MCU/eye_level/85mm/f2** → `scene-glass-facade__07.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], neutral daylight, clean whites, restrained saturation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/9] 2:3 vertical, Medium close-up of an adult model looking back over shoulder, modern outfit (unspecified), sharp gaze, side backlight with reflector, glass curtain wall background with bokeh, urban fashion, 85mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S14-08 FS/eye_level/24mm/f4** → `scene-glass-facade__08.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], neutral daylight, clean whites, restrained saturation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/9] 2:3 vertical, Full body shot of an adult model walking away towards glass curtain wall, clear reflection of model in glass, modern outfit (unspecified), afternoon side light, urban street photography, sharp focus, 24mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S14-09 CU/eye_level/85mm/f1.8** → `scene-glass-facade__09.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], neutral daylight, clean whites, restrained saturation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/9] 2:3 vertical, Close-up of an adult model's face with eyes closed, glass curtain wall reflection creating bokeh light spots in background, modern outfit (unspecified), soft lighting, urban fashion, sharp facial details, 85mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+---
+
+## S15 书店书架间的人（`scene-bookstore-aisle`）
+
+- 画幅：2:3 vertical（1024x1536）｜调色：natural colour with a gentle film curve and consistent white balance
+- 人物：adult，hairstyle fixed at the reference frame｜场地：独立书店（书架与阅览桌现场已有）
+- 光线：利用店内射灯与窗光混合，射灯从上方打亮书架，窗光从左侧漫射；无闪光灯
+- 参考帧：`scene-bookstore-aisle__REF-A.png`（三选一）
+
+### 参考帧（先出这 3 张）
+
+**参考帧 A · 正面胸像** → `scene-bookstore-aisle__REF-A.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, A quiet independent bookstore interior, a person standing sideways in front of tall bookshelves, gently touching book spines, natural window light from left and warm spotlights from above, eye level, deep depth of field, calm and immersive atmosphere, no flash, cinematic, photorealistic, head-and-shoulders front view, neutral expression, looking slightly off camera, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 B · 45° 侧脸** → `scene-bookstore-aisle__REF-B.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, A quiet independent bookstore interior, a person standing sideways in front of tall bookshelves, gently touching book spines, natural window light from left and warm spotlights from above, eye level, deep depth of field, calm and immersive atmosphere, no flash, cinematic, photorealistic, head-and-shoulders three-quarter 45 degree view, soft side light, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 C · 全身定妆** → `scene-bookstore-aisle__REF-C.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, A quiet independent bookstore interior, a person standing sideways in front of tall bookshelves, gently touching book spines, natural window light from left and warm spotlights from above, eye level, deep depth of field, calm and immersive atmosphere, no flash, cinematic, photorealistic, full body standing, relaxed natural stance, whole outfit visible head to toe, 50mm lens at f/4, photorealistic editorial photograph, clean unmarked frame.
+```
+
+### 分镜帧（按顺序出，用参考图）
+
+**S15-01 FS/eye_level/35mm/f4** → `scene-bookstore-aisle__01.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/9] 2:3 vertical, A quiet independent bookstore interior, a person standing sideways in front of tall bookshelves, gently touching book spines, natural window light from left and warm spotlights from above, full body shot, eye level, deep depth of field, calm and immersive atmosphere, no flash, cinematic, photorealistic, 35mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S15-02 MFS/eye_level/35mm/f3.5** → `scene-bookstore-aisle__02.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/9] 2:3 vertical, A person walking slowly along a bookstore aisle between tall bookshelves, looking at books, backlit by window light at the end of the aisle, side spotlights creating depth, medium full shot, eye level, strong leading lines, quiet and literary mood, no flash, photorealistic, 35mm lens at f/3.5, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S15-03 MS/eye_level/35mm/f2.8** → `scene-bookstore-aisle__03.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/9] 2:3 vertical, A person standing sideways in a bookstore, pulling a book from a shelf and reading, window light from right illuminating the face, warm spotlights on shelves, medium shot, eye level, focused and immersive, no flash, natural colors, photorealistic, 35mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S15-04 CU/high_angle/35mm/f1.8** → `scene-bookstore-aisle__04.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/9] 2:3 vertical, Close-up of hands gently turning pages of a book in a bookstore, soft window light from side, no flash, shallow depth of field, detailed skin texture and paper, quiet and immersive, photorealistic, 35mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S15-05 MS/eye_level/35mm/f2.8** → `scene-bookstore-aisle__05.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/9] 2:3 vertical, A person sitting at a reading table in a bookstore, deeply engrossed in a book, chin resting on hands, window light from left, warm spotlights above, medium shot, eye level, calm and quiet atmosphere, no flash, photorealistic, 35mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S15-06 FS/eye_level/35mm/f4** → `scene-bookstore-aisle__06.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/9] 2:3 vertical, A person leaning against a bookshelf in a bookstore, reading a book, one foot slightly raised, warm spotlights from above, window light from right, full body shot, eye level, relaxed and immersed, no flash, photorealistic, 35mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S15-07 MS/low_angle/35mm/f2.8** → `scene-bookstore-aisle__07.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/9] 2:3 vertical, A person reaching up to take a book from a high shelf in a bookstore, standing on tiptoes, warm spotlights from above, window light from behind, medium shot, low angle, focused and immersive, no flash, photorealistic, 35mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S15-08 MS/eye_level/35mm/f2.8** → `scene-bookstore-aisle__08.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/9] 2:3 vertical, A person sitting by a window in a bookstore, book on lap, looking out thoughtfully, natural window light, warm spotlights, medium shot, eye level, peaceful and contemplative, no flash, photorealistic, 35mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S15-09 FS/eye_level/35mm/f4** → `scene-bookstore-aisle__09.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/9] 2:3 vertical, A person walking towards the exit of a bookstore, seen from behind, holding a book, natural light from door, warm spotlights, full body shot, eye level, quiet departure, no flash, photorealistic, 35mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+---
+
+## S16 自助洗衣店之夜（`scene-laundry-night`）
+
+- 画幅：2:3 vertical（1024x1536）｜调色：warm amber highlights, muted browns, gentle contrast, vintage lens character
+- 人物：adult，hairstyle fixed at the reference frame｜场地：24小时自助洗衣店
+- 光线：店内荧光灯顶光为主，利用门口自然光与室内荧光灯混合，不开闪光灯。
+- 参考帧：`scene-laundry-night__REF-A.png`（三选一）
+
+### 参考帧（先出这 3 张）
+
+**参考帧 A · 正面胸像** → `scene-laundry-night__REF-A.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, A  of an adult model entering a 24-hour laundromat at night, wearing a vintage denim jacket, white t-shirt, dark straight pants, and canvas shoes, pushing the door open, natural relaxed expression, illuminated by fluorescent lights, no flash, shot on, eye level, American retro style, lifestyle photography, head-and-shoulders front view, neutral expression, looking slightly off camera, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 B · 45° 侧脸** → `scene-laundry-night__REF-B.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, A  of an adult model entering a 24-hour laundromat at night, wearing a vintage denim jacket, white t-shirt, dark straight pants, and canvas shoes, pushing the door open, natural relaxed expression, illuminated by fluorescent lights, no flash, shot on, eye level, American retro style, lifestyle photography, head-and-shoulders three-quarter 45 degree view, soft side light, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 C · 全身定妆** → `scene-laundry-night__REF-C.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, A  of an adult model entering a 24-hour laundromat at night, wearing a vintage denim jacket, white t-shirt, dark straight pants, and canvas shoes, pushing the door open, natural relaxed expression, illuminated by fluorescent lights, no flash, shot on, eye level, American retro style, lifestyle photography, full body standing, relaxed natural stance, whole outfit visible head to toe, 50mm lens at f/4, photorealistic editorial photograph, clean unmarked frame.
+```
+
+### 分镜帧（按顺序出，用参考图）
+
+**S16-01 FS/eye_level/35mm/f4** → `scene-laundry-night__01.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/9] 2:3 vertical, A full-body shot of an adult model entering a 24-hour laundromat at night, wearing a vintage denim jacket, white t-shirt, dark straight pants, and canvas shoes, pushing the door open, natural relaxed expression, illuminated by fluorescent lights, no flash, shot on, eye level, wide shot, American retro style, lifestyle photography, 35mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S16-02 MS/low_angle/35mm/f2.8** → `scene-laundry-night__02.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/9] 2:3 vertical, A medium shot of an adult model loading clothes into a washing machine in a laundromat, side profile, wearing a white t-shirt and dark pants, denim jacket draped over shoulder, natural relaxed expression, illuminated by overhead fluorescent lights, no flash, shot on, slightly low angle, American retro lifestyle, 35mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S16-03 CU/eye_level/35mm/f1.8** → `scene-laundry-night__03.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/9] 2:3 vertical, A close-up shot of an adult model's face seen through the glass door of a washing machine, hands gently touching the glass, curious expression, illuminated by soft fluorescent light from inside the machine and overhead, no flash, shot on at 30cm distance, eye level, American retro style, 35mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S16-04 CU/eye_level/35mm/f1.8** → `scene-laundry-night__04.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/9] 2:3 vertical, A close-up shot of an adult model's side profile leaning against the glass door of a washing machine, eyes closed, gentle smile, relaxed mood, illuminated by side fluorescent light, no flash, shot on at 30cm distance, eye level, American retro style, 35mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S16-05 MS/eye_level/35mm/f2.8** → `scene-laundry-night__05.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/9] 2:3 vertical, A medium shot of an adult model leaning against a washing machine in a laundromat, hands in pockets, looking towards the machine, relaxed posture, wearing a denim jacket and white t-shirt, illuminated by overhead fluorescent lights, no flash, shot on, eye level, American retro lifestyle, 35mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S16-06 MCU/eye_level/35mm/f2** → `scene-laundry-night__06.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/9] 2:3 vertical, A close-up shot of an adult model adjusting the collar of a denim jacket, looking down, detailed hand movement, wearing a white t-shirt, illuminated by overhead fluorescent light, no flash, shot on, eye level, American retro style, 35mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S16-07 FS/low_angle/35mm/f4** → `scene-laundry-night__07.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/9] 2:3 vertical, A full-body shot of an adult model sitting on a bench in a laundromat, reading a magazine, legs crossed, relaxed posture, wearing a denim jacket and white t-shirt, illuminated by overhead fluorescent lights, no flash, shot on, slightly low angle, American retro lifestyle, 35mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S16-08 MCU/eye_level/35mm/f2** → `scene-laundry-night__08.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/9] 2:3 vertical, A medium close-up shot of an adult model standing in front of a washing machine, hands resting on the machine, leaning forward, gazing into the rotating drum, wearing a denim jacket and white t-shirt, illuminated by overhead fluorescent light and drum light, no flash, shot on, eye level, American retro style, 35mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S16-09 CU/high_angle/35mm/f1.8** → `scene-laundry-night__09.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/9] 2:3 vertical, A close-up shot of an adult model's hand pressing a button on a washing machine control panel, wearing a denim jacket sleeve, illuminated by overhead fluorescent light, no flash, shot on, high angle, American retro style, 35mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+---
+
+## S17 地下车库冷调人像（`scene-parking-garage`）
+
+- 画幅：2:3 vertical（1024x1536）｜调色：natural colour with a gentle film curve and consistent white balance
+- 人物：adult，hairstyle fixed at the reference frame｜场地：公共地下车库空置区（已获物业许可）
+- 光线：利用车库顶部连续光带作为主光源，不补光，关闭闪光灯；机位方向追光但避免光带过曝
+- 参考帧：`scene-parking-garage__REF-A.png`（三选一）
+
+### 参考帧（先出这 3 张）
+
+**参考帧 A · 正面胸像** → `scene-parking-garage__REF-A.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, of an adult standing in an empty underground parking garage, cool blue lighting, leading lines from overhead light strips, wide angle, low noise, urban cool mood, no flash, head-and-shoulders front view, neutral expression, looking slightly off camera, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 B · 45° 侧脸** → `scene-parking-garage__REF-B.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, of an adult standing in an empty underground parking garage, cool blue lighting, leading lines from overhead light strips, wide angle, low noise, urban cool mood, no flash, head-and-shoulders three-quarter 45 degree view, soft side light, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 C · 全身定妆** → `scene-parking-garage__REF-C.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, of an adult standing in an empty underground parking garage, cool blue lighting, leading lines from overhead light strips, wide angle, low noise, urban cool mood, no flash, full body standing, relaxed natural stance, whole outfit visible head to toe, 50mm lens at f/4, photorealistic editorial photograph, clean unmarked frame.
+```
+
+### 分镜帧（按顺序出，用参考图）
+
+**S17-01 FS/eye_level/24mm/f4** → `scene-parking-garage__01.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/9] 2:3 vertical, Full body shot of an adult standing in an empty underground parking garage, cool blue lighting, leading lines from overhead light strips, wide angle, low noise, urban cool mood, no flash, 24mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S17-02 MS/low_angle/24mm/f2.8** → `scene-parking-garage__02.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/9] 2:3 vertical, Low angle medium shot of an adult standing in an underground parking garage, cool lighting, urban mood, looking at camera with cool expression, no flash, 24mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S17-03 MCU/eye_level/50mm/f2** → `scene-parking-garage__03.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/9] 2:3 vertical, Medium close-up of an adult looking at camera in an underground parking garage, cool lighting, urban style, no flash, 50mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S17-04 MCU/eye_level/50mm/f2** → `scene-parking-garage__04.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/9] 2:3 vertical, Side profile half body shot of an adult in an underground parking garage, overhead light strip in background, cool tone, no flash, 50mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S17-05 FS/eye_level/24mm/f4** → `scene-parking-garage__05.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/9] 2:3 vertical, Full body shot of an adult walking in an underground parking garage, overhead light strips leading lines, cool atmosphere, no flash, 24mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S17-06 FS/low_angle/24mm/f4** → `scene-parking-garage__06.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/9] 2:3 vertical, Low angle full body shot of an adult sitting on the ground in an underground parking garage, cool lighting, urban mood, no flash, 24mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S17-07 MS/eye_level/50mm/f2.8** → `scene-parking-garage__07.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/9] 2:3 vertical, Medium shot of an adult leaning against a concrete pillar in an underground parking garage, cool lighting, urban style, no flash, 50mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S17-08 CU/eye_level/50mm/f1.8** → `scene-parking-garage__08.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/9] 2:3 vertical, Close-up of an adult face in an underground parking garage, cool lighting, intense gaze, urban mood, no flash, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S17-09 FS/eye_level/24mm/f4** → `scene-parking-garage__09.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/9] 2:3 vertical, Full body shot of an adult standing in an underground parking garage, strong leading lines from overhead lights and floor markings, cool urban atmosphere, no flash, 24mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+---
+
+## S18 温室植物园人像（`scene-greenhouse-humid`）
+
+- 画幅：2:3 vertical（1024x1536）｜调色：natural colour with a gentle film curve and consistent white balance
+- 人物：adult，hairstyle fixed at the reference frame｜场地：植物园温室（已获许可，步道内拍摄）
+- 光线：仅用棚顶漫射日光，不补光，不开闪光灯；观察棚顶玻璃光斑落点，让模特站位选择光斑落在肩头的位置
+- 参考帧：`scene-greenhouse-humid__REF-A.png`（三选一）
+
+### 参考帧（先出这 3 张）
+
+**参考帧 A · 正面胸像** → `scene-greenhouse-humid__REF-A.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, portrait of an adult standing on a walkway inside a humid botanical greenhouse, glass roof above, lush green tropical plants on both sides, soft diffused daylight, damp walkway, natural relaxed posture, eye level, realistic photography, no flash, no tripod, head-and-shoulders front view, neutral expression, looking slightly off camera, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 B · 45° 侧脸** → `scene-greenhouse-humid__REF-B.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, portrait of an adult standing on a walkway inside a humid botanical greenhouse, glass roof above, lush green tropical plants on both sides, soft diffused daylight, damp walkway, natural relaxed posture, eye level, realistic photography, no flash, no tripod, head-and-shoulders three-quarter 45 degree view, soft side light, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 C · 全身定妆** → `scene-greenhouse-humid__REF-C.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, portrait of an adult standing on a walkway inside a humid botanical greenhouse, glass roof above, lush green tropical plants on both sides, soft diffused daylight, damp walkway, natural relaxed posture, eye level, realistic photography, no flash, no tripod, full body standing, relaxed natural stance, whole outfit visible head to toe, 50mm lens at f/4, photorealistic editorial photograph, clean unmarked frame.
+```
+
+### 分镜帧（按顺序出，用参考图）
+
+**S18-01 FS/eye_level/50mm/f4** → `scene-greenhouse-humid__01.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/10] 2:3 vertical, full body portrait of an adult standing on a walkway inside a humid botanical greenhouse, glass roof above, lush green tropical plants on both sides, soft diffused daylight, damp walkway, natural relaxed posture, eye level, realistic photography, no flash, no tripod, 50mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S18-02 MS/eye_level/50mm/f2.8** → `scene-greenhouse-humid__02.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/10] 2:3 vertical, half body portrait of an adult in a greenhouse, soft dappled sunlight falling on shoulder and cheek, humid atmosphere, green foliage background softly blurred, natural skin texture, slightly low eye level, realistic, no flash, 50mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S18-03 MS/low_angle/50mm/f2.8** → `scene-greenhouse-humid__03.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/10] 2:3 vertical, medium shot from low angle of an adult standing on a greenhouse walkway, looking toward lush plants, blurred foreground leaves, humid soft daylight from glass roof, natural posture, realistic photography, no flash, 50mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S18-04 CU/low_angle/50mm/f1.8** → `scene-greenhouse-humid__04.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/10] 2:3 vertical, close up portrait of an adult looking up at a glass greenhouse roof, soft dappled light on forehead and nose bridge, natural skin texture, humid atmosphere, shallow depth, slightly low angle, realistic, no flash, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S18-05 FS/eye_level/50mm/f4** → `scene-greenhouse-humid__05.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/10] 2:3 vertical, full body walking shot of an adult on a greenhouse walkway, walking slowly toward camera, green plants on both sides, glass roof diffused light, humid atmosphere, eye level, realistic photography, no flash, no tripod, 50mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S18-06 MCU/eye_level/50mm/f2** → `scene-greenhouse-humid__06.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/10] 2:3 vertical, medium close up side profile of an adult in a botanical greenhouse, dappled leaf shadows on face, soft natural light from glass roof, humid green background, eye level, realistic, no flash, 50mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S18-07 FS/high_angle/50mm/f4** → `scene-greenhouse-humid__07.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/10] 2:3 vertical, high angle full body shot of an adult standing on a greenhouse walkway looking up at camera, glass roof diffused daylight, green planting beds on both sides, humid atmosphere, realistic photography, no flash, 50mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S18-08 MS/eye_level/50mm/f2.8** → `scene-greenhouse-humid__08.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/10] 2:3 vertical, medium shot of an adult standing on a greenhouse walkway, hands gently folded in front, humid soft atmosphere, lush plants softly blurred behind, diffused daylight, eye level, realistic photography, no flash, 50mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S18-09 ECU/high_angle/50mm/f1.8** → `scene-greenhouse-humid__09.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/10] 2:3 vertical, close up detail of an adult's relaxed hand raised near chest, not touching plants, soft diffused greenhouse light, blurred green foliage background, natural skin texture, slightly high angle, realistic, no flash, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S18-10 FS/eye_level/50mm/f4** → `scene-greenhouse-humid__10.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 10/10] 2:3 vertical, full body shot of an adult walking away on a greenhouse walkway then looking back over shoulder at camera, humid botanical garden, diffused daylight from glass roof, green plants, eye level, realistic photography, no flash, 50mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+---
+
+## S19 立交桥车流夜景（`scene-overpass-night`）
+
+- 画幅：2:3 vertical（1024x1536）｜调色：natural colour with a gentle film curve and consistent white balance
+- 人物：adult，long hair worn loose｜场地：过街天桥（人行的）
+- 光线：现场路灯侧光，无闪光灯，利用车流灯光作轮廓光
+- 参考帧：`scene-overpass-night__REF-A.png`（三选一）
+
+### 参考帧（先出这 3 张）
+
+**参考帧 A · 正面胸像** → `scene-overpass-night__REF-A.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, of an adult standing on a pedestrian overpass at night, back to camera, hands on railing, looking at traffic below, long exposure light trails of cars, city lights, no flash, realistic photography, head-and-shoulders front view, neutral expression, looking slightly off camera, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 B · 45° 侧脸** → `scene-overpass-night__REF-B.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, of an adult standing on a pedestrian overpass at night, back to camera, hands on railing, looking at traffic below, long exposure light trails of cars, city lights, no flash, realistic photography, head-and-shoulders three-quarter 45 degree view, soft side light, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 C · 全身定妆** → `scene-overpass-night__REF-C.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, of an adult standing on a pedestrian overpass at night, back to camera, hands on railing, looking at traffic below, long exposure light trails of cars, city lights, no flash, realistic photography, full body standing, relaxed natural stance, whole outfit visible head to toe, 50mm lens at f/4, photorealistic editorial photograph, clean unmarked frame.
+```
+
+### 分镜帧（按顺序出，用参考图）
+
+**S19-01 FS/eye_level/35mm/f4** → `scene-overpass-night__01.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/9] 2:3 vertical, Full body shot of an adult standing on a pedestrian overpass at night, back to camera, hands on railing, looking at traffic below, long exposure light trails of cars, city lights, no flash, realistic photography, 35mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S19-02 MS/eye_level/35mm/f2.8** → `scene-overpass-night__02.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/9] 2:3 vertical, Medium shot of an adult standing sideways on a pedestrian overpass at night, hands on railing, looking at traffic below, long exposure light trails, side lighting from street lamps, no flash, realistic photography, 35mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S19-03 CU/eye_level/35mm/f1.8** → `scene-overpass-night__03.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/9] 2:3 vertical, Close-up shot of an adult standing on a pedestrian overpass at night, hands on railing, looking towards camera, city lights background, no flash, realistic photography, 35mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S19-04 ECU/high_angle/35mm/f1.8** → `scene-overpass-night__04.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/9] 2:3 vertical, Extreme close-up of a hand touching a metal railing on a pedestrian overpass at night, with blurred car light trails in background, no flash, realistic photography, 35mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S19-05 FS/low_angle/35mm/f4** → `scene-overpass-night__05.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/9] 2:3 vertical, Low angle shot of an adult standing on a pedestrian overpass at night, leaning slightly forward, looking down at traffic, long exposure light trails, no flash, realistic photography, 35mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S19-06 MCU/eye_level/35mm/f2** → `scene-overpass-night__06.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/9] 2:3 vertical, Medium close-up of an adult leaning back against railing on a pedestrian overpass at night, looking into distance, car light trails background, no flash, realistic photography, 35mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S19-07 FS/eye_level/35mm/f4** → `scene-overpass-night__07.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/9] 2:3 vertical, Full body shot of an adult walking on a pedestrian overpass at night, arms swinging naturally, looking ahead, city lights and car light trails in background, no flash, realistic photography, 35mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S19-08 MS/eye_level/35mm/f2.8** → `scene-overpass-night__08.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/9] 2:3 vertical, Medium shot of an adult standing at the edge of a pedestrian overpass at night, one hand on railing, looking towards traffic, car light trails background, no flash, realistic photography, 35mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S19-09 CU/eye_level/35mm/f1.8** → `scene-overpass-night__09.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/9] 2:3 vertical, Close-up shot of an adult walking on a pedestrian overpass at night, turning head back towards camera, natural expression, car light trails in background, no flash, realistic photography, 35mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+---
+
+## S20 天台泳池黄昏（`scene-pool-dusk`）
+
+- 画幅：2:3 vertical（1024x1536）｜调色：natural colour with a gentle film curve and consistent white balance
+- 人物：adult，hair tied back in a low bun｜场地：酒店天台泳池（已获许可，仅池畔拍摄）
+- 光线：黄昏自然光，太阳位于模特左后方低角度，形成暖色逆光轮廓；不使用闪光灯，必要时用白色反光板在模特正面3米处补光
+- 参考帧：`scene-pool-dusk__REF-A.png`（三选一）
+
+### 参考帧（先出这 3 张）
+
+**参考帧 A · 正面胸像** → `scene-pool-dusk__REF-A.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, A  of an adult model standing sideways on a rooftop pool deck at dusk, relaxed posture, looking towards the sunset, warm backlight outlining her silhouette, calm water in the background, soft natural light, no flash, serene vacation mood, head-and-shoulders front view, neutral expression, looking slightly off camera, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 B · 45° 侧脸** → `scene-pool-dusk__REF-B.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, A  of an adult model standing sideways on a rooftop pool deck at dusk, relaxed posture, looking towards the sunset, warm backlight outlining her silhouette, calm water in the background, soft natural light, no flash, serene vacation mood, head-and-shoulders three-quarter 45 degree view, soft side light, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 C · 全身定妆** → `scene-pool-dusk__REF-C.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, A  of an adult model standing sideways on a rooftop pool deck at dusk, relaxed posture, looking towards the sunset, warm backlight outlining her silhouette, calm water in the background, soft natural light, no flash, serene vacation mood, full body standing, relaxed natural stance, whole outfit visible head to toe, 50mm lens at f/4, photorealistic editorial photograph, clean unmarked frame.
+```
+
+### 分镜帧（按顺序出，用参考图）
+
+**S20-01 FS/eye_level/50mm/f4** → `scene-pool-dusk__01.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/10] 2:3 vertical, A full-body shot of an adult model standing sideways on a rooftop pool deck at dusk, relaxed posture, looking towards the sunset, warm backlight outlining her silhouette, calm water in the background, soft natural light, no flash, serene vacation mood, 50mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S20-02 MS/eye_level/50mm/f2.8** → `scene-pool-dusk__02.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/10] 2:3 vertical, A medium shot of an adult model sitting by a rooftop pool at dusk, legs dangling towards water but not touching, hands supporting behind, leaning back slightly, relaxed expression, warm side backlight, water reflections, no flash, lazy vacation atmosphere, 50mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S20-03 MS/high_angle/50mm/f2.8** → `scene-pool-dusk__03.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/10] 2:3 vertical, A high-angle shot of an adult model standing by a rooftop pool at dusk, leaning slightly forward, looking down at the water, clear reflection on the water surface, natural warm light, no flash, tranquil vacation mood, 50mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S20-04 CU/low_angle/50mm/f1.8** → `scene-pool-dusk__04.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/10] 2:3 vertical, A low-angle shot of an adult model crouching by a rooftop pool at dusk, one hand touching the water surface lightly, side profile, warm backlight, reflection on water, no flash, peaceful vacation vibe, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S20-05 FS/eye_level/50mm/f4** → `scene-pool-dusk__05.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/10] 2:3 vertical, A full-body silhouette of an adult model walking slowly by a rooftop pool at dusk, backlit by the setting sun, clear outline, warm sky colors, no flash, serene vacation atmosphere, 50mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S20-06 CU/eye_level/50mm/f1.8** → `scene-pool-dusk__06.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/10] 2:3 vertical, A half-body silhouette of an adult model leaning on a poolside wall at dusk, relaxed posture, looking into the distance, backlit by the setting sun, clear outline, no flash, calm vacation mood, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S20-07 MCU/eye_level/50mm/f2** → `scene-pool-dusk__07.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/10] 2:3 vertical, A medium close-up of an adult model standing by a rooftop pool at dusk, one hand resting on a railing, looking down at the water, warm side light, soft reflections, no flash, relaxed vacation vibe, 50mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S20-08 MS/eye_level/50mm/f2.8** → `scene-pool-dusk__08.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/10] 2:3 vertical, A medium shot of an adult model standing by a rooftop pool at dusk, arms slightly open, eyes closed, head tilted back, enjoying the breeze, warm side backlight, no flash, lazy vacation mood, 50mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S20-09 FS/high_angle/50mm/f4** → `scene-pool-dusk__09.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/10] 2:3 vertical, A high-angle shot of an adult model sitting by a rooftop pool at dusk, hugging knees, chin on knees, looking at the water, warm frontal light, no flash, cozy vacation atmosphere, 50mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S20-10 CU/eye_level/50mm/f1.8** → `scene-pool-dusk__10.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 10/10] 2:3 vertical, A close-up of an adult model standing by a rooftop pool at dusk, one hand gently touching collarbone, side profile, soft side light, warm tones, no flash, intimate vacation mood, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+---
+
+## S21 儿童运动会抓拍（`ppl-kids-sportsday`）
+
+- 画幅：2:3 vertical（1024x1536）｜调色：black and white with strong grain and high micro-contrast
+- 人物：child，hairstyle fixed at the reference frame｜场地：小学操场（已获校方许可）
+- 光线：自然日光，顺侧光，不加闪光；靠操场开阔天空光与地面反射补足面部
+- 参考帧：`ppl-kids-sportsday__REF-A.png`（三选一）
+
+### 参考帧（先出这 3 张）
+
+**参考帧 A · 正面胸像** → `ppl-kids-sportsday__REF-A.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, child, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, documentary photo, 8 year old child standing behind starting line on a primary school running track, waiting quietly, natural daylight, shallow depth of field, blurred playground background, vivid energetic mood, no flash, telephoto compression, realistic look, head-and-shoulders front view, neutral expression, looking slightly off camera, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 B · 45° 侧脸** → `ppl-kids-sportsday__REF-B.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, child, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, documentary photo, 8 year old child standing behind starting line on a primary school running track, waiting quietly, natural daylight, shallow depth of field, blurred playground background, vivid energetic mood, no flash, telephoto compression, realistic look, head-and-shoulders three-quarter 45 degree view, soft side light, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 C · 全身定妆** → `ppl-kids-sportsday__REF-C.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, child, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, documentary photo, 8 year old child standing behind starting line on a primary school running track, waiting quietly, natural daylight, shallow depth of field, blurred playground background, vivid energetic mood, no flash, telephoto compression, realistic look, full body standing, relaxed natural stance, whole outfit visible head to toe, 50mm lens at f/4, photorealistic editorial photograph, clean unmarked frame.
+```
+
+### 分镜帧（按顺序出，用参考图）
+
+**S21-01 FS/eye_level/150mm/f4** → `ppl-kids-sportsday__01.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, child, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/9] 2:3 vertical, documentary photo, 8 year old child standing behind starting line on a primary school running track, waiting quietly, full body, natural daylight, shallow depth of field, blurred playground background, vivid energetic mood, no flash, telephoto compression, realistic look, 150mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S21-02 MCU/low_angle/200mm/f2** → `ppl-kids-sportsday__02.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, child, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/9] 2:3 vertical, documentary sports photo, focused 8 year old child in athletic wear before a race, knees slightly bent, fists loose at sides, looking forward, upper body portrait, soft natural side light, blurred school playground, no flashtelephoto, candid energetic mood, 200mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S21-03 MCU/eye_level/200mm/f2** → `ppl-kids-sportsday__03.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, child, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/9] 2:3 vertical, candid documentary photo, child in crouch start position on school track, one hand on ground, leaning forward, determined eyes, low eye-level angle, natural daylight, no flash, blurred running track backgroundtelephoto, energetic realistic style, 200mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S21-04 FS/eye_level/200mm/f4** → `ppl-kids-sportsday__04.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, child, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/9] 2:3 vertical, frozen action documentary photo, child sprinting on school track, both feet off ground, arms pumping, intense expression, fast shutter freeze, natural daylight, no flash, blurred track background, telephoto, dynamic and energetic, 200mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S21-05 MCU/eye_level/180mm/f2** → `ppl-kids-sportsday__05.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, child, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/9] 2:3 vertical, documentary sports action, child running left to right on track, leaning forward, arm swinging, hair flying, side profile, rim light from sun, natural fill, no flash, blurred playgroundtelephoto, vivid energetic mood, 180mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S21-06 FS/eye_level/200mm/f4** → `ppl-kids-sportsday__06.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, child, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/9] 2:3 vertical, documentary finish line photo, child leaning forward sprinting through finish area, arms back, large stride, full body, natural daylight, fast shutter, no flash, blurred school tracktelephoto, energetic candid, 200mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S21-07 CU/eye_level/200mm/f1.8** → `ppl-kids-sportsday__07.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, child, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/9] 2:3 vertical, candid close portrait, child catching breath after race, hands on knees, looking up smiling, sweat on forehead, natural soft daylight, no flash, blurred playground backgroundtelephoto, documentary sports mood, 200mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S21-08 FS/eye_level/135mm/f4** → `ppl-kids-sportsday__08.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, child, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/9] 2:3 vertical, documentary full body photo, child standing relaxed in school playground after race, one hand on hip, natural expression, athletic wear, natural daylight, no flash, blurred grandstand backgroundtelephoto, lively candid style, 135mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S21-09 WS/eye_level/200mm/f5.6** → `ppl-kids-sportsday__09.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, child, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/9] 2:3 vertical, documentary environmental back view, child walking along school track away from camera toward guardian, relaxed shoulders, athletic wear, natural backlight rim, no flash, blurred playground and grandstandtelephoto, quiet energetic ending mood, 200mm lens at f/5.6, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+---
+
+## S22 猫与主人的居家午后（`ppl-cat-home`）
+
+- 画幅：2:3 vertical（1024x1536）｜调色：natural colour with a gentle film curve and consistent white balance
+- 人物：pet owner，hairstyle fixed at the reference frame｜场地：家中客厅（猫窝与窗边地毯现场已有）
+- 光线：仅用窗边自然光，窗户在画面左后方形成侧逆光，地面用白色泡沫板补暗部，禁止闪光灯
+- 参考帧：`ppl-cat-home__REF-A.png`（三选一）
+
+### 参考帧（先出这 3 张）
+
+**参考帧 A · 正面胸像** → `ppl-cat-home__REF-A.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, pet owner, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, A cozy living room afternoon, an adult sitting cross-legged on a rug near a window, a cat stretching near a cat bed, low ground-level camera, natural window backlight, soft atmosphere, healing lifestyle photography, head-and-shoulders front view, neutral expression, looking slightly off camera, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 B · 45° 侧脸** → `ppl-cat-home__REF-B.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, pet owner, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, A cozy living room afternoon, an adult sitting cross-legged on a rug near a window, a cat stretching near a cat bed, low ground-level camera, natural window backlight, soft atmosphere, healing lifestyle photography, head-and-shoulders three-quarter 45 degree view, soft side light, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 C · 全身定妆** → `ppl-cat-home__REF-C.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, pet owner, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, A cozy living room afternoon, an adult sitting cross-legged on a rug near a window, a cat stretching near a cat bed, low ground-level camera, natural window backlight, soft atmosphere, healing lifestyle photography, full body standing, relaxed natural stance, whole outfit visible head to toe, 50mm lens at f/4, photorealistic editorial photograph, clean unmarked frame.
+```
+
+### 分镜帧（按顺序出，用参考图）
+
+**S22-01 FS/ground_level/50mm/f4** → `ppl-cat-home__01.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, pet owner, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/9] 2:3 vertical, A cozy living room afternoon, an adult sitting cross-legged on a rug near a window, a cat stretching near a cat bed, low ground-level camera, natural window backlight, soft atmosphere, healing lifestyle photography, 50mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S22-02 MS/ground_level/50mm/f2.8** → `ppl-cat-home__02.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, pet owner, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/9] 2:3 vertical, Backlit scene by a window, an adult sitting on a rug with a cat, rim light on hair and cat fur, soft natural light, ground-level camera angle, warm and healing mood, 50mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S22-03 CU/ground_level/85mm/f1.8** → `ppl-cat-home__03.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, pet owner, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/9] 2:3 vertical, Close-up of a relaxed cat lying in a cat bed, human fingers touching the bed edge, soft window light, rim light on fur, low angle at cat eye level, intimate and gentle, 85mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S22-04 MS/ground_level/50mm/f2.8** → `ppl-cat-home__04.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, pet owner, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/9] 2:3 vertical, An adult gently stroking a cat's back on a rug, cat stretching, soft diffuse window light, low camera angle, tender and healing moment, 50mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S22-05 CU/ground_level/85mm/f1.8** → `ppl-cat-home__05.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, pet owner, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/9] 2:3 vertical, Backlit close-up of a cat by a window, rim light on fur, whiskers detail, soft glow, low angle at cat level, peaceful afternoon, 85mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S22-06 CU/low_angle/50mm/f1.8** → `ppl-cat-home__06.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, pet owner, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/9] 2:3 vertical, Close-up of an adult looking down with a gentle smile, soft window light from side, shallow depth of field with cat blurred in corner, warm and caring expression, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S22-07 MS/overhead/50mm/f2.8** → `ppl-cat-home__07.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, pet owner, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/9] 2:3 vertical, Overhead shot of an adult lying on a rug looking at a cat in a cat bed, soft ambient light, cozy living room, peaceful interaction, 50mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S22-08 MCU/ground_level/50mm/f2** → `ppl-cat-home__08.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, pet owner, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/9] 2:3 vertical, Medium close-up of a cat getting chin scratches from a human hand, cat eyes closed in bliss, soft side backlight, intimate and healing, 50mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S22-09 FS/low_angle/50mm/f4** → `ppl-cat-home__09.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, pet owner, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/9] 2:3 vertical, A serene afternoon scene, an adult resting with eyes closed on a rug, a cat sleeping beside their legs, soft window light, low camera angle, peaceful and cozy, 50mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+---
+
+## S23 商务人士办公室肖像（`ppl-business-portrait`）
+
+- 画幅：2:3 vertical（1024x1536）｜调色：neutral daylight, clean whites, restrained saturation
+- 人物：adult，hairstyle fixed at the reference frame｜场地：办公室（落地窗、办公桌现场已有）
+- 光线：仅用落地窗自然侧光，不开启闪光灯；窗光从模特左前方45度入射，若反差过大可在暗部用白墙反光板补光，但不得直射
+- 参考帧：`ppl-business-portrait__REF-A.png`（三选一）
+
+### 参考帧（先出这 3 张）
+
+**参考帧 A · 正面胸像** → `ppl-business-portrait__REF-A.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], neutral daylight, clean whites, restrained saturation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Business portrait of an adult professional standing beside an office desk, side to floor-to-ceiling window, hands relaxed, looking toward window light, dark suit and light shirt, clean grooming, natural window side light, no flash,  with window and desk in frame, trustworthy and capable mood, eye level, head-and-shoulders front view, neutral expression, looking slightly off camera, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 B · 45° 侧脸** → `ppl-business-portrait__REF-B.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], neutral daylight, clean whites, restrained saturation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Business portrait of an adult professional standing beside an office desk, side to floor-to-ceiling window, hands relaxed, looking toward window light, dark suit and light shirt, clean grooming, natural window side light, no flash,  with window and desk in frame, trustworthy and capable mood, eye level, head-and-shoulders three-quarter 45 degree view, soft side light, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 C · 全身定妆** → `ppl-business-portrait__REF-C.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], neutral daylight, clean whites, restrained saturation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Business portrait of an adult professional standing beside an office desk, side to floor-to-ceiling window, hands relaxed, looking toward window light, dark suit and light shirt, clean grooming, natural window side light, no flash,  with window and desk in frame, trustworthy and capable mood, eye level, full body standing, relaxed natural stance, whole outfit visible head to toe, 50mm lens at f/4, photorealistic editorial photograph, clean unmarked frame.
+```
+
+### 分镜帧（按顺序出，用参考图）
+
+**S23-01 FS/eye_level/35mm/f4** → `ppl-business-portrait__01.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], neutral daylight, clean whites, restrained saturation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/10] 2:3 vertical, Business portrait of an adult professional standing beside an office desk, side to floor-to-ceiling window, hands relaxed, looking toward window light, dark suit and light shirt, clean grooming, natural window side light, no flash, full body shot with window and desk in frame, trustworthy and capable mood, eye level, 35mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S23-02 MCU/eye_level/85mm/f2** → `ppl-business-portrait__02.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], neutral daylight, clean whites, restrained saturation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/10] 2:3 vertical, Business portrait of an adult professional seated at an office desk, body slightly turned left, one hand on desk, looking at camera, dark suit and light shirt, clean hair, natural window side light from left, subtle fill from right, no flash, medium close-up, eye level, trustworthy mood, 85mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S23-03 CU/eye_level/85mm/f1.8** → `ppl-business-portrait__03.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], neutral daylight, clean whites, restrained saturation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/10] 2:3 vertical, Close-up business portrait of an adult professional facing camera, head slightly tilted toward window light on left, confident slight smile, dark suit and light shirt with top button open, natural skin texture, window side light from left with soft fill, no flash, eye level, trustworthy and sharp mood, 85mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S23-04 MS/eye_level/85mm/f2.8** → `ppl-business-portrait__04.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], neutral daylight, clean whites, restrained saturation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/10] 2:3 vertical, Half-body silhouette portrait of an adult professional standing with back to floor-to-ceiling window, facing camera, hands clasped in front, dark suit and light shirt, strong window backlight, minimal fill, no flash, eye level, capable and trustworthy mood, 85mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S23-05 MS/high_angle/35mm/f2.8** → `ppl-business-portrait__05.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], neutral daylight, clean whites, restrained saturation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/10] 2:3 vertical, Medium shot of an adult professional sitting at an office desk, leaning forward, hands on desk as if writing, looking down at desk, dark suit and light shirt, natural window side light, no flash, high angle view, focused and capable mood, background floor-to-ceiling window blurred, 35mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S23-06 MCU/eye_level/85mm/f2** → `ppl-business-portrait__06.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], neutral daylight, clean whites, restrained saturation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/10] 2:3 vertical, Medium close-up portrait of an adult professional sitting upright in an office chair, hands lightly gripping desk edge, looking at camera with calm expression, dark suit and light shirt, natural window side light, subtle fill, no flash, eye level, trustworthy mood, 85mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S23-07 MS/eye_level/85mm/f2.8** → `ppl-business-portrait__07.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], neutral daylight, clean whites, restrained saturation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/10] 2:3 vertical, Medium shot of an adult professional standing by floor-to-ceiling window, side profile facing out, one hand resting on window frame, looking into distance, dark suit and light shirt, natural window light, subtle fill, no flash, eye level, contemplative and capable mood, 85mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S23-08 ECU/eye_level/85mm/f1.8** → `ppl-business-portrait__08.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], neutral daylight, clean whites, restrained saturation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/10] 2:3 vertical, Close-up detail shot of hands of an adult professional resting on office desk, fingers slightly curved, suit and shirt cuffs visible, natural window side light, no flash, eye level, shallow depth of field, focused and trustworthy mood, 85mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S23-09 CU/eye_level/85mm/f1.8** → `ppl-business-portrait__09.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], neutral daylight, clean whites, restrained saturation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/10] 2:3 vertical, Close-up of an adult professional sitting at desk, body slightly leaning forward, one hand resting on chin, looking away toward window light, thoughtful expression, dark suit and light shirt, natural window side light, subtle fill, no flash, eye level, contemplative mood, 85mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S23-10 MS/eye_level/85mm/f2.8** → `ppl-business-portrait__10.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], neutral daylight, clean whites, restrained saturation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 10/10] 2:3 vertical, Medium shot of an adult professional turning from back to face camera, suit jacket swaying with motion, expression transitioning from serious to smile, dark suit and light shirt, natural window light, subtle fill, no flash, eye level, dynamic and trustworthy mood, 85mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+---
+
+## S24 舞者练功房（`ppl-dancer-studio`）
+
+- 画幅：2:3 vertical（1024x1536）｜调色：low-contrast pastel with faint green shadows and fine 400-speed grain
+- 人物：adult，hairstyle fixed at the reference frame｜场地：舞蹈教室（把杆与镜墙现场已有）
+- 光线：利用教室顶部现有荧光灯，关闭闪光灯，必要时用反光板从正面补光（如现场有）。
+- 参考帧：`ppl-dancer-studio__REF-A.png`（三选一）
+
+### 参考帧（先出这 3 张）
+
+**参考帧 A · 正面胸像** → `ppl-dancer-studio__REF-A.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, A  of a dancer standing still with back to camera, facing a mirror wall in a dance studio. The mirror reflects her front view. She wears dark tight practice clothes, hair tied back. Natural fluorescent lighting, no flash. Composition places dancer on right third, mirror reflection on left., eye level, depth of field showing the studio space including barre. Artistic and powerful mood, head-and-shoulders front view, neutral expression, looking slightly off camera, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 B · 45° 侧脸** → `ppl-dancer-studio__REF-B.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, A  of a dancer standing still with back to camera, facing a mirror wall in a dance studio. The mirror reflects her front view. She wears dark tight practice clothes, hair tied back. Natural fluorescent lighting, no flash. Composition places dancer on right third, mirror reflection on left., eye level, depth of field showing the studio space including barre. Artistic and powerful mood, head-and-shoulders three-quarter 45 degree view, soft side light, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 C · 全身定妆** → `ppl-dancer-studio__REF-C.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, A  of a dancer standing still with back to camera, facing a mirror wall in a dance studio. The mirror reflects her front view. She wears dark tight practice clothes, hair tied back. Natural fluorescent lighting, no flash. Composition places dancer on right third, mirror reflection on left., eye level, depth of field showing the studio space including barre. Artistic and powerful mood, full body standing, relaxed natural stance, whole outfit visible head to toe, 50mm lens at f/4, photorealistic editorial photograph, clean unmarked frame.
+```
+
+### 分镜帧（按顺序出，用参考图）
+
+**S24-01 FS/eye_level/50mm/f4** → `ppl-dancer-studio__01.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/9] 2:3 vertical, A full-body shot of a dancer standing still with back to camera, facing a mirror wall in a dance studio. The mirror reflects her front view. She wears dark tight practice clothes, hair tied back. Natural fluorescent lighting, no flash. Composition places dancer on right third, mirror reflection on left., eye level, depth of field showing the studio space including barre. Artistic and powerful mood, 50mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S24-02 MS/low_angle/50mm/f2.8** → `ppl-dancer-studio__02.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/9] 2:3 vertical, A side view of a dancer stretching at a barre, one leg on the barre, body leaning forward, arms extended. She wears a tight practice outfit, hair in a bun. Side-back lighting accentuates her silhouette and muscle tension., slightly low angle. The barre is visible. Artistic and powerful, 50mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S24-03 FS/eye_level/50mm/f4** → `ppl-dancer-studio__03.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/9] 2:3 vertical, A dancer frozen mid-air in a grand jeté, legs split 180 degrees, arms raised. Wearing a tight practice outfit. Shot with, eye level, fast shutter speed to freeze motion. High key lighting, no flash. Artistic and powerful, 50mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S24-04 MS/eye_level/50mm/f2.8** → `ppl-dancer-studio__04.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/9] 2:3 vertical, A dancer jumping mid-air, turning, arms extended, looking towards camera. Shot with, eye level, fast shutter. Mirror reflection visible without photographer. Side lighting, no flash. Artistic and powerful, 50mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S24-05 MS/eye_level/50mm/f2.8** → `ppl-dancer-studio__05.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/9] 2:3 vertical, A dancer holding a barre, one leg extended, slowly turning, creating a motion blur effect. Shot with, slow shutter speed, camera stabilized by resting on the barre. Natural lighting, no flash. Artistic and powerful, 50mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S24-06 MCU/eye_level/50mm/f2** → `ppl-dancer-studio__06.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/9] 2:3 vertical, A dancer touching a mirror wall, looking at her reflection, one hand on the barre. Shot with, eye level. Composition focuses on the reflection and eye contact. Soft lighting, no flash. Artistic and powerful, 50mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S24-07 CU/eye_level/50mm/f1.8** → `ppl-dancer-studio__07.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/9] 2:3 vertical, A close-up of a dancer's hands gripping a barre, knuckles white, veins visible. Shot with, eye level. Side lighting to emphasize texture. No flash. Artistic and powerful, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S24-08 FS/low_angle/50mm/f4** → `ppl-dancer-studio__08.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/9] 2:3 vertical, A dancer landing from a jump, knees bent in a plié, arms back for balance, body leaning forward. Shot with, low angle. Fast shutter to freeze motion. No flash. Artistic and powerful, 50mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S24-09 MCU/eye_level/50mm/f2** → `ppl-dancer-studio__09.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/9] 2:3 vertical, A half-body portrait of a dancer after practice, slightly out of breath, sweat glistening on skin, looking at camera with determination. Shot with, eye level. Soft side lighting, no flash. Artistic and powerful, 50mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+---
+
+## S25 厨师后厨的火焰（`ppl-chef-kitchen`）
+
+- 画幅：2:3 vertical（1024x1536）｜调色：black and white with strong grain and high micro-contrast
+- 人物：adult，long hair worn loose｜场地：餐厅后厨（已获许可，非高峰时段）
+- 光线：仅利用后厨顶部现有日光灯，不补光；检查地面湿滑区域，机位后方铺防滑垫或确认干燥
+- 参考帧：`ppl-chef-kitchen__REF-A.png`（三选一）
+
+### 参考帧（先出这 3 张）
+
+**参考帧 A · 正面胸像** → `ppl-chef-kitchen__REF-A.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, candid documentary shot, adult chef leaning over stainless steel prep counter sorting ingredients in a crate, rolled sleeves, dark apron, existing ceiling light reflections on metal, no flash, slight low angle, warm gritty kitchen mood, head-and-shoulders front view, neutral expression, looking slightly off camera, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 B · 45° 侧脸** → `ppl-chef-kitchen__REF-B.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, candid documentary shot, adult chef leaning over stainless steel prep counter sorting ingredients in a crate, rolled sleeves, dark apron, existing ceiling light reflections on metal, no flash, slight low angle, warm gritty kitchen mood, head-and-shoulders three-quarter 45 degree view, soft side light, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 C · 全身定妆** → `ppl-chef-kitchen__REF-C.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, candid documentary shot, adult chef leaning over stainless steel prep counter sorting ingredients in a crate, rolled sleeves, dark apron, existing ceiling light reflections on metal, no flash, slight low angle, warm gritty kitchen mood, full body standing, relaxed natural stance, whole outfit visible head to toe, 50mm lens at f/4, photorealistic editorial photograph, clean unmarked frame.
+```
+
+### 分镜帧（按顺序出，用参考图）
+
+**S25-01 WS/eye_level/35mm/f5.6** → `ppl-chef-kitchen__01.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/10] 2:3 vertical, documentary photo, adult chef in white uniform and dark apron standing back to camera in a restaurant kitchen, stainless steel counters, range hood, wet floor reflections, existing fluorescent ceiling lights, no flash, eye level, realistic, gritty atmosphere, 35mm lens at f/5.6, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S25-02 MS/eye_level/35mm/f2.8** → `ppl-chef-kitchen__02.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/10] 2:3 vertical, candid documentary shot, adult chef leaning over stainless steel prep counter sorting ingredients in a crate, rolled sleeves, dark apron, existing ceiling light reflections on metal, no flash, slight low angle, warm gritty kitchen mood, 35mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S25-03 ECU/high_angle/35mm/f1.8** → `ppl-chef-kitchen__03.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/10] 2:3 vertical, extreme close up documentary, adult chef hands chopping ingredients on wooden cutting board, claw grip protecting fingers, kitchen knife mid-cut, overhead ceiling light contrast, no flash, shallow but readable detail, 35mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S25-04 MS/eye_level/35mm/f2.8** → `ppl-chef-kitchen__04.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/10] 2:3 vertical, documentary kitchen scene, adult chef side view turning stove knob, hand on wok handle, small blue flame igniting, existing ceiling light mixed with warm fire glow, no flash, eye level, authentic texture, 35mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S25-05 MS/eye_level/35mm/f2.8** → `ppl-chef-kitchen__05.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/10] 2:3 vertical, dynamic documentary, adult chef tossing wok, ingredients airborne, burst of flame from oil mist, stainless kitchen background, existing ceiling light, no flash, eye level, frozen motion, fiery gritty atmosphere, 35mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S25-06 MCU/low_angle/35mm/f2** → `ppl-chef-kitchen__06.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/10] 2:3 vertical, low angle documentary, adult chef leaning forward tossing wok, flame rising from pan edge, range hood silhouette, fire as key light, no flash, energetic fiery kitchen scene, realistic, 35mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S25-07 MS/eye_level/35mm/f2.8** → `ppl-chef-kitchen__07.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/10] 2:3 vertical, intimate documentary portrait, adult chef resting hands on stove edge after cooking, slight sweat on temple, breathing, wok on stove, existing ceiling light, stainless steel reflections, no flash, eye level, smoky warmth, 35mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S25-08 MCU/low_angle/35mm/f2** → `ppl-chef-kitchen__08.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/10] 2:3 vertical, low angle documentary, adult chef looking up at range hood in kitchen, smoke haze catching existing light, stainless steel hood, no flash, realistic gritty atmosphere, vertical depth, 35mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S25-09 CU/eye_level/35mm/f1.8** → `ppl-chef-kitchen__09.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/10] 2:3 vertical, candid close shot, adult chef wiping forehead with forearm, sweat sheen on skin, stainless kitchen blurred background, existing overhead light, no flash, eye level, honest documentary texture, 35mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S25-10 CU/eye_level/35mm/f1.8** → `ppl-chef-kitchen__10.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 10/10] 2:3 vertical, still life documentary, wok on kitchen stove with faint residual steam, stainless steel counter, range hood shadow above, existing ceiling light, no flash, eye level, quiet fiery aftermath mood, 35mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+---
+
+## S26 滑板少年的黄昏（`ppl-skater-dusk`）
+
+- 画幅：2:3 vertical（1024x1536）｜调色：natural colour with a gentle film curve and consistent white balance
+- 人物：adult，hairstyle fixed at the reference frame｜场地：滑板场（已获场地许可）
+- 光线：利用黄昏低角度现场自然光，拍摄机位背对落日方向，不补光、不使用闪光灯
+- 参考帧：`ppl-skater-dusk__REF-A.png`（三选一）
+
+### 参考帧（先出这 3 张）
+
+**参考帧 A · 正面胸像** → `ppl-skater-dusk__REF-A.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, young adult skateboarder rolling into an outdoor skatepark at golden hour, low sunset backlighteye-level , loose natural stance on board, skatepark ramps and concrete in background, no flash, cinematic street photography, safe distance  composition, head-and-shoulders front view, neutral expression, looking slightly off camera, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 B · 45° 侧脸** → `ppl-skater-dusk__REF-B.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, young adult skateboarder rolling into an outdoor skatepark at golden hour, low sunset backlighteye-level , loose natural stance on board, skatepark ramps and concrete in background, no flash, cinematic street photography, safe distance  composition, head-and-shoulders three-quarter 45 degree view, soft side light, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 C · 全身定妆** → `ppl-skater-dusk__REF-C.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, young adult skateboarder rolling into an outdoor skatepark at golden hour, low sunset backlighteye-level , loose natural stance on board, skatepark ramps and concrete in background, no flash, cinematic street photography, safe distance  composition, full body standing, relaxed natural stance, whole outfit visible head to toe, 50mm lens at f/4, photorealistic editorial photograph, clean unmarked frame.
+```
+
+### 分镜帧（按顺序出，用参考图）
+
+**S26-01 FS/eye_level/35mm/f4** → `ppl-skater-dusk__01.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/9] 2:3 vertical, young adult skateboarder rolling into an outdoor skatepark at golden hour, low sunset backlighteye-level wide shot, loose natural stance on board, skatepark ramps and concrete in background, no flash, cinematic street photography, safe distance full body composition, 35mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S26-02 MS/low_angle/24mm/f2.8** → `ppl-skater-dusk__02.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/9] 2:3 vertical, dynamic low angletracking shot of a young skateboarder carving on a skatepark slope at dusk, camera 1.2 meters away on the safe side, knees bent, wheels on concrete, warm side backlight, no flash, motion feel, street style, 24mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S26-03 MS/low_angle/24mm/f2.8** → `ppl-skater-dusk__03.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/9] 2:3 vertical, low side tracking shot of a young skateboarder leaning into a carve at an outdoor skatepark, golden hour rim light, camera on safe outside line 1.5 meters away, forward space in frame, no flash, street action photography, 24mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S26-04 MCU/eye_level/135mm/f2** → `ppl-skater-dusk__04.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/9] 2:3 vertical, telephoto side profile of a young skateboarder rolling across a skatepark at sunset, camera 9 meters away on the safe perimeter, compressed ramp background, warm rim light, no flash, cinematic street photography, 135mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S26-05 FS/eye_level/135mm/f4** → `ppl-skater-dusk__05.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/9] 2:3 vertical, telephoto silhouette of a young skateboarder mid-air above a skatepark ramp at sunset, knees tucked, board under feet, camera 10 meters away on safe perimeter, strong backlight, no flash, clean golden sky background, 135mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S26-06 FS/low_angle/70mm/f4** → `ppl-skater-dusk__06.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/9] 2:3 vertical, low angle action freeze of a young skateboarder jumping off a skatepark ramp at dusk, knees tucked, one arm forward, board under feet, camera 5 meters away on safe ground, fast shutter, side warm light, no flash, 70mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S26-07 FS/eye_level/50mm/f4** → `ppl-skater-dusk__07.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/9] 2:3 vertical, side view action freeze of a young skateboarder jumping over a small skatepark ramp at sunset, full body in frame, board level, takeoff ramp left and landing zone right, fast shutter, natural side light, no flash, street photography, 50mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S26-08 FS/eye_level/85mm/f4** → `ppl-skater-dusk__08.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/9] 2:3 vertical, backlit silhouette of a young skateboarder standing relaxed beside a skateboard at a skatepark, facing the low sunset, camera 7 meters away, golden sky filling background, no flash, pure contour silhouette, cinematic dusk, 85mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S26-09 CU/eye_level/50mm/f1.8** → `ppl-skater-dusk__09.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/9] 2:3 vertical, close-up detail of a young skateboarder's hands resting near a skateboard at golden hour, seated at the safe edge of a skatepark, warm side backlight on skin and deck, no flash, shallow depth, cinematic detail shot, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+---
+
+## S27 老人的手作时光（`ppl-elder-hands`）
+
+- 画幅：2:3 vertical（1024x1536）｜调色：natural colour with a gentle film curve and consistent white balance
+- 人物：adult，hairstyle fixed at the reference frame｜场地：老街工作台（工作台与工具现场已有）
+- 光线：仅用门窗自然光作为主光，门窗位于画面左侧形成侧光，关闭台灯避免色温混合，禁用闪光灯
+- 参考帧：`ppl-elder-hands__REF-A.png`（三选一）
+
+### 参考帧（先出这 3 张）
+
+**参考帧 A · 正面胸像** → `ppl-elder-hands__REF-A.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, warm documentary photograph, elderly craftsman sitting sideways behind a worn street-side workbench, hands resting on table edge, calm gaze, soft natural window light from left, no flash, quiet old street workshop atmosphere, eye level, medium full shot, muted warm tones, realistic, head-and-shoulders front view, neutral expression, looking slightly off camera, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 B · 45° 侧脸** → `ppl-elder-hands__REF-B.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, warm documentary photograph, elderly craftsman sitting sideways behind a worn street-side workbench, hands resting on table edge, calm gaze, soft natural window light from left, no flash, quiet old street workshop atmosphere, eye level, medium full shot, muted warm tones, realistic, head-and-shoulders three-quarter 45 degree view, soft side light, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 C · 全身定妆** → `ppl-elder-hands__REF-C.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, warm documentary photograph, elderly craftsman sitting sideways behind a worn street-side workbench, hands resting on table edge, calm gaze, soft natural window light from left, no flash, quiet old street workshop atmosphere, eye level, medium full shot, muted warm tones, realistic, full body standing, relaxed natural stance, whole outfit visible head to toe, 50mm lens at f/4, photorealistic editorial photograph, clean unmarked frame.
+```
+
+### 分镜帧（按顺序出，用参考图）
+
+**S27-01 MFS/eye_level/50mm/f3.5** → `ppl-elder-hands__01.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/9] 2:3 vertical, warm documentary photograph, elderly craftsman sitting sideways behind a worn street-side workbench, hands resting on table edge, calm gaze, soft natural window light from left, no flash, quiet old street workshop atmosphere, eye level, medium full shot, muted warm tones, realistic, 50mm lens at f/3.5, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S27-02 MCU/eye_level/50mm/f2** → `ppl-elder-hands__02.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/9] 2:3 vertical, warm documentary portrait, elderly artisan in plain cotton shirt, head slightly bowed toward workbench, one hand resting lightly on a tool, soft side light from window and door, no flash, gentle focused expression, eye level, medium close shot, film-like warm tones, realistic, 50mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S27-03 CU/high_angle/85mm/f1.8** → `ppl-elder-hands__03.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/9] 2:3 vertical, intimate close-up of elderly craftsman's hands resting beside worn tools on a wooden workbench, fingers slowly opening and closing, soft natural light from upper left, small warm desk lamp fill from right, no flash, realistic skin texture, warm documentary mood, 85mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S27-04 ECU/eye_level/85mm/f1.8** → `ppl-elder-hands__04.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/9] 2:3 vertical, macro-style documentary shot of elderly hands gently guiding a worn craft tool on a wooden bench, soft backlight rim from window, subtle bounce fill from pale tabletop, no flash, ground-level eye view of hands, intimate warm tones, realistic, 85mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S27-05 CU/overhead/85mm/f1.8** → `ppl-elder-hands__05.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/9] 2:3 vertical, quiet close-up of elderly artisan's hands pausing above a craft tool on an old wooden workbench, fingertips lightly touching the tool, one hand loosely relaxed, soft daylight from behind, no flash, slightly overhead view of hands, warm nostalgic documentary style, realistic textures, 85mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S27-06 MS/eye_level/50mm/f2.8** → `ppl-elder-hands__06.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/9] 2:3 vertical, warm side-profile documentary shot, elderly craftsman seated at a workbench in an old street, head lowered, one hand steadying a tool while the other moves slowly, soft window daylight from front side, natural shadow background, no flash, shoulder height, medium shot, realistic film tones, 50mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S27-07 MS/low_angle/50mm/f2.8** → `ppl-elder-hands__07.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/9] 2:3 vertical, low-angle documentary view from workbench level, elderly craftsman arranging tools slowly with both hands, wooden tabletop texture in foreground, soft daylight from upper right across the bench, no flash, medium shot, warm quiet old-street workshop atmosphere, realistic, 50mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S27-08 FS/eye_level/50mm/f4** → `ppl-elder-hands__08.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/9] 2:3 vertical, warm environmental portrait, elderly craftsman seated upright at a street-side workbench, hands resting beside tools, soft window and door daylight entering from left, no flash, eye level, full body shot, old street workshop, natural warm tones, documentary realism, 50mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S27-09 WS/eye_level/50mm/f5.6** → `ppl-elder-hands__09.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/9] 2:3 vertical, wide environmental documentary shot, elderly craftsman seated at a workbench near an old street doorway, hands folded on the table, head slightly turned toward the window light, soft natural daylight only, no flash, eye level, wide shot, warm nostalgic atmosphere, realistic, 50mm lens at f/5.6, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+---
+
+## S28 游泳者出水瞬间（`ppl-swimmer-poolside`）
+
+- 画幅：2:3 vertical（1024x1536）｜调色：bright airy pastel, golden backlight bloom, clean highlights
+- 人物：adult，hairstyle fixed at the reference frame｜场地：室内游泳馆（已获许可，池畔拍摄）
+- 光线：使用泳馆顶部既有照明，关掉所有闪光灯；ISO提高保证1/1000秒以上快门
+- 参考帧：`ppl-swimmer-poolside__REF-A.png`（三选一）
+
+### 参考帧（先出这 3 张）
+
+**参考帧 A · 正面胸像** → `ppl-swimmer-poolside__REF-A.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], bright airy pastel, golden backlight bloom, clean highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, side view , adult swimmer rising from water with one arm sweeping upward, water droplets chained in air, indoor pool ceiling light, reflector fill, no flash, muscular dynamic, head-and-shoulders front view, neutral expression, looking slightly off camera, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 B · 45° 侧脸** → `ppl-swimmer-poolside__REF-B.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], bright airy pastel, golden backlight bloom, clean highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, side view , adult swimmer rising from water with one arm sweeping upward, water droplets chained in air, indoor pool ceiling light, reflector fill, no flash, muscular dynamic, head-and-shoulders three-quarter 45 degree view, soft side light, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**参考帧 C · 全身定妆** → `ppl-swimmer-poolside__REF-C.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], bright airy pastel, golden backlight bloom, clean highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, side view , adult swimmer rising from water with one arm sweeping upward, water droplets chained in air, indoor pool ceiling light, reflector fill, no flash, muscular dynamic, full body standing, relaxed natural stance, whole outfit visible head to toe, 50mm lens at f/4, photorealistic editorial photograph, clean unmarked frame.
+```
+
+### 分镜帧（按顺序出，用参考图）
+
+**S28-01 WS/eye_level/35mm/f5.6** → `ppl-swimmer-poolside__01.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], bright airy pastel, golden backlight bloom, clean highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/10] 2:3 vertical, indoor swimming pool wide establishing shot, adult swimmer treading water mid-lane, lane ropes receding, wet pool deck in foreground, available ceiling light only, no flash, eye level, dynamic documentary photography, 35mm lens at f/5.6, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S28-02 MS/low_angle/85mm/f2.8** → `ppl-swimmer-poolside__02.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], bright airy pastel, golden backlight bloom, clean highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/10] 2:3 vertical, low angle side view, adult swimmer crouched against pool wall ready to push off, tense powerful posture, water droplets, indoor pool light, reflector fill, no flash, dynamic sports photography, 85mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S28-03 MCU/low_angle/135mm/f2** → `ppl-swimmer-poolside__03.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], bright airy pastel, golden backlight bloom, clean highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/10] 2:3 vertical, telephoto, adult swimmer in streamlined position just before breaking water surface, droplets frozen, indoor pool overhead light, no flash, high shutter speed, powerful silence before splash, 135mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S28-04 MCU/eye_level/135mm/f2** → `ppl-swimmer-poolside__04.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], bright airy pastel, golden backlight bloom, clean highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/10] 2:3 vertical, telephoto, adult swimmer bursting up out of pool water, head and shoulders breaking surface, spray frozen in air, side backlight from ceiling, no flash, 1/2500s, powerful dynamic sports moment, 135mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S28-05 CU/eye_level/135mm/f1.8** → `ppl-swimmer-poolside__05.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], bright airy pastel, golden backlight bloom, clean highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/10] 2:3 vertical, telephoto close up, adult swimmer emerging, head tilted back inhaling, droplets sliding down face, goggles pushed up, reflector fill from left, no flash, indoor pool, 1/2000s, 135mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S28-06 MS/eye_level/85mm/f2.8** → `ppl-swimmer-poolside__06.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], bright airy pastel, golden backlight bloom, clean highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/10] 2:3 vertical, side view medium shot, adult swimmer rising from water with one arm sweeping upward, water droplets chained in air, indoor pool ceiling light, reflector fill, no flash, muscular dynamic, 85mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S28-07 MS/eye_level/85mm/f2.8** → `ppl-swimmer-poolside__07.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], bright airy pastel, golden backlight bloom, clean highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/10] 2:3 vertical, frontal medium shot, adult swimmer emerging half body from pool, chest up, confident gaze, water line at waist, indoor pool overhead lighting, no flash, strong posture, 85mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S28-08 ECU/eye_level/100mm/f1.8** → `ppl-swimmer-poolside__08.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], bright airy pastel, golden backlight bloom, clean highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/10] 2:3 vertical, macro close up, water droplets suspended from adult swimmer jaw and shoulder, side backlight making droplets glow, indoor pool, no flash, 1/2500s, crisp texture, 100mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S28-09 FS/low_angle/50mm/f4** → `ppl-swimmer-poolside__09.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], bright airy pastel, golden backlight bloom, clean highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/10] 2:3 vertical, low angle side view full body, adult swimmer pushing up onto pool deck, wet body, water dripping, side backlight from ceiling, wet slippery deck, no flash, powerful exit moment, 50mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+
+**S28-10 MFS/eye_level/35mm/f3.5** → `ppl-swimmer-poolside__10.png`
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], bright airy pastel, golden backlight bloom, clean highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 10/10] 2:3 vertical, frontal medium full shot, adult swimmer standing on wet pool deck catching breath, hands on knees then looking up, water dripping, wet footprints, indoor pool background, no flash, resilient mood, 35mm lens at f/3.5, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
+```
+

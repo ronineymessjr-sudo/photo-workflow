@@ -1,6 +1,7 @@
 {
   "series": "S06",
   "briefId": "style-cinema-rooftop",
+  "theme": "电影感青橙调天台",
   "refFile": "style-cinema-rooftop__REF-A.png",
   "identityLock": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames",
   "styleLock": "[STYLE LOCK], teal shadows and warm skin tones, cinematic contrast, subtle halation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look",
@@ -22,6 +23,23 @@
       "no props beyond the listed ones"
     ]
   },
+  "refs": [
+    {
+      "name": "参考帧 A · 正面胸像",
+      "file": "style-cinema-rooftop__REF-A.png",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], teal shadows and warm skin tones, cinematic contrast, subtle halation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Cinematic  of an adult standing alone on a residential rooftop during blue hour, back to camera, looking at the sky, dark jacket, teal and orange color grading, distant city lights, eye level, atmospheric, head-and-shoulders front view, neutral expression, looking slightly off camera, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame."
+    },
+    {
+      "name": "参考帧 B · 45° 侧脸",
+      "file": "style-cinema-rooftop__REF-B.png",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], teal shadows and warm skin tones, cinematic contrast, subtle halation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Cinematic  of an adult standing alone on a residential rooftop during blue hour, back to camera, looking at the sky, dark jacket, teal and orange color grading, distant city lights, eye level, atmospheric, head-and-shoulders three-quarter 45 degree view, soft side light, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame."
+    },
+    {
+      "name": "参考帧 C · 全身定妆",
+      "file": "style-cinema-rooftop__REF-C.png",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], teal shadows and warm skin tones, cinematic contrast, subtle halation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Cinematic  of an adult standing alone on a residential rooftop during blue hour, back to camera, looking at the sky, dark jacket, teal and orange color grading, distant city lights, eye level, atmospheric, full body standing, relaxed natural stance, whole outfit visible head to toe, 50mm lens at f/4, photorealistic editorial photograph, clean unmarked frame."
+    }
+  ],
   "frames": [
     {
       "id": "S06-01",

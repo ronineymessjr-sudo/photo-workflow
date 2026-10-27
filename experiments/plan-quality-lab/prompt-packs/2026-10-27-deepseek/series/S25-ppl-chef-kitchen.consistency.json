@@ -1,6 +1,7 @@
 {
   "series": "S25",
   "briefId": "ppl-chef-kitchen",
+  "theme": "厨师后厨的火焰",
   "refFile": "ppl-chef-kitchen__REF-A.png",
   "identityLock": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames",
   "styleLock": "[STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look",
@@ -23,6 +24,23 @@
       "no flash"
     ]
   },
+  "refs": [
+    {
+      "name": "参考帧 A · 正面胸像",
+      "file": "ppl-chef-kitchen__REF-A.png",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, candid documentary shot, adult chef leaning over stainless steel prep counter sorting ingredients in a crate, rolled sleeves, dark apron, existing ceiling light reflections on metal, no flash, slight low angle, warm gritty kitchen mood, head-and-shoulders front view, neutral expression, looking slightly off camera, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame."
+    },
+    {
+      "name": "参考帧 B · 45° 侧脸",
+      "file": "ppl-chef-kitchen__REF-B.png",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, candid documentary shot, adult chef leaning over stainless steel prep counter sorting ingredients in a crate, rolled sleeves, dark apron, existing ceiling light reflections on metal, no flash, slight low angle, warm gritty kitchen mood, head-and-shoulders three-quarter 45 degree view, soft side light, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame."
+    },
+    {
+      "name": "参考帧 C · 全身定妆",
+      "file": "ppl-chef-kitchen__REF-C.png",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, candid documentary shot, adult chef leaning over stainless steel prep counter sorting ingredients in a crate, rolled sleeves, dark apron, existing ceiling light reflections on metal, no flash, slight low angle, warm gritty kitchen mood, full body standing, relaxed natural stance, whole outfit visible head to toe, 50mm lens at f/4, photorealistic editorial photograph, clean unmarked frame."
+    }
+  ],
   "frames": [
     {
       "id": "S25-01",

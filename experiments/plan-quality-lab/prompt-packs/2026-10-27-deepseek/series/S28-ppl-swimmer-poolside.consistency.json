@@ -1,6 +1,7 @@
 {
   "series": "S28",
   "briefId": "ppl-swimmer-poolside",
+  "theme": "游泳者出水瞬间",
   "refFile": "ppl-swimmer-poolside__REF-A.png",
   "identityLock": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames",
   "styleLock": "[STYLE LOCK], bright airy pastel, golden backlight bloom, clean highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look",
@@ -23,6 +24,23 @@
       "no flash"
     ]
   },
+  "refs": [
+    {
+      "name": "参考帧 A · 正面胸像",
+      "file": "ppl-swimmer-poolside__REF-A.png",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], bright airy pastel, golden backlight bloom, clean highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, side view , adult swimmer rising from water with one arm sweeping upward, water droplets chained in air, indoor pool ceiling light, reflector fill, no flash, muscular dynamic, head-and-shoulders front view, neutral expression, looking slightly off camera, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame."
+    },
+    {
+      "name": "参考帧 B · 45° 侧脸",
+      "file": "ppl-swimmer-poolside__REF-B.png",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], bright airy pastel, golden backlight bloom, clean highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, side view , adult swimmer rising from water with one arm sweeping upward, water droplets chained in air, indoor pool ceiling light, reflector fill, no flash, muscular dynamic, head-and-shoulders three-quarter 45 degree view, soft side light, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame."
+    },
+    {
+      "name": "参考帧 C · 全身定妆",
+      "file": "ppl-swimmer-poolside__REF-C.png",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], bright airy pastel, golden backlight bloom, clean highlights, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, side view , adult swimmer rising from water with one arm sweeping upward, water droplets chained in air, indoor pool ceiling light, reflector fill, no flash, muscular dynamic, full body standing, relaxed natural stance, whole outfit visible head to toe, 50mm lens at f/4, photorealistic editorial photograph, clean unmarked frame."
+    }
+  ],
   "frames": [
     {
       "id": "S28-01",

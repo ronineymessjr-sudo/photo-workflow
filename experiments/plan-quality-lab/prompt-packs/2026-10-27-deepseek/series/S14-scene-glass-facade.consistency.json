@@ -1,6 +1,7 @@
 {
   "series": "S14",
   "briefId": "scene-glass-facade",
+  "theme": "玻璃幕墙反光街拍",
   "refFile": "scene-glass-facade__REF-A.png",
   "identityLock": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames",
   "styleLock": "[STYLE LOCK], neutral daylight, clean whites, restrained saturation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look",
@@ -22,6 +23,23 @@
       "no props beyond the listed ones"
     ]
   },
+  "refs": [
+    {
+      "name": "参考帧 A · 正面胸像",
+      "file": "scene-glass-facade__REF-A.png",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], neutral daylight, clean whites, restrained saturation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Fashion street photography,  of an adult model standing confidently in front of a glass curtain wall office building, wearing modern urban outfit (unspecified), natural pose with one hand on hip, side lighting, sharp details, clear reflection on glass, modern city vibe, head-and-shoulders front view, neutral expression, looking slightly off camera, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame."
+    },
+    {
+      "name": "参考帧 B · 45° 侧脸",
+      "file": "scene-glass-facade__REF-B.png",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], neutral daylight, clean whites, restrained saturation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Fashion street photography,  of an adult model standing confidently in front of a glass curtain wall office building, wearing modern urban outfit (unspecified), natural pose with one hand on hip, side lighting, sharp details, clear reflection on glass, modern city vibe, head-and-shoulders three-quarter 45 degree view, soft side light, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame."
+    },
+    {
+      "name": "参考帧 C · 全身定妆",
+      "file": "scene-glass-facade__REF-C.png",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], neutral daylight, clean whites, restrained saturation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Fashion street photography,  of an adult model standing confidently in front of a glass curtain wall office building, wearing modern urban outfit (unspecified), natural pose with one hand on hip, side lighting, sharp details, clear reflection on glass, modern city vibe, full body standing, relaxed natural stance, whole outfit visible head to toe, 50mm lens at f/4, photorealistic editorial photograph, clean unmarked frame."
+    }
+  ],
   "frames": [
     {
       "id": "S14-01",

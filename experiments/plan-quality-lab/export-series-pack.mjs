@@ -69,6 +69,9 @@ function wardrobeOf(record) {
             .replace(/[（(]\s*[)）]/g, '')
             .replace(/[，,；;、]\s*(?=[，,；;、])/g, '')
             .replace(/^[，,；;、\s]+|[，,；;、\s]+$/g, '')
+            // Twice: "服装待确认，妆发待确认；建议…" leaves "服装，妆发；建议…" after
+            // the first pass, and one more strip clears the leftover prefix.
+            .replace(/^(?:服装(?:与妆发)?|妆发)[，,；;、\s]*/g, '')
             .replace(/^(?:服装(?:与妆发)?|妆发)[，,；;、\s]*/g, '')
             .replace(/^的/g, '')
             .trim();
@@ -249,10 +252,15 @@ for (const [briefIndex, brief] of briefs.entries()) {
 
     await writeFile(resolve(packDir, `${code}-${brief.id}.md`), md.join('\n') + '\n', 'utf8');
     await writeFile(resolve(packDir, `${code}-${brief.id}.consistency.json`), JSON.stringify({
-        series: code, briefId: brief.id, refFile,
+        series: code, briefId: brief.id, theme: brief.input?.theme || brief.id, refFile,
         identityLock: identity, styleLock: style,
         identity: { gender: gender.label, hair, wardrobe, scene, light },
         style: { grade, aspect: `${aspect.ratio} ${aspect.en}`, size: aspect.size, bans },
+        refs: refs.map((ref, index) => ({
+            name: ref.name,
+            file: `${brief.id}__REF-${['A', 'B', 'C'][index]}.png`,
+            prompt: `${identity}, ${style}, ${heroPrompt}, ${ref.frame}, photorealistic editorial photograph, clean unmarked frame.`,
+        })),
         frames,
     }, null, 2), 'utf8');
 
