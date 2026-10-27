@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://photoatelier.local/schema/continuity-group.json",
+  "title": "ContinuityGroup",
+  "description": "一次连续拍摄的分组契约：锁定字段 + 角色化参考资产 + 逐镜头请求。规划层只能填 variant 字段，locked 字段不可被镜头改写。",
+  "type": "object",
+  "required": ["continuityGroupId", "locked", "references", "shots"],
+  "additionalProperties": false,
+  "properties": {
+    "continuityGroupId": { "type": "string" },
+    "locked": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["subject", "wardrobe", "location", "timeOfDay", "light", "styleProfile", "mustKeep", "mustAvoid"],
+      "properties": {
+        "subject": { "type": "string", "description": "人物身份与外观" },
+        "wardrobe": { "type": "string" },
+        "location": { "type": "string" },
+        "season": { "type": "string" },
+        "weather": { "type": "string" },
+        "timeOfDay": { "type": "string" },
+        "light": { "type": "string" },
+        "colorGrade": { "type": "string" },
+        "styleProfile": { "type": "string", "description": "从用户选定风格参考中提取，不允许规划模型自创" },
+        "mustKeep": { "type": "array", "items": { "type": "string" } },
+        "mustAvoid": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "references": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["assetId", "role", "status"],
+        "properties": {
+          "assetId": { "type": "string" },
+          "role": { "enum": ["identity", "scene", "style"] },
+          "status": { "enum": ["confirmed", "missing", "pending"] },
+          "path": { "type": "string" },
+          "note": { "type": "string" }
+        }
+      }
+    },
+    "master": {
+      "type": "object",
+      "description": "主参考图：人工确认后才允许批量生成",
+      "additionalProperties": false,
+      "properties": {
+        "assetId": { "type": "string" },
+        "confirmedBy": { "enum": ["human", "none"] },
+        "confirmedAt": { "type": "string" }
+      }
+    },
+    "shots": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["shotId", "shotType", "camera", "action", "subjectPlacement", "mustKeep", "prompt"],
+        "properties": {
+          "shotId": { "type": "string" },
+          "shotType": { "type": "string" },
+          "camera": { "type": "string" },
+          "lens": { "type": "string" },
+          "distance": { "type": "string" },
+          "action": { "type": "string" },
+          "subjectPlacement": { "type": "string" },
+          "mustKeep": { "type": "array", "items": { "type": "string" } },
+          "prompt": { "type": "string" },
+          "size": { "type": "string" },
+          "aspect": { "type": "string" },
+          "props": { "type": "string" }
+        }
+      }
+    }
+  }
+}
