@@ -53,6 +53,26 @@
 
 身份卡（Identity Card）里把性别年龄、发型、脸型五官、肤色妆容、服装、场地、光线、调色逐项写死；换任何一项都要全系列重出，不允许"这一帧换件衣服"。
 
+## 治"AI 味"：第三道锁 [REALISM LOCK]
+
+上一批图的问题是"AI 味太重、不像真的"。诊断与做法见 **`07-AI味诊断与去AI化方案.md`**，核心是提示词里不能只写 `photorealistic` 这种形容词，要给物理约束：
+
+```text
+[REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain,
+skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching,
+no beauty filter, available light with true falloff, the unlit side drops into shadow,
+mixed colour temperature between window light and practicals, real venue with wear:
+scuffed stone, faint water stains, dust in the air, a few scattered real objects,
+natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette,
+documentary realism, not an advertisement
+```
+
+配套负面：`plastic skin, airbrushed skin, HDR look, 3d render, CGI, digital painting, glowing skin, perfect symmetry, doll face, smooth gradient background, over-sharpened, beauty filter, bloom, clean studio backdrop`。
+
+**光靠提示词只能压到一半，第二步必做**：出图后做 img2img 低重绘（denoise 0.15–0.25，提示词只写 `35mm film scan, natural grain, unretouched skin`），再叠 5–8% 胶片颗粒。可选再叠一张真实场地照做 reference（IP-Adapter 权重 0.3–0.4），把"布景感"压下去。
+
+验收按 16 分真实感评分卡（皮肤/光比/逆光/虚化/场地/发丝衣料/手部/一致性），≥12 分可用、8–11 需回炉、<8 重出。
+
 ## 回图命名规范（重要）
 
 请按 `{用例ID}__{两位镜号}.png` 命名，例如 `style-hanfu-court__01.png`。

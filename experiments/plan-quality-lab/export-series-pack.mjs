@@ -147,7 +147,18 @@ for (const [briefIndex, brief] of briefs.entries()) {
         grade,
         'one single lighting direction for the whole series',
         `${aspect.ratio} ${aspect.en} framing`,
-        'natural skin texture, no beauty-filter plastic look',
+        'consistent white balance across every frame',
+    ].join(', ');
+    // REALISM LOCK — the anti-AI-look block. Adjectives like "photorealistic"
+    // do not stop the beauty-filter default; physical constraints do.
+    const realism = [
+        '[REALISM LOCK]',
+        'shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain',
+        'skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter',
+        'available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals',
+        'real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects',
+        'natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette',
+        'documentary realism, not an advertisement',
     ].join(', ');
 
     const md = [`# ${code} · ${brief.input?.theme || brief.id}`, '',
@@ -162,9 +173,10 @@ for (const [briefIndex, brief] of briefs.entries()) {
         `| 场地 | ${scene} | 同一处，背景元素不跑 |`,
         `| 光线 | ${light} | 主光方向不变 |`,
         `| 调色 | ${grade} | 一套 LUT 到底 |`, '',
-        '## 二、两条锁（每帧提示词开头，必须逐字相同）', '',
-        '```text', identity, '```', '', '```text', style, '```', '',
-        '> 这两段是**字符串级复制**：改一个词就破坏一致性，`check-series-consistency.mjs` 会报错。', '',
+        '## 二、三道锁（每帧提示词开头，必须逐字相同）', '',
+        '```text', identity, '```', '', '```text', style, '```', '', '```text', realism, '```', '',
+        '> 这三段是**字符串级复制**：改一个词就破坏一致性，`check-series-consistency.mjs` 会报错。',
+        '> `[REALISM LOCK]` 是专门治"AI 味"的：不写它，模型默认给你磨皮+均匀受光+HDR 的广告片质感。', '',
         '## 三、第一步：定妆参考帧（出 3 张，挑 1 张作 REF）', ''];
     const heroPrompt = String(shots[hero].generator_prompt || '')
         .replace(/[,，]?\s*\d{1,3}(?:-\d{1,3})?\s*mm\s*(?:lens|镜头)?/gi, '')
@@ -178,7 +190,7 @@ for (const [briefIndex, brief] of briefs.entries()) {
         { name: '参考帧 C · 全身定妆', frame: 'full body standing, relaxed natural stance, whole outfit visible head to toe, 50mm lens at f/4' },
     ];
     for (const ref of refs) {
-        md.push(`### ${ref.name}`, '', '```text', `${identity}, ${style}, ${heroPrompt}, ${ref.frame}, photorealistic editorial photograph, clean unmarked frame.`, '```', '');
+        md.push(`### ${ref.name}`, '', '```text', `${identity}, ${realism}, ${style}, ${heroPrompt}, ${ref.frame}, clean unmarked frame.`, '```', '');
     }
     md.push(`> 三张里挑**脸最稳、衣服最还原**的一张，命名为 \`${refFile}\`，后面所有帧都从它出发。`, '');
 
@@ -203,7 +215,7 @@ for (const [briefIndex, brief] of briefs.entries()) {
         const dof = ['ECU', 'CU', 'MCU'].includes(shot.shot_size)
             ? 'shallow depth of field with creamy bokeh'
             : 'subject and environment both clearly readable';
-        const framePrompt = `${identity}, ${style}, [FRAME ${i + 1}/${shots.length}] ${shotAspect.ratio} ${shotAspect.en}, ${content}, ${shot.lens} lens at f/${ap}, ${dof}, photorealistic editorial photograph, clean unmarked frame.`;
+        const framePrompt = `${identity}, ${realism}, ${style}, [FRAME ${i + 1}/${shots.length}] ${shotAspect.ratio} ${shotAspect.en}, ${content}, ${shot.lens} lens at f/${ap}, ${dof}, clean unmarked frame.`;
 
         md.push(`### ${code}-${String(i + 1).padStart(2, '0')}　${shot.shot_language}`, '');
         md.push(`- 文件名：\`${brief.id}__${String(i + 1).padStart(2, '0')}.png\``);
@@ -215,7 +227,7 @@ for (const [briefIndex, brief] of briefs.entries()) {
         md.push('');
         md.push('```text', framePrompt, '```', '');
         md.push(`编辑指令（用 REF 图生图）：\`Keep the face, hairstyle and outfit identical to ${refFile}. Change only camera position, framing and pose to match FRAME ${i + 1}. Props allowed: ${propsEn}.\``, '');
-        md.push(`负面：\`${bans.join(', ')}, different person, changed hairstyle, changed outfit, extra fingers, deformed hands, distorted face, plastic skin, oversaturated, duplicate subject, tilted horizon\``, '');
+        md.push(`负面：\`${bans.join(', ')}, different person, changed hairstyle, changed outfit, plastic skin, airbrushed skin, HDR look, 3d render, CGI, digital painting, glowing skin, perfect symmetry, doll face, smooth gradient background, over-sharpened, beauty filter, bloom, clean studio backdrop, extra fingers, deformed hands, distorted face, duplicate subject, tilted horizon\``, '');
         frames.push({
             id: `${code}-${String(i + 1).padStart(2, '0')}`,
             file: `${brief.id}__${String(i + 1).padStart(2, '0')}.png`,
@@ -253,13 +265,13 @@ for (const [briefIndex, brief] of briefs.entries()) {
     await writeFile(resolve(packDir, `${code}-${brief.id}.md`), md.join('\n') + '\n', 'utf8');
     await writeFile(resolve(packDir, `${code}-${brief.id}.consistency.json`), JSON.stringify({
         series: code, briefId: brief.id, theme: brief.input?.theme || brief.id, refFile,
-        identityLock: identity, styleLock: style,
+        identityLock: identity, styleLock: style, realismLock: realism,
         identity: { gender: gender.label, hair, wardrobe, scene, light },
         style: { grade, aspect: `${aspect.ratio} ${aspect.en}`, size: aspect.size, bans },
         refs: refs.map((ref, index) => ({
             name: ref.name,
             file: `${brief.id}__REF-${['A', 'B', 'C'][index]}.png`,
-            prompt: `${identity}, ${style}, ${heroPrompt}, ${ref.frame}, photorealistic editorial photograph, clean unmarked frame.`,
+            prompt: `${identity}, ${realism}, ${style}, ${heroPrompt}, ${ref.frame}, clean unmarked frame.`,
         })),
         frames,
     }, null, 2), 'utf8');

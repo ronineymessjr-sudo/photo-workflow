@@ -23,19 +23,23 @@ const cjk = /[\u4e00-\u9fa5]/;
 for (const file of files) {
     const data = JSON.parse(await readFile(resolve(dir, file), 'utf8'));
     seriesCount += 1;
-    const { series, briefId, identityLock, styleLock, frames } = data;
+    const { series, briefId, identityLock, styleLock, realismLock, frames } = data;
     if (!identityLock?.startsWith('[IDENTITY LOCK]')) problems.push(`${series}: 缺少 [IDENTITY LOCK]`);
     if (!styleLock?.startsWith('[STYLE LOCK]')) problems.push(`${series}: 缺少 [STYLE LOCK]`);
+    if (!realismLock?.startsWith('[REALISM LOCK]')) problems.push(`${series}: 缺少 [REALISM LOCK]（会退回磨皮广告片质感）`);
     if (!frames?.length) { problems.push(`${series}: 没有分镜帧`); continue; }
     const hashes = new Set();
     for (const frame of frames) {
         frameCount += 1;
         if (!frame.prompt.startsWith(identityLock)) problems.push(`${series}/${frame.id}: 帧提示词开头不是同一条 IDENTITY LOCK`);
         if (!frame.prompt.includes(styleLock)) problems.push(`${series}/${frame.id}: 帧提示词里找不到同一条 STYLE LOCK`);
+        if (realismLock && !frame.prompt.includes(realismLock)) problems.push(`${series}/${frame.id}: 帧提示词里找不到同一条 REALISM LOCK`);
         hashes.add(frame.promptHash);
         // English prompt must stay English; CJK in a prompt measurably degrades
         // image models and usually means a spec field leaked through.
-        const promptWithoutLocks = frame.prompt.replace(identityLock, '').replace(styleLock, '');
+        const promptWithoutLocks = frame.prompt
+            .replace(identityLock, '').replace(styleLock, '')
+            .replace(realismLock || '', '');
         if (cjk.test(promptWithoutLocks)) problems.push(`${series}/${frame.id}: 提示词正文含中文，会拖累模型`);
         if (!/\d{1,3}(-\d{1,3})?mm lens at f\/\d/.test(frame.prompt)) problems.push(`${series}/${frame.id}: 缺焦段/光圈参数`);
         if (!/(2:3 vertical|3:2 horizontal)/.test(frame.prompt)) problems.push(`${series}/${frame.id}: 缺画幅声明`);
