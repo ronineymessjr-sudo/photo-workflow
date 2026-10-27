@@ -27,18 +27,34 @@
 - 机位角度覆盖：`eye_level / low_angle / high_angle / ground_level / overhead`
 - 回归测试：**106/106 全过**
 
-## 三、遗留与判断
+## 三、DeepSeek 真实端到端（同 28 组）
+
+- 第一轮 **23/28**，5 组被拒
+- 诊断结果：4 组是校验器缺口、1 组是模型数错镜头数
+  1. 办公椅（配办公桌成套）被当臆造 → 椅子 pattern 加 `办公椅/座椅/转椅` + `办公|办公室|会议室` parents
+  2. 工作台场景模型写 `wooden table/workbench` → 桌子 pattern 加 `工作台|案台|操作台|workbench`，parents 加工作台系
+  3. 室内游泳馆的侧窗/顶光 → 窗 parents 加 `游泳馆|泳池|体育馆|球馆|室内馆|机场|商场`
+  4. **条件式判定改为字段内**：模型写"可加背包（待确认，现场无则无）"是提示词允许的条件式，但原全局判定把整镜任何一处的"待确认"都当条件词（几乎每镜都有），太松；改成「条件词+替代词须在该道具同一字段内，或 execution_note 自身是完整条件式」才算豁免。既放行合规写法，也拦住"服装待确认 + 别处改拍"这种顺带豁免
+  5. 洗衣店镜头 9 服装字段写"无"、教室组镜头数错：模型问题，重生成即过（拒绝是对的）
+- 修复后重试：**28/28 双通过**，259 镜零缺陷（焦段/距离/枚举/空字段/重名全 0），回归 **107/107**
+- 焦段实际分布比子 Agent 更丰富：`16/24/28/35/50/70/85/100/135/150/180/200mm`；最慢一组 27.8s（旋转楼梯 9 镜）
+- 真实模型详单：`REVIEW-FORMAT-2026-10-27-DEEPSEEK.md`（28 组 259 镜逐镜全字段）
+
+## 四、遗留与判断
 
 - 3 组（猫/商务/老人）首轮被拒是子 Agent 自己数错镜头数（9/10/9 写反），非管线问题，重生成即过；生产侧本来就该拒（避免复制镜头补数）。
-- 少数「场景固有物」豁免属判断题：教室的窗、楼梯的天窗、练功房的侧窗这类建筑结构不算臆造道具；但**中性场景**（如空街）无条件假设窗户仍会被拦，回归测试固化了两侧边界。
-- DeepSeek 真实端到端这轮未跑（密钥中转已按安全规则清空）。要复跑：重启 `tools/eval-key-server.mjs` → 网页贴密钥 → `node real-model-eval.mjs --backend deepseek --briefs briefs-format-2026-10-27.json --out results/format-2026-10-27-deepseek`。注意新一轮格式硬约束下，模型若漏写机位距离会被 502 退回重试，这是预期行为。
+- 少数「场景固有物」豁免属判断题：教室的窗、楼梯的天窗、练功房的侧窗、游泳馆的采光窗这类建筑结构不算臆造道具；但**中性场景**（如空街）无条件假设窗户仍会被拦，回归测试固化了两侧边界。
+- 条件式豁免现在按字段判定：模型说"可加背包（待确认，现场无则无）"放行；但"道具无条件是背包 + 别处写服装待确认 + 别处写改拍"仍拦。
+- 密钥（掩码 ****6a8b）按用户要求留在本机中转（127.0.0.1:8129，7 天 TTL），随时可复跑：`node real-model-eval.mjs --backend deepseek --briefs briefs-format-2026-10-27.json --out results/format-2026-10-27-deepseek`。模型若漏写机位距离会被 502 退回重试，这是预期行为。
 
 ## 四、产物清单
 
 | 文件 | 说明 |
 |---|---|
 | `experiments/plan-quality-lab/briefs-format-2026-10-27.json` | 28 组新用例 |
-| `experiments/plan-quality-lab/results/format-subagent-2026-10-27/` | 28 组逐镜结果 + `summary.json` |
+| `experiments/plan-quality-lab/results/format-subagent-2026-10-27/` | 子 Agent 通道 28 组逐镜结果 + `summary.json` |
+| `experiments/plan-quality-lab/results/format-2026-10-27-deepseek/` | DeepSeek 真实端到端 28 组逐镜结果 + `summary.json` |
+| `experiments/plan-quality-lab/REVIEW-FORMAT-2026-10-27-DEEPSEEK.md` | **真实模型人工验收详单**（28 组 259 镜逐镜全字段） |
 | `experiments/plan-quality-lab/REVIEW-FORMAT-2026-10-27.md` | **人工验收详单**：28 组 259 镜，逐镜列全 15 字段（景别/焦段/机位距离/人物/服装/光线/道具/裁切/必见/废片判据/替代/英文提示词） |
 | `experiments/plan-quality-lab/export-review-doc.mjs` | 详单导出脚本（可复用于任何一次运行） |
 | `api/ai-plan.mjs` | 格式完整性硬约束 + 3 类场景豁免 + 提示词合同同步 |
