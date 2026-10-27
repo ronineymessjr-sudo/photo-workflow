@@ -1,0 +1,126 @@
+{
+  "series": "S03",
+  "briefId": "style-minimal-white",
+  "refFile": "style-minimal-white__REF-A.png",
+  "identityLock": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames",
+  "styleLock": "[STYLE LOCK], high-key near-monochrome, clean whites, low contrast, no colour cast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look",
+  "identity": {
+    "gender": "adult",
+    "hair": "hairstyle fixed at the reference frame",
+    "wardrobe": "建议纯色无图案的简约款式；妆发自然，不佩戴显眼饰品。",
+    "scene": "纯白墙面与单把椅子（椅子现场已有）",
+    "light": "仅使用现场自然光，关闭所有人工光源，利用白墙漫反射补光，确保光线柔和均匀。"
+  },
+  "style": {
+    "grade": "high-key near-monochrome, clean whites, low contrast, no colour cast",
+    "aspect": "2:3 vertical",
+    "size": "1024x1536",
+    "bans": [
+      "no text or labels inside the image",
+      "no watermark",
+      "no extra people",
+      "no props beyond the listed ones"
+    ]
+  },
+  "frames": [
+    {
+      "id": "S03-01",
+      "file": "style-minimal-white__01.png",
+      "size": "FS",
+      "angle": "eye_level",
+      "lens": "50mm",
+      "aperture": 4,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], high-key near-monochrome, clean whites, low contrast, no colour cast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/9] 2:3 vertical, Minimalist portrait, an adult sitting on a single chair against a pure white wall, side profile, body upright, hands on thighs, calm and restrained expression, natural light only, large negative space, full shot, eye level, white wall background, no artificial lighting, 50mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "06c4a4a80a55"
+    },
+    {
+      "id": "S03-02",
+      "file": "style-minimal-white__02.png",
+      "size": "MS",
+      "angle": "eye_level",
+      "lens": "50mm",
+      "aperture": 2.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], high-key near-monochrome, clean whites, low contrast, no colour cast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/9] 2:3 vertical, Minimalist portrait, an adult sitting on a chair, leaning forward with elbows on knees, hands clasped, looking down, restrained expression, pure white wall background, natural light, medium shot, eye level, large negative space, no artificial lighting, 50mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "06c4a4a80a55"
+    },
+    {
+      "id": "S03-03",
+      "file": "style-minimal-white__03.png",
+      "size": "CU",
+      "angle": "eye_level",
+      "lens": "50mm",
+      "aperture": 1.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], high-key near-monochrome, clean whites, low contrast, no colour cast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/9] 2:3 vertical, Minimalist portrait, an adult sitting on a chair, side profile, head slightly tilted up, looking into distance, calm restrained expression, pure white wall background, natural side light, close-up, eye level, large negative space, no artificial lighting, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "06c4a4a80a55"
+    },
+    {
+      "id": "S03-04",
+      "file": "style-minimal-white__04.png",
+      "size": "ECU",
+      "angle": "high_angle",
+      "lens": "50mm",
+      "aperture": 1.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], high-key near-monochrome, clean whites, low contrast, no colour cast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/9] 2:3 vertical, Minimalist portrait, close-up of hands resting on thighs, fingers slightly intertwined, relaxed, pure white wall background, natural light, extreme close-up, high angle, large negative space, no artificial lighting, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "06c4a4a80a55"
+    },
+    {
+      "id": "S03-05",
+      "file": "style-minimal-white__05.png",
+      "size": "FS",
+      "angle": "low_angle",
+      "lens": "50mm",
+      "aperture": 4,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], high-key near-monochrome, clean whites, low contrast, no colour cast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/9] 2:3 vertical, Minimalist portrait, an adult sitting on a chair, legs hanging naturally, back straight, hands on knees, looking forward, restrained expression, pure white wall background, natural light, full shot, low angle, large negative space, no artificial lighting, 50mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "06c4a4a80a55"
+    },
+    {
+      "id": "S03-06",
+      "file": "style-minimal-white__06.png",
+      "size": "MCU",
+      "angle": "high_angle",
+      "lens": "50mm",
+      "aperture": 2,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], high-key near-monochrome, clean whites, low contrast, no colour cast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/9] 2:3 vertical, Minimalist portrait, an adult sitting on a chair, leaning back slightly, head raised looking at camera, calm restrained expression, pure white wall background, natural light, medium close-up, high angle, large negative space, no artificial lighting, 50mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "06c4a4a80a55"
+    },
+    {
+      "id": "S03-07",
+      "file": "style-minimal-white__07.png",
+      "size": "FS",
+      "angle": "ground_level",
+      "lens": "50mm",
+      "aperture": 4,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], high-key near-monochrome, clean whites, low contrast, no colour cast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/9] 2:3 vertical, Minimalist portrait, an adult sitting on a chair, feet flat on floor, hands resting on sides, looking down, restrained expression, pure white wall background, natural light, full shot, ground level, large negative space, no artificial lighting, 50mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "06c4a4a80a55"
+    },
+    {
+      "id": "S03-08",
+      "file": "style-minimal-white__08.png",
+      "size": "MCU",
+      "angle": "eye_level",
+      "lens": "50mm",
+      "aperture": 2,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], high-key near-monochrome, clean whites, low contrast, no colour cast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/9] 2:3 vertical, Minimalist portrait, an adult sitting on a chair, body slightly turned, one hand resting on chair back, looking at camera, restrained expression, pure white wall background, natural light, medium close-up, eye level, large negative space, no artificial lighting, 50mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "06c4a4a80a55"
+    },
+    {
+      "id": "S03-09",
+      "file": "style-minimal-white__09.png",
+      "size": "MCU",
+      "angle": "high_angle",
+      "lens": "50mm",
+      "aperture": 2,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], high-key near-monochrome, clean whites, low contrast, no colour cast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/9] 2:3 vertical, Minimalist portrait, an adult sitting on a chair, hands on knees, fingers naturally curved, head slightly lowered looking at hands, restrained expression, pure white wall background, natural light, medium close-up, high angle, large negative space, no artificial lighting, 50mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "06c4a4a80a55"
+    }
+  ]
+}

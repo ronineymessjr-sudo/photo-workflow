@@ -1,0 +1,127 @@
+{
+  "series": "S21",
+  "briefId": "ppl-kids-sportsday",
+  "refFile": "ppl-kids-sportsday__REF-A.png",
+  "identityLock": "[IDENTITY LOCK], one single person, the same person as the reference image, child, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames",
+  "styleLock": "[STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look",
+  "identity": {
+    "gender": "child",
+    "hair": "hairstyle fixed at the reference frame",
+    "wardrobe": "运动短袖与运动短裤、运动鞋，发型清爽，无夸张配饰",
+    "scene": "小学操场（已获校方许可）",
+    "light": "自然日光，顺侧光，不加闪光；靠操场开阔天空光与地面反射补足面部"
+  },
+  "style": {
+    "grade": "black and white with strong grain and high micro-contrast",
+    "aspect": "2:3 vertical",
+    "size": "1024x1536",
+    "bans": [
+      "no text or labels inside the image",
+      "no watermark",
+      "no extra people",
+      "no props beyond the listed ones",
+      "no flash"
+    ]
+  },
+  "frames": [
+    {
+      "id": "S21-01",
+      "file": "ppl-kids-sportsday__01.png",
+      "size": "FS",
+      "angle": "eye_level",
+      "lens": "150mm",
+      "aperture": 4,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, child, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/9] 2:3 vertical, documentary photo, 8 year old child standing behind starting line on a primary school running track, waiting quietly, full body, natural daylight, shallow depth of field, blurred playground background, vivid energetic mood, no flash, telephoto compression, realistic look, 150mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "2f13853070b8"
+    },
+    {
+      "id": "S21-02",
+      "file": "ppl-kids-sportsday__02.png",
+      "size": "MCU",
+      "angle": "low_angle",
+      "lens": "200mm",
+      "aperture": 2,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, child, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/9] 2:3 vertical, documentary sports photo, focused 8 year old child in athletic wear before a race, knees slightly bent, fists loose at sides, looking forward, upper body portrait, soft natural side light, blurred school playground, no flashtelephoto, candid energetic mood, 200mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "2f13853070b8"
+    },
+    {
+      "id": "S21-03",
+      "file": "ppl-kids-sportsday__03.png",
+      "size": "MCU",
+      "angle": "eye_level",
+      "lens": "200mm",
+      "aperture": 2,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, child, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/9] 2:3 vertical, candid documentary photo, child in crouch start position on school track, one hand on ground, leaning forward, determined eyes, low eye-level angle, natural daylight, no flash, blurred running track backgroundtelephoto, energetic realistic style, 200mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "2f13853070b8"
+    },
+    {
+      "id": "S21-04",
+      "file": "ppl-kids-sportsday__04.png",
+      "size": "FS",
+      "angle": "eye_level",
+      "lens": "200mm",
+      "aperture": 4,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, child, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/9] 2:3 vertical, frozen action documentary photo, child sprinting on school track, both feet off ground, arms pumping, intense expression, fast shutter freeze, natural daylight, no flash, blurred track background, telephoto, dynamic and energetic, 200mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "2f13853070b8"
+    },
+    {
+      "id": "S21-05",
+      "file": "ppl-kids-sportsday__05.png",
+      "size": "MCU",
+      "angle": "eye_level",
+      "lens": "180mm",
+      "aperture": 2,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, child, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/9] 2:3 vertical, documentary sports action, child running left to right on track, leaning forward, arm swinging, hair flying, side profile, rim light from sun, natural fill, no flash, blurred playgroundtelephoto, vivid energetic mood, 180mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "2f13853070b8"
+    },
+    {
+      "id": "S21-06",
+      "file": "ppl-kids-sportsday__06.png",
+      "size": "FS",
+      "angle": "eye_level",
+      "lens": "200mm",
+      "aperture": 4,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, child, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/9] 2:3 vertical, documentary finish line photo, child leaning forward sprinting through finish area, arms back, large stride, full body, natural daylight, fast shutter, no flash, blurred school tracktelephoto, energetic candid, 200mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "2f13853070b8"
+    },
+    {
+      "id": "S21-07",
+      "file": "ppl-kids-sportsday__07.png",
+      "size": "CU",
+      "angle": "eye_level",
+      "lens": "200mm",
+      "aperture": 1.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, child, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/9] 2:3 vertical, candid close portrait, child catching breath after race, hands on knees, looking up smiling, sweat on forehead, natural soft daylight, no flash, blurred playground backgroundtelephoto, documentary sports mood, 200mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "2f13853070b8"
+    },
+    {
+      "id": "S21-08",
+      "file": "ppl-kids-sportsday__08.png",
+      "size": "FS",
+      "angle": "eye_level",
+      "lens": "135mm",
+      "aperture": 4,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, child, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/9] 2:3 vertical, documentary full body photo, child standing relaxed in school playground after race, one hand on hip, natural expression, athletic wear, natural daylight, no flash, blurred grandstand backgroundtelephoto, lively candid style, 135mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "2f13853070b8"
+    },
+    {
+      "id": "S21-09",
+      "file": "ppl-kids-sportsday__09.png",
+      "size": "WS",
+      "angle": "eye_level",
+      "lens": "200mm",
+      "aperture": 5.6,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, child, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/9] 2:3 vertical, documentary environmental back view, child walking along school track away from camera toward guardian, relaxed shoulders, athletic wear, natural backlight rim, no flash, blurred playground and grandstandtelephoto, quiet energetic ending mood, 200mm lens at f/5.6, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "2f13853070b8"
+    }
+  ]
+}

@@ -2,45 +2,54 @@
 
 用例 `style-gothic-ruin`　镜头 10　画幅 竖幅 2:3（1024x1536）
 
-## 系列圣经（每次生成前先读这一段，全系列不变）
+## 一、身份卡（Identity Card）— 全系列不许变
 
-- **人物**：一名成年人（全系列同一人，脸型、发型、肤色必须与参考帧完全一致）
-- **服装**：深色长外套、黑色长裤、深色靴子；发型，妆容
-- **场地**：废弃厂房外部围栏内安全区（已获许可，不进入建筑本体）
-- **光线**：自然光，阴天漫射光，无补光；避免闪光灯
-- **调色**：desaturated cool grey, crushed blacks, single warm accent
-- **画幅**：竖幅 2:3
-- **焦段序列**：24mm → 24mm → 85mm → 85mm → 24mm → 85mm → 85mm → 85mm → 24mm → 24mm
-- **禁用项**：no in-image text or labels；no watermark；no extra people in frame；no objects that are not listed in this frame；no flash
-- **原始要求**：24mm环境2镜、85mm特写2镜；破碎窗框逆光剪影2镜；所有机位写明与废墙的安全距离（不少于3米）；禁用闪光灯。
+| 项目 | 锁定值 | 说明 |
+|---|---|---|
+| 性别/年龄段 | 成年人（adult） | 由需求推断，不符请先改这里 |
+| 发型 | hairstyle fixed at the reference frame | 必须由参考帧定死 |
+| 脸型/五官 | 以参考帧为准，逐帧一致 | 换脸即废片 |
+| 肤色/妆容 | 以参考帧为准，不中途换妆 | 避免帧间色差 |
+| 服装 | 深色长外套、黑色长裤、深色靴子；发型，妆容 | 换衣即断系列 |
+| 场地 | 废弃厂房外部围栏内安全区（已获许可，不进入建筑本体） | 同一处，背景元素不跑 |
+| 光线 | 自然光，阴天漫射光，无补光；避免闪光灯 | 主光方向不变 |
+| 调色 | desaturated cool grey, crushed blacks, one warm accent light | 一套 LUT 到底 |
 
-> 英文提示词里刻意**不重复描述**人物与服装，只用 "same person / same outfit as the reference image"。这样既避免中英混写拖累模型，也比再描述一遍更严格。
+## 二、两条锁（每帧提示词开头，必须逐字相同）
 
-## 第一步：定妆参考帧（先出这 3 张，选一张作为全系列的身份锚点）
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames
+```
 
-三张都用 hero 分镜的英文提示词作内容基底，只改机位与景别：
+```text
+[STYLE LOCK], desaturated cool grey, crushed blacks, one warm accent light, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look
+```
+
+> 这两段是**字符串级复制**：改一个词就破坏一致性，`check-series-consistency.mjs` 会报错。
+
+## 三、第一步：定妆参考帧（出 3 张，挑 1 张作 REF）
 
 ### 参考帧 A · 正面胸像
 
 ```text
-Wide environmental portrait, adult model in profile facing left, standing near a fence with derelict factory wall on right, dark gothic style, overcast side light, subtle fill from white board, no flash, eye level, head-and-shoulders front view, neutral expression, looking slightly off camera, 85mm lens at f/2, photorealistic editorial photograph, natural skin texture, clean unmarked frame.
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], desaturated cool grey, crushed blacks, one warm accent light, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Wide environmental portrait, adult model in profile facing left, standing near a fence with derelict factory wall on right, dark gothic style, overcast side light, subtle fill from white board, no flash, eye level, head-and-shoulders front view, neutral expression, looking slightly off camera, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
 ```
 
 ### 参考帧 B · 45° 侧脸
 
 ```text
-Wide environmental portrait, adult model in profile facing left, standing near a fence with derelict factory wall on right, dark gothic style, overcast side light, subtle fill from white board, no flash, eye level, head-and-shoulders three-quarter 45 degree view, soft side light, 85mm lens at f/2, photorealistic editorial photograph, natural skin texture, clean unmarked frame.
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], desaturated cool grey, crushed blacks, one warm accent light, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Wide environmental portrait, adult model in profile facing left, standing near a fence with derelict factory wall on right, dark gothic style, overcast side light, subtle fill from white board, no flash, eye level, head-and-shoulders three-quarter 45 degree view, soft side light, 85mm lens at f/2, photorealistic editorial photograph, clean unmarked frame.
 ```
 
 ### 参考帧 C · 全身定妆
 
 ```text
-Wide environmental portrait, adult model in profile facing left, standing near a fence with derelict factory wall on right, dark gothic style, overcast side light, subtle fill from white board, no flash, eye level, full body standing, relaxed natural stance, whole outfit visible head to toe, 50mm lens at f/4, photorealistic editorial photograph, natural skin texture, clean unmarked frame.
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], desaturated cool grey, crushed blacks, one warm accent light, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, Wide environmental portrait, adult model in profile facing left, standing near a fence with derelict factory wall on right, dark gothic style, overcast side light, subtle fill from white board, no flash, eye level, full body standing, relaxed natural stance, whole outfit visible head to toe, 50mm lens at f/4, photorealistic editorial photograph, clean unmarked frame.
 ```
 
-> 出图后挑一张"脸最正常、衣服最还原"的作为 **REF**，后面每一帧都用它做参考图（图生图 / 编辑模式，`input_fidelity` 调高）。
+> 三张里挑**脸最稳、衣服最还原**的一张，命名为 `style-gothic-ruin__REF-A.png`，后面所有帧都从它出发。
 
-## 第二步：分镜序列（按顺序出图，全部以 REF 为参考图）
+## 四、分镜序列（全部以 REF 为参考图，逐帧只改机位与姿势）
 
 | # | 镜头 | 景别 | 角度 | 焦段 | 光圈 | 机位与距离 |
 |---|---|---|---|---|---|---|
@@ -57,208 +66,202 @@ Wide environmental portrait, adult model in profile facing left, standing near a
 
 ### S07-01　废墟全景定场
 
-- 文件名：`style-gothic-ruin__01.png`　全景 / 平视 / 24mm / f/5.6 / 横幅
+- 文件名：`style-gothic-ruin__01.png`
+- 景别/角度/焦段/光圈：全景 / 平视 / 24mm / f/5.6 / 竖幅
 - 机位：距主体约8米，机位高度1.2米，平视
 - 动作：模特背对镜头站立，双臂自然下垂，头部微仰望向厂房高处
-- 服装：深色长外套、黑色长裤、深色靴子；发型待确认，妆容待确认
-- 光线：自然光，阴天漫射光，无补光；避免闪光灯
-- 道具：无
-- 裁切／必见：下沿保留地面碎石，上沿保留厂房顶部残缺轮廓，左右保留围栏边缘　｜　模特全身、废弃厂房外立面、围栏内安全区标识
-- 废片判据：画面出现建筑内部、人物过小无法辨认、围栏外区域
+- 道具：无　｜　裁切：下沿保留地面碎石，上沿保留厂房顶部残缺轮廓，左右保留围栏边缘
+- 必见：模特全身、废弃厂房外立面、围栏内安全区标识　｜　废片判据：画面出现建筑内部、人物过小无法辨认、围栏外区域
 
 ```text
-CONSISTENCY LOCK, the same person as the reference image, identical face, hairstyle, makeup and outfit, same location and same lighting direction, same colour grade: desaturated cool grey, crushed blacks, single warm accent, 2:3 vertical framing, no in-image text or labels, frame 1 of 10, Wide shot of an adult model standing with back to camera, facing a derelict factory exterior, inside a fenced safe zone, dark gothic style, overcast diffuse light, no flash, eye level, desolate atmosphere, 24mm lens at f/5.6, subject and environment clearly readable, photorealistic editorial photograph, natural skin texture, clean unmarked frame.
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], desaturated cool grey, crushed blacks, one warm accent light, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/10] 2:3 vertical, Wide shot of an adult model standing with back to camera, facing a derelict factory exterior, inside a fenced safe zone, dark gothic style, overcast diffuse light, no flash, eye level, desolate atmosphere, 24mm lens at f/5.6, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
 ```
 
-编辑指令（用 REF 做图生图时）：`Keep the face, hairstyle and outfit exactly as the reference image; change only the camera position, framing and pose to match this frame. Do not add props beyond: none.`
+编辑指令（用 REF 图生图）：`Keep the face, hairstyle and outfit identical to style-gothic-ruin__REF-A.png. Change only camera position, framing and pose to match FRAME 1. Props allowed: none.`
 
-负面：`no in-image text or labels, no watermark, no extra people in frame, no objects that are not listed in this frame, no flash, extra fingers, deformed hands, distorted face, plastic skin, oversaturated, duplicate subject, tilted horizon`
+负面：`no text or labels inside the image, no watermark, no extra people, no props beyond the listed ones, no flash, different person, changed hairstyle, changed outfit, extra fingers, deformed hands, distorted face, plastic skin, oversaturated, duplicate subject, tilted horizon`
 
 ### S07-02　侧方环境引导
 
-- 文件名：`style-gothic-ruin__02.png`　全身 / 平视 / 24mm / f/4 / 竖幅
+- 文件名：`style-gothic-ruin__02.png`
+- 景别/角度/焦段/光圈：全身 / 平视 / 24mm / f/4 / 竖幅
 - 机位：距主体约5米，机位高度1.5米，平视
 - 动作：模特侧身站立，面朝画面左侧，右手轻触围栏（或自然下垂），目光低垂
-- 服装：深色长外套、黑色长裤、深色靴子；发型待确认，妆容待确认
-- 光线：自然光，侧逆光，面部略暗，用白色反光板在模特正面2米处补光（若无反光板则用浅色墙面反光）
-- 道具：无
-- 裁切／必见：保留模特全身及右侧厂房墙面，下沿至靴子，上沿保留部分天空　｜　模特侧身轮廓、围栏结构、厂房外墙纹理
-- 废片判据：模特面部完全漆黑、围栏外区域入镜、使用闪光灯
+- 道具：无　｜　裁切：保留模特全身及右侧厂房墙面，下沿至靴子，上沿保留部分天空
+- 必见：模特侧身轮廓、围栏结构、厂房外墙纹理　｜　废片判据：模特面部完全漆黑、围栏外区域入镜、使用闪光灯
 
 ```text
-CONSISTENCY LOCK, the same person as the reference image, identical face, hairstyle, makeup and outfit, same location and same lighting direction, same colour grade: desaturated cool grey, crushed blacks, single warm accent, 2:3 vertical framing, no in-image text or labels, frame 2 of 10, Wide environmental portrait, adult model in profile facing left, standing near a fence with derelict factory wall on right, dark gothic style, overcast side light, subtle fill from white board, no flash, eye level, 24mm lens at f/4, subject and environment clearly readable, photorealistic editorial photograph, natural skin texture, clean unmarked frame.
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], desaturated cool grey, crushed blacks, one warm accent light, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/10] 2:3 vertical, Wide environmental portrait, adult model in profile facing left, standing near a fence with derelict factory wall on right, dark gothic style, overcast side light, subtle fill from white board, no flash, eye level, 24mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
 ```
 
-编辑指令（用 REF 做图生图时）：`Keep the face, hairstyle and outfit exactly as the reference image; change only the camera position, framing and pose to match this frame. Do not add props beyond: none.`
+编辑指令（用 REF 图生图）：`Keep the face, hairstyle and outfit identical to style-gothic-ruin__REF-A.png. Change only camera position, framing and pose to match FRAME 2. Props allowed: none.`
 
-负面：`no in-image text or labels, no watermark, no extra people in frame, no objects that are not listed in this frame, no flash, extra fingers, deformed hands, distorted face, plastic skin, oversaturated, duplicate subject, tilted horizon`
+负面：`no text or labels inside the image, no watermark, no extra people, no props beyond the listed ones, no flash, different person, changed hairstyle, changed outfit, extra fingers, deformed hands, distorted face, plastic skin, oversaturated, duplicate subject, tilted horizon`
 
 ### S07-03　破碎窗框逆光剪影
 
-- 文件名：`style-gothic-ruin__03.png`　中景 / 平视 / 85mm / f/2.8 / 竖幅
+- 文件名：`style-gothic-ruin__03.png`
+- 景别/角度/焦段/光圈：中景 / 平视 / 85mm / f/2.8 / 竖幅
 - 机位：距主体约6米，机位高度1.6米，平视
 - 动作：模特站在破碎窗框前，侧身45度，头部微低，双臂自然下垂
-- 服装：深色长外套、黑色长裤；发型待确认，妆容待确认
-- 光线：自然逆光，窗框后方有天空光，人物正面用反光板微弱补光（保留剪影效果）
-- 道具：无
-- 裁切／必见：上沿保留完整窗框，下沿至人物腰部，左右保留窗框边缘　｜　人物剪影轮廓、破碎窗框结构、逆光光感
-- 废片判据：人物正面细节过亮失去剪影感、窗框不完整、使用闪光灯
+- 道具：无　｜　裁切：上沿保留完整窗框，下沿至人物腰部，左右保留窗框边缘
+- 必见：人物剪影轮廓、破碎窗框结构、逆光光感　｜　废片判据：人物正面细节过亮失去剪影感、窗框不完整、使用闪光灯
 
 ```text
-CONSISTENCY LOCK, the same person as the reference image, identical face, hairstyle, makeup and outfit, same location and same lighting direction, same colour grade: desaturated cool grey, crushed blacks, single warm accent, 2:3 vertical framing, no in-image text or labels, frame 3 of 10, Medium shot of an adult model standing in front of a broken window frame, backlit silhouette, side profile, dark gothic atmosphere, natural backlight, subtle fill, no flash, eye level, 85mm lens at f/2.8, subject and environment clearly readable, photorealistic editorial photograph, natural skin texture, clean unmarked frame.
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], desaturated cool grey, crushed blacks, one warm accent light, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/10] 2:3 vertical, Medium shot of an adult model standing in front of a broken window frame, backlit silhouette, side profile, dark gothic atmosphere, natural backlight, subtle fill, no flash, eye level, 85mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
 ```
 
-编辑指令（用 REF 做图生图时）：`Keep the face, hairstyle and outfit exactly as the reference image; change only the camera position, framing and pose to match this frame. Do not add props beyond: none.`
+编辑指令（用 REF 图生图）：`Keep the face, hairstyle and outfit identical to style-gothic-ruin__REF-A.png. Change only camera position, framing and pose to match FRAME 3. Props allowed: none.`
 
-负面：`no in-image text or labels, no watermark, no extra people in frame, no objects that are not listed in this frame, no flash, extra fingers, deformed hands, distorted face, plastic skin, oversaturated, duplicate subject, tilted horizon`
+负面：`no text or labels inside the image, no watermark, no extra people, no props beyond the listed ones, no flash, different person, changed hairstyle, changed outfit, extra fingers, deformed hands, distorted face, plastic skin, oversaturated, duplicate subject, tilted horizon`
 
 ### S07-04　窗框细节特写
 
-- 文件名：`style-gothic-ruin__04.png`　特写 / 平视 / 85mm / f/1.8 / 竖幅
+- 文件名：`style-gothic-ruin__04.png`
+- 景别/角度/焦段/光圈：特写 / 平视 / 85mm / f/1.8 / 竖幅
 - 机位：距主体约1.5米，机位高度1.6米，平视
 - 动作：模特面部贴近破碎窗框边缘，闭眼，表情肃穆
-- 服装：深色外套领口微立；发型待确认，妆容待确认
-- 光线：自然光，窗框透过的逆光在面部形成轮廓光，正面用反光板补光至面部可见细节
-- 道具：无
-- 裁切／必见：头部和肩部特写，保留部分窗框纹理　｜　面部表情、皮肤质感、窗框边缘细节
-- 废片判据：面部过曝或全黑、窗框纹理模糊、使用闪光灯
+- 道具：无　｜　裁切：头部和肩部特写，保留部分窗框纹理
+- 必见：面部表情、皮肤质感、窗框边缘细节　｜　废片判据：面部过曝或全黑、窗框纹理模糊、使用闪光灯
 
 ```text
-CONSISTENCY LOCK, the same person as the reference image, identical face, hairstyle, makeup and outfit, same location and same lighting direction, same colour grade: desaturated cool grey, crushed blacks, single warm accent, 2:3 vertical framing, no in-image text or labels, frame 4 of 10, Close-up of an adult model's face near a broken window frame, closed eyes, solemn expression, dark gothic style, backlit rim light, subtle fill, no flash, eye level, 85mm lens at f/1.8, shallow depth of field, background melting into bokeh, photorealistic editorial photograph, natural skin texture, clean unmarked frame.
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], desaturated cool grey, crushed blacks, one warm accent light, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/10] 2:3 vertical, Close-up of an adult model's face near a broken window frame, closed eyes, solemn expression, dark gothic style, backlit rim light, subtle fill, no flash, eye level, 85mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
 ```
 
-编辑指令（用 REF 做图生图时）：`Keep the face, hairstyle and outfit exactly as the reference image; change only the camera position, framing and pose to match this frame. Do not add props beyond: none.`
+编辑指令（用 REF 图生图）：`Keep the face, hairstyle and outfit identical to style-gothic-ruin__REF-A.png. Change only camera position, framing and pose to match FRAME 4. Props allowed: none.`
 
-负面：`no in-image text or labels, no watermark, no extra people in frame, no objects that are not listed in this frame, no flash, extra fingers, deformed hands, distorted face, plastic skin, oversaturated, duplicate subject, tilted horizon`
+负面：`no text or labels inside the image, no watermark, no extra people, no props beyond the listed ones, no flash, different person, changed hairstyle, changed outfit, extra fingers, deformed hands, distorted face, plastic skin, oversaturated, duplicate subject, tilted horizon`
 
 ### S07-05　墙面纹理低角度
 
-- 文件名：`style-gothic-ruin__05.png`　中景 / 地面低角度 / 24mm / f/2.8 / 竖幅
+- 文件名：`style-gothic-ruin__05.png`
+- 景别/角度/焦段/光圈：中景 / 地面低角度 / 24mm / f/2.8 / 竖幅
 - 机位：距主体约2米，机位高度0.8米，低角度仰拍
 - 动作：模特背靠废墙站立，距离墙面约1米，双臂交叉抱胸，目光望向前方
-- 服装：深色长外套、黑色长裤；发型待确认，妆容待确认
-- 光线：自然光，侧光强调墙面纹理，无补光
-- 道具：无
-- 裁切／必见：下沿至膝盖，上沿保留墙面高处破碎结构，左右保留墙体　｜　人物上半身、墙面粗糙纹理、低角度透视感
-- 废片判据：人物与墙面距离少于3米（安全距离要求）、墙面过曝、使用闪光灯
+- 道具：无　｜　裁切：下沿至膝盖，上沿保留墙面高处破碎结构，左右保留墙体
+- 必见：人物上半身、墙面粗糙纹理、低角度透视感　｜　废片判据：人物与墙面距离少于3米（安全距离要求）、墙面过曝、使用闪光灯
 
 ```text
-CONSISTENCY LOCK, the same person as the reference image, identical face, hairstyle, makeup and outfit, same location and same lighting direction, same colour grade: desaturated cool grey, crushed blacks, single warm accent, 2:3 vertical framing, no in-image text or labels, frame 5 of 10, Low angle shot of an adult model leaning against a derelict wall, arms crossed, looking forward, dark gothic style, side light emphasizing wall texture, no flash, ground level, 24mm lens at f/2.8, subject and environment clearly readable, photorealistic editorial photograph, natural skin texture, clean unmarked frame.
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], desaturated cool grey, crushed blacks, one warm accent light, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/10] 2:3 vertical, Low angle shot of an adult model leaning against a derelict wall, arms crossed, looking forward, dark gothic style, side light emphasizing wall texture, no flash, ground level, 24mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
 ```
 
-编辑指令（用 REF 做图生图时）：`Keep the face, hairstyle and outfit exactly as the reference image; change only the camera position, framing and pose to match this frame. Do not add props beyond: none.`
+编辑指令（用 REF 图生图）：`Keep the face, hairstyle and outfit identical to style-gothic-ruin__REF-A.png. Change only camera position, framing and pose to match FRAME 5. Props allowed: none.`
 
-负面：`no in-image text or labels, no watermark, no extra people in frame, no objects that are not listed in this frame, no flash, extra fingers, deformed hands, distorted face, plastic skin, oversaturated, duplicate subject, tilted horizon`
+负面：`no text or labels inside the image, no watermark, no extra people, no props beyond the listed ones, no flash, different person, changed hairstyle, changed outfit, extra fingers, deformed hands, distorted face, plastic skin, oversaturated, duplicate subject, tilted horizon`
 
 ### S07-06　手部细节特写
 
-- 文件名：`style-gothic-ruin__06.png`　大特写 / 高机位俯拍 / 85mm / f/1.8 / 竖幅
+- 文件名：`style-gothic-ruin__06.png`
+- 景别/角度/焦段/光圈：大特写 / 高机位俯拍 / 85mm / f/1.8 / 竖幅
 - 机位：距主体约1米，机位高度1米，俯拍手部
 - 动作：模特一只手轻触废墙表面，手指微微张开
-- 服装：深色外套袖口露出，手部无饰品（待确认）
-- 光线：自然光，侧光凸显手部与墙面质感，正面用反光板轻微补光
-- 道具：无
-- 裁切／必见：手部及部分前臂特写，背景为墙面纹理　｜　手部姿势、皮肤纹理、墙面质感
-- 废片判据：手部模糊、手指残缺、使用闪光灯
+- 道具：无　｜　裁切：手部及部分前臂特写，背景为墙面纹理
+- 必见：手部姿势、皮肤纹理、墙面质感　｜　废片判据：手部模糊、手指残缺、使用闪光灯
 
 ```text
-CONSISTENCY LOCK, the same person as the reference image, identical face, hairstyle, makeup and outfit, same location and same lighting direction, same colour grade: desaturated cool grey, crushed blacks, single warm accent, 2:3 vertical framing, no in-image text or labels, frame 6 of 10, Extreme close-up of a hand touching a rough derelict wall, fingers slightly spread, dark gothic style, side light, subtle fill, no flash, high angle, 85mm lens at f/1.8, shallow depth of field, background melting into bokeh, photorealistic editorial photograph, natural skin texture, clean unmarked frame.
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], desaturated cool grey, crushed blacks, one warm accent light, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/10] 2:3 vertical, Extreme close-up of a hand touching a rough derelict wall, fingers slightly spread, dark gothic style, side light, subtle fill, no flash, high angle, 85mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
 ```
 
-编辑指令（用 REF 做图生图时）：`Keep the face, hairstyle and outfit exactly as the reference image; change only the camera position, framing and pose to match this frame. Do not add props beyond: none.`
+编辑指令（用 REF 图生图）：`Keep the face, hairstyle and outfit identical to style-gothic-ruin__REF-A.png. Change only camera position, framing and pose to match FRAME 6. Props allowed: none.`
 
-负面：`no in-image text or labels, no watermark, no extra people in frame, no objects that are not listed in this frame, no flash, extra fingers, deformed hands, distorted face, plastic skin, oversaturated, duplicate subject, tilted horizon`
+负面：`no text or labels inside the image, no watermark, no extra people, no props beyond the listed ones, no flash, different person, changed hairstyle, changed outfit, extra fingers, deformed hands, distorted face, plastic skin, oversaturated, duplicate subject, tilted horizon`
 
 ### S07-07　全身剪影逆光
 
-- 文件名：`style-gothic-ruin__07.png`　全身 / 平视 / 85mm / f/4 / 竖幅
+- 文件名：`style-gothic-ruin__07.png`
+- 景别/角度/焦段/光圈：全身 / 平视 / 85mm / f/4 / 竖幅
 - 机位：距主体约6米，机位高度1.5米，平视
 - 动作：模特站在厂房前空地，背对强光方向，双腿微开，双臂自然下垂
-- 服装：深色长外套、黑色长裤、深色靴子，形成整体剪影；发型待确认，妆容待确认
-- 光线：自然逆光，太阳在模特后方（若阴天则利用天空光），人物正面不补光或极弱补光
-- 道具：无
-- 裁切／必见：保留全身及部分厂房轮廓，下沿至靴子　｜　人物全身剪影、厂房背景、逆光氛围
-- 废片判据：人物细节过亮、背景过曝、使用闪光灯
+- 道具：无　｜　裁切：保留全身及部分厂房轮廓，下沿至靴子
+- 必见：人物全身剪影、厂房背景、逆光氛围　｜　废片判据：人物细节过亮、背景过曝、使用闪光灯
 
 ```text
-CONSISTENCY LOCK, the same person as the reference image, identical face, hairstyle, makeup and outfit, same location and same lighting direction, same colour grade: desaturated cool grey, crushed blacks, single warm accent, 2:3 vertical framing, no in-image text or labels, frame 7 of 10, Full body silhouette of an adult model standing in front of a derelict factory, backlit, dark gothic style, natural backlight, no flash, eye level, 85mm lens at f/4, subject and environment clearly readable, photorealistic editorial photograph, natural skin texture, clean unmarked frame.
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], desaturated cool grey, crushed blacks, one warm accent light, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/10] 2:3 vertical, Full body silhouette of an adult model standing in front of a derelict factory, backlit, dark gothic style, natural backlight, no flash, eye level, 85mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
 ```
 
-编辑指令（用 REF 做图生图时）：`Keep the face, hairstyle and outfit exactly as the reference image; change only the camera position, framing and pose to match this frame. Do not add props beyond: none.`
+编辑指令（用 REF 图生图）：`Keep the face, hairstyle and outfit identical to style-gothic-ruin__REF-A.png. Change only camera position, framing and pose to match FRAME 7. Props allowed: none.`
 
-负面：`no in-image text or labels, no watermark, no extra people in frame, no objects that are not listed in this frame, no flash, extra fingers, deformed hands, distorted face, plastic skin, oversaturated, duplicate subject, tilted horizon`
+负面：`no text or labels inside the image, no watermark, no extra people, no props beyond the listed ones, no flash, different person, changed hairstyle, changed outfit, extra fingers, deformed hands, distorted face, plastic skin, oversaturated, duplicate subject, tilted horizon`
 
 ### S07-08　面部情绪特写
 
-- 文件名：`style-gothic-ruin__08.png`　特写 / 平视 / 85mm / f/1.8 / 竖幅
+- 文件名：`style-gothic-ruin__08.png`
+- 景别/角度/焦段/光圈：特写 / 平视 / 85mm / f/1.8 / 竖幅
 - 机位：距主体约1米，机位高度1.6米，平视
 - 动作：模特正面站立，头部微低，眼睛看向镜头，嘴唇紧闭
-- 服装：深色外套领口细节；发型待确认，妆容待确认（建议苍白底妆）
-- 光线：自然光，侧光照明，正面用反光板补光，形成柔和对比
-- 道具：无
-- 裁切／必见：头部和肩部特写，裁切至下巴以下　｜　面部表情、皮肤质感、眼神
-- 废片判据：面部过曝或过暗、表情不肃穆、使用闪光灯
+- 道具：无　｜　裁切：头部和肩部特写，裁切至下巴以下
+- 必见：面部表情、皮肤质感、眼神　｜　废片判据：面部过曝或过暗、表情不肃穆、使用闪光灯
 
 ```text
-CONSISTENCY LOCK, the same person as the reference image, identical face, hairstyle, makeup and outfit, same location and same lighting direction, same colour grade: desaturated cool grey, crushed blacks, single warm accent, 2:3 vertical framing, no in-image text or labels, frame 8 of 10, Close-up face portrait of an adult model, solemn expression, looking at camera, dark gothic style, side light, subtle fill, no flash, eye level, 85mm lens at f/1.8, shallow depth of field, background melting into bokeh, photorealistic editorial photograph, natural skin texture, clean unmarked frame.
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], desaturated cool grey, crushed blacks, one warm accent light, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/10] 2:3 vertical, Close-up face portrait of an adult model, solemn expression, looking at camera, dark gothic style, side light, subtle fill, no flash, eye level, 85mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.
 ```
 
-编辑指令（用 REF 做图生图时）：`Keep the face, hairstyle and outfit exactly as the reference image; change only the camera position, framing and pose to match this frame. Do not add props beyond: none.`
+编辑指令（用 REF 图生图）：`Keep the face, hairstyle and outfit identical to style-gothic-ruin__REF-A.png. Change only camera position, framing and pose to match FRAME 8. Props allowed: none.`
 
-负面：`no in-image text or labels, no watermark, no extra people in frame, no objects that are not listed in this frame, no flash, extra fingers, deformed hands, distorted face, plastic skin, oversaturated, duplicate subject, tilted horizon`
+负面：`no text or labels inside the image, no watermark, no extra people, no props beyond the listed ones, no flash, different person, changed hairstyle, changed outfit, extra fingers, deformed hands, distorted face, plastic skin, oversaturated, duplicate subject, tilted horizon`
 
 ### S07-09　环境人像高角度
 
-- 文件名：`style-gothic-ruin__09.png`　中景 / 高机位俯拍 / 24mm / f/2.8 / 竖幅
+- 文件名：`style-gothic-ruin__09.png`
+- 景别/角度/焦段/光圈：中景 / 高机位俯拍 / 24mm / f/2.8 / 竖幅
 - 机位：距主体约4米，机位高度2.5米，高角度俯拍
 - 动作：模特蹲在安全区地面，低头，双手抱膝
-- 服装：深色长外套、黑色长裤；发型待确认，妆容待确认
-- 光线：自然漫射光，无补光
-- 道具：无
-- 裁切／必见：保留模特全身及周围地面，上沿至围栏顶部　｜　模特蹲姿、地面纹理、围栏结构
-- 废片判据：模特不完整、地面杂乱无章、使用闪光灯
+- 道具：无　｜　裁切：保留模特全身及周围地面，上沿至围栏顶部
+- 必见：模特蹲姿、地面纹理、围栏结构　｜　废片判据：模特不完整、地面杂乱无章、使用闪光灯
 
 ```text
-CONSISTENCY LOCK, the same person as the reference image, identical face, hairstyle, makeup and outfit, same location and same lighting direction, same colour grade: desaturated cool grey, crushed blacks, single warm accent, 2:3 vertical framing, no in-image text or labels, frame 9 of 10, High angle shot of an adult model crouching on the ground in a fenced safe zone, holding knees, dark gothic style, overcast light, no flash, high angle, 24mm lens at f/2.8, subject and environment clearly readable, photorealistic editorial photograph, natural skin texture, clean unmarked frame.
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], desaturated cool grey, crushed blacks, one warm accent light, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/10] 2:3 vertical, High angle shot of an adult model crouching on the ground in a fenced safe zone, holding knees, dark gothic style, overcast light, no flash, high angle, 24mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
 ```
 
-编辑指令（用 REF 做图生图时）：`Keep the face, hairstyle and outfit exactly as the reference image; change only the camera position, framing and pose to match this frame. Do not add props beyond: none.`
+编辑指令（用 REF 图生图）：`Keep the face, hairstyle and outfit identical to style-gothic-ruin__REF-A.png. Change only camera position, framing and pose to match FRAME 9. Props allowed: none.`
 
-负面：`no in-image text or labels, no watermark, no extra people in frame, no objects that are not listed in this frame, no flash, extra fingers, deformed hands, distorted face, plastic skin, oversaturated, duplicate subject, tilted horizon`
+负面：`no text or labels inside the image, no watermark, no extra people, no props beyond the listed ones, no flash, different person, changed hairstyle, changed outfit, extra fingers, deformed hands, distorted face, plastic skin, oversaturated, duplicate subject, tilted horizon`
 
 ### S07-10　离场背影尾声
 
-- 文件名：`style-gothic-ruin__10.png`　全景 / 平视 / 24mm / f/5.6 / 横幅
+- 文件名：`style-gothic-ruin__10.png`
+- 景别/角度/焦段/光圈：全景 / 平视 / 24mm / f/5.6 / 竖幅
 - 机位：距主体约5米，机位高度1.5米，平视
 - 动作：模特背对镜头向围栏出口方向行走，步伐缓慢，头部微低
-- 服装：深色长外套、黑色长裤、深色靴子；发型待确认，妆容待确认
-- 光线：自然光，逆光或侧逆光，无补光
-- 道具：无
-- 裁切／必见：保留模特全身、围栏出口、部分厂房背景　｜　模特背影、围栏出口、环境氛围
-- 废片判据：模特走出围栏外、背景过曝、使用闪光灯
+- 道具：无　｜　裁切：保留模特全身、围栏出口、部分厂房背景
+- 必见：模特背影、围栏出口、环境氛围　｜　废片判据：模特走出围栏外、背景过曝、使用闪光灯
 
 ```text
-CONSISTENCY LOCK, the same person as the reference image, identical face, hairstyle, makeup and outfit, same location and same lighting direction, same colour grade: desaturated cool grey, crushed blacks, single warm accent, 2:3 vertical framing, no in-image text or labels, frame 10 of 10, Wide shot of an adult model walking away towards a fence exit, back view, dark gothic style, natural backlight, no flash, eye level, 24mm lens at f/5.6, subject and environment clearly readable, photorealistic editorial photograph, natural skin texture, clean unmarked frame.
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], desaturated cool grey, crushed blacks, one warm accent light, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 10/10] 2:3 vertical, Wide shot of an adult model walking away towards a fence exit, back view, dark gothic style, natural backlight, no flash, eye level, 24mm lens at f/5.6, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.
 ```
 
-编辑指令（用 REF 做图生图时）：`Keep the face, hairstyle and outfit exactly as the reference image; change only the camera position, framing and pose to match this frame. Do not add props beyond: none.`
+编辑指令（用 REF 图生图）：`Keep the face, hairstyle and outfit identical to style-gothic-ruin__REF-A.png. Change only camera position, framing and pose to match FRAME 10. Props allowed: none.`
 
-负面：`no in-image text or labels, no watermark, no extra people in frame, no objects that are not listed in this frame, no flash, extra fingers, deformed hands, distorted face, plastic skin, oversaturated, duplicate subject, tilted horizon`
+负面：`no text or labels inside the image, no watermark, no extra people, no props beyond the listed ones, no flash, different person, changed hairstyle, changed outfit, extra fingers, deformed hands, distorted face, plastic skin, oversaturated, duplicate subject, tilted horizon`
 
-## 第三步：系列接触印样（拼贴）
+## 五、参考图模式（不同模型怎么保证不换脸）
 
-- 版式：4×3 网格，格间留 8px 白边，外边距一致
-- **图内绝对不要生成文字**；序号与标题在排版阶段用固定字体叠加（避免模型乱写参数，上一轮 12 格里 5 格参数被写错）
-- 统一标签格式：`S07-01 ｜ 镜头名 ｜ 24mm f/5.6`
-- 全系列统一色温与对比，拼在一起要像"同一次拍摄"，不是"精选集"
+| 模型/工具 | 保证同一人的手段 | 备注 |
+|---|---|---|
+| GPT Image 2 / 2.5 | 用 `style-gothic-ruin__REF-A.png` 走编辑模式，`input_fidelity` 调高；提示词原样带上 [IDENTITY LOCK] | 同一对话内连续编辑，别新开 |
+| Flux Kontext / nano-banana | 参考图 + "same person as input image" | 多图参考时 REF 放第一位 |
+| SDXL + IP-Adapter FaceID / InstantID / PuLID | 参考图作 face embedding，权重 0.7–0.9 | 没有这些插件，纯文生图必漂 |
+| SD1.5 + Roop/Reactor 后处理 | 先出图再统一换脸，最后统一调色 | 保底方案，适合批量 |
+| 任意模型 + 固定种子 | 同种子同提示词只改机位句 | 仅对同构图有效，换景别仍会漂 |
 
-## 一致性自检（每系列出完逐项过）
+## 六、一致性自检（出完逐项过，不过就重出该帧）
 
-- [ ] 脸型/发型一致（同一人）
-- [ ] 服装一致（颜色、材质、配饰）
-- [ ] 场地一致（同一处，背景元素不跑）
-- [ ] 光位一致（主光方向不跳）
-- [ ] 色温一致（冷暖不跳）
-- [ ] 画幅一致（竖就全竖）
-- [ ] 画面无多余人/物，无文字水印
+- [ ] 脸型/五官一致（不是"长得像"，是同一个人）
+- [ ] 发型/发色一致
+- [ ] 服装一致（版型、颜色、配饰都在）
+- [ ] 场地一致（背景建筑、家具、标识不跑）
+- [ ] 主光方向一致（阴影落点不跳边）
+- [ ] 色温/对比一致（拼在一起不像两张片子）
+- [ ] 画幅一致（竖就全竖，不混排）
+- [ ] 无文字/水印/多余人
+
+**"同一个人"的量化口径**（不靠肉眼）：用 InsightFace/ArcFace 提取每帧人脸 embedding，与 REF 帧比对余弦相似度——
+
+| 相似度 | 判定 | 处理 |
+|---|---|---|
+| ≥ 0.55 | 同一人 | 收 |
+| 0.40–0.55 | 疑似换脸 | 优先重出；必须用时只保留侧脸/背影帧 |
+| < 0.40 | 换人了 | 直接废片，重出
+
+批量脚本可以一次跑完整个系列，把低于阈值的帧号直接列出来。
 

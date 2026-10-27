@@ -1,0 +1,128 @@
+{
+  "series": "S19",
+  "briefId": "scene-overpass-night",
+  "refFile": "scene-overpass-night__REF-A.png",
+  "identityLock": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames",
+  "styleLock": "[STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look",
+  "identity": {
+    "gender": "adult",
+    "hair": "long hair worn loose",
+    "wardrobe": "深色外套，长发自然披散，妆面",
+    "scene": "过街天桥（人行的）",
+    "light": "现场路灯侧光，无闪光灯，利用车流灯光作轮廓光"
+  },
+  "style": {
+    "grade": "natural colour with a gentle film curve and consistent white balance",
+    "aspect": "2:3 vertical",
+    "size": "1024x1536",
+    "bans": [
+      "no text or labels inside the image",
+      "no watermark",
+      "no extra people",
+      "no props beyond the listed ones",
+      "no flash",
+      "no tripod"
+    ]
+  },
+  "frames": [
+    {
+      "id": "S19-01",
+      "file": "scene-overpass-night__01.png",
+      "size": "FS",
+      "angle": "eye_level",
+      "lens": "35mm",
+      "aperture": 4,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/9] 2:3 vertical, Full body shot of an adult standing on a pedestrian overpass at night, back to camera, hands on railing, looking at traffic below, long exposure light trails of cars, city lights, no flash, realistic photography, 35mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "2836f662a126"
+    },
+    {
+      "id": "S19-02",
+      "file": "scene-overpass-night__02.png",
+      "size": "MS",
+      "angle": "eye_level",
+      "lens": "35mm",
+      "aperture": 2.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/9] 2:3 vertical, Medium shot of an adult standing sideways on a pedestrian overpass at night, hands on railing, looking at traffic below, long exposure light trails, side lighting from street lamps, no flash, realistic photography, 35mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "2836f662a126"
+    },
+    {
+      "id": "S19-03",
+      "file": "scene-overpass-night__03.png",
+      "size": "CU",
+      "angle": "eye_level",
+      "lens": "35mm",
+      "aperture": 1.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/9] 2:3 vertical, Close-up shot of an adult standing on a pedestrian overpass at night, hands on railing, looking towards camera, city lights background, no flash, realistic photography, 35mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "2836f662a126"
+    },
+    {
+      "id": "S19-04",
+      "file": "scene-overpass-night__04.png",
+      "size": "ECU",
+      "angle": "high_angle",
+      "lens": "35mm",
+      "aperture": 1.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/9] 2:3 vertical, Extreme close-up of a hand touching a metal railing on a pedestrian overpass at night, with blurred car light trails in background, no flash, realistic photography, 35mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "2836f662a126"
+    },
+    {
+      "id": "S19-05",
+      "file": "scene-overpass-night__05.png",
+      "size": "FS",
+      "angle": "low_angle",
+      "lens": "35mm",
+      "aperture": 4,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/9] 2:3 vertical, Low angle shot of an adult standing on a pedestrian overpass at night, leaning slightly forward, looking down at traffic, long exposure light trails, no flash, realistic photography, 35mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "2836f662a126"
+    },
+    {
+      "id": "S19-06",
+      "file": "scene-overpass-night__06.png",
+      "size": "MCU",
+      "angle": "eye_level",
+      "lens": "35mm",
+      "aperture": 2,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/9] 2:3 vertical, Medium close-up of an adult leaning back against railing on a pedestrian overpass at night, looking into distance, car light trails background, no flash, realistic photography, 35mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "2836f662a126"
+    },
+    {
+      "id": "S19-07",
+      "file": "scene-overpass-night__07.png",
+      "size": "FS",
+      "angle": "eye_level",
+      "lens": "35mm",
+      "aperture": 4,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/9] 2:3 vertical, Full body shot of an adult walking on a pedestrian overpass at night, arms swinging naturally, looking ahead, city lights and car light trails in background, no flash, realistic photography, 35mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "2836f662a126"
+    },
+    {
+      "id": "S19-08",
+      "file": "scene-overpass-night__08.png",
+      "size": "MS",
+      "angle": "eye_level",
+      "lens": "35mm",
+      "aperture": 2.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/9] 2:3 vertical, Medium shot of an adult standing at the edge of a pedestrian overpass at night, one hand on railing, looking towards traffic, car light trails background, no flash, realistic photography, 35mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "2836f662a126"
+    },
+    {
+      "id": "S19-09",
+      "file": "scene-overpass-night__09.png",
+      "size": "CU",
+      "angle": "eye_level",
+      "lens": "35mm",
+      "aperture": 1.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/9] 2:3 vertical, Close-up shot of an adult walking on a pedestrian overpass at night, turning head back towards camera, natural expression, car light trails in background, no flash, realistic photography, 35mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "2836f662a126"
+    }
+  ]
+}

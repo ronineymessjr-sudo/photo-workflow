@@ -1,0 +1,127 @@
+{
+  "series": "S15",
+  "briefId": "scene-bookstore-aisle",
+  "refFile": "scene-bookstore-aisle__REF-A.png",
+  "identityLock": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames",
+  "styleLock": "[STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look",
+  "identity": {
+    "gender": "adult",
+    "hair": "hairstyle fixed at the reference frame",
+    "wardrobe": "日常休闲装，发型自然，淡妆",
+    "scene": "独立书店（书架与阅览桌现场已有）",
+    "light": "利用店内射灯与窗光混合，射灯从上方打亮书架，窗光从左侧漫射；无闪光灯"
+  },
+  "style": {
+    "grade": "natural colour with a gentle film curve and consistent white balance",
+    "aspect": "2:3 vertical",
+    "size": "1024x1536",
+    "bans": [
+      "no text or labels inside the image",
+      "no watermark",
+      "no extra people",
+      "no props beyond the listed ones",
+      "no flash"
+    ]
+  },
+  "frames": [
+    {
+      "id": "S15-01",
+      "file": "scene-bookstore-aisle__01.png",
+      "size": "FS",
+      "angle": "eye_level",
+      "lens": "35mm",
+      "aperture": 4,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/9] 2:3 vertical, A quiet independent bookstore interior, a person standing sideways in front of tall bookshelves, gently touching book spines, natural window light from left and warm spotlights from above, full body shot, eye level, deep depth of field, calm and immersive atmosphere, no flash, cinematic, photorealistic, 35mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "5700bab3eba6"
+    },
+    {
+      "id": "S15-02",
+      "file": "scene-bookstore-aisle__02.png",
+      "size": "MFS",
+      "angle": "eye_level",
+      "lens": "35mm",
+      "aperture": 3.5,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/9] 2:3 vertical, A person walking slowly along a bookstore aisle between tall bookshelves, looking at books, backlit by window light at the end of the aisle, side spotlights creating depth, medium full shot, eye level, strong leading lines, quiet and literary mood, no flash, photorealistic, 35mm lens at f/3.5, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "5700bab3eba6"
+    },
+    {
+      "id": "S15-03",
+      "file": "scene-bookstore-aisle__03.png",
+      "size": "MS",
+      "angle": "eye_level",
+      "lens": "35mm",
+      "aperture": 2.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/9] 2:3 vertical, A person standing sideways in a bookstore, pulling a book from a shelf and reading, window light from right illuminating the face, warm spotlights on shelves, medium shot, eye level, focused and immersive, no flash, natural colors, photorealistic, 35mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "5700bab3eba6"
+    },
+    {
+      "id": "S15-04",
+      "file": "scene-bookstore-aisle__04.png",
+      "size": "CU",
+      "angle": "high_angle",
+      "lens": "35mm",
+      "aperture": 1.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/9] 2:3 vertical, Close-up of hands gently turning pages of a book in a bookstore, soft window light from side, no flash, shallow depth of field, detailed skin texture and paper, quiet and immersive, photorealistic, 35mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "5700bab3eba6"
+    },
+    {
+      "id": "S15-05",
+      "file": "scene-bookstore-aisle__05.png",
+      "size": "MS",
+      "angle": "eye_level",
+      "lens": "35mm",
+      "aperture": 2.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/9] 2:3 vertical, A person sitting at a reading table in a bookstore, deeply engrossed in a book, chin resting on hands, window light from left, warm spotlights above, medium shot, eye level, calm and quiet atmosphere, no flash, photorealistic, 35mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "5700bab3eba6"
+    },
+    {
+      "id": "S15-06",
+      "file": "scene-bookstore-aisle__06.png",
+      "size": "FS",
+      "angle": "eye_level",
+      "lens": "35mm",
+      "aperture": 4,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/9] 2:3 vertical, A person leaning against a bookshelf in a bookstore, reading a book, one foot slightly raised, warm spotlights from above, window light from right, full body shot, eye level, relaxed and immersed, no flash, photorealistic, 35mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "5700bab3eba6"
+    },
+    {
+      "id": "S15-07",
+      "file": "scene-bookstore-aisle__07.png",
+      "size": "MS",
+      "angle": "low_angle",
+      "lens": "35mm",
+      "aperture": 2.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/9] 2:3 vertical, A person reaching up to take a book from a high shelf in a bookstore, standing on tiptoes, warm spotlights from above, window light from behind, medium shot, low angle, focused and immersive, no flash, photorealistic, 35mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "5700bab3eba6"
+    },
+    {
+      "id": "S15-08",
+      "file": "scene-bookstore-aisle__08.png",
+      "size": "MS",
+      "angle": "eye_level",
+      "lens": "35mm",
+      "aperture": 2.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/9] 2:3 vertical, A person sitting by a window in a bookstore, book on lap, looking out thoughtfully, natural window light, warm spotlights, medium shot, eye level, peaceful and contemplative, no flash, photorealistic, 35mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "5700bab3eba6"
+    },
+    {
+      "id": "S15-09",
+      "file": "scene-bookstore-aisle__09.png",
+      "size": "FS",
+      "angle": "eye_level",
+      "lens": "35mm",
+      "aperture": 4,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/9] 2:3 vertical, A person walking towards the exit of a bookstore, seen from behind, holding a book, natural light from door, warm spotlights, full body shot, eye level, quiet departure, no flash, photorealistic, 35mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "5700bab3eba6"
+    }
+  ]
+}

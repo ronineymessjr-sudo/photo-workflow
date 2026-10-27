@@ -1,0 +1,127 @@
+{
+  "series": "S16",
+  "briefId": "scene-laundry-night",
+  "refFile": "scene-laundry-night__REF-A.png",
+  "identityLock": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames",
+  "styleLock": "[STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look",
+  "identity": {
+    "gender": "adult",
+    "hair": "hairstyle fixed at the reference frame",
+    "wardrobe": "美式复古休闲装：牛仔夹克、白色T恤、深色直筒裤、帆布鞋；发型自然蓬松；妆面干净。品牌。",
+    "scene": "24小时自助洗衣店",
+    "light": "店内荧光灯顶光为主，利用门口自然光与室内荧光灯混合，不开闪光灯。"
+  },
+  "style": {
+    "grade": "warm amber highlights, muted browns, gentle contrast, vintage lens character",
+    "aspect": "2:3 vertical",
+    "size": "1024x1536",
+    "bans": [
+      "no text or labels inside the image",
+      "no watermark",
+      "no extra people",
+      "no props beyond the listed ones",
+      "no flash"
+    ]
+  },
+  "frames": [
+    {
+      "id": "S16-01",
+      "file": "scene-laundry-night__01.png",
+      "size": "FS",
+      "angle": "eye_level",
+      "lens": "35mm",
+      "aperture": 4,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/9] 2:3 vertical, A full-body shot of an adult model entering a 24-hour laundromat at night, wearing a vintage denim jacket, white t-shirt, dark straight pants, and canvas shoes, pushing the door open, natural relaxed expression, illuminated by fluorescent lights, no flash, shot on, eye level, wide shot, American retro style, lifestyle photography, 35mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "8f4b2e77372d"
+    },
+    {
+      "id": "S16-02",
+      "file": "scene-laundry-night__02.png",
+      "size": "MS",
+      "angle": "low_angle",
+      "lens": "35mm",
+      "aperture": 2.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/9] 2:3 vertical, A medium shot of an adult model loading clothes into a washing machine in a laundromat, side profile, wearing a white t-shirt and dark pants, denim jacket draped over shoulder, natural relaxed expression, illuminated by overhead fluorescent lights, no flash, shot on, slightly low angle, American retro lifestyle, 35mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "8f4b2e77372d"
+    },
+    {
+      "id": "S16-03",
+      "file": "scene-laundry-night__03.png",
+      "size": "CU",
+      "angle": "eye_level",
+      "lens": "35mm",
+      "aperture": 1.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/9] 2:3 vertical, A close-up shot of an adult model's face seen through the glass door of a washing machine, hands gently touching the glass, curious expression, illuminated by soft fluorescent light from inside the machine and overhead, no flash, shot on at 30cm distance, eye level, American retro style, 35mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "8f4b2e77372d"
+    },
+    {
+      "id": "S16-04",
+      "file": "scene-laundry-night__04.png",
+      "size": "CU",
+      "angle": "eye_level",
+      "lens": "35mm",
+      "aperture": 1.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/9] 2:3 vertical, A close-up shot of an adult model's side profile leaning against the glass door of a washing machine, eyes closed, gentle smile, relaxed mood, illuminated by side fluorescent light, no flash, shot on at 30cm distance, eye level, American retro style, 35mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "8f4b2e77372d"
+    },
+    {
+      "id": "S16-05",
+      "file": "scene-laundry-night__05.png",
+      "size": "MS",
+      "angle": "eye_level",
+      "lens": "35mm",
+      "aperture": 2.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/9] 2:3 vertical, A medium shot of an adult model leaning against a washing machine in a laundromat, hands in pockets, looking towards the machine, relaxed posture, wearing a denim jacket and white t-shirt, illuminated by overhead fluorescent lights, no flash, shot on, eye level, American retro lifestyle, 35mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "8f4b2e77372d"
+    },
+    {
+      "id": "S16-06",
+      "file": "scene-laundry-night__06.png",
+      "size": "MCU",
+      "angle": "eye_level",
+      "lens": "35mm",
+      "aperture": 2,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/9] 2:3 vertical, A close-up shot of an adult model adjusting the collar of a denim jacket, looking down, detailed hand movement, wearing a white t-shirt, illuminated by overhead fluorescent light, no flash, shot on, eye level, American retro style, 35mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "8f4b2e77372d"
+    },
+    {
+      "id": "S16-07",
+      "file": "scene-laundry-night__07.png",
+      "size": "FS",
+      "angle": "low_angle",
+      "lens": "35mm",
+      "aperture": 4,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/9] 2:3 vertical, A full-body shot of an adult model sitting on a bench in a laundromat, reading a magazine, legs crossed, relaxed posture, wearing a denim jacket and white t-shirt, illuminated by overhead fluorescent lights, no flash, shot on, slightly low angle, American retro lifestyle, 35mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "8f4b2e77372d"
+    },
+    {
+      "id": "S16-08",
+      "file": "scene-laundry-night__08.png",
+      "size": "MCU",
+      "angle": "eye_level",
+      "lens": "35mm",
+      "aperture": 2,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/9] 2:3 vertical, A medium close-up shot of an adult model standing in front of a washing machine, hands resting on the machine, leaning forward, gazing into the rotating drum, wearing a denim jacket and white t-shirt, illuminated by overhead fluorescent light and drum light, no flash, shot on, eye level, American retro style, 35mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "8f4b2e77372d"
+    },
+    {
+      "id": "S16-09",
+      "file": "scene-laundry-night__09.png",
+      "size": "CU",
+      "angle": "high_angle",
+      "lens": "35mm",
+      "aperture": 1.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/9] 2:3 vertical, A close-up shot of an adult model's hand pressing a button on a washing machine control panel, wearing a denim jacket sleeve, illuminated by overhead fluorescent light, no flash, shot on, high angle, American retro style, 35mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "8f4b2e77372d"
+    }
+  ]
+}

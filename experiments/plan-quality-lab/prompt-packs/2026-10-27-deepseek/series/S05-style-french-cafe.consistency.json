@@ -1,0 +1,127 @@
+{
+  "series": "S05",
+  "briefId": "style-french-cafe",
+  "refFile": "style-french-cafe__REF-A.png",
+  "identityLock": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames",
+  "styleLock": "[STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look",
+  "identity": {
+    "gender": "adult",
+    "hair": "long hair worn loose",
+    "wardrobe": "复古风格服装，妆容自然，发型蓬松微乱",
+    "scene": "临街咖啡馆（桌椅与杯具现场已有）",
+    "light": "利用窗外自然光与店内暖黄吊灯，无闪光灯，必要时用反光板从模特正面补光"
+  },
+  "style": {
+    "grade": "warm amber highlights, muted browns, gentle contrast, vintage lens character",
+    "aspect": "2:3 vertical",
+    "size": "1024x1536",
+    "bans": [
+      "no text or labels inside the image",
+      "no watermark",
+      "no extra people",
+      "no props beyond the listed ones",
+      "no flash"
+    ]
+  },
+  "frames": [
+    {
+      "id": "S05-01",
+      "file": "style-french-cafe__01.png",
+      "size": "FS",
+      "angle": "eye_level",
+      "lens": "28mm",
+      "aperture": 4,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/9] 2:3 vertical, Full shot of an adult model standing sideways in a French vintage cafe window, one hand resting on a chair back, gazing out, soft daylight and warm interior lighting, no flash, shot with, no photographer reflection, natural lazy mood, eye level, 28mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "373f67cb70c6"
+    },
+    {
+      "id": "S05-02",
+      "file": "style-french-cafe__02.png",
+      "size": "MCU",
+      "angle": "eye_level",
+      "lens": "50mm",
+      "aperture": 2,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/9] 2:3 vertical, Medium close-up of an adult model sitting sideways by a cafe window, resting chin on hand, soft window light from left, warm interior fill, vintage French cafe, lazy mood, no flash, 50mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "373f67cb70c6"
+    },
+    {
+      "id": "S05-03",
+      "file": "style-french-cafe__03.png",
+      "size": "ECU",
+      "angle": "eye_level",
+      "lens": "50mm",
+      "aperture": 1.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/9] 2:3 vertical, Extreme close-up of a hand gently holding a coffee cup in a French vintage cafe, soft window light, natural skin texture, no flash, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "373f67cb70c6"
+    },
+    {
+      "id": "S05-04",
+      "file": "style-french-cafe__04.png",
+      "size": "CU",
+      "angle": "high_angle",
+      "lens": "50mm",
+      "aperture": 1.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/9] 2:3 vertical, Close-up of an adult model resting head on crossed arms at a cafe table, eyes half closed, soft window light from above right, vintage French style, lazy mood, no flash, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "373f67cb70c6"
+    },
+    {
+      "id": "S05-05",
+      "file": "style-french-cafe__05.png",
+      "size": "MCU",
+      "angle": "eye_level",
+      "lens": "50mm",
+      "aperture": 2,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/9] 2:3 vertical, Medium close-up of an adult model standing behind a cafe window, touching glass, side profile, soft reflections on glass, French vintage cafe, no photographer reflection, no flash, 50mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "373f67cb70c6"
+    },
+    {
+      "id": "S05-06",
+      "file": "style-french-cafe__06.png",
+      "size": "CU",
+      "angle": "eye_level",
+      "lens": "50mm",
+      "aperture": 1.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/9] 2:3 vertical, Close-up of an adult model sitting at a window, leaning forward, chin on hands, looking into glass, soft reflections, French vintage cafe, no photographer reflection, no flash, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "373f67cb70c6"
+    },
+    {
+      "id": "S05-07",
+      "file": "style-french-cafe__07.png",
+      "size": "WS",
+      "angle": "eye_level",
+      "lens": "50mm",
+      "aperture": 5.6,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/9] 2:3 vertical, Wide shot of a French vintage cafe interior, an adult model sitting in the background near window, foreground empty tables and chairs, warm ambient light, no flash, 50mm lens at f/5.6, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "373f67cb70c6"
+    },
+    {
+      "id": "S05-08",
+      "file": "style-french-cafe__08.png",
+      "size": "CU",
+      "angle": "eye_level",
+      "lens": "50mm",
+      "aperture": 1.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/9] 2:3 vertical, Close-up side profile of an adult model in a cafe, face turned to window light, eyes gently closed, soft light and shadow, French vintage, no flash, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "373f67cb70c6"
+    },
+    {
+      "id": "S05-09",
+      "file": "style-french-cafe__09.png",
+      "size": "FS",
+      "angle": "low_angle",
+      "lens": "28mm",
+      "aperture": 4,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/9] 2:3 vertical, Full shot from low angle of an adult model lounging on a chair in a French vintage cafe, lazy gaze, window light backlight, no flash, 28mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "373f67cb70c6"
+    }
+  ]
+}

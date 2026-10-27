@@ -1,0 +1,127 @@
+{
+  "series": "S27",
+  "briefId": "ppl-elder-hands",
+  "refFile": "ppl-elder-hands__REF-A.png",
+  "identityLock": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames",
+  "styleLock": "[STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look",
+  "identity": {
+    "gender": "adult",
+    "hair": "hairstyle fixed at the reference frame",
+    "wardrobe": "素色棉质长袖上衣，袖口自然放下，妆发，保持整洁朴素",
+    "scene": "老街工作台（工作台与工具现场已有）",
+    "light": "仅用门窗自然光作为主光，门窗位于画面左侧形成侧光，关闭台灯避免色温混合，禁用闪光灯"
+  },
+  "style": {
+    "grade": "natural colour with a gentle film curve and consistent white balance",
+    "aspect": "2:3 vertical",
+    "size": "1024x1536",
+    "bans": [
+      "no text or labels inside the image",
+      "no watermark",
+      "no extra people",
+      "no props beyond the listed ones",
+      "no flash"
+    ]
+  },
+  "frames": [
+    {
+      "id": "S27-01",
+      "file": "ppl-elder-hands__01.png",
+      "size": "MFS",
+      "angle": "eye_level",
+      "lens": "50mm",
+      "aperture": 3.5,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/9] 2:3 vertical, warm documentary photograph, elderly craftsman sitting sideways behind a worn street-side workbench, hands resting on table edge, calm gaze, soft natural window light from left, no flash, quiet old street workshop atmosphere, eye level, medium full shot, muted warm tones, realistic, 50mm lens at f/3.5, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "5700bab3eba6"
+    },
+    {
+      "id": "S27-02",
+      "file": "ppl-elder-hands__02.png",
+      "size": "MCU",
+      "angle": "eye_level",
+      "lens": "50mm",
+      "aperture": 2,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/9] 2:3 vertical, warm documentary portrait, elderly artisan in plain cotton shirt, head slightly bowed toward workbench, one hand resting lightly on a tool, soft side light from window and door, no flash, gentle focused expression, eye level, medium close shot, film-like warm tones, realistic, 50mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "5700bab3eba6"
+    },
+    {
+      "id": "S27-03",
+      "file": "ppl-elder-hands__03.png",
+      "size": "CU",
+      "angle": "high_angle",
+      "lens": "85mm",
+      "aperture": 1.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/9] 2:3 vertical, intimate close-up of elderly craftsman's hands resting beside worn tools on a wooden workbench, fingers slowly opening and closing, soft natural light from upper left, small warm desk lamp fill from right, no flash, realistic skin texture, warm documentary mood, 85mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "5700bab3eba6"
+    },
+    {
+      "id": "S27-04",
+      "file": "ppl-elder-hands__04.png",
+      "size": "ECU",
+      "angle": "eye_level",
+      "lens": "85mm",
+      "aperture": 1.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/9] 2:3 vertical, macro-style documentary shot of elderly hands gently guiding a worn craft tool on a wooden bench, soft backlight rim from window, subtle bounce fill from pale tabletop, no flash, ground-level eye view of hands, intimate warm tones, realistic, 85mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "5700bab3eba6"
+    },
+    {
+      "id": "S27-05",
+      "file": "ppl-elder-hands__05.png",
+      "size": "CU",
+      "angle": "overhead",
+      "lens": "85mm",
+      "aperture": 1.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/9] 2:3 vertical, quiet close-up of elderly artisan's hands pausing above a craft tool on an old wooden workbench, fingertips lightly touching the tool, one hand loosely relaxed, soft daylight from behind, no flash, slightly overhead view of hands, warm nostalgic documentary style, realistic textures, 85mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "5700bab3eba6"
+    },
+    {
+      "id": "S27-06",
+      "file": "ppl-elder-hands__06.png",
+      "size": "MS",
+      "angle": "eye_level",
+      "lens": "50mm",
+      "aperture": 2.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/9] 2:3 vertical, warm side-profile documentary shot, elderly craftsman seated at a workbench in an old street, head lowered, one hand steadying a tool while the other moves slowly, soft window daylight from front side, natural shadow background, no flash, shoulder height, medium shot, realistic film tones, 50mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "5700bab3eba6"
+    },
+    {
+      "id": "S27-07",
+      "file": "ppl-elder-hands__07.png",
+      "size": "MS",
+      "angle": "low_angle",
+      "lens": "50mm",
+      "aperture": 2.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/9] 2:3 vertical, low-angle documentary view from workbench level, elderly craftsman arranging tools slowly with both hands, wooden tabletop texture in foreground, soft daylight from upper right across the bench, no flash, medium shot, warm quiet old-street workshop atmosphere, realistic, 50mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "5700bab3eba6"
+    },
+    {
+      "id": "S27-08",
+      "file": "ppl-elder-hands__08.png",
+      "size": "FS",
+      "angle": "eye_level",
+      "lens": "50mm",
+      "aperture": 4,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/9] 2:3 vertical, warm environmental portrait, elderly craftsman seated upright at a street-side workbench, hands resting beside tools, soft window and door daylight entering from left, no flash, eye level, full body shot, old street workshop, natural warm tones, documentary realism, 50mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "5700bab3eba6"
+    },
+    {
+      "id": "S27-09",
+      "file": "ppl-elder-hands__09.png",
+      "size": "WS",
+      "angle": "eye_level",
+      "lens": "50mm",
+      "aperture": 5.6,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/9] 2:3 vertical, wide environmental documentary shot, elderly craftsman seated at a workbench near an old street doorway, hands folded on the table, head slightly turned toward the window light, soft natural daylight only, no flash, eye level, wide shot, warm nostalgic atmosphere, realistic, 50mm lens at f/5.6, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "5700bab3eba6"
+    }
+  ]
+}

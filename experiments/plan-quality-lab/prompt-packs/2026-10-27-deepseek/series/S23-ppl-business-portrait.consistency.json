@@ -1,0 +1,138 @@
+{
+  "series": "S23",
+  "briefId": "ppl-business-portrait",
+  "refFile": "ppl-business-portrait__REF-A.png",
+  "identityLock": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames",
+  "styleLock": "[STYLE LOCK], neutral daylight, clean whites, restrained saturation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look",
+  "identity": {
+    "gender": "adult",
+    "hair": "hairstyle fixed at the reference frame",
+    "wardrobe": "商务正装（深色西装外套、浅色衬衫），妆发干净利落",
+    "scene": "办公室（落地窗、办公桌现场已有）",
+    "light": "仅用落地窗自然侧光，不开启闪光灯；窗光从模特左前方45度入射，若反差过大可在暗部用白墙反光板补光，但不得直射"
+  },
+  "style": {
+    "grade": "neutral daylight, clean whites, restrained saturation",
+    "aspect": "2:3 vertical",
+    "size": "1024x1536",
+    "bans": [
+      "no text or labels inside the image",
+      "no watermark",
+      "no extra people",
+      "no props beyond the listed ones",
+      "no flash"
+    ]
+  },
+  "frames": [
+    {
+      "id": "S23-01",
+      "file": "ppl-business-portrait__01.png",
+      "size": "FS",
+      "angle": "eye_level",
+      "lens": "35mm",
+      "aperture": 4,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], neutral daylight, clean whites, restrained saturation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/10] 2:3 vertical, Business portrait of an adult professional standing beside an office desk, side to floor-to-ceiling window, hands relaxed, looking toward window light, dark suit and light shirt, clean grooming, natural window side light, no flash, full body shot with window and desk in frame, trustworthy and capable mood, eye level, 35mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "68b8baee6557"
+    },
+    {
+      "id": "S23-02",
+      "file": "ppl-business-portrait__02.png",
+      "size": "MCU",
+      "angle": "eye_level",
+      "lens": "85mm",
+      "aperture": 2,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], neutral daylight, clean whites, restrained saturation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/10] 2:3 vertical, Business portrait of an adult professional seated at an office desk, body slightly turned left, one hand on desk, looking at camera, dark suit and light shirt, clean hair, natural window side light from left, subtle fill from right, no flash, medium close-up, eye level, trustworthy mood, 85mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "68b8baee6557"
+    },
+    {
+      "id": "S23-03",
+      "file": "ppl-business-portrait__03.png",
+      "size": "CU",
+      "angle": "eye_level",
+      "lens": "85mm",
+      "aperture": 1.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], neutral daylight, clean whites, restrained saturation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/10] 2:3 vertical, Close-up business portrait of an adult professional facing camera, head slightly tilted toward window light on left, confident slight smile, dark suit and light shirt with top button open, natural skin texture, window side light from left with soft fill, no flash, eye level, trustworthy and sharp mood, 85mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "68b8baee6557"
+    },
+    {
+      "id": "S23-04",
+      "file": "ppl-business-portrait__04.png",
+      "size": "MS",
+      "angle": "eye_level",
+      "lens": "85mm",
+      "aperture": 2.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], neutral daylight, clean whites, restrained saturation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/10] 2:3 vertical, Half-body silhouette portrait of an adult professional standing with back to floor-to-ceiling window, facing camera, hands clasped in front, dark suit and light shirt, strong window backlight, minimal fill, no flash, eye level, capable and trustworthy mood, 85mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "68b8baee6557"
+    },
+    {
+      "id": "S23-05",
+      "file": "ppl-business-portrait__05.png",
+      "size": "MS",
+      "angle": "high_angle",
+      "lens": "35mm",
+      "aperture": 2.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], neutral daylight, clean whites, restrained saturation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/10] 2:3 vertical, Medium shot of an adult professional sitting at an office desk, leaning forward, hands on desk as if writing, looking down at desk, dark suit and light shirt, natural window side light, no flash, high angle view, focused and capable mood, background floor-to-ceiling window blurred, 35mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "68b8baee6557"
+    },
+    {
+      "id": "S23-06",
+      "file": "ppl-business-portrait__06.png",
+      "size": "MCU",
+      "angle": "eye_level",
+      "lens": "85mm",
+      "aperture": 2,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], neutral daylight, clean whites, restrained saturation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/10] 2:3 vertical, Medium close-up portrait of an adult professional sitting upright in an office chair, hands lightly gripping desk edge, looking at camera with calm expression, dark suit and light shirt, natural window side light, subtle fill, no flash, eye level, trustworthy mood, 85mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "68b8baee6557"
+    },
+    {
+      "id": "S23-07",
+      "file": "ppl-business-portrait__07.png",
+      "size": "MS",
+      "angle": "eye_level",
+      "lens": "85mm",
+      "aperture": 2.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], neutral daylight, clean whites, restrained saturation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/10] 2:3 vertical, Medium shot of an adult professional standing by floor-to-ceiling window, side profile facing out, one hand resting on window frame, looking into distance, dark suit and light shirt, natural window light, subtle fill, no flash, eye level, contemplative and capable mood, 85mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "68b8baee6557"
+    },
+    {
+      "id": "S23-08",
+      "file": "ppl-business-portrait__08.png",
+      "size": "ECU",
+      "angle": "eye_level",
+      "lens": "85mm",
+      "aperture": 1.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], neutral daylight, clean whites, restrained saturation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/10] 2:3 vertical, Close-up detail shot of hands of an adult professional resting on office desk, fingers slightly curved, suit and shirt cuffs visible, natural window side light, no flash, eye level, shallow depth of field, focused and trustworthy mood, 85mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "68b8baee6557"
+    },
+    {
+      "id": "S23-09",
+      "file": "ppl-business-portrait__09.png",
+      "size": "CU",
+      "angle": "eye_level",
+      "lens": "85mm",
+      "aperture": 1.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], neutral daylight, clean whites, restrained saturation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/10] 2:3 vertical, Close-up of an adult professional sitting at desk, body slightly leaning forward, one hand resting on chin, looking away toward window light, thoughtful expression, dark suit and light shirt, natural window side light, subtle fill, no flash, eye level, contemplative mood, 85mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "68b8baee6557"
+    },
+    {
+      "id": "S23-10",
+      "file": "ppl-business-portrait__10.png",
+      "size": "MS",
+      "angle": "eye_level",
+      "lens": "85mm",
+      "aperture": 2.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], neutral daylight, clean whites, restrained saturation, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 10/10] 2:3 vertical, Medium shot of an adult professional turning from back to face camera, suit jacket swaying with motion, expression transitioning from serious to smile, dark suit and light shirt, natural window light, subtle fill, no flash, eye level, dynamic and trustworthy mood, 85mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "68b8baee6557"
+    }
+  ]
+}

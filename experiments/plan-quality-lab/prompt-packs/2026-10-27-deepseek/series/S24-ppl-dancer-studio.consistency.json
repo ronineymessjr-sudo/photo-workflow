@@ -1,0 +1,128 @@
+{
+  "series": "S24",
+  "briefId": "ppl-dancer-studio",
+  "refFile": "ppl-dancer-studio__REF-A.png",
+  "identityLock": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames",
+  "styleLock": "[STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look",
+  "identity": {
+    "gender": "adult",
+    "hair": "hairstyle fixed at the reference frame",
+    "wardrobe": "舞者穿着深色紧身练功服（头发扎起，无饰品。",
+    "scene": "舞蹈教室（把杆与镜墙现场已有）",
+    "light": "利用教室顶部现有荧光灯，关闭闪光灯，必要时用反光板从正面补光（如现场有）。"
+  },
+  "style": {
+    "grade": "low-contrast pastel with faint green shadows and fine 400-speed grain",
+    "aspect": "2:3 vertical",
+    "size": "1024x1536",
+    "bans": [
+      "no text or labels inside the image",
+      "no watermark",
+      "no extra people",
+      "no props beyond the listed ones",
+      "no flash",
+      "no tripod"
+    ]
+  },
+  "frames": [
+    {
+      "id": "S24-01",
+      "file": "ppl-dancer-studio__01.png",
+      "size": "FS",
+      "angle": "eye_level",
+      "lens": "50mm",
+      "aperture": 4,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/9] 2:3 vertical, A full-body shot of a dancer standing still with back to camera, facing a mirror wall in a dance studio. The mirror reflects her front view. She wears dark tight practice clothes, hair tied back. Natural fluorescent lighting, no flash. Composition places dancer on right third, mirror reflection on left., eye level, depth of field showing the studio space including barre. Artistic and powerful mood, 50mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "e1ada918b509"
+    },
+    {
+      "id": "S24-02",
+      "file": "ppl-dancer-studio__02.png",
+      "size": "MS",
+      "angle": "low_angle",
+      "lens": "50mm",
+      "aperture": 2.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/9] 2:3 vertical, A side view of a dancer stretching at a barre, one leg on the barre, body leaning forward, arms extended. She wears a tight practice outfit, hair in a bun. Side-back lighting accentuates her silhouette and muscle tension., slightly low angle. The barre is visible. Artistic and powerful, 50mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "e1ada918b509"
+    },
+    {
+      "id": "S24-03",
+      "file": "ppl-dancer-studio__03.png",
+      "size": "FS",
+      "angle": "eye_level",
+      "lens": "50mm",
+      "aperture": 4,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/9] 2:3 vertical, A dancer frozen mid-air in a grand jeté, legs split 180 degrees, arms raised. Wearing a tight practice outfit. Shot with, eye level, fast shutter speed to freeze motion. High key lighting, no flash. Artistic and powerful, 50mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "e1ada918b509"
+    },
+    {
+      "id": "S24-04",
+      "file": "ppl-dancer-studio__04.png",
+      "size": "MS",
+      "angle": "eye_level",
+      "lens": "50mm",
+      "aperture": 2.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/9] 2:3 vertical, A dancer jumping mid-air, turning, arms extended, looking towards camera. Shot with, eye level, fast shutter. Mirror reflection visible without photographer. Side lighting, no flash. Artistic and powerful, 50mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "e1ada918b509"
+    },
+    {
+      "id": "S24-05",
+      "file": "ppl-dancer-studio__05.png",
+      "size": "MS",
+      "angle": "eye_level",
+      "lens": "50mm",
+      "aperture": 2.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/9] 2:3 vertical, A dancer holding a barre, one leg extended, slowly turning, creating a motion blur effect. Shot with, slow shutter speed, camera stabilized by resting on the barre. Natural lighting, no flash. Artistic and powerful, 50mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "e1ada918b509"
+    },
+    {
+      "id": "S24-06",
+      "file": "ppl-dancer-studio__06.png",
+      "size": "MCU",
+      "angle": "eye_level",
+      "lens": "50mm",
+      "aperture": 2,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/9] 2:3 vertical, A dancer touching a mirror wall, looking at her reflection, one hand on the barre. Shot with, eye level. Composition focuses on the reflection and eye contact. Soft lighting, no flash. Artistic and powerful, 50mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "e1ada918b509"
+    },
+    {
+      "id": "S24-07",
+      "file": "ppl-dancer-studio__07.png",
+      "size": "CU",
+      "angle": "eye_level",
+      "lens": "50mm",
+      "aperture": 1.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/9] 2:3 vertical, A close-up of a dancer's hands gripping a barre, knuckles white, veins visible. Shot with, eye level. Side lighting to emphasize texture. No flash. Artistic and powerful, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "e1ada918b509"
+    },
+    {
+      "id": "S24-08",
+      "file": "ppl-dancer-studio__08.png",
+      "size": "FS",
+      "angle": "low_angle",
+      "lens": "50mm",
+      "aperture": 4,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/9] 2:3 vertical, A dancer landing from a jump, knees bent in a plié, arms back for balance, body leaning forward. Shot with, low angle. Fast shutter to freeze motion. No flash. Artistic and powerful, 50mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "e1ada918b509"
+    },
+    {
+      "id": "S24-09",
+      "file": "ppl-dancer-studio__09.png",
+      "size": "MCU",
+      "angle": "eye_level",
+      "lens": "50mm",
+      "aperture": 2,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/9] 2:3 vertical, A half-body portrait of a dancer after practice, slightly out of breath, sweat glistening on skin, looking at camera with determination. Shot with, eye level. Soft side lighting, no flash. Artistic and powerful, 50mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "e1ada918b509"
+    }
+  ]
+}

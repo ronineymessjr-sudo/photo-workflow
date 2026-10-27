@@ -1,0 +1,128 @@
+{
+  "series": "S26",
+  "briefId": "ppl-skater-dusk",
+  "refFile": "ppl-skater-dusk__REF-A.png",
+  "identityLock": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames",
+  "styleLock": "[STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look",
+  "identity": {
+    "gender": "adult",
+    "hair": "hairstyle fixed at the reference frame",
+    "wardrobe": "青年滑板者穿着；现场确认是否佩戴头盔与护具，发型自然随风",
+    "scene": "滑板场（已获场地许可）",
+    "light": "利用黄昏低角度现场自然光，拍摄机位背对落日方向，不补光、不使用闪光灯"
+  },
+  "style": {
+    "grade": "natural colour with a gentle film curve and consistent white balance",
+    "aspect": "2:3 vertical",
+    "size": "1024x1536",
+    "bans": [
+      "no text or labels inside the image",
+      "no watermark",
+      "no extra people",
+      "no props beyond the listed ones",
+      "no flash",
+      "stay out of the restricted area"
+    ]
+  },
+  "frames": [
+    {
+      "id": "S26-01",
+      "file": "ppl-skater-dusk__01.png",
+      "size": "FS",
+      "angle": "eye_level",
+      "lens": "35mm",
+      "aperture": 4,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/9] 2:3 vertical, young adult skateboarder rolling into an outdoor skatepark at golden hour, low sunset backlighteye-level wide shot, loose natural stance on board, skatepark ramps and concrete in background, no flash, cinematic street photography, safe distance full body composition, 35mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "5700bab3eba6"
+    },
+    {
+      "id": "S26-02",
+      "file": "ppl-skater-dusk__02.png",
+      "size": "MS",
+      "angle": "low_angle",
+      "lens": "24mm",
+      "aperture": 2.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/9] 2:3 vertical, dynamic low angletracking shot of a young skateboarder carving on a skatepark slope at dusk, camera 1.2 meters away on the safe side, knees bent, wheels on concrete, warm side backlight, no flash, motion feel, street style, 24mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "5700bab3eba6"
+    },
+    {
+      "id": "S26-03",
+      "file": "ppl-skater-dusk__03.png",
+      "size": "MS",
+      "angle": "low_angle",
+      "lens": "24mm",
+      "aperture": 2.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/9] 2:3 vertical, low side tracking shot of a young skateboarder leaning into a carve at an outdoor skatepark, golden hour rim light, camera on safe outside line 1.5 meters away, forward space in frame, no flash, street action photography, 24mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "5700bab3eba6"
+    },
+    {
+      "id": "S26-04",
+      "file": "ppl-skater-dusk__04.png",
+      "size": "MCU",
+      "angle": "eye_level",
+      "lens": "135mm",
+      "aperture": 2,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/9] 2:3 vertical, telephoto side profile of a young skateboarder rolling across a skatepark at sunset, camera 9 meters away on the safe perimeter, compressed ramp background, warm rim light, no flash, cinematic street photography, 135mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "5700bab3eba6"
+    },
+    {
+      "id": "S26-05",
+      "file": "ppl-skater-dusk__05.png",
+      "size": "FS",
+      "angle": "eye_level",
+      "lens": "135mm",
+      "aperture": 4,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/9] 2:3 vertical, telephoto silhouette of a young skateboarder mid-air above a skatepark ramp at sunset, knees tucked, board under feet, camera 10 meters away on safe perimeter, strong backlight, no flash, clean golden sky background, 135mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "5700bab3eba6"
+    },
+    {
+      "id": "S26-06",
+      "file": "ppl-skater-dusk__06.png",
+      "size": "FS",
+      "angle": "low_angle",
+      "lens": "70mm",
+      "aperture": 4,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/9] 2:3 vertical, low angle action freeze of a young skateboarder jumping off a skatepark ramp at dusk, knees tucked, one arm forward, board under feet, camera 5 meters away on safe ground, fast shutter, side warm light, no flash, 70mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "5700bab3eba6"
+    },
+    {
+      "id": "S26-07",
+      "file": "ppl-skater-dusk__07.png",
+      "size": "FS",
+      "angle": "eye_level",
+      "lens": "50mm",
+      "aperture": 4,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/9] 2:3 vertical, side view action freeze of a young skateboarder jumping over a small skatepark ramp at sunset, full body in frame, board level, takeoff ramp left and landing zone right, fast shutter, natural side light, no flash, street photography, 50mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "5700bab3eba6"
+    },
+    {
+      "id": "S26-08",
+      "file": "ppl-skater-dusk__08.png",
+      "size": "FS",
+      "angle": "eye_level",
+      "lens": "85mm",
+      "aperture": 4,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/9] 2:3 vertical, backlit silhouette of a young skateboarder standing relaxed beside a skateboard at a skatepark, facing the low sunset, camera 7 meters away, golden sky filling background, no flash, pure contour silhouette, cinematic dusk, 85mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "5700bab3eba6"
+    },
+    {
+      "id": "S26-09",
+      "file": "ppl-skater-dusk__09.png",
+      "size": "CU",
+      "angle": "eye_level",
+      "lens": "50mm",
+      "aperture": 1.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/9] 2:3 vertical, close-up detail of a young skateboarder's hands resting near a skateboard at golden hour, seated at the safe edge of a skatepark, warm side backlight on skin and deck, no flash, shallow depth, cinematic detail shot, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "5700bab3eba6"
+    }
+  ]
+}

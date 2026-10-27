@@ -1,0 +1,138 @@
+{
+  "series": "S10",
+  "briefId": "style-newchinese-tea",
+  "refFile": "style-newchinese-tea__REF-A.png",
+  "identityLock": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames",
+  "styleLock": "[STYLE LOCK], low-saturation warm-neutral with jade and ivory tones, soft film rolloff, no digital oversharpening, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look",
+  "identity": {
+    "gender": "adult",
+    "hair": "hair tied back in a low bun",
+    "wardrobe": "建议素色宽松上衣与长裤，发型简洁低束，淡妆，不戴亮面饰品",
+    "scene": "茶室（茶桌、茶具现场已有）",
+    "light": "只开室内现有暖灯，主灯位于画面右上方，关闭闪光灯，用反光板在左侧墙面柔补暗部，不做正面补光"
+  },
+  "style": {
+    "grade": "low-saturation warm-neutral with jade and ivory tones, soft film rolloff, no digital oversharpening",
+    "aspect": "2:3 vertical",
+    "size": "1024x1536",
+    "bans": [
+      "no text or labels inside the image",
+      "no watermark",
+      "no extra people",
+      "no props beyond the listed ones",
+      "no flash"
+    ]
+  },
+  "frames": [
+    {
+      "id": "S10-01",
+      "file": "style-newchinese-tea__01.png",
+      "size": "EWS",
+      "angle": "eye_level",
+      "lens": "50mm",
+      "aperture": 8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-saturation warm-neutral with jade and ivory tones, soft film rolloff, no digital oversharpening, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/10] 2:3 vertical, Chinese-style tea room interior, an adult sitting quietly at a tea table in the right third of the frame, back three-quarter to camera, hands resting on knees, warm indoor lamp light only, tea table and tea set in foreground, folding screen in background, calm zen mood, eye level, full scene, no flash, 50mm lens at f/8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "16cbc5b494b4"
+    },
+    {
+      "id": "S10-02",
+      "file": "style-newchinese-tea__02.png",
+      "size": "MS",
+      "angle": "eye_level",
+      "lens": "50mm",
+      "aperture": 2.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-saturation warm-neutral with jade and ivory tones, soft film rolloff, no digital oversharpening, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/10] 2:3 vertical, An adult standing sideways in front of a Chinese folding screen in a tea room, hands relaxed, gaze toward the tea table, warm indoor lamp lighting, calm expression, chest-level eye view, half body, muted wardrobe, no flash, 50mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "16cbc5b494b4"
+    },
+    {
+      "id": "S10-03",
+      "file": "style-newchinese-tea__03.png",
+      "size": "FS",
+      "angle": "eye_level",
+      "lens": "50mm",
+      "aperture": 4,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-saturation warm-neutral with jade and ivory tones, soft film rolloff, no digital oversharpening, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/10] 2:3 vertical, An adult seated upright at a tea table, legs together, one hand on table and one on knee, warm indoor lamp light, Chinese tea room, full body, camera at 0.9 meter eye level, calm zen atmosphere, no flash, 50mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "16cbc5b494b4"
+    },
+    {
+      "id": "S10-04",
+      "file": "style-newchinese-tea__04.png",
+      "size": "FS",
+      "angle": "eye_level",
+      "lens": "50mm",
+      "aperture": 4,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-saturation warm-neutral with jade and ivory tones, soft film rolloff, no digital oversharpening, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/10] 2:3 vertical, An adult seated sideways framed by a Chinese folding screen opening, hands folded on tea table edge, eyes lowered, warm indoor lamp light, zen tea room, eye level from 3.5 meters, screen acting as natural frame, no flash, 50mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "16cbc5b494b4"
+    },
+    {
+      "id": "S10-05",
+      "file": "style-newchinese-tea__05.png",
+      "size": "ECU",
+      "angle": "eye_level",
+      "lens": "50mm",
+      "aperture": 1.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-saturation warm-neutral with jade and ivory tones, soft film rolloff, no digital oversharpening, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/10] 2:3 vertical, Close-up of hands pouring water from a teapot into a cup on a tea tray, warm indoor lamp light, camera 40cm from tea table at surface height, calm precise motion, Chinese tea room, no flash, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "16cbc5b494b4"
+    },
+    {
+      "id": "S10-06",
+      "file": "style-newchinese-tea__06.png",
+      "size": "CU",
+      "angle": "eye_level",
+      "lens": "50mm",
+      "aperture": 1.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-saturation warm-neutral with jade and ivory tones, soft film rolloff, no digital oversharpening, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/10] 2:3 vertical, Close-up of two hands gently offering a tea cup, warm indoor lamp light, tea table surface, camera 40cm away at low table height, calm gesture, Chinese tea room, no flash, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "16cbc5b494b4"
+    },
+    {
+      "id": "S10-07",
+      "file": "style-newchinese-tea__07.png",
+      "size": "MCU",
+      "angle": "eye_level",
+      "lens": "50mm",
+      "aperture": 2,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-saturation warm-neutral with jade and ivory tones, soft film rolloff, no digital oversharpening, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/10] 2:3 vertical, An adult holding a tea cup near chest, other hand resting on tea table, tea set in foreground, warm indoor lamp light, calm gaze, medium shot, eye level 1.5 meters away, Chinese zen tea room, no flash, 50mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "16cbc5b494b4"
+    },
+    {
+      "id": "S10-08",
+      "file": "style-newchinese-tea__08.png",
+      "size": "CU",
+      "angle": "eye_level",
+      "lens": "50mm",
+      "aperture": 1.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-saturation warm-neutral with jade and ivory tones, soft film rolloff, no digital oversharpening, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/10] 2:3 vertical, A close-up of an adult looking down at a tea cup held with both hands, warm indoor lamp side light, calm quiet expression, camera one meter away at eye level, Chinese tea room, no flash, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "16cbc5b494b4"
+    },
+    {
+      "id": "S10-09",
+      "file": "style-newchinese-tea__09.png",
+      "size": "MS",
+      "angle": "overhead",
+      "lens": "50mm",
+      "aperture": 2.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-saturation warm-neutral with jade and ivory tones, soft film rolloff, no digital oversharpening, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/10] 2:3 vertical, Overhead view of an adult sitting at a Chinese tea table arranging tea set with both hands, warm indoor lamp light from upper side, calm atmosphere, camera 1.8 meters high, medium shot, no flash, 50mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "16cbc5b494b4"
+    },
+    {
+      "id": "S10-10",
+      "file": "style-newchinese-tea__10.png",
+      "size": "CU",
+      "angle": "eye_level",
+      "lens": "50mm",
+      "aperture": 1.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], low-saturation warm-neutral with jade and ivory tones, soft film rolloff, no digital oversharpening, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 10/10] 2:3 vertical, Close-up side profile of an adult in a warm-lit Chinese tea room, gaze toward distant tea set, quiet expression, rim light from indoor lamp behind, deep calm tones, camera 80cm away at eye level, no flash, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "16cbc5b494b4"
+    }
+  ]
+}

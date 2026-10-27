@@ -33,6 +33,23 @@
 - **图内绝对不生成文字**。上一轮 12 格里 5 格的焦段/光圈是模型自己编的（16mm f/8 写成 f/4、50mm f/1.8 写成 85mm f/2.8），标签一律后期排版加。
 - 同系列**一套调色**，否则拼在一起就是"精选集"不是"一次拍摄"。
 
+## 人物不变、风格不变 —— 怎么被强制住的
+
+每个系列里，**每帧提示词的开头是两段逐字相同的锁**（不是"大概写得像"）：
+
+```text
+[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames
+[STYLE LOCK], low-saturation warm-neutral with jade and ivory tones, soft film rolloff, ..., one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look
+```
+
+三道保险：
+
+1. **字符串级一致**：`check-series-consistency.mjs` 逐帧比对两段锁和 hash，任何一帧被改动、画幅混排、正文混进中文，都会直接报错（当前 28 系列 259 帧全过）。
+2. **参考图为准**：身份不靠文字描述锁，靠 REF 图编辑（GPT Image 2 编辑模式 / Flux Kontext / IP-Adapter FaceID / InstantID）。
+3. **可量化验收**：用 InsightFace 比对每帧与 REF 的人脸相似度，≥0.55 同一人、0.40–0.55 疑似换脸、<0.40 直接废片。
+
+身份卡（Identity Card）里把性别年龄、发型、脸型五官、肤色妆容、服装、场地、光线、调色逐项写死；换任何一项都要全系列重出，不允许"这一帧换件衣服"。
+
 ## 回图命名规范（重要）
 
 请按 `{用例ID}__{两位镜号}.png` 命名，例如 `style-hanfu-court__01.png`。

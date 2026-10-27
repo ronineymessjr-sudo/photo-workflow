@@ -1,0 +1,127 @@
+{
+  "series": "S09",
+  "briefId": "style-bw-street",
+  "refFile": "style-bw-street__REF-A.png",
+  "identityLock": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames",
+  "styleLock": "[STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look",
+  "identity": {
+    "gender": "adult",
+    "hair": "hairstyle fixed at the reference frame",
+    "wardrobe": "深色棉麻长袖衬衫与直筒长裤，发型自然，妆面",
+    "scene": "老城区骑楼街道",
+    "light": "现场自然光，利用骑楼柱列间透入的侧光，不使用补光设备"
+  },
+  "style": {
+    "grade": "black and white with strong grain and high micro-contrast",
+    "aspect": "2:3 vertical",
+    "size": "1024x1536",
+    "bans": [
+      "no text or labels inside the image",
+      "no watermark",
+      "no extra people",
+      "no props beyond the listed ones",
+      "no flash"
+    ]
+  },
+  "frames": [
+    {
+      "id": "S09-01",
+      "file": "style-bw-street__01.png",
+      "size": "FS",
+      "angle": "eye_level",
+      "lens": "28mm",
+      "aperture": 4,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/9] 2:3 vertical, Black and white street documentary, an adult walking away down an old arcade corridor, columns receding in perspective, natural side light, no flash, candid atmosphere, deep depth of field, 28mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "0496fafc6fbd"
+    },
+    {
+      "id": "S09-02",
+      "file": "style-bw-street__02.png",
+      "size": "MS",
+      "angle": "eye_level",
+      "lens": "28mm",
+      "aperture": 2.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/9] 2:3 vertical, Black and white documentary portrait, adult standing sideways in old arcade, strong light band cutting across frame from columns, natural side light, no flash, candid expression, 28mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "0496fafc6fbd"
+    },
+    {
+      "id": "S09-03",
+      "file": "style-bw-street__03.png",
+      "size": "FS",
+      "angle": "eye_level",
+      "lens": "28mm",
+      "aperture": 4,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/9] 2:3 vertical, Black and white street documentary, adult standing still beside arcade column, blurred pedestrians moving in background, natural light, no flash, candid city life, 28mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "0496fafc6fbd"
+    },
+    {
+      "id": "S09-04",
+      "file": "style-bw-street__04.png",
+      "size": "CU",
+      "angle": "ground_level",
+      "lens": "28mm",
+      "aperture": 1.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/9] 2:3 vertical, Black and white documentary, low angle ground level shot of adult walking, focus on footstep and textured pavement, old arcade column base, natural light, no flash, 28mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "0496fafc6fbd"
+    },
+    {
+      "id": "S09-05",
+      "file": "style-bw-street__05.png",
+      "size": "WS",
+      "angle": "eye_level",
+      "lens": "28mm",
+      "aperture": 5.6,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/9] 2:3 vertical, Black and white street documentary, adult standing in middle of old arcade street, showing both sides of shophouses, bustling market atmosphere, natural light, no flash, candid scene, 28mm lens at f/5.6, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "0496fafc6fbd"
+    },
+    {
+      "id": "S09-06",
+      "file": "style-bw-street__06.png",
+      "size": "MS",
+      "angle": "eye_level",
+      "lens": "28mm",
+      "aperture": 2.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/9] 2:3 vertical, Black and white documentary, adult leaning against arcade column, diagonal shadow line cutting wall, strong contrast, natural light, no flash, candid, 28mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "0496fafc6fbd"
+    },
+    {
+      "id": "S09-07",
+      "file": "style-bw-street__07.png",
+      "size": "CU",
+      "angle": "eye_level",
+      "lens": "28mm",
+      "aperture": 1.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/9] 2:3 vertical, Black and white documentary portrait, adult peeking from behind arcade column, framed by two columns, natural soft light, no flash, candid expression, shallow depth of field, 28mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "0496fafc6fbd"
+    },
+    {
+      "id": "S09-08",
+      "file": "style-bw-street__08.png",
+      "size": "FS",
+      "angle": "high_angle",
+      "lens": "28mm",
+      "aperture": 4,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/9] 2:3 vertical, Black and white documentary, high angle shot of adult walking under arcade, diagonal path, shadow on ground, natural light, no flash, street life, 28mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "0496fafc6fbd"
+    },
+    {
+      "id": "S09-09",
+      "file": "style-bw-street__09.png",
+      "size": "EWS",
+      "angle": "eye_level",
+      "lens": "28mm",
+      "aperture": 8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/9] 2:3 vertical, Black and white documentary, adult walking away into old arcade, backlit silhouette, natural light, no flash, atmospheric street scene, 28mm lens at f/8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "0496fafc6fbd"
+    }
+  ]
+}

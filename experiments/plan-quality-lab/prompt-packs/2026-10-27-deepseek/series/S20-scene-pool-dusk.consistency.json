@@ -1,0 +1,139 @@
+{
+  "series": "S20",
+  "briefId": "scene-pool-dusk",
+  "refFile": "scene-pool-dusk__REF-A.png",
+  "identityLock": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames",
+  "styleLock": "[STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look",
+  "identity": {
+    "gender": "adult",
+    "hair": "hair tied back in a low bun",
+    "wardrobe": "度假风服装（建议浅色长裙或宽松衬衫），自然披发，淡妆",
+    "scene": "酒店天台泳池（已获许可，仅池畔拍摄）",
+    "light": "黄昏自然光，太阳位于模特左后方低角度，形成暖色逆光轮廓；不使用闪光灯，必要时用白色反光板在模特正面3米处补光"
+  },
+  "style": {
+    "grade": "natural colour with a gentle film curve and consistent white balance",
+    "aspect": "2:3 vertical",
+    "size": "1024x1536",
+    "bans": [
+      "no text or labels inside the image",
+      "no watermark",
+      "no extra people",
+      "no props beyond the listed ones",
+      "no flash",
+      "keep the subject out of the water"
+    ]
+  },
+  "frames": [
+    {
+      "id": "S20-01",
+      "file": "scene-pool-dusk__01.png",
+      "size": "FS",
+      "angle": "eye_level",
+      "lens": "50mm",
+      "aperture": 4,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 1/10] 2:3 vertical, A full-body shot of an adult model standing sideways on a rooftop pool deck at dusk, relaxed posture, looking towards the sunset, warm backlight outlining her silhouette, calm water in the background, soft natural light, no flash, serene vacation mood, 50mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "96d26a8c49c6"
+    },
+    {
+      "id": "S20-02",
+      "file": "scene-pool-dusk__02.png",
+      "size": "MS",
+      "angle": "eye_level",
+      "lens": "50mm",
+      "aperture": 2.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 2/10] 2:3 vertical, A medium shot of an adult model sitting by a rooftop pool at dusk, legs dangling towards water but not touching, hands supporting behind, leaning back slightly, relaxed expression, warm side backlight, water reflections, no flash, lazy vacation atmosphere, 50mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "96d26a8c49c6"
+    },
+    {
+      "id": "S20-03",
+      "file": "scene-pool-dusk__03.png",
+      "size": "MS",
+      "angle": "high_angle",
+      "lens": "50mm",
+      "aperture": 2.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 3/10] 2:3 vertical, A high-angle shot of an adult model standing by a rooftop pool at dusk, leaning slightly forward, looking down at the water, clear reflection on the water surface, natural warm light, no flash, tranquil vacation mood, 50mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "96d26a8c49c6"
+    },
+    {
+      "id": "S20-04",
+      "file": "scene-pool-dusk__04.png",
+      "size": "CU",
+      "angle": "low_angle",
+      "lens": "50mm",
+      "aperture": 1.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 4/10] 2:3 vertical, A low-angle shot of an adult model crouching by a rooftop pool at dusk, one hand touching the water surface lightly, side profile, warm backlight, reflection on water, no flash, peaceful vacation vibe, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "96d26a8c49c6"
+    },
+    {
+      "id": "S20-05",
+      "file": "scene-pool-dusk__05.png",
+      "size": "FS",
+      "angle": "eye_level",
+      "lens": "50mm",
+      "aperture": 4,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 5/10] 2:3 vertical, A full-body silhouette of an adult model walking slowly by a rooftop pool at dusk, backlit by the setting sun, clear outline, warm sky colors, no flash, serene vacation atmosphere, 50mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "96d26a8c49c6"
+    },
+    {
+      "id": "S20-06",
+      "file": "scene-pool-dusk__06.png",
+      "size": "CU",
+      "angle": "eye_level",
+      "lens": "50mm",
+      "aperture": 1.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 6/10] 2:3 vertical, A half-body silhouette of an adult model leaning on a poolside wall at dusk, relaxed posture, looking into the distance, backlit by the setting sun, clear outline, no flash, calm vacation mood, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "96d26a8c49c6"
+    },
+    {
+      "id": "S20-07",
+      "file": "scene-pool-dusk__07.png",
+      "size": "MCU",
+      "angle": "eye_level",
+      "lens": "50mm",
+      "aperture": 2,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 7/10] 2:3 vertical, A medium close-up of an adult model standing by a rooftop pool at dusk, one hand resting on a railing, looking down at the water, warm side light, soft reflections, no flash, relaxed vacation vibe, 50mm lens at f/2, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "96d26a8c49c6"
+    },
+    {
+      "id": "S20-08",
+      "file": "scene-pool-dusk__08.png",
+      "size": "MS",
+      "angle": "eye_level",
+      "lens": "50mm",
+      "aperture": 2.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 8/10] 2:3 vertical, A medium shot of an adult model standing by a rooftop pool at dusk, arms slightly open, eyes closed, head tilted back, enjoying the breeze, warm side backlight, no flash, lazy vacation mood, 50mm lens at f/2.8, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "96d26a8c49c6"
+    },
+    {
+      "id": "S20-09",
+      "file": "scene-pool-dusk__09.png",
+      "size": "FS",
+      "angle": "high_angle",
+      "lens": "50mm",
+      "aperture": 4,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 9/10] 2:3 vertical, A high-angle shot of an adult model sitting by a rooftop pool at dusk, hugging knees, chin on knees, looking at the water, warm frontal light, no flash, cozy vacation atmosphere, 50mm lens at f/4, subject and environment both clearly readable, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "96d26a8c49c6"
+    },
+    {
+      "id": "S20-10",
+      "file": "scene-pool-dusk__10.png",
+      "size": "CU",
+      "angle": "eye_level",
+      "lens": "50mm",
+      "aperture": 1.8,
+      "aspect": "2:3 vertical",
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, natural skin texture, no beauty-filter plastic look, [FRAME 10/10] 2:3 vertical, A close-up of an adult model standing by a rooftop pool at dusk, one hand gently touching collarbone, side profile, soft side light, warm tones, no flash, intimate vacation mood, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, photorealistic editorial photograph, clean unmarked frame.",
+      "promptHash": "96d26a8c49c6"
+    }
+  ]
+}
