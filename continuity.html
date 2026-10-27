@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>连续性分组 · 参考图与逐镜生成</title>
+<style>
+    :root {
+        color-scheme: light dark;
+        --bg: #f7f7f5;
+        --panel: #fff;
+        --ink: #1c1c1a;
+        --muted: #6b6b66;
+        --line: #e3e3de;
+        --accent: #2f6b4f;
+        --warn: #8a5a12;
+        --danger: #8c2f2f;
+    }
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --bg: #16171a; --panel: #1e2024; --ink: #ececea; --muted: #9a9a96;
+            --line: #2c2f34; --accent: #6fbf8f; --warn: #d8a95c; --danger: #e08484;
+        }
+    }
+    * { box-sizing: border-box; }
+    body {
+        margin: 0; padding: 32px 20px 80px; background: var(--bg); color: var(--ink);
+        font: 15px/1.6 -apple-system, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    }
+    main { max-width: 1060px; margin: 0 auto; }
+    h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: .01em; }
+    h2 { font-size: 15px; margin: 32px 0 12px; color: var(--muted); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+    h3 { font-size: 15px; margin: 0 0 12px; }
+    p.muted, .muted { color: var(--muted); }
+    .small { font-size: 12px; }
+    .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
+    .grid { display: grid; gap: 14px; }
+    .grid.two { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+    label { display: grid; gap: 6px; font-size: 13px; color: var(--muted); }
+    label.inline { display: flex; align-items: center; gap: 8px; color: var(--ink); }
+    input, textarea, select, button { font: inherit; }
+    input[type="text"], input[type="file"], textarea, select {
+        width: 100%; padding: 9px 11px; border: 1px solid var(--line); border-radius: 9px;
+        background: var(--bg); color: var(--ink);
+    }
+    textarea { min-height: 92px; resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+    button {
+        padding: 9px 14px; border-radius: 9px; border: 1px solid transparent;
+        background: var(--accent); color: #fff; cursor: pointer;
+    }
+    button.ghost { background: transparent; border-color: var(--line); color: var(--ink); }
+    button:hover { filter: brightness(1.05); }
+    .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 12px; }
+    .refs { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+    .ref-card { border: 1px solid var(--line); border-radius: 12px; padding: 14px; background: var(--panel); }
+    .ref-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .ref-actions { display: grid; gap: 8px; margin-top: 12px; }
+    .thumb { width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); }
+    .thumb.empty { display: grid; place-items: center; color: var(--muted); font-size: 12px; }
+    .badge { font-size: 11px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+    .badge.confirmed, .badge.pass { color: var(--accent); border-color: var(--accent); }
+    .badge.pending, .badge.needs-human { color: var(--warn); border-color: var(--warn); }
+    .badge.retry, .badge.missing { color: var(--danger); border-color: var(--danger); }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { color: var(--muted); font-weight: 600; font-size: 12px; }
+    td button { padding: 5px 10px; font-size: 12px; margin-right: 6px; }
+    pre { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 12px; overflow: auto; font-size: 12px; max-height: 360px; }
+    #toast {
+        position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+        background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+        padding: 10px 16px; box-shadow: 0 8px 24px rgba(0,0,0,.12); font-size: 13px; max-width: 80vw;
+    }
+    #toast[data-kind="error"] { color: var(--danger); border-color: var(--danger); }
+    #toast[data-kind="ok"] { color: var(--accent); border-color: var(--accent); }
+    #toast[data-kind="warn"] { color: var(--warn); border-color: var(--warn); }
+    .qc-grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    .rule { font-size: 13px; color: var(--muted); margin: 6px 0 0; padding-left: 18px; }
+    .rule li { margin: 2px 0; }
+</style>
+</head>
+<body>
+<main>
+    <h1>连续性分组</h1>
+    <p class="muted">一次拍摄 = 一份锁定契约 + 三张角色化参考 + 主图确认 + 逐镜请求 + 每图质检。没有"一条提示词出九张"这种按钮。</p>
+
+    <h2>1. 建立分组</h2>
+    <section class="card">
+        <div class="grid two">
+            <label>主题<input id="f-theme" type="text" placeholder="雨夜旧车站" /></label>
+            <label>场地<input id="f-scene" type="text" placeholder="雨后的海边旧火车站月台" /></label>
+            <label>人物<input id="f-person" type="text" placeholder="同一位成年女性" /></label>
+            <label>服装<input id="f-wardrobe" type="text" placeholder="炭灰羊毛大衣、米色围巾" /></label>
+            <label>风格<input id="f-style" type="text" placeholder="纪实、冷暖混合" /></label>
+            <label>光线 / 时间 / 天气备注<input id="f-extra" type="text" placeholder="阴天傍晚，雨停后；禁用闪光灯" /></label>
+        </div>
+        <label style="margin-top:14px">镜头列表（JSON，可为数组或 {shot_plans:[…]}）
+            <textarea id="f-shots" placeholder='[{"shotId":"shot-01","size":"WS","camera_angle":"eye_level","lens":"35mm","model_pose":"沿月台缓慢行走","model_position":"画面右侧","generator_prompt":"wide shot of a figure walking along a wet platform"}]'></textarea>
+        </label>
+        <div class="row">
+            <button id="create">建立分组</button>
+            <label class="inline ghost" style="gap:8px">
+                <span>或导入契约 JSON</span>
+                <input id="import" type="file" accept="application/json" style="width:auto" />
+            </label>
+        </div>
+        <div id="summary" class="row" style="margin-top:10px"></div>
+    </section>
+
+    <h2>2. 三张参考图（角色分开，缺一不可）</h2>
+    <section id="refs" class="refs"></section>
+    <div class="row">
+        <button id="master">确认主参考图（人工）</button>
+        <span class="muted small">主图未确认前，服务端会直接拒绝生成。</span>
+    </div>
+
+    <h2>3. 逐镜请求</h2>
+    <section class="card">
+        <div class="row" style="margin-top:0">
+            <label style="max-width:280px">图像服务
+                <select id="f-provider"></select>
+            </label>
+        </div>
+        <div id="shots" style="margin-top:12px"></div>
+        <pre id="request-output">选中某镜的"取请求"，这里会显示实际发出去的请求（含 seed、参考角色、锁定字段）。</pre>
+    </section>
+
+    <h2>4. 质检</h2>
+    <section id="qc-panel" class="card">
+        <p class="muted" style="margin:0">选中某镜的"质检"后在这里逐项判定。未过只重做该镜，不重做整组。</p>
+    </section>
+
+    <h2>规则</h2>
+    <ul class="rule">
+        <li>锁定字段只能来自原始需求，镜头层不得改写。</li>
+        <li>参考图分人物 / 场景 / 风格三档，风格参考必须来自你自己的图库。</li>
+        <li>主参考图必须人工确认，之后才允许批量生成。</li>
+        <li>每个镜头单独请求，携带同一套锁定条件与同一组参考。</li>
+        <li>不支持参考图的模型一律拒绝，不做纯文字降级。</li>
+        <li>每张图都必须过质检；关键项（身份 / 肢体 / 风格）需人眼确认。</li>
+    </ul>
+</main>
+<div id="toast" hidden></div>
+<script type="module" src="/assets/continuity-panel.js"></script>
+</body>
+</html>
