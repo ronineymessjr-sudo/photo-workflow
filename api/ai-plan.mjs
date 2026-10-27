@@ -11,13 +11,14 @@ const unconfirmedResources = [
     { name: '雨伞', pattern: /雨伞|撑伞|伞面|umbrella/i },
     { name: '手机', pattern: /手机|电话|\bphones?\b/i },
     // 窗 excludes 窗口 (a time window, e.g. 蓝调窗口), which is not a physical window.
-    // 场景固有附属物：列车车窗之于地铁站台，不因场景文本未写"窗"而视为臆造。
-    { name: '橱窗或窗户', pattern: /窗(?!口)|window(?!less)/i, parents: [/车窗|站台|列车|地铁|车窗外/] },
-    { name: '椅子或凳子', pattern: /椅子|凳子|藤椅|木椅|竹椅|摇椅|长椅|椅背|\bchairs?\b|\bstools?\b/i, parents: [/家具/, /\bfurniture\b/i, /阅览/ ] },
+    // 场景固有附属物：列车车窗之于地铁站台、临街窗之于咖啡馆、宅窗之于老宅，
+    // 不因场景文本未写"窗"而视为臆造。
+    { name: '橱窗或窗户', pattern: /窗(?!口)|window(?!less)/i, parents: [/车窗|站台|列车|地铁|车窗外/, /咖啡馆|咖啡厅|咖啡店|茶馆/, /老宅|老屋|住宅|民宅|农宅|公寓/] },
+    { name: '椅子或凳子', pattern: /椅子|凳子|藤椅|木椅|竹椅|摇椅|长椅|长凳|板凳|条凳|\bchairs?\b|\bstools?\b|\bbenches?\b/i, parents: [/家具/, /\bfurniture\b/i, /阅览/, /咖啡馆|咖啡厅|咖啡店|茶馆/] },
     // 家具 is a parent word: 旧家具 provided by the user covers 旧方桌/八仙桌 etc.
     // 阅览区/自习室自带桌椅，如同公园自带长椅。
     // "table lamp" is a lamp, not a table — excluded by lookahead.
-    { name: '桌子', pattern: /桌子|桌面|餐桌|茶桌|方桌|八仙桌|\btables?\b(?! lamps?)|\bdesks?\b/i, parents: [/家具/, /\bfurniture\b/i, /阅览|自习/] },
+    { name: '桌子', pattern: /桌子|桌面|餐桌|茶桌|方桌|八仙桌|\btables?\b(?! lamps?)|\bdesks?\b/i, parents: [/家具/, /\bfurniture\b/i, /阅览|自习/, /咖啡馆|咖啡厅|咖啡店|茶馆/] },
     { name: '花束', pattern: /花束|鲜花|bouquet/i },
     { name: '背包或手提包', pattern: /双肩包|单肩包|背包|手提包|包袋|\bbackpacks?\b|\bhandbags?\b/i },
     // Word boundaries: storybook is an adjective, not a physical book.
@@ -25,7 +26,8 @@ const unconfirmedResources = [
     { name: '书本', pattern: /书本|书籍|\bbooks?\b/i, parents: [/图书馆|书店|书架|书城|阅览/] },
     { name: '自行车', pattern: /自行车|单车|\bbicycles?\b|\bbikes?\b/i },
     // Word boundaries: "hands cupped around" is not a cup; cupboard is not a cup.
-    { name: '杯子', pattern: /杯子|咖啡杯|水杯|\bcups?\b|\bmugs?\b/i },
+    // 茶桌配茶杯、咖啡馆配杯具，是场景固有衍生。
+    { name: '杯子', pattern: /杯子|咖啡杯|水杯|茶杯|\bcups?\b|\bmugs?\b/i, parents: [/茶桌|茶席|茶道|茶艺/, /咖啡馆|咖啡厅|咖啡店|茶馆/] },
     { name: '气球', pattern: /气球|\bballoons?\b/i },
 ];
 
@@ -110,8 +112,15 @@ export function validateHardConstraints(shots, input) {
         if (constraints.lowerLeftAll && !/左下(?:角|方)?|画面左下|lower[- ]left/i.test(shot.model_position)) add(index, '人物位置未明确放在画面左下');
         if (constraints.focalLengthOnly && !new RegExp(`^\\s*${constraints.focalLengthOnly.replace('mm', '')}\\s*mm\\b`, 'i').test(shot.lens)) add(index, `焦段不符合仅用${constraints.focalLengthOnly}的要求`);
         for (const item of constraints.prohibited) if (hasPositiveMention(shotText, item.pattern)) add(index, `出现禁用内容：${item.label}`);
+        // The prompt explicitly allows "依赖现场条件的镜头明确写条件与替代方案":
+        // a plan may reference an unconfirmed resource as long as it states the
+        // condition (若无/如果没有) and a fallback (改拍/改用/改为/替代). Rejecting
+        // that wording would contradict the prompt.
+        const hasCondition = /若无|如果没[有]|若没[有]|（如果有）|\(if available\)|\(if any\)|假设有|但未提供|未提供/i.test(shotText);
+        const hasFallback = /改拍|改用|改在|改为|替代|或门口|或借助/.test(shotText);
         for (const resource of unconfirmedResources) {
-            if (!isProvided(resource, constraints.resourceAllowlist) && hasPositiveMention(shotText, resource.pattern)) add(index, `使用了未提供、需确认的资源：${resource.name}`);
+            if (!isProvided(resource, constraints.resourceAllowlist) && hasPositiveMention(shotText, resource.pattern)
+                && !(hasCondition && hasFallback)) add(index, `使用了未提供、需确认的资源：${resource.name}`);
         }
     });
     return [...new Set(violations)];

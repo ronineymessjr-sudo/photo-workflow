@@ -281,6 +281,7 @@ test('scene-inherent objects (library books, reading-room tables, train windows)
         [{ theme: '图书馆阅读', scene: '市图书馆阅览区', duration: '1小时' }, '翻开手中的书本，坐在座位上', 'book'],
         [{ theme: '自习室纪实', scene: '大学自习室', duration: '1小时' }, '在桌前写字', 'desk'],
         [{ theme: '地铁站台', scene: '地铁站台（已获拍摄许可）', duration: '1小时' }, '静立候车，背景列车车窗光轨划过', 'train window light trails'],
+        [{ theme: '咖啡馆写真', scene: '咖啡馆室内（店主人很好已同意）', duration: '1小时' }, '坐在窗边桌前双手捧杯', 'cafe window seat with coffee cup'],
     ];
     for (const [input, pose, prompt] of cases) {
         const shots = [{ shot_language: '场景镜', model_pose: pose, photographer_position: '平视', lens: '35mm', model_position: '中央', wardrobe_styling: '日常装', lighting_setup: '现场光', shot_props: '无', crop_boundary: '半身', must_show: '环境细节', reject_if: '模糊', execution_note: '改拍侧影', generator_prompt: prompt, shot_size: 'MS', camera_angle: 'eye_level' }];
@@ -289,6 +290,28 @@ test('scene-inherent objects (library books, reading-room tables, train windows)
     // 但空街上没有图书馆上下文时，书本仍是未确认资源。
     const street = [{ shot_language: '街拍', model_pose: '捧着书本走路', photographer_position: '平视', lens: '35mm', model_position: '中央', wardrobe_styling: '休闲装', lighting_setup: '自然光', shot_props: '无', crop_boundary: '全身', must_show: '街道', reject_if: '模糊', execution_note: '改拍背影', generator_prompt: 'walking with a book', shot_size: 'FS', camera_angle: 'eye_level' }];
     assert.ok(validateHardConstraints(street, { theme: '街拍', duration: '1小时' }).some(v => v.includes('书本')), '无图书馆上下文的书本必须仍被拦截');
+});
+
+test('长凳 provided by the user covers bench mentions; 茶桌 covers tea cups', () => {
+    const benchInput = { theme: '八人团建', scene: '公司附近公园草坪', duration: '2小时', extra: '合影用长凳（现场已有）' };
+    const bench = [{ shot_language: '合影', model_pose: '前排四人坐长凳，后排搭在前排肩上', photographer_position: '长凳正前方', lens: '35mm', model_position: '中央', wardrobe_styling: '统一工装', lighting_setup: '顺光', shot_props: '长凳（现场已有）', crop_boundary: '全身', must_show: '八人全员', reject_if: '有人闭眼', execution_note: '改拍站姿', generator_prompt: 'group photo on a bench', shot_size: 'FS', camera_angle: 'eye_level' }];
+    assert.deepEqual(validateHardConstraints(bench, benchInput), []);
+    const teaInput = { theme: '祖孙午后', scene: '老宅院内的藤椅与茶桌', duration: '1小时' };
+    const tea = [{ shot_language: '递茶', model_pose: '双手递茶杯', photographer_position: '对面平视', lens: '85mm', model_position: '中央', wardrobe_styling: '家常装', lighting_setup: '自然光', shot_props: '茶杯', crop_boundary: '手部特写', must_show: '茶杯与手', reject_if: '模糊', execution_note: '改拍对视', generator_prompt: 'hands handing a tea cup', shot_size: 'ECU', camera_angle: 'eye_level' }];
+    assert.deepEqual(validateHardConstraints(tea, teaInput), []);
+});
+
+test('conditional dependency with a fallback is accepted per the prompt contract', () => {
+    // 提示词承诺允许"依赖现场条件的镜头明确写条件与替代方案"。
+    const input = { theme: '老屋环境人像', scene: '即将拆迁的老屋内部（已获许可）', duration: '1小时', extra: '交代屋内环境细节（斑驳墙、旧家具）' };
+    const shots = [{ shot_language: '窗前剪影', model_pose: '静立望向窗外', photographer_position: '室内平视', lens: '24mm', model_position: '中央', wardrobe_styling: '待确认', lighting_setup: '自然光从侧面窗户（如果有）或门口进入，现有室内光为环境光', shot_props: '无', crop_boundary: '全身', must_show: '斑驳墙', reject_if: '剪影发灰', execution_note: '若无窗户，可改用门口光线改拍门口剪影', generator_prompt: 'silhouette by the window', shot_size: 'FS', camera_angle: 'eye_level' }];
+    assert.deepEqual(validateHardConstraints(shots, input), []);
+    // 但直接假设窗户存在且无条件表述仍要拦（中性场景，无场景豁免、无条件词）。
+    const street = { theme: '街头人像', scene: '步行街', duration: '1小时' };
+    const assumed = [{ ...shots[0], lighting_setup: '自然光从侧面窗户射入，现有室内光为环境光', execution_note: '改拍门框剪影' }];
+    assert.ok(validateHardConstraints(assumed, street).some(v => v.includes('橱窗或窗户')), '无条件表述的窗户假设必须仍被拦截');
+    // 中性场景 + 条件与替代 → 放行（合同允许）。
+    assert.deepEqual(validateHardConstraints(shots, street), []);
 });
 
 test('english negations in generator prompts are not counted as positive resource mentions', () => {

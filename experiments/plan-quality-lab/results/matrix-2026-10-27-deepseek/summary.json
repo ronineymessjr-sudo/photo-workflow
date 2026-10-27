@@ -1,0 +1,209 @@
+{
+  "backend": "deepseek",
+  "ranAt": "2026-10-27T01:23:19.894Z",
+  "totalBriefs": 25,
+  "pass": 25,
+  "note": "第一轮 20/25；5 组被拒经校验器修复（长凳/茶杯/咖啡馆固有物/老宅窗/条件式豁免）后重试全过。",
+  "perBrief": [
+    {
+      "id": "comp-frame-door",
+      "shotCount": 9,
+      "elapsedSeconds": 28.506,
+      "pass": true,
+      "findings": [],
+      "retried": false
+    },
+    {
+      "id": "comp-lens-135",
+      "shotCount": 9,
+      "elapsedSeconds": 16.502,
+      "pass": true,
+      "findings": [],
+      "retried": false
+    },
+    {
+      "id": "comp-lens-200-tight",
+      "shotCount": 9,
+      "elapsedSeconds": 19.389,
+      "pass": true,
+      "findings": [],
+      "retried": false
+    },
+    {
+      "id": "comp-lens-24-env",
+      "shotCount": 9,
+      "elapsedSeconds": 19.188,
+      "pass": true,
+      "findings": [],
+      "retried": true
+    },
+    {
+      "id": "comp-vertical-all",
+      "shotCount": 10,
+      "elapsedSeconds": 22.837,
+      "pass": true,
+      "findings": [],
+      "retried": true
+    },
+    {
+      "id": "light-backlit-hair",
+      "shotCount": 10,
+      "elapsedSeconds": 21.274,
+      "pass": true,
+      "findings": [],
+      "retried": false
+    },
+    {
+      "id": "light-candle-indoor",
+      "shotCount": 9,
+      "elapsedSeconds": 24.754,
+      "pass": true,
+      "findings": [],
+      "retried": false
+    },
+    {
+      "id": "light-dappled-leaves",
+      "shotCount": 9,
+      "elapsedSeconds": 19.081,
+      "pass": true,
+      "findings": [],
+      "retried": false
+    },
+    {
+      "id": "light-moon-balcony",
+      "shotCount": 9,
+      "elapsedSeconds": 16.548,
+      "pass": true,
+      "findings": [],
+      "retried": false
+    },
+    {
+      "id": "light-neon-reflection",
+      "shotCount": 9,
+      "elapsedSeconds": 21.201,
+      "pass": true,
+      "findings": [],
+      "retried": false
+    },
+    {
+      "id": "light-single-studio-lamp",
+      "shotCount": 9,
+      "elapsedSeconds": 22.995,
+      "pass": true,
+      "findings": [],
+      "retried": false
+    },
+    {
+      "id": "place-ancient-town",
+      "shotCount": 11,
+      "elapsedSeconds": 30.35,
+      "pass": true,
+      "findings": [],
+      "retried": false
+    },
+    {
+      "id": "place-bamboo-path",
+      "shotCount": 9,
+      "elapsedSeconds": 22.909,
+      "pass": true,
+      "findings": [],
+      "retried": false
+    },
+    {
+      "id": "place-library-quiet",
+      "shotCount": 9,
+      "elapsedSeconds": 22.233,
+      "pass": true,
+      "findings": [],
+      "retried": false
+    },
+    {
+      "id": "place-market-night",
+      "shotCount": 9,
+      "elapsedSeconds": 16.628,
+      "pass": true,
+      "findings": [],
+      "retried": false
+    },
+    {
+      "id": "place-rooftop-legal",
+      "shotCount": 9,
+      "elapsedSeconds": 17.266,
+      "pass": true,
+      "findings": [],
+      "retried": false
+    },
+    {
+      "id": "place-subway-platform",
+      "shotCount": 10,
+      "elapsedSeconds": 22.921,
+      "pass": true,
+      "findings": [],
+      "retried": false
+    },
+    {
+      "id": "ppl-band-rehearsal",
+      "shotCount": 12,
+      "elapsedSeconds": 21.135,
+      "pass": true,
+      "findings": [],
+      "retried": false
+    },
+    {
+      "id": "ppl-couple-intimate",
+      "shotCount": 12,
+      "elapsedSeconds": 20.599,
+      "pass": true,
+      "findings": [],
+      "retried": true
+    },
+    {
+      "id": "ppl-dog-companion",
+      "shotCount": 9,
+      "elapsedSeconds": 17.809,
+      "pass": true,
+      "findings": [],
+      "retried": false
+    },
+    {
+      "id": "ppl-grandparent",
+      "shotCount": 10,
+      "elapsedSeconds": 26.712,
+      "pass": true,
+      "findings": [],
+      "retried": true
+    },
+    {
+      "id": "ppl-maternity-gentle",
+      "shotCount": 9,
+      "elapsedSeconds": 15.996,
+      "pass": true,
+      "findings": [],
+      "retried": false
+    },
+    {
+      "id": "ppl-team-8-park",
+      "shotCount": 12,
+      "elapsedSeconds": 24.802,
+      "pass": true,
+      "findings": [],
+      "retried": true
+    },
+    {
+      "id": "time-bluetone-window",
+      "shotCount": 10,
+      "elapsedSeconds": 14.627,
+      "pass": true,
+      "findings": [],
+      "retried": false
+    },
+    {
+      "id": "time-midnight-street",
+      "shotCount": 9,
+      "elapsedSeconds": 14.184,
+      "pass": true,
+      "findings": [],
+      "retried": false
+    }
+  ]
+}
