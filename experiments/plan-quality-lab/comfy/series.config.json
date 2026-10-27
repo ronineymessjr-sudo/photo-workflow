@@ -1,0 +1,44 @@
+{
+  "comfy": {
+    "url": "http://127.0.0.1:8188",
+    "timeoutSeconds": 300
+  },
+  "model": {
+    "checkpoint": "realvisxlV50_v50Bakedvae.safetensors",
+    "ipadapterPreset": "PLUS FACEID",
+    "ipadapterWeight": 0.85,
+    "clipName": "clip_g",
+    "vaeName": "sdxl_vae.safetensors"
+  },
+  "sampler": {
+    "steps": 30,
+    "cfg": 5.5,
+    "samplerName": "dpmpp_2m",
+    "scheduler": "karras",
+    "denoise": 1.0
+  },
+  "sceneLock": {
+    "mode": "controlnet_depth",
+    "note": "controlnet_depth = 用真实场地照片锁建筑结构；reference = 用 IP-Adapter 参考图锁色调与陈设；off = 不锁",
+    "controlnetModel": "control_v11f1p_sd15_depth.pth",
+    "strength": 0.55
+  },
+  "poseLock": {
+    "mode": "off",
+    "note": "openpose = 用参考帧锁姿势骨架；off = 只靠提示词",
+    "controlnetModel": "control_openpose-fp16.safetensors",
+    "strength": 0.6
+  },
+  "seeds": {
+    "base": 428193,
+    "note": "每帧种子 = base + 系列号*100 + 帧号，保证可复现"
+  },
+  "output": {
+    "dir": "D:/AI项目/摄影系统/photo-workflow-web-discovery-fix/experiments/plan-quality-lab/comfy-output",
+    "returnedDir": "D:/AI项目/摄影系统/photo-workflow-web-discovery-fix/experiments/plan-quality-lab/prompt-packs/2026-10-27-deepseek/returned/local-comfy",
+    "width": 832,
+    "height": 1216,
+    "widthWide": 1216,
+    "heightWide": 832
+  }
+}
