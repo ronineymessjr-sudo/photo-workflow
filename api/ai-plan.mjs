@@ -12,14 +12,17 @@ const unconfirmedResources = [
     { name: '手机', pattern: /手机|电话|\bphones?\b/i },
     // 窗 excludes 窗口 (a time window, e.g. 蓝调窗口), which is not a physical window.
     // 场景固有附属物：列车车窗之于地铁站台、临街窗之于咖啡馆、宅窗之于老宅，
-    // 天窗/梯井之于楼梯与美术馆中庭、侧窗之于教室与练功房，均属建筑结构而非臆造道具。
-    { name: '橱窗或窗户', pattern: /窗(?!口)|window(?!less)/i, parents: [/车窗|站台|列车|地铁|车窗外/, /咖啡馆|咖啡厅|咖啡店|茶馆/, /老宅|老屋|住宅|民宅|农宅|公寓/, /楼梯|梯井|天窗|顶窗|中庭/, /美术馆|展厅|展览|博物馆/, /教室|课室|练功房|舞房|镜墙|把杆/] },
-    { name: '椅子或凳子', pattern: /椅子|凳子|藤椅|木椅|竹椅|摇椅|长椅|长凳|板凳|条凳|\bchairs?\b|\bstools?\b|\bbenches?\b/i, parents: [/家具/, /\bfurniture\b/i, /阅览/, /咖啡馆|咖啡厅|咖啡店|茶馆/, /教室|课室|课桌|练功房|舞房/] },
+    // 天窗/梯井之于楼梯与美术馆中庭、侧窗之于教室与练功房、顶部采光之于场馆，
+    // 均属建筑结构而非臆造道具。
+    { name: '橱窗或窗户', pattern: /窗(?!口)|window(?!less)/i, parents: [/车窗|站台|列车|地铁|车窗外/, /咖啡馆|咖啡厅|咖啡店|茶馆/, /老宅|老屋|住宅|民宅|农宅|公寓/, /楼梯|梯井|天窗|顶窗|中庭/, /美术馆|展厅|展览|博物馆/, /教室|课室|练功房|舞房|镜墙|把杆/, /游泳馆|泳池|体育馆|球馆|室内馆|机场|商场/] },
+    { name: '椅子或凳子', pattern: /椅子|凳子|藤椅|木椅|竹椅|摇椅|长椅|长凳|板凳|条凳|办公椅|座椅|转椅|\bchairs?\b|\bstools?\b|\bbenches?\b/i, parents: [/家具/, /\bfurniture\b/i, /阅览/, /咖啡馆|咖啡厅|咖啡店|茶馆/, /教室|课室|课桌|练功房|舞房/, /办公|办公室|会议室/] },
     // 家具 is a parent word: 旧家具 provided by the user covers 旧方桌/八仙桌 etc.
     // 阅览区/自习室自带桌椅，如同公园自带长椅。
     // "table lamp" is a lamp, not a table — excluded by lookahead.
     // 课桌/书桌/桌椅 are the classroom form of a desk: 课桌椅 provided covers desk.
-    { name: '桌子', pattern: /桌子|桌面|餐桌|茶桌|方桌|八仙桌|课桌|书桌|桌椅|\btables?\b(?! lamps?)|\bdesks?\b/i, parents: [/家具/, /\bfurniture\b/i, /阅览|自习/, /咖啡馆|咖啡厅|咖啡店|茶馆/, /教室|课室|办公|会议室/] },
+    // 工作台/案台/操作台 are the craft-room form: a provided workbench covers
+    // "wooden table" and "workbench" in the English prompt.
+    { name: '桌子', pattern: /桌子|桌面|餐桌|茶桌|方桌|八仙桌|课桌|书桌|桌椅|工作台|案台|操作台|\btables?\b(?! lamps?)|\bdesks?\b|\bworkbench(?:es)?\b/i, parents: [/家具/, /\bfurniture\b/i, /阅览|自习/, /咖啡馆|咖啡厅|咖啡店|茶馆/, /教室|课室|办公|会议室/, /工作台|案台|操作台/] },
     { name: '花束', pattern: /花束|鲜花|bouquet/i },
     { name: '背包或手提包', pattern: /双肩包|单肩包|背包|手提包|包袋|\bbackpacks?\b|\bhandbags?\b/i },
     // Word boundaries: storybook is an adjective, not a physical book.
@@ -32,10 +35,11 @@ const unconfirmedResources = [
     { name: '气球', pattern: /气球|\bballoons?\b/i },
 ];
 
-function hasPositiveMention(text, pattern) {
+function positiveMentionIndexes(text, pattern) {
+    const indexes = [];
     const matches = text.matchAll(new RegExp(pattern.source, 'gi'));
+    const negation = /(?:无|没有|无需|不用|不要|不带|不需要|不使用|未使用|不开|未开|关闭|关掉|禁用|别用|别开|切勿|严禁|莫用|不得|禁止(?:使用|开启)?|拒绝(?:使用)?|避免(?:使用)?|\b(?:no|without|not|never|avoid|forbid|excluded?|free of)\b)/;
     for (const match of matches) {
-        const negation = /(?:无|没有|无需|不用|不要|不带|不需要|不使用|未使用|不开|未开|关闭|关掉|禁用|别用|别开|切勿|严禁|莫用|不得|禁止(?:使用|开启)?|拒绝(?:使用)?|避免(?:使用)?|\b(?:no|without|not|never|avoid|forbid|excluded?|free of)\b)/;
         // Negations include English forms because generator_prompt is English:
         // "no flash", "without a reflector" are refusals, not violations.
         // Both sides are checked within the same clause: "不开闪光灯" (before)
@@ -44,7 +48,34 @@ function hasPositiveMention(text, pattern) {
         if (negation.test(prefix)) continue;
         const suffix = text.slice(match.index + match[0].length, match.index + match[0].length + 20).split(/[，,。；;\n]|但|不过|然而/)[0];
         if (negation.test(suffix)) continue;
-        return true;
+        indexes.push([match.index, match[0].length]);
+    }
+    return indexes;
+}
+
+function hasPositiveMention(text, pattern) {
+    return positiveMentionIndexes(text, pattern).length > 0;
+}
+
+// The prompt tells the model to state a condition plus a fallback for anything
+// that may not be on site ("可加背包（待确认，现场无则无）"). A mention is
+// covered when both parts sit in the same field as that mention, or when the
+// execution note carries a complete conditional ("若无窗户，可改用门口光").
+// A bare "待确认" in an unrelated field must not excuse an unconditional prop.
+const CONDITION_TEXT = /若无|如果没[有]|若没[有]|如果有|假设有|但未提供|未提供|待确认|现场有则|现场无则|按现场条件|如有需要/i;
+const FALLBACK_TEXT = /改拍|改用|改在|改为|替代|或门口|或借助|则无|则省略|则不用|则不使用|换用/;
+
+function hasUnconditionalMention(shot, fields, pattern, executionNote) {
+    const note = String(executionNote || '');
+    const noteIsConditional = CONDITION_TEXT.test(note) && FALLBACK_TEXT.test(note);
+    for (const key of fields) {
+        const value = String(shot[key] || '');
+        for (const [index, length] of positiveMentionIndexes(value, pattern)) {
+            const around = value.slice(Math.max(0, index - 40), index + length + 40);
+            if (CONDITION_TEXT.test(around) && FALLBACK_TEXT.test(around)) continue;
+            if (noteIsConditional) continue;
+            return true;
+        }
     }
     return false;
 }
@@ -114,14 +145,11 @@ export function validateHardConstraints(shots, input) {
         if (constraints.focalLengthOnly && !new RegExp(`^\\s*${constraints.focalLengthOnly.replace('mm', '')}\\s*mm\\b`, 'i').test(shot.lens)) add(index, `焦段不符合仅用${constraints.focalLengthOnly}的要求`);
         for (const item of constraints.prohibited) if (hasPositiveMention(shotText, item.pattern)) add(index, `出现禁用内容：${item.label}`);
         // The prompt explicitly allows "依赖现场条件的镜头明确写条件与替代方案":
-        // a plan may reference an unconfirmed resource as long as it states the
-        // condition (若无/如果没有) and a fallback (改拍/改用/改为/替代). Rejecting
-        // that wording would contradict the prompt.
-        const hasCondition = /若无|如果没[有]|若没[有]|（如果有）|\(if available\)|\(if any\)|假设有|但未提供|未提供/i.test(shotText);
-        const hasFallback = /改拍|改用|改在|改为|替代|或门口|或借助/.test(shotText);
+        // a plan may reference an unconfirmed resource as long as the condition
+        // (若无/如果没有/待确认) and the fallback (改拍/改用/则无) sit next to that
+        // mention. Rejecting that wording would contradict the prompt.
         for (const resource of unconfirmedResources) {
-            if (!isProvided(resource, constraints.resourceAllowlist) && hasPositiveMention(shotText, resource.pattern)
-                && !(hasCondition && hasFallback)) add(index, `使用了未提供、需确认的资源：${resource.name}`);
+            if (!isProvided(resource, constraints.resourceAllowlist) && hasUnconditionalMention(shot, requiredText.filter(key => key !== 'reject_if'), resource.pattern, shot.execution_note)) add(index, `使用了未提供、需确认的资源：${resource.name}`);
         }
     });
     return [...new Set(violations)];

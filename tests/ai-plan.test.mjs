@@ -310,6 +310,10 @@ test('scene-inherent objects (library books, reading-room tables, train windows)
         [{ theme: '日系教室', scene: '旧教室（课桌椅现场已有）', duration: '1小时' }, '坐在课桌前撑着下巴', 'rows of wooden desks, student sitting at window desk in backlit classroom'],
         [{ theme: '旋转楼梯', scene: '美术馆旋转楼梯（已获许可）', duration: '1小时' }, '沿内侧阶梯下行', 'spiral staircase under a skylight, light pouring down the stairwell'],
         [{ theme: '舞者练功房', scene: '舞蹈教室（把杆与镜墙现场已有）', duration: '1小时' }, '靠把杆压腿', 'dancer stretching by the barre, side window light rimming the body'],
+        // 办公桌椅成套、工作台之于手作、场馆顶部与侧窗采光，同样是场景固有物。
+        [{ theme: '商务肖像', scene: '办公室（落地窗、办公桌现场已有）', duration: '1小时' }, '坐在办公椅上侧向镜头', 'businessman sitting on an office chair beside a desk'],
+        [{ theme: '老人手作', scene: '老街工作台（工作台与工具现场已有）', duration: '1小时' }, '双手放在台面工具旁', 'elderly artisan at a wooden workbench, tools on the wooden table'],
+        [{ theme: '泳者出水', scene: '室内游泳馆（已获许可，池畔拍摄）', duration: '1小时' }, '岸边擦水', 'swimmer by the pool under ceiling and side window light'],
     ];
     for (const [input, pose, prompt] of cases) {
         const shots = [{ shot_language: '场景镜', model_pose: pose, photographer_position: '距主体约3米平视', lens: '35mm', model_position: '中央', wardrobe_styling: '日常装', lighting_setup: '现场光', shot_props: '无', crop_boundary: '半身', must_show: '环境细节', reject_if: '模糊', execution_note: '改拍侧影', generator_prompt: prompt, shot_size: 'MS', camera_angle: 'eye_level' }];
@@ -360,6 +364,17 @@ test('禁用闪光灯 is a refusal, not a violation', () => {
     const input = { theme: '地铁站台', duration: '1小时', extra: '禁止使用闪光灯' };
     const shots = [{ shot_language: '候车剪影', model_pose: '静立候车', photographer_position: '站台对面约4米', lens: '35mm', model_position: '黄线内', wardrobe_styling: '通勤装', lighting_setup: '全程禁用闪光灯，仅用灯带照明', shot_props: '无', crop_boundary: '全身', must_show: '灯带', reject_if: '模糊', execution_note: '改拍剪影', generator_prompt: 'subway platform silhouette', shot_size: 'FS', camera_angle: 'eye_level' }];
     assert.deepEqual(validateHardConstraints(shots, input), []);
+});
+
+test('a conditional prop is accepted only when the condition and fallback sit next to it', () => {
+    const base = { shot_language: '侧光全身', model_pose: '站在课桌旁侧身', photographer_position: '距主体约3.5米平视', lens: '35mm', model_position: '画面左侧', lighting_setup: '侧光为主', crop_boundary: '全身', must_show: '课桌与教室背景', reject_if: '动作僵硬', generator_prompt: 'student standing by desks in a classroom', shot_size: 'FS', camera_angle: 'eye_level' };
+    const input = { theme: '日系教室', scene: '旧教室（课桌椅现场已有）', duration: '1小时' };
+    // 条件与替代方案就在道具旁：合规。
+    const nearby = [{ ...base, shot_props: '可加背包（待确认，现场无则无）', wardrobe_styling: '校服，发型待确认', execution_note: '若走廊有学生经过，改拍门框剪影' }];
+    assert.deepEqual(validateHardConstraints(nearby, input), []);
+    // 只有别处出现"待确认"，道具本身是无条件使用：仍要拦。
+    const farAway = [{ ...base, shot_props: '背包放在课桌上', wardrobe_styling: '服装待确认，妆发待确认', execution_note: '人多时改拍侧影' }];
+    assert.ok(validateHardConstraints(farAway, input).some(v => v.includes('背包或手提包')), '无条件使用背包必须被拦截');
 });
 
 test('a parent word like 旧家具 covers specific furniture the user provided', () => {
