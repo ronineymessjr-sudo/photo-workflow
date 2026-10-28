@@ -10,7 +10,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
     createGroup, setReference, confirmMaster, buildShotRequests,
-    recordQc, continuitySummary, continuitySchema, ContinuityError,
+    recordQc, continuitySummary, continuitySchema, attachResult, handoffFor, ContinuityError,
 } from '../api/continuity.mjs';
 import { storeAsset, readAsset, AssetError, ASSET_LIMITS } from '../api/continuity-assets.mjs';
 import { generateShot } from '../api/continuity-generation.mjs';
@@ -89,6 +89,17 @@ const server = http.createServer(async (request, response) => {
                     seedBase: Number(body?.seedBase) || 428193,
                 });
                 return json(200, { requests, count: requests.length });
+            }
+            if (pathname === '/api/continuity/handoff') {
+                return json(200, handoffFor(body?.group, { shotId: body?.shotId || '' }));
+            }
+            if (pathname === '/api/continuity/attach') {
+                const asset = await storeAsset({ dataUrl: body?.dataUrl, role: 'misc', store: diskStore });
+                const group = attachResult(body?.group, {
+                    shotId: body?.shotId, assetId: asset.assetId, path: asset.path,
+                    provider: body?.provider || 'manual', seed: body?.seed ?? null,
+                });
+                return json(200, { group, asset });
             }
             if (pathname === '/api/continuity/generate') {
                 return json(200, await generateShot({ group: body?.group, shotId: body?.shotId, providerId: body?.providerId, store: diskStore }));

@@ -214,8 +214,9 @@ function renderShots() {
                 text: verdictText,
             })),
             el('td', {}, [
+                el('button', { text: '交接卡', onclick: () => openHandoff(shot.shotId) }),
                 el('button', { class: 'ghost', text: '取请求', onclick: () => requestShot(shot.shotId) }),
-                el('button', { text: '生成这张', onclick: () => generateShot(shot.shotId) }),
+                el('button', { class: 'ghost', text: '生成这张', onclick: () => generateShot(shot.shotId) }),
                 el('button', { class: 'ghost', text: '质检', onclick: () => openQc(shot.shotId) }),
             ]),
         ]));
@@ -274,6 +275,85 @@ async function prescreenShot(shotId) {
 }
 
 // ---- qc --------------------------------------------------------------------
+
+// Hand-off card: for people who generate in a chat UI instead of via API. One
+// card holds the prompt, the three reference downloads and the target filename;
+// the image comes back through "回传" and joins the same QC path.
+async function openHandoff(shotId) {
+    const panel = document.getElementById('handoff-panel');
+    const { ok, payload } = await api('/api/continuity/handoff', { group: state.group, shotId });
+    if (!ok) { toast(payload.error || '无法生成交接卡', 'error'); return; }
+    const card = payload.cards[0];
+    const result = state.results?.[shotId];
+
+    const copyButton = el('button', {
+        class: 'ghost', text: '复制提示词',
+        onclick: async () => {
+            try {
+                await navigator.clipboard.writeText(card.prompt);
+                toast('提示词已复制', 'ok');
+            } catch {
+                const area = document.createElement('textarea');
+                area.value = card.prompt;
+                document.body.append(area);
+                area.select();
+                document.execCommand('copy');
+                area.remove();
+                toast('提示词已复制', 'ok');
+            }
+        },
+    });
+
+    const refs = el('div', { class: 'refs' }, card.referencePaths.map((path, index) => el('div', { class: 'ref-card' }, [
+        el('div', { class: 'ref-head' }, [
+            el('strong', { text: ['人物参考', '场景参考', '风格参考'][index] || `参考 ${index + 1}` }),
+        ]),
+        el('img', { src: path, class: 'thumb', alt: '参考图' }),
+        el('a', { href: path, download: `ref-${index + 1}.png`, class: 'muted small', text: '下载参考图' }),
+    ])));
+
+    const uploader = el('input', {
+        type: 'file', accept: 'image/jpeg,image/png,image/webp',
+        onchange: async event => {
+            const file = event.target.files?.[0];
+            if (!file) return;
+            const dataUrl = await new Promise(resolve => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(String(reader.result));
+                reader.readAsDataURL(file);
+            });
+            const attached = await api('/api/continuity/attach', { group: state.group, shotId, dataUrl, provider: 'chatgpt-web' });
+            if (!attached.ok) { toast(attached.payload.error || '回传失败', 'error'); return; }
+            state.group = attached.payload.group;
+            state.results = { ...(state.results || {}), [shotId]: { shotId, image: { assetId: attached.payload.asset.assetId, path: attached.payload.asset.path } } };
+            save();
+            render();
+            openHandoff(shotId);
+            toast(`${shotId} 已回传，等待质检`, 'ok');
+        },
+    });
+
+    panel.replaceChildren(
+        el('h3', { text: `交接卡 · ${card.shotId}　${card.size} / ${card.lens}` }),
+        el('p', { class: 'muted', text: payload.ready ? card.instruction : `还没准备好：${payload.blockedReason}` }),
+        el('label', {}, [el('span', { text: '提示词（粘贴到 ChatGPT）' }), el('textarea', { readonly: 'readonly', text: card.prompt })]),
+        el('div', { class: 'row' }, [
+            copyButton,
+            el('span', { class: 'muted small', text: `目标文件名：${card.file}` }),
+        ]),
+        el('h3', { text: '参考图（三张都要给）', style: 'margin-top:18px' }),
+        refs,
+        el('h3', { text: '出图后回传', style: 'margin-top:18px' }),
+        uploader,
+        result?.image ? el('div', { class: 'row' }, [
+            el('img', { src: result.image.path, class: 'thumb', alt: '回传结果', style: 'max-width:220px' }),
+        ]) : null,
+        el('div', { class: 'row' }, [
+            el('button', { class: 'ghost', text: '视觉初筛', onclick: () => prescreenShot(shotId) }),
+            el('button', { class: 'ghost', text: '关闭', onclick: () => panel.replaceChildren() }),
+        ]),
+    );
+}
 
 function openQc(shotId) {
     const host = document.getElementById('qc-panel');

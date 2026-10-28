@@ -6,6 +6,18 @@ import { attachJevReview } from './jev-review.mjs';
 import { recordWebRequest } from './web-telemetry.mjs';
 import { emailLoginEnabled, handleEmailAuth } from './email-auth.mjs';
 import { aiPlanProviders, handleAiPlan } from './ai-plan.mjs';
+import { handleAiBrief } from './ai-brief.mjs';
+import { createGroup, setReference, confirmMaster, buildShotRequests, recordQc, continuitySummary, continuitySchema, attachResult, handoffFor, ContinuityError } from './continuity.mjs';
+import { storeAsset, readAsset } from './continuity-assets.mjs';
+import { generateShot } from './continuity-generation.mjs';
+import { prescreen, mergeScores, summariseVision } from './continuity-vision.mjs';
+
+// Reads a stored reference/result image back as a data URL for the vision call.
+async function assetToDataUrl(imagePath, env) {
+    const asset = await readAsset(imagePath, { env });
+    if (!asset) return '';
+    return `data:${asset.mime};base64,${Buffer.from(asset.buffer).toString('base64')}`;
+}
 export { WorkspaceSync } from './workspace-state.mjs';
 
 // Cloudflare Workers 环境中 Buffer 不可用，使用替代方案
@@ -301,8 +313,11 @@ export default {
         // Parse body
         let body = {};
         if (method === 'POST' || method === 'PUT' || method === 'PATCH') {
-            if (path === '/api/ai/plan') {
+            if (path === '/api/ai/plan' || path === '/api/ai/brief' || path === '/api/continuity/asset') {
                 if (!request.headers.get('content-type')?.startsWith('application/json')) return Response.json({ error: 'JSON_REQUIRED' }, { status: 415, headers: CORS });
+                // Reference images arrive as base64, so this route needs a larger cap
+                // than the text routes (8MB binary ≈ 11MB base64 + envelope).
+                const limit = path === '/api/continuity/asset' ? 12 * 1024 * 1024 : 16000;
                 const reader = request.body?.getReader();
                 let size = 0, chunks = [];
                 if (reader) {
@@ -310,7 +325,7 @@ export default {
                         const { done, value } = await reader.read();
                         if (done) break;
                         size += value.length;
-                        if (size > 16000) { await reader.cancel(); return Response.json({ error: 'REQUEST_TOO_LARGE' }, { status: 413, headers: CORS }); }
+                        if (size > limit) { await reader.cancel(); return Response.json({ error: 'REQUEST_TOO_LARGE' }, { status: 413, headers: CORS }); }
                         chunks.push(value);
                     }
                 }
@@ -335,6 +350,9 @@ export default {
             else if (path === '/api/ai/plan' && method === 'POST') {
                 result = await handleAiPlan(body, env);
             }
+            else if (path === '/api/ai/brief' && method === 'POST') {
+                result = await handleAiBrief(body, env);
+            }
             // Shared browser business data, isolated by the authenticated account.
             else if (path === '/api/auth/session' && method === 'GET') {
                 result = uid ? { status: 200, body: { success: true, user: { id: uid } } }
@@ -351,6 +369,84 @@ export default {
                     }));
                     result = { status: response.status, body: await response.json() };
                 }
+            }
+            // Continuity: locked shoot bible + role-separated references + per-shot requests.
+            // Stateless: the client sends the contract back on every call.
+            // Continuity asset storage: content-addressed reference images.
+            else if (path === '/api/continuity/asset' && method === 'POST') {
+                const asset = await storeAsset({ dataUrl: body?.dataUrl, role: body?.role, env });
+                result = { status: 201, body: asset };
+            }
+            else if (path.startsWith('/api/continuity/asset/') && method === 'GET') {
+                const asset = await readAsset(path, { env });
+                if (!asset) result = { status: 404, body: { error: 'ASSET_NOT_FOUND' } };
+                else return new Response(asset.buffer, {
+                    status: 200,
+                    headers: { ...CORS, 'Content-Type': asset.mime, 'Cache-Control': 'private, max-age=86400' },
+                });
+            }
+            else if (path === '/api/continuity/schema' && method === 'GET') {
+                result = { status: 200, body: continuitySchema() };
+            }
+            else if (path === '/api/continuity/init' && method === 'POST') {
+                result = { status: 200, body: { group: createGroup(body || {}) } };
+            }
+            else if (path === '/api/continuity/reference' && method === 'POST') {
+                result = { status: 200, body: { group: setReference(body?.group, body?.reference || body) } };
+            }
+            else if (path === '/api/continuity/master' && method === 'POST') {
+                result = { status: 200, body: { group: confirmMaster(body?.group, { assetId: body?.assetId, actor: body?.actor }) } };
+            }
+            else if (path === '/api/continuity/requests' && method === 'POST') {
+                const shots = buildShotRequests(body?.group, {
+                    providerId: body?.providerId,
+                    shotIds: Array.isArray(body?.shotIds) ? body.shotIds : [],
+                    seedBase: Number(body?.seedBase) || 428193,
+                });
+                result = { status: 200, body: { requests: shots, count: shots.length } };
+            }
+            // Manual hand-off: the image is made elsewhere (ChatGPT web), then
+            // uploaded back. Same contract checks, same QC path.
+            else if (path === '/api/continuity/handoff' && method === 'POST') {
+                result = { status: 200, body: handoffFor(body?.group, { shotId: body?.shotId || '' }) };
+            }
+            else if (path === '/api/continuity/attach' && method === 'POST') {
+                const asset = await storeAsset({ dataUrl: body?.dataUrl, role: 'misc', env });
+                const group = attachResult(body?.group, {
+                    shotId: body?.shotId, assetId: asset.assetId, path: asset.path,
+                    provider: body?.provider || 'manual', seed: body?.seed ?? null,
+                });
+                result = { status: 200, body: { group, asset } };
+            }
+            else if (path === '/api/continuity/generate' && method === 'POST') {
+                const generated = await generateShot({
+                    group: body?.group, shotId: body?.shotId, providerId: body?.providerId, env,
+                });
+                result = { status: 200, body: generated };
+            }
+            else if (path === '/api/continuity/prescreen' && method === 'POST') {
+                const shot = (body?.group?.shots || []).find(item => item.shotId === body?.shotId);
+                if (!shot) result = { status: 404, body: { error: '没有这个镜头', code: 'CONTINUITY_SHOT_UNKNOWN' } };
+                else {
+                    const vision = await prescreen({
+                        imageDataUrl: body?.imageDataUrl || (body?.imagePath ? await assetToDataUrl(body.imagePath, env) : ''),
+                        shot, locked: body.group.locked, env,
+                    });
+                    result = {
+                        status: 200,
+                        body: { ...vision, summary: summariseVision(vision), merged: mergeScores(body?.scores || {}, vision.scores) },
+                    };
+                }
+            }
+            else if (path === '/api/continuity/qc' && method === 'POST') {
+                const judged = recordQc(body?.group, {
+                    shotId: body?.shotId, scores: body?.scores,
+                    humanConfirmed: body?.humanConfirmed === true, reviewer: body?.reviewer || 'human',
+                });
+                result = { status: 200, body: judged };
+            }
+            else if (path === '/api/continuity/summary' && method === 'POST') {
+                result = { status: 200, body: continuitySummary(body?.group) };
             }
             // Auth
             else if (path === '/api/director/plan' && method === 'POST') {
@@ -442,6 +538,16 @@ export default {
             });
 
         } catch (e) {
+            // Contract violations are the product here: report the exact code so the
+            // UI can show "参考图未确认" instead of a generic server error.
+            if (e instanceof ContinuityError || e?.name === 'GenerationError' || e?.name === 'AssetError') {
+                const failure = { status: e.status || 400, body: { error: e.message, code: e.code, ...(e.details ? { details: e.details } : {}) } };
+                const requestId = recordWebRequest(request, failure, env, body);
+                return new Response(JSON.stringify(failure.body), {
+                    status: e.status || 400,
+                    headers: { ...CORS, 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'X-Request-Id': requestId }
+                });
+            }
             const failure = { status: 500, body: { error: '服务器暂时不可用，请稍后重试' } };
             const requestId = recordWebRequest(request, failure, env, body);
             return new Response(JSON.stringify(failure.body), {

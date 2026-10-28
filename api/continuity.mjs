@@ -151,6 +151,7 @@ export function normalizeShots(shots = []) {
         size: text(shot.size || shot.shot_size),
         aspect: text(shot.aspect, '2:3'),
         props: text(shot.shot_props || shot.props),
+        file: text(shot.file, `${text(shot.shotId, `shot-${String(index + 1).padStart(2, '0')}`)}.png`),
     }));
 }
 
@@ -252,6 +253,61 @@ export function judgeQc(scores = {}, { humanConfirmed = false, reviewer = 'none'
     const humanPending = humanRequired.some(id => scores[id] !== 'pass') || humanConfirmed !== true;
     const verdict = failed.length ? 'retry' : (unknown.length || humanPending ? 'needs-human' : 'pass');
     return { verdict, failed, unknown, humanRequired, reviewer, retryScope: verdict === 'retry' ? 'single-shot' : 'none' };
+}
+
+// Manual hand-off: the image is produced elsewhere (ChatGPT web, another tool)
+// and comes back as bytes. We store it, attach it to the shot and keep the same
+// QC path — the contract does not care who pressed the button.
+export function attachResult(group, { shotId, assetId, path = '', provider = 'manual', seed = null } = {}) {
+    const { group: checked, lockedHash } = requireGroup(group);
+    if (!text(shotId)) throw new ContinuityError('CONTINUITY_SHOT_REQUIRED', '需要镜头 ID', 400);
+    if (!text(assetId)) throw new ContinuityError('CONTINUITY_ASSET_REQUIRED', '需要资产 ID', 400);
+    if (!checked.shots.some(shot => shot.shotId === shotId)) {
+        throw new ContinuityError('CONTINUITY_SHOT_UNKNOWN', `没有这个镜头：${shotId}`, 404);
+    }
+    checked.results = {
+        ...(checked.results || {}),
+        [shotId]: {
+            shotId, assetId, path, provider, seed, lockedHash,
+            attachedAt: new Date().toISOString(),
+            qc: checked.qc?.[shotId]?.verdict || 'pending',
+        },
+    };
+    return checked;
+}
+
+export function handoffFor(group, { shotId = '' } = {}) {
+    const { group: checked, lockedHash } = requireGroup(group);
+    const shots = shotId ? checked.shots.filter(shot => shot.shotId === shotId) : checked.shots;
+    if (!shots.length) throw new ContinuityError('CONTINUITY_SHOT_UNKNOWN', `没有这个镜头：${shotId}`, 404);
+    const references = checked.references.map(reference => ({
+        role: reference.role,
+        assetId: reference.assetId,
+        path: reference.path || '',
+        status: reference.status,
+    }));
+    const missing = references.filter(reference => reference.status !== 'confirmed' || !reference.path);
+    return {
+        continuityGroupId: checked.continuityGroupId,
+        lockedHash,
+        masterConfirmed: checked.master?.confirmedBy === 'human',
+        references,
+        ready: missing.length === 0 && checked.master?.confirmedBy === 'human',
+        blockedReason: missing.length
+            ? `参考图未就绪：${missing.map(reference => reference.role).join('、')}`
+            : checked.master?.confirmedBy === 'human' ? '' : '主参考图未人工确认',
+        cards: shots.map(shot => ({
+            shotId: shot.shotId,
+            file: shot.file || `${shot.shotId}.png`,
+            size: shot.size,
+            lens: shot.lens,
+            camera: shot.camera,
+            // Everything a person needs to paste into a chat UI, in one place.
+            prompt: shot.prompt,
+            referencePaths: references.map(reference => reference.path).filter(Boolean),
+            instruction: `把 ${references.length} 张参考图拖进对话框，粘贴上面的提示词，出图后保存为 ${shot.file}，再回传到本面板。`,
+        })),
+    };
 }
 
 export function recordQc(group, { shotId, scores, humanConfirmed = false, reviewer = 'human' } = {}) {
