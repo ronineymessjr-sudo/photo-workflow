@@ -1,4 +1,4 @@
 .wrangler/
 
-# Local continuity reference assets (dev server writes here; never commit photos)
-runtime/continuity-assets/
+# Local runtime artifacts: reference photos, atlas snapshots, probe downloads
+runtime/
