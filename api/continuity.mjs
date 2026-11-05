@@ -255,6 +255,15 @@ export function judgeQc(scores = {}, { humanConfirmed = false, reviewer = 'none'
     return { verdict, failed, unknown, humanRequired, reviewer, retryScope: verdict === 'retry' ? 'single-shot' : 'none' };
 }
 
+// Which brush this shoot uses. Stored on the contract so a rerun cannot silently
+// switch to a different (cheaper or weaker) provider.
+export function setImageProvider(group, { providerId } = {}) {
+    const { group: checked } = requireGroup(group);
+    if (!text(providerId)) throw new ContinuityError('CONTINUITY_PROVIDER_REQUIRED', '需要图像服务 ID', 400);
+    checked.imageProvider = providerId;
+    return checked;
+}
+
 // Manual hand-off: the image is produced elsewhere (ChatGPT web, another tool)
 // and comes back as bytes. We store it, attach it to the shot and keep the same
 // QC path — the contract does not care who pressed the button.

@@ -10,11 +10,12 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
     createGroup, setReference, confirmMaster, buildShotRequests,
-    recordQc, continuitySummary, continuitySchema, attachResult, handoffFor, ContinuityError,
+    recordQc, continuitySummary, continuitySchema, attachResult, handoffFor, setImageProvider, ContinuityError,
 } from '../api/continuity.mjs';
 import { storeAsset, readAsset, AssetError, ASSET_LIMITS } from '../api/continuity-assets.mjs';
 import { generateShot } from '../api/continuity-generation.mjs';
 import { prescreen, mergeScores, summariseVision } from '../api/continuity-vision.mjs';
+import { listProviders, recommendProvider, assertGroupProvider } from '../api/continuity-providers.mjs';
 
 const root = path.resolve(fileURLToPath(new URL('../', import.meta.url)));
 const portArgIndex = process.argv.indexOf('--port');
@@ -77,11 +78,23 @@ const server = http.createServer(async (request, response) => {
             response.writeHead(200, { 'Content-Type': asset.mime, 'Cache-Control': 'private, max-age=86400' });
             return response.end(asset.buffer);
         }
+        if (pathname === '/api/continuity/providers' && request.method === 'GET') {
+            const needReferences = url.searchParams.get('needReferences') !== 'false';
+            const maxPriceTier = url.searchParams.get('maxPriceTier') || '';
+            return json(200, {
+                providers: listProviders({ needReferences, maxPriceTier }),
+                ...recommendProvider({ needReferences, configuredEnv: {}, maxPriceTier }),
+            });
+        }
         if (pathname.startsWith('/api/continuity/') && request.method === 'POST') {
             const body = await readBody(request);
             if (pathname === '/api/continuity/init') return json(200, { group: createGroup(body || {}) });
             if (pathname === '/api/continuity/reference') return json(200, { group: setReference(body?.group, body?.reference || body) });
             if (pathname === '/api/continuity/master') return json(200, { group: confirmMaster(body?.group, { assetId: body?.assetId, actor: body?.actor }) });
+            if (pathname === '/api/continuity/provider') {
+                const provider = assertGroupProvider(body?.group, body?.providerId);
+                return json(200, { group: setImageProvider(body?.group, { providerId: provider.id }), provider });
+            }
             if (pathname === '/api/continuity/requests') {
                 const requests = buildShotRequests(body?.group, {
                     providerId: body?.providerId,
@@ -90,7 +103,7 @@ const server = http.createServer(async (request, response) => {
                 });
                 return json(200, { requests, count: requests.length });
             }
-            if (pathname === '/api/continuity/handoff') {
+        if (pathname === '/api/continuity/handoff') {
                 return json(200, handoffFor(body?.group, { shotId: body?.shotId || '' }));
             }
             if (pathname === '/api/continuity/attach') {

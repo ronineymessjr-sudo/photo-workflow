@@ -107,7 +107,10 @@ const ADAPTERS = {
  * Generates exactly one shot. Never loops, never fans out: the caller decides
  * which shot to (re)make, which is what keeps retry scoped to a single frame.
  */
-export async function generateShot({ group, shotId, providerId, env = {}, fetchImpl = fetch, store = null } = {}) {
+export async function generateShot({ group, shotId, providerId = '', env = {}, fetchImpl = fetch, store = null } = {}) {
+    // Fall back to the provider pinned on the contract, so the shoot keeps using
+    // the brush it was approved with.
+    providerId = providerId || group?.imageProvider || '';
     if (!shotId) throw new ContinuityError('CONTINUITY_SHOT_REQUIRED', '需要镜头 ID', 400);
     if (!(group?.shots || []).some(shot => shot.shotId === shotId)) {
         throw new ContinuityError('CONTINUITY_SHOT_UNKNOWN', `没有这个镜头：${shotId}`, 404);

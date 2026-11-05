@@ -421,15 +421,40 @@ function render() {
 async function boot() {
     const schemaResponse = await api('/api/continuity/schema', null, 'GET');
     schema = schemaResponse.payload;
+
+    // The brush list comes from the provider catalog, not a hardcoded select:
+    // cheap first, reference support stated, and the recommendation explained.
     const provider = document.getElementById('f-provider');
-    if (schema?.providers) {
+    try {
+        const catalog = await api('/api/continuity/providers?needReferences=true', null, 'GET');
         provider.replaceChildren();
-        for (const [id, definition] of Object.entries(schema.providers)) {
-            const option = el('option', { value: id, text: `${definition.label}${definition.canGenerate ? '' : '（不能出图）'}` });
-            if (id === 'gpt-image-2') option.selected = true;
+        for (const entry of catalog.payload.providers || []) {
+            const ready = (catalog.payload.configuredIds || []).includes(entry.id);
+            const option = el('option', {
+                value: entry.id,
+                text: `${entry.label}　${entry.priceLabel}${entry.supportsReferences ? '' : '（不支持参考）'}${ready ? '' : '（未配凭据）'}`,
+            });
+            if (entry.id === (state.group?.imageProvider || catalog.payload.recommended)) option.selected = true;
             provider.append(option);
         }
+        const hint = document.getElementById('provider-hint');
+        if (hint) {
+            hint.textContent = catalog.payload.blockedReason
+                || `推荐：${catalog.payload.recommended}（便宜档且能带参考图）`;
+        }
+    } catch {
+        provider.replaceChildren(el('option', { value: 'manual-chatgpt-web', text: '手动 · ChatGPT 网页' }));
     }
+
+    provider.addEventListener('change', async () => {
+        if (!state.group) return;
+        const { ok, payload } = await api('/api/continuity/provider', { group: state.group, providerId: provider.value });
+        if (!ok) { toast(payload.error || '切换图像服务失败', 'error'); return; }
+        state.group = payload.group;
+        save();
+        toast(`已切换到 ${payload.provider.label}`, 'ok');
+    });
+
     document.getElementById('create').addEventListener('click', createNewGroup);
     document.getElementById('master').addEventListener('click', confirmMaster);
     document.getElementById('import').addEventListener('change', event => {

@@ -1,15 +1,21 @@
 // Photo Workflow Backend API - Cloudflare Workers
 import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 import { createDirectorPlan, createGuestPlanDraft } from './director-plan.mjs';
+import { prepareReferenceContext, referencePlanFields } from './ai-studio/reference-brief.mjs';
 import { buildDirectorIdentityWorkflow } from './director-identity-workflow.mjs';
 import { attachJevReview } from './jev-review.mjs';
 import { recordWebRequest } from './web-telemetry.mjs';
 import { emailLoginEnabled, handleEmailAuth } from './email-auth.mjs';
 import { aiPlanProviders, handleAiPlan } from './ai-plan.mjs';
 import { handleAiBrief } from './ai-brief.mjs';
-import { createGroup, setReference, confirmMaster, buildShotRequests, recordQc, continuitySummary, continuitySchema, attachResult, handoffFor, ContinuityError } from './continuity.mjs';
+import { confirmStudioProposal, createStudioProposal, searchStudio, consumeStudioSearchQuota, AiStudioError } from './ai-studio/service.mjs';
+import { checkStudioFeishuConnection, syncStudioPlan } from './ai-studio/feishu-sync.mjs';
+import { workspaceEntryKey } from '../assets/workspace-sync-protocol.mjs';
+export { AiStudioQuota } from './ai-studio/quota.mjs';
+import { createGroup, setReference, confirmMaster, buildShotRequests, recordQc, continuitySummary, continuitySchema, attachResult, handoffFor, setImageProvider, ContinuityError } from './continuity.mjs';
 import { storeAsset, readAsset } from './continuity-assets.mjs';
 import { generateShot } from './continuity-generation.mjs';
+import { listProviders, recommendProvider, assertGroupProvider } from './continuity-providers.mjs';
 import { prescreen, mergeScores, summariseVision } from './continuity-vision.mjs';
 
 // Reads a stored reference/result image back as a data URL for the vision call.
@@ -59,6 +65,26 @@ const CORS = {
     'Access-Control-Allow-Headers': 'Content-Type,Authorization',
     'Content-Type': 'application/json'
 };
+
+const STUDIO_PATHS = new Set(['/api/ai/plan-lite', '/api/ai/studio/proposals', '/api/ai/studio/confirm',
+    '/api/ai/studio/feishu/status', '/api/ai/studio/feishu/sync']);
+const STUDIO_CORS = {
+    'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+    'Content-Type': 'application/json',
+    'Cache-Control': 'no-store',
+    'Vary': 'Origin',
+};
+function studioOriginAllowed(origin, env) {
+    const allowed = String(env.AI_STUDIO_ALLOWED_ORIGINS || '').split(',').map(value => value.trim());
+    return Boolean(origin && (allowed.includes(origin) || (env.ENVIRONMENT !== 'production'
+        && /^http:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?$/.test(origin))));
+}
+function studioJson(status, body, origin) {
+    return new Response(JSON.stringify(body), { status, headers: {
+        ...STUDIO_CORS, ...(origin ? { 'Access-Control-Allow-Origin': origin } : {}),
+    } });
+}
 
 // ===== HTTP Helper using fetch =====
 async function sbQuery(env, path, method = 'GET', body = null) {
@@ -301,23 +327,27 @@ async function handleDashboardStats(env, uid) {
 // ===== Main Export =====
 export default {
     async fetch(request, env, ctx) {
-        // CORS preflight
-        if (request.method === 'OPTIONS') {
-            return new Response(null, { status: 200, headers: CORS });
-        }
-
         const url = new URL(request.url);
         const path = url.pathname;
         const method = request.method;
+        const isStudio = STUDIO_PATHS.has(path);
+        const origin = request.headers.get('Origin');
+        if (isStudio && !studioOriginAllowed(origin, env)) return studioJson(403, { error: 'ORIGIN_NOT_ALLOWED' });
+        if (method === 'OPTIONS') {
+            return isStudio ? new Response(null, { status: 204, headers: { ...STUDIO_CORS, 'Access-Control-Allow-Origin': origin } })
+                : new Response(null, { status: 200, headers: CORS });
+        }
 
         // Parse body
         let body = {};
         if (method === 'POST' || method === 'PUT' || method === 'PATCH') {
-            if (path === '/api/ai/plan' || path === '/api/ai/brief' || path === '/api/continuity/asset') {
-                if (!request.headers.get('content-type')?.startsWith('application/json')) return Response.json({ error: 'JSON_REQUIRED' }, { status: 415, headers: CORS });
+            if (isStudio || path === '/api/ai/plan' || path === '/api/ai/brief' || path === '/api/continuity/asset') {
+                if (!request.headers.get('content-type')?.startsWith('application/json')) return isStudio
+                    ? studioJson(415, { error: 'JSON_REQUIRED' }, origin) : Response.json({ error: 'JSON_REQUIRED' }, { status: 415, headers: CORS });
                 // Reference images arrive as base64, so this route needs a larger cap
                 // than the text routes (8MB binary ≈ 11MB base64 + envelope).
-                const limit = path === '/api/continuity/asset' ? 12 * 1024 * 1024 : 16000;
+                const limit = isStudio ? (path === '/api/ai/plan-lite' ? 8192 : 32768)
+                    : path === '/api/continuity/asset' ? 12 * 1024 * 1024 : 16000;
                 const reader = request.body?.getReader();
                 let size = 0, chunks = [];
                 if (reader) {
@@ -325,14 +355,17 @@ export default {
                         const { done, value } = await reader.read();
                         if (done) break;
                         size += value.length;
-                        if (size > limit) { await reader.cancel(); return Response.json({ error: 'REQUEST_TOO_LARGE' }, { status: 413, headers: CORS }); }
+                        if (size > limit) { await reader.cancel(); return isStudio
+                            ? studioJson(413, { error: 'REQUEST_TOO_LARGE' }, origin) : Response.json({ error: 'REQUEST_TOO_LARGE' }, { status: 413, headers: CORS }); }
                         chunks.push(value);
                     }
                 }
                 const bytes = new Uint8Array(size);
                 let offset = 0;
                 for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.length; }
-                try { body = JSON.parse(new TextDecoder().decode(bytes)); } catch { return Response.json({ error: 'INVALID_JSON' }, { status: 400, headers: CORS }); }
+                try { body = JSON.parse(new TextDecoder().decode(bytes)); } catch { return isStudio
+                    ? studioJson(400, { error: 'INVALID_JSON' }, origin) : Response.json({ error: 'INVALID_JSON' }, { status: 400, headers: CORS }); }
+                if (isStudio && (!body || typeof body !== 'object' || Array.isArray(body))) return studioJson(400, { error: 'INVALID_JSON' }, origin);
             } else {
                 try { body = await request.json(); } catch {}
             }
@@ -344,7 +377,56 @@ export default {
             const uid = verifyToken(request.headers.get('authorization'), env);
 
             // BYOK is stateless: keys are used for one provider request, never saved.
-            if (path === '/api/ai/providers' && method === 'GET') {
+            if (path === '/api/ai/plan-lite' && method === 'POST') {
+                const allowed = await consumeStudioSearchQuota({ uid, ip: request.headers.get('CF-Connecting-IP'), env });
+                if (allowed === null) result = { status: 503, body: { error: 'AI_STUDIO_QUOTA_NOT_CONFIGURED' } };
+                else if (!allowed) result = { status: 429, body: { error: 'RATE_LIMITED' } };
+                else result = { status: 200, body: await searchStudio({
+                    prompt: body.prompt, planId: body.planId, expectedRevision: body.expectedRevision, uid, env,
+                }) };
+            }
+            else if (path === '/api/ai/studio/proposals' && method === 'POST') {
+                result = uid ? { status: 200, body: await createStudioProposal({
+                    searchReceipt: body.searchReceipt, selectedIds: body.selectedIds, uid, env,
+                }) } : { status: 401, body: { error: '未登录' } };
+            }
+            else if (path === '/api/ai/studio/confirm' && method === 'POST') {
+                if (!uid) result = { status: 401, body: { error: '未登录' } };
+                else if (!env.WORKSPACE_SYNC) result = { status: 503, body: { error: 'WORKSPACE_SYNC_NOT_CONFIGURED' } };
+                else {
+                    const commit = await confirmStudioProposal({ proposalToken: body.proposalToken, idempotencyKey: body.idempotencyKey, uid, env });
+                    const object = env.WORKSPACE_SYNC.get(env.WORKSPACE_SYNC.idFromName(`user:${uid}`));
+                    const response = await object.fetch(new Request('https://workspace.internal/studio/commit', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(commit),
+                    }));
+                    const saved = await response.json();
+                    result = { status: response.status, body: response.ok ? { ...commit, ...saved, storage: 'workspace' } : saved };
+                }
+            }
+            else if (path === '/api/ai/studio/feishu/status' && method === 'GET') {
+                result = uid ? { status: 200, body: await checkStudioFeishuConnection({ env }) }
+                    : { status: 401, body: { error: '未登录' } };
+            }
+            else if (path === '/api/ai/studio/feishu/sync' && method === 'POST') {
+                if (!uid) result = { status: 401, body: { error: '未登录' } };
+                else if (typeof body.planId !== 'string' || !/^[A-Za-z0-9_-]{1,128}$/.test(body.planId)) result = { status: 400, body: { error: 'INVALID_PLAN_ID' } };
+                else if (!env.WORKSPACE_SYNC) result = { status: 503, body: { error: 'WORKSPACE_SYNC_NOT_CONFIGURED' } };
+                else {
+                    const object = env.WORKSPACE_SYNC.get(env.WORKSPACE_SYNC.idFromName(`user:${uid}`));
+                    const workspace = await (await object.fetch(new Request('https://workspace.internal/state'))).json();
+                    const plan = workspace.entries[workspaceEntryKey('local', 'pw_plans', `record:${body.planId}`)];
+                    if (!plan) result = { status: 404, body: { error: 'PLAN_NOT_FOUND' } };
+                    else {
+                        const outcome = await syncStudioPlan({ uid, plan, env });
+                        const saved = await object.fetch(new Request('https://workspace.internal/studio/sync-result', {
+                            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(outcome),
+                        }));
+                        const data = await saved.json();
+                        result = { status: saved.status, body: saved.ok ? { ...outcome, ...data, storage: 'workspace' } : data };
+                    }
+                }
+            }
+            else if (path === '/api/ai/providers' && method === 'GET') {
                 result = { status: 200, body: { providers: aiPlanProviders(env) } };
             }
             else if (path === '/api/ai/plan' && method === 'POST') {
@@ -407,6 +489,25 @@ export default {
             }
             // Manual hand-off: the image is made elsewhere (ChatGPT web), then
             // uploaded back. Same contract checks, same QC path.
+            // Image-provider catalog: the brush is pluggable, the brain is not.
+            else if (path === '/api/continuity/providers' && method === 'GET') {
+                const needReferences = url.searchParams.get('needReferences') !== 'false';
+                const maxPriceTier = url.searchParams.get('maxPriceTier') || '';
+                const configuredEnv = { OPENAI_API_KEY: env.OPENAI_API_KEY, CONTINUITY_IMAGE_ENDPOINT: env.CONTINUITY_IMAGE_ENDPOINT, CONTINUITY_IMAGE_KEY: env.CONTINUITY_IMAGE_KEY };
+                result = {
+                    status: 200,
+                    body: {
+                        providers: listProviders({ needReferences, maxPriceTier }),
+                        ...recommendProvider({ needReferences, configuredEnv, maxPriceTier }),
+                    },
+                };
+            }
+            else if (path === '/api/continuity/provider' && method === 'POST') {
+                // Validate before writing: a provider that cannot take references
+                // must not be pinned on a continuity group.
+                const provider = body?.providerId ? assertGroupProvider(body?.group, body.providerId) : null;
+                result = { status: 200, body: { group: setImageProvider(body?.group, { providerId: provider.id }), provider } };
+            }
             else if (path === '/api/continuity/handoff' && method === 'POST') {
                 result = { status: 200, body: handoffFor(body?.group, { shotId: body?.shotId || '' }) };
             }
@@ -453,6 +554,8 @@ export default {
                 let plan;
                 if (!env.DIRECTOR_API_BASE || !env.DIRECTOR_API_BASE.startsWith('https://')) {
                     plan = createGuestPlanDraft(body);
+                    const referenceContext = await prepareReferenceContext(body);
+                    Object.assign(plan, referencePlanFields(referenceContext));
                 } else {
                     plan = await createDirectorPlan(body, { baseUrl: env.DIRECTOR_API_BASE });
                     plan.director = { ...plan.director, imageGenerationConnected: false, imageGenerationMode: 'cloud-image-delivery-not-configured' };
@@ -531,6 +634,7 @@ export default {
                 result = { status: 404, body: { error: 'Not Found' } };
             }
 
+            if (isStudio) return studioJson(result.status, result.body, origin);
             const requestId = recordWebRequest(request, result, env, body);
             return new Response(JSON.stringify(result.body), { 
                 status: result.status, 
@@ -538,6 +642,8 @@ export default {
             });
 
         } catch (e) {
+            if (isStudio) return studioJson(e instanceof AiStudioError ? e.status : 500,
+                { error: e instanceof AiStudioError ? e.code : 'AI_STUDIO_ERROR' }, origin);
             // Contract violations are the product here: report the exact code so the
             // UI can show "参考图未确认" instead of a generic server error.
             if (e instanceof ContinuityError || e?.name === 'GenerationError' || e?.name === 'AssetError') {
