@@ -6360,10 +6360,10 @@ function renderDirectorCandidatePanel(plan) {
     const fitWarning = shot ? getDirectorShotFitWarning(plan, shot, selected) : '';
     const key = escHtml(String(plan.id));
     const candidates = (state.generationCandidates || []).filter(c => Number(c.shotIndex) === selected);
-    const model = state.selectedCandidateModel || 'cloudflare:@cf/black-forest-labs/flux-2-klein-4b';
+    const model = state.selectedCandidateModel || 'cloudflare:@cf/black-forest-labs/flux-2-klein-9b';
     const aspect = state.selectedCandidateAspect || inferAspectRatioFromPlan(plan);
     const localCandidateModels = ['127.0.0.1', 'localhost', '[::1]'].includes(window.location.hostname);
-    const models = [['cloudflare:@cf/black-forest-labs/flux-2-klein-4b','FLUX.2 klein · 摆姿 / 服装 / 人脸三图参考'],
+    const models = [['cloudflare:@cf/black-forest-labs/flux-2-klein-9b','FLUX.2 klein 9B · 摆姿 / 服装 / 人脸三图参考'],
         ...(localCandidateModels ? [['pollinations:flux','Flux'],['pollinations:krea','Krea'],['pollinations:sana','Sana']] : [])];
     const aspects = [['landscape','横屏 4:3'],['landscape-wide','横屏 16:9'],['square','方形 1:1'],['portrait','竖屏 3:4'],['portrait-tall','竖屏 9:16']];
     const cards = candidates.map(c => {
@@ -6562,7 +6562,7 @@ async function generateDirectorCandidateForPlan(planId) {
     const shotSelect = $('candidate-shot-' + planId);
     const shotIndex = Number(shotSelect && shotSelect.value || 0);
     const modelSelect = $('candidate-model-' + planId);
-    const [provider, selectedModel] = String(modelSelect && modelSelect.value || 'cloudflare:@cf/black-forest-labs/flux-2-klein-4b').split(':');
+    const [provider, selectedModel] = String(modelSelect && modelSelect.value || 'cloudflare:@cf/black-forest-labs/flux-2-klein-9b').split(':');
     const aspectSelect = $('candidate-aspect-' + planId);
     const aspectRatio = aspectSelect && aspectSelect.value || 'landscape';
     const shot = (plan.shotList || [])[shotIndex];

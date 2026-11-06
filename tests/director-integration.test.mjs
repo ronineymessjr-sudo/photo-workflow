@@ -222,7 +222,7 @@ test('all inline scripts parse and submit awaits director, shot list reuses resp
     assert.match(html, /if \(plan\.director\) return plan\.shotList \|\| \[\];/);
     assert.match(html, /generateDirectorCandidateForPlan/);
     assert.match(html, /candidate-model-/);
-    assert.match(html, /cloudflare:@cf\/black-forest-labs\/flux-2-klein-4b/);
+    assert.match(html, /cloudflare:@cf\/black-forest-labs\/flux-2-klein-9b/);
     assert.match(html, /pollinations:flux/);
     assert.match(html, /pollinations:krea/);
     assert.match(html, /pollinations:sana/);

@@ -96,7 +96,7 @@ export async function consumeStudioImageQuota({ uid, env = {} }) {
     if (!uid) return false;
     const userAllowed = await consumeQuota(env, `user:${uid}`, 'image', 5);
     if (userAllowed !== true) return userAllowed;
-    const globalAllowed = await consumeQuota(env, 'global:cloud-image', 'image-global', 50);
+    const globalAllowed = await consumeQuota(env, 'global:cloud-image', 'image-global', 6);
     return globalAllowed === true ? true : globalAllowed === null ? null : 'global-limit';
 }
 

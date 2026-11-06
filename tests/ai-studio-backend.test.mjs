@@ -143,8 +143,8 @@ test('candidate quota is five per user plus a shared daily free-tier safety cap'
     }));
     for (let index = 0; index < 5; index++) assert.equal((await (await consume('image', 5)).json()).allowed, true);
     assert.equal((await (await consume('image', 5)).json()).allowed, false);
-    for (let index = 0; index < 50; index++) assert.equal((await (await consume('image-global', 50)).json()).allowed, true);
-    assert.equal((await (await consume('image-global', 50)).json()).allowed, false);
+    for (let index = 0; index < 6; index++) assert.equal((await (await consume('image-global', 6)).json()).allowed, true);
+    assert.equal((await (await consume('image-global', 6)).json()).allowed, false);
 });
 
 test('image allowance is isolated per signed-in user and refuses guests', async () => {
@@ -152,7 +152,8 @@ test('image allowance is isolated per signed-in user and refuses guests', async 
     assert.equal(await consumeStudioImageQuota({ uid: null, env }), false);
     for (let index = 0; index < 5; index++) assert.equal(await consumeStudioImageQuota({ uid: 'user-a', env }), true);
     assert.equal(await consumeStudioImageQuota({ uid: 'user-a', env }), false);
-    for (let index = 0; index < 5; index++) assert.equal(await consumeStudioImageQuota({ uid: 'user-b', env }), true);
+    assert.equal(await consumeStudioImageQuota({ uid: 'user-b', env }), true);
+    assert.equal(await consumeStudioImageQuota({ uid: 'user-b', env }), 'global-limit');
 });
 
 test('Worker confirmation writes only the verified account workspace and replays once', async () => {
@@ -212,7 +213,7 @@ test('authenticated production candidates retrieve templates before Cloudflare A
     assert.equal(sourceCalls.length, 6);
     assert.match(aiCalls[0].input.messages[1].content, /自然光/);
     assert.deepEqual(result.candidateAsset.referenceImages.map(image => image.kind), ['portrait', 'costume', 'pose']);
-    assert.equal(aiCalls[1].model, '@cf/black-forest-labs/flux-2-klein-4b');
+    assert.equal(aiCalls[1].model, '@cf/black-forest-labs/flux-2-klein-9b');
     const form = await new Response(aiCalls[1].input.multipart.body, { headers: { 'Content-Type': aiCalls[1].input.multipart.contentType } }).formData();
     assert.match(form.get('prompt'), /seated steadily on a park bench/);
     assert.ok(form.get('input_image_0') && form.get('input_image_1') && form.get('input_image_2'));

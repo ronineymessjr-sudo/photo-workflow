@@ -1,6 +1,6 @@
 import { prepareReferenceContext } from './ai-studio/reference-brief.mjs';
 
-const CLOUDFLARE_MODEL = '@cf/black-forest-labs/flux-2-klein-4b';
+const CLOUDFLARE_MODEL = '@cf/black-forest-labs/flux-2-klein-9b';
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 const MAX_PROMPT_CHARS = 2048;
 
@@ -26,7 +26,7 @@ export async function prepareCloudCandidateReferences(input, options = {}) {
 
 export function compileCloudCandidateRequest(input, referenceContext) {
     if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('INVALID_GENERATION_REQUEST');
-    if (input.provider !== 'cloudflare' || ![CLOUDFLARE_MODEL, '@cf/black-forest-labs/flux-1-schnell'].includes(input.model)) throw new Error('GENERATION_PROVIDER_NOT_ALLOWED');
+    if (input.provider !== 'cloudflare' || ![CLOUDFLARE_MODEL, '@cf/black-forest-labs/flux-2-klein-4b', '@cf/black-forest-labs/flux-1-schnell'].includes(input.model)) throw new Error('GENERATION_PROVIDER_NOT_ALLOWED');
     if (input.candidate_count !== 1 || input.billing_mode !== 'free-credit-first') throw new Error('GENERATION_BILLING_MODE_NOT_ALLOWED');
     if (input.reference_image_path || input.reference_image_url || input.reference_asset_ids?.length) throw new Error('CLOUD_REFERENCE_IMAGE_NOT_CONFIGURED');
 

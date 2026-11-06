@@ -44,7 +44,7 @@ test('candidate uses the existing Cloudflare AI binding and validates its JPEG o
     } } });
     assert.equal(calls.length, 2);
     assert.doesNotMatch(calls[0].input.messages[1].content, /Retrieved template direction|pose-1|costume-1|black, tights/);
-    assert.equal(calls[1].model, '@cf/black-forest-labs/flux-2-klein-4b');
+    assert.equal(calls[1].model, '@cf/black-forest-labs/flux-2-klein-9b');
     const form = await new Response(calls[1].input.multipart.body, { headers: { 'Content-Type': calls[1].input.multipart.contentType } }).formData();
     assert.match(form.get('prompt'), /35mm eye-level environmental portrait/);
     assert.match(form.get('prompt'), /Exactly one hand rests on the hip/);
@@ -54,7 +54,7 @@ test('candidate uses the existing Cloudflare AI binding and validates its JPEG o
     assert.equal(form.get('width'), '768');
     assert.equal(form.get('height'), '1024');
     assert.equal(result.referenceImages.length, 3);
-    assert.equal(result.model, '@cf/black-forest-labs/flux-2-klein-4b');
+    assert.equal(result.model, '@cf/black-forest-labs/flux-2-klein-9b');
     assert.equal(result.mime, 'image/jpeg');
     assert.deepEqual(result.bytes, jpeg);
 });
