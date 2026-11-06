@@ -156,7 +156,7 @@ async function fetchDataset(spec, fetchImpl) {
     });
     try {
         return await Promise.race([timeout, (async () => {
-            const response = await fetchImpl(spec.url, { signal: controller.signal, redirect: 'error', headers: { Accept: 'application/json' } });
+            const response = await fetchImpl(spec.url, { signal: controller.signal, redirect: 'manual', headers: { Accept: 'application/json' } });
             if (!response.ok) throw new Error('POSEATLAS_UPSTREAM_UNAVAILABLE');
             if (Number(response.headers.get('content-length')) > MAX_DATASET_BYTES) throw new Error('POSEATLAS_DATASET_TOO_LARGE');
             const reader = response.body?.getReader();

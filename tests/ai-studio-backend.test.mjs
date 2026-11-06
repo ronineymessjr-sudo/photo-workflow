@@ -181,11 +181,20 @@ test('Worker confirmation writes only the verified account workspace and replays
     assert.equal((await (await call(env, '/api/ai/studio/feishu/status')).json()).credential_configured, false);
 });
 
-test('authenticated production candidates use Cloudflare AI and private signed storage without provider keys', async () => {
+test('authenticated production candidates retrieve templates before Cloudflare AI and private signed storage', async t => {
+    const sourceCalls = [];
+    t.mock.method(globalThis, 'fetch', async url => {
+        sourceCalls.push(String(url));
+        if (String(url).endsWith('poses.json')) return Response.json({ poses: [{ id: 'full_single_P019', names: { zh: '安静坐姿' }, category: '坐姿', variants: [{ angle: 'front' }] }] });
+        if (String(url).endsWith('costumes.json')) return Response.json({ costumes: [] });
+        if (String(url).endsWith('faces.json')) return Response.json({ images: [] });
+        throw new Error('Unexpected template source');
+    });
     const jpeg = new Uint8Array([255, 216, 255, 0]);
     const aiCalls = [];
     const env = { ...environment(), AI: { run: async (model, input) => {
         aiCalls.push({ model, input });
+        if (model.includes('llama')) return { response: 'One adult in brown knitwear seated steadily on a park bench, muted autumn park colors, natural light, full hands and feet.' };
         return { image: Buffer.from(jpeg).toString('base64') };
     } } };
     const response = await call(env, '/api/director/generate-candidate', {
@@ -193,12 +202,18 @@ test('authenticated production candidates use Cloudflare AI and private signed s
         candidate_count: 1, billing_mode: 'free-credit-first', aspect_ratio: 'portrait',
         brief: '秋日公园坐姿人像，棕色针织衫。', scene_brief: '自然光，不使用闪光灯。', style_direction: '低饱和电影感',
         reference_asset_ids: [],
+        reference_ids: ['atlas-pose-full_single_p019'],
         shot_contract: { shot_language: 'park seated portrait', generator_prompt: '35mm eye-level seated portrait, full hands and feet', must_show: 'existing park bench', reject_if: 'flash or cropped feet' },
     });
     assert.equal(response.status, 201);
     const result = await response.json();
-    assert.equal(aiCalls.length, 1);
-    assert.equal(aiCalls[0].model, '@cf/black-forest-labs/flux-1-schnell');
+    assert.equal(aiCalls.length, 2);
+    assert.equal(sourceCalls.length, 3);
+    assert.match(aiCalls[0].input.messages[1].content, /atlas-pose-full_single_p019/);
+    assert.match(aiCalls[0].input.messages[1].content, /坐稳/);
+    assert.deepEqual(result.candidateAsset.referenceIds, ['atlas-pose-full_single_p019']);
+    assert.equal(aiCalls[1].model, '@cf/black-forest-labs/flux-1-schnell');
+    assert.match(aiCalls[1].input.prompt, /seated steadily on a park bench/);
     assert.equal(result.candidateAsset.status, 'candidate-awaiting-human-review');
     assert.equal(result.candidateAsset.source, 'cloudflare-workers-ai');
     assert.equal(result.candidateAsset.poseStatus, 'not-run');

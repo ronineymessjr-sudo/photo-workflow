@@ -75,6 +75,40 @@ export async function createDirectorPlan(input, { baseUrl, fetchImpl = fetch, re
     };
 }
 
+export function createTemplatePlan(input, referenceContext) {
+    if (!referenceContext?.templates.some(template => template.sourceUrl)) throw new Error('REFERENCE_LIBRARY_UNAVAILABLE');
+    const plan = createGuestPlanDraft(input);
+    const poses = referenceContext.templates.filter(template => template.kind === 'pose');
+    if (!poses.length) throw new Error('POSE_TEMPLATE_REQUIRED');
+    plan.shotList = plan.shotList.map((shot, index) => {
+        const template = poses[index % poses.length];
+        const guidance = referenceContext.guidance.suggestions.find(item => item.sourceItemId === template.id)?.direction || '';
+        const action = `${template.title}。${guidance}`;
+        const framing = /全景|全身|中全景/.test(shot.shotSize)
+            ? 'Wide environmental head-to-toe full-body photograph. The entire person including both shoes fits inside the frame, with visible ground below the shoes. Person occupies less than half the image.'
+            : shot.shotSize;
+        const stance = /(?:不|禁止)交叉双?腿/.test(input.extra || '')
+            ? 'Both feet parallel and hip-width apart on the ground. Legs straight and separated, weight evenly on both feet.' : '';
+        const contract = {
+            source: 'template-library-plan', referenceIds: [template.id],
+            shot_language: `${shot.title} · ${template.title}`, model_pose: action,
+            generator_prompt: `Editorial photograph. ${framing} ${stance} ${shot.focalLength}, ${shot.angle}. Subject and clothing: ${input.modelDesc || ''}. Scene: ${input.scene || ''}. User constraints: ${input.extra || ''}. Pose reference: ${action}. Style: ${input.style || ''}.`,
+            wardrobe_styling: input.modelDesc || '沿用用户已确认服装',
+            must_show: `${action} ${input.modelDesc || ''}`, reject_if: `extra limbs, duplicate feet, malformed anatomy, text, watermark`,
+        };
+        return { ...shot, description: action, directorContract: contract };
+    });
+    Object.assign(plan, referencePlanFields(referenceContext));
+    plan.sections = plan.shotList.map((shot, index) => ({ ti: `镜头 ${index + 1} · ${shot.title}`, ic: '', c: [
+        `模板动作：${shot.description}`, `景别与焦段：${shot.shotSize} · ${shot.focalLength}`,
+        `人物与服装：${input.modelDesc || '待确认'}`, `用户限制：${input.extra || '无补充'}`,
+    ] }));
+    plan.director.source = 'template-library-plan';
+    plan.director.submittedBrief += `\n${referenceContext.guidance.brief}`;
+    plan.director.imageGenerationMode = 'template-library-candidate-review';
+    return plan;
+}
+
 function resolveShotCount(input) {
     const duration = String(input.duration || '2小时');
     const match = duration.match(/(\d+(?:\.\d+)?)\s*(小时|h|分钟|min)/i);
