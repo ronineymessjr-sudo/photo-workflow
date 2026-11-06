@@ -288,7 +288,21 @@ export function attachResult(group, { shotId, assetId, path = '', provider = 'ma
 export function handoffFor(group, { shotId = '' } = {}) {
     const { group: checked, lockedHash } = requireGroup(group);
     const shots = shotId ? checked.shots.filter(shot => shot.shotId === shotId) : checked.shots;
-    if (!shots.length) throw new ContinuityError('CONTINUITY_SHOT_UNKNOWN', `没有这个镜头：${shotId}`, 404);
+    if (!shots.length) {
+        // A skeleton from the studio converter has no shots yet; that is a blocker,
+        // not an error, and the caller needs to know both reasons.
+        if (shotId) throw new ContinuityError('CONTINUITY_SHOT_UNKNOWN', `没有这个镜头：${shotId}`, 404);
+        const pendingRoles = checked.references.filter(reference => reference.status !== 'confirmed' || !reference.path);
+        return {
+            continuityGroupId: checked.continuityGroupId,
+            lockedHash,
+            references: checked.references.map(reference => ({ role: reference.role, assetId: reference.assetId, path: reference.path || '', status: reference.status })),
+            masterConfirmed: checked.master?.confirmedBy === 'human',
+            ready: false,
+            blockedReason: `还没有镜头：先补方案或手工添加；${pendingRoles.length ? `参考图未就绪：${pendingRoles.map(reference => reference.role).join('、')}` : '参考图已就绪'}`,
+            cards: [],
+        };
+    }
     const references = checked.references.map(reference => ({
         role: reference.role,
         assetId: reference.assetId,

@@ -16,6 +16,7 @@ import { storeAsset, readAsset, AssetError, ASSET_LIMITS } from '../api/continui
 import { generateShot } from '../api/continuity-generation.mjs';
 import { prescreen, mergeScores, summariseVision } from '../api/continuity-vision.mjs';
 import { listProviders, recommendProvider, assertGroupProvider } from '../api/continuity-providers.mjs';
+import { groupFromStudio } from '../api/continuity-studio-bridge.mjs';
 
 const root = path.resolve(fileURLToPath(new URL('../', import.meta.url)));
 const portArgIndex = process.argv.indexOf('--port');
@@ -91,6 +92,12 @@ const server = http.createServer(async (request, response) => {
             if (pathname === '/api/continuity/init') return json(200, { group: createGroup(body || {}) });
             if (pathname === '/api/continuity/reference') return json(200, { group: setReference(body?.group, body?.reference || body) });
             if (pathname === '/api/continuity/master') return json(200, { group: confirmMaster(body?.group, { assetId: body?.assetId, actor: body?.actor }) });
+            if (pathname === '/api/continuity/from-studio') {
+                return json(200, groupFromStudio({
+                    templates: body?.templates, input: body?.input || {},
+                    planId: body?.planId || '', selectedIds: body?.selectedIds || [],
+                }));
+            }
             if (pathname === '/api/continuity/provider') {
                 const provider = assertGroupProvider(body?.group, body?.providerId);
                 return json(200, { group: setImageProvider(body?.group, { providerId: provider.id }), provider });

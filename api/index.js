@@ -16,6 +16,7 @@ import { createGroup, setReference, confirmMaster, buildShotRequests, recordQc, 
 import { storeAsset, readAsset } from './continuity-assets.mjs';
 import { generateShot } from './continuity-generation.mjs';
 import { listProviders, recommendProvider, assertGroupProvider } from './continuity-providers.mjs';
+import { groupFromStudio } from './continuity-studio-bridge.mjs';
 import { prescreen, mergeScores, summariseVision } from './continuity-vision.mjs';
 
 // Reads a stored reference/result image back as a data URL for the vision call.
@@ -507,6 +508,11 @@ export default {
                 // must not be pinned on a continuity group.
                 const provider = body?.providerId ? assertGroupProvider(body?.group, body.providerId) : null;
                 result = { status: 200, body: { group: setImageProvider(body?.group, { providerId: provider.id }), provider } };
+            }
+            else if (path === '/api/continuity/from-studio' && method === 'POST') {
+                result = { status: 200, body: groupFromStudio({
+                    templates: body?.templates, input: body?.input || {}, planId: body?.planId || '', selectedIds: body?.selectedIds || [],
+                }) };
             }
             else if (path === '/api/continuity/handoff' && method === 'POST') {
                 result = { status: 200, body: handoffFor(body?.group, { shotId: body?.shotId || '' }) };
