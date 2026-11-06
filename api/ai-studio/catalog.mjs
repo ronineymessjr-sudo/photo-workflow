@@ -1,0 +1,13 @@
+export default {
+  "schemaVersion": 1,
+  "description": "Original demonstration records authored for the PhotoAtelier integration. Not RuiC-PoseAtlas metadata, names, or images.",
+  "templates": [
+    {"id":"pa-pose-natural-seat","kind":"pose","title":"自然放松坐姿","description":"单腿自然弯曲、肩膀放松，适合半身与环境人像。","tags":["坐姿","自然","松弛","秋日","电影感"],"category":"坐姿","angles":["front","side","diagonal"],"rights":{"status":"owned","evidence":"PhotoAtelier original sample metadata","allowedUses":["public-display","agent-reference"]},"asset":null,"source":{"type":"original"}},
+    {"id":"pa-pose-walk","kind":"pose","title":"轻松行走回眸","description":"行走过程中自然回头，适合抓拍。","tags":["站姿","行走","回眸","街拍","电影感"],"category":"站姿","angles":["front","side","diagonal"],"rights":{"status":"owned","evidence":"PhotoAtelier original sample metadata","allowedUses":["public-display","agent-reference"]},"asset":null,"source":{"type":"original"}},
+    {"id":"pa-pose-lean","kind":"pose","title":"侧靠墙面站姿","description":"重心落在后脚，身体轻靠墙面。","tags":["站姿","倚靠","街头","自然"],"category":"站姿","angles":["front","side"],"rights":{"status":"owned","evidence":"PhotoAtelier original sample metadata","allowedUses":["public-display","agent-reference"]},"asset":null,"source":{"type":"original"}},
+    {"id":"pa-costume-autumn-knit","kind":"costume","title":"秋季棕色针织搭配","description":"棕色针织衫与米色下装，暖色电影感穿搭。","tags":["秋日","秋季","棕色","针织","毛衣","暖色","电影感"],"season":"autumn","color":"brown","category":"针织","rights":{"status":"owned","evidence":"PhotoAtelier original sample metadata","allowedUses":["public-display","agent-reference"]},"asset":null,"source":{"type":"original"}},
+    {"id":"pa-costume-white-shirt","kind":"costume","title":"简约白衬衫搭配","description":"白色衬衫与浅色牛仔裤，简约干净。","tags":["白色","衬衫","简约","清新"],"season":"spring","color":"white","category":"衬衫","rights":{"status":"owned","evidence":"PhotoAtelier original sample metadata","allowedUses":["public-display","agent-reference"]},"asset":null,"source":{"type":"original"}},
+    {"id":"pa-portrait-medium-hair","kind":"portrait","title":"中长发自然造型","description":"中长发、松弛发丝与低饱和妆容。","tags":["中长发","自然","电影感","低饱和","妆发"],"section":"styling","hair":"semilong","rights":{"status":"owned","evidence":"PhotoAtelier original sample metadata","allowedUses":["public-display","agent-reference"]},"asset":null,"source":{"type":"original"}},
+    {"id":"pa-portrait-short-hair","kind":"portrait","title":"利落短发造型","description":"短发轮廓与利落妆容，适合极简棚拍。","tags":["短发","简约","棚拍","妆发"],"section":"styling","hair":"short","rights":{"status":"owned","evidence":"PhotoAtelier original sample metadata","allowedUses":["public-display","agent-reference"]},"asset":null,"source":{"type":"original"}}
+  ]
+};
