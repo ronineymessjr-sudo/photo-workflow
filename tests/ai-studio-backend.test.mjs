@@ -211,12 +211,13 @@ test('authenticated production candidates retrieve templates before Cloudflare A
     assert.equal(aiCalls.length, 2);
     assert.equal(sourceCalls.length, 6);
     assert.match(aiCalls[0].input.messages[1].content, /自然光/);
-    assert.deepEqual(result.candidateAsset.referenceImages.map(image => image.kind), ['pose', 'costume', 'portrait']);
+    assert.deepEqual(result.candidateAsset.referenceImages.map(image => image.kind), ['portrait', 'costume', 'pose']);
     assert.equal(aiCalls[1].model, '@cf/black-forest-labs/flux-2-klein-4b');
     const form = await new Response(aiCalls[1].input.multipart.body, { headers: { 'Content-Type': aiCalls[1].input.multipart.contentType } }).formData();
     assert.match(form.get('prompt'), /seated steadily on a park bench/);
     assert.ok(form.get('input_image_0') && form.get('input_image_1') && form.get('input_image_2'));
     assert.match(form.get('prompt'), /black-and-white artist drawing/);
+    assert.equal(result.selected_shot_contract.generator_prompt, form.get('prompt'));
     assert.equal(result.candidateAsset.status, 'candidate-awaiting-human-review');
     assert.equal(result.candidateAsset.source, 'cloudflare-workers-ai');
     assert.equal(result.candidateAsset.poseStatus, 'not-run');

@@ -79,10 +79,11 @@ export function compileCloudCandidateRequest(input, referenceContext) {
 export async function generateCloudCandidate(input, { ai, referenceContext, fetchImpl = fetch } = {}) {
     if (!ai || typeof ai.run !== 'function') throw new Error('IMAGE_PROVIDER_NOT_CONFIGURED');
     const compiled = compileCloudCandidateRequest(input, referenceContext);
-    const references = ['pose', 'costume', 'portrait'].map(kind => referenceContext?.templates.find(template => template.kind === kind));
+    const references = ['portrait', 'costume', 'pose'].map(kind => referenceContext?.templates.find(template => template.kind === kind));
     if (references.some(reference => !reference?.referenceImageUrl)) throw new Error('REFERENCE_IMAGES_REQUIRED');
     const images = await Promise.all(references.map(reference => fetchReferenceImage(reference.referenceImageUrl, fetchImpl)));
     let prompt = compiled.prompt;
+    let generationPrompt;
     let result;
     try {
         if (referenceContext && /[\u3400-\u9fff]/u.test(prompt)) {
@@ -96,10 +97,18 @@ export async function generateCloudCandidate(input, { ai, referenceContext, fetc
             prompt = translated.response.trim().slice(0, MAX_PROMPT_CHARS);
         }
         const form = new FormData();
-        const outfitDetails = (references[1].tags || []).filter(tag => /^[a-z][a-z -]+$/i.test(tag)).join(', ');
-        const poseTitle = clean(references[0].englishTitle, 120);
+        const poseTitle = clean(references[2].englishTitle, 120);
         const poseDetail = /\bhand on (?:hip|waist)\b/i.test(poseTitle) ? 'Exactly one hand rests on the hip; the opposite arm hangs down by the side.' : '';
-        form.append('prompt', `Create a single photograph of exactly ONE person, using the framing specified in the shot contract. The face close-up reference determines the person's face, apparent age and hair. The headless outfit reference determines the COMPLETE outfit, every clothing layer, hosiery, footwear and accessories: ${outfitDetails}. The black-and-white artist drawing determines the body silhouette and limb positions, independently from the outfit's pose. Required pose: ${poseTitle}. ${poseDetail} ${prompt}`);
+        const framing = [
+            [/环境全景|环境远景|^(?:E?WS)$/i, 'Environmental long shot. Person occupies at most 40 percent of the image height. Show the surrounding location clearly. Keep the camera far enough away.'],
+            [/中全景|^MFS$/i, 'Knee-up portrait. Crop above the knees, showing head, torso and hands.'],
+            [/全身|^FS$/i, 'Head-to-toe portrait. Show both shoes and ground beneath them, with margins above the head and below the feet.'],
+            [/近景|^MCU$/i, 'Head-and-shoulders portrait. Crop below the shoulders.'],
+            [/特写|^E?CU$/i, 'Tight close-up of the face or the detail specified by the shot contract.'],
+            [/中景|^MS$/i, 'Waist-up portrait. Crop below the waist and preserve the hands when visible.'],
+        ].find(([pattern]) => pattern.test(input.shot_contract.shot_size || ''))?.[1] || '';
+        generationPrompt = `Create one photorealistic DSLR photograph of ONE person, with realistic skin texture and a fully rendered real location. Reference image 1, the face photograph, controls facial identity, apparent age, hair and photographic realism. Reference image 2, the outfit, controls every visible garment, layer, color, material, accessory and shoe. Copy those garments faithfully without adding or replacing layers. Reference image 3, the black-and-white artist drawing, contributes only body geometry and limb placement. Required pose: ${poseTitle}. ${poseDetail} ${prompt} Required camera framing: ${framing || 'Follow the shot contract.'} Render the requested scene as a real photographic environment with natural light and material detail.`;
+        form.append('prompt', generationPrompt);
         form.append('width', String(compiled.width));
         form.append('height', String(compiled.height));
         images.forEach((image, index) => form.append(`input_image_${index}`, image, `reference-${index}`));
@@ -118,7 +127,7 @@ export async function generateCloudCandidate(input, { ai, referenceContext, fetc
     const bytes = Uint8Array.from(binary, char => char.charCodeAt(0));
     const mime = bytes[0] === 137 ? 'image/png' : bytes[0] === 82 ? 'image/webp' : 'image/jpeg';
     if (!hasValidImageSignature(bytes, mime)) throw new Error('IMAGE_PROVIDER_INVALID_IMAGE_TYPE');
-    return { ...compiled, bytes, mime, referenceImages: references.map((reference, index) => ({
+    return { ...compiled, prompt: generationPrompt, bytes, mime, referenceImages: references.map((reference, index) => ({
         kind: reference.kind, sourceItemId: reference.id, imageIndex: index,
         sourceUrl: reference.sourceUrl, referenceImageUrl: reference.referenceImageUrl,
     })) };

@@ -47,7 +47,8 @@ test('candidate uses the existing Cloudflare AI binding and validates its JPEG o
     const form = await new Response(calls[1].input.multipart.body, { headers: { 'Content-Type': calls[1].input.multipart.contentType } }).formData();
     assert.match(form.get('prompt'), /35mm eye-level environmental portrait/);
     assert.match(form.get('prompt'), /Exactly one hand rests on the hip/);
-    assert.match(form.get('prompt'), /black, tights/);
+    assert.match(form.get('prompt'), /without adding or replacing layers/);
+    assert.equal(result.prompt, form.get('prompt'));
     for (let index = 0; index < 3; index++) assert.equal(form.get(`input_image_${index}`).size, jpeg.length);
     assert.equal(form.get('width'), '768');
     assert.equal(form.get('height'), '1024');
@@ -73,7 +74,7 @@ test('cloud generation rejects missing bindings, unapproved providers, reference
 test('actual image payload preserves a close-up contract without forcing full-body framing', async () => {
     let imagePrompt;
     const input = { ...request, brief: 'Quiet expression by a cafe window', scene_brief: 'Cafe window, soft side light', style_direction: 'Editorial',
-        shot_contract: { shot_language: 'Window expression', generator_prompt: 'Close-up portrait, crop at shoulders, soft window side light', referenceIds: ['pose-1'] } };
+        shot_contract: { shot_language: 'Window expression', shot_size: 'MCU', generator_prompt: 'Close-up portrait, crop at shoulders, soft window side light', referenceIds: ['pose-1'] } };
     await generateCloudCandidate(input, { referenceContext, fetchImpl, ai: { run: async (_model, payload) => {
         const form = await new Response(payload.multipart.body, { headers: { 'Content-Type': payload.multipart.contentType } }).formData();
         imagePrompt = form.get('prompt');
@@ -81,6 +82,8 @@ test('actual image payload preserves a close-up contract without forcing full-bo
     } } });
     assert.match(imagePrompt, /Close-up portrait, crop at shoulders/);
     assert.match(imagePrompt, /soft window side light/);
+    assert.match(imagePrompt, /Head-and-shoulders portrait/);
+    assert.match(imagePrompt, /face photograph/);
     assert.doesNotMatch(imagePrompt, /single full-body|Keep the figure asymmetrical|same bent and lowered arms/);
 });
 

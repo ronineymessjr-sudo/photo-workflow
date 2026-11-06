@@ -638,6 +638,7 @@ export default {
                             result = { status: 201, body: {
                                 request_id: typeof body.request_id === 'string' ? body.request_id.slice(0, 128) : assetId,
                                 selected_shot_contract: { source: 'template-library-shot-contract',
+                                    generator_prompt: generated.prompt,
                                     referenceIds: referenceContext.templates.map(template => template.id),
                                     referenceImages: generated.referenceImages,
                                     library: referenceContext.library },
