@@ -1,0 +1,237 @@
+{
+  "continuityGroupId": "自助洗衣店之夜-S16",
+  "series": "S16",
+  "briefId": "scene-laundry-night",
+  "locked": {
+    "subject": "一名成年人（同一人物，外观以身份参考图为准）",
+    "wardrobe": "美式复古休闲装：牛仔夹克、白色T恤、深色直筒裤、帆布鞋；发型自然蓬松；妆面干净。品牌。",
+    "location": "24小时自助洗衣店",
+    "season": "不限定（按场地植被判断）",
+    "weather": "阴天（散射光，无直射硬光）",
+    "timeOfDay": "夜间",
+    "light": "店内荧光灯顶光为主，利用门口自然光与室内荧光灯混合，不开闪光灯。",
+    "colorGrade": "warm amber highlights, muted browns, gentle contrast, vintage lens character",
+    "styleProfile": "从用户选定的风格参考提取：美式复古、生活流；warm amber highlights, muted browns, gentle contrast, vintage lens character",
+    "mustKeep": [
+      "同一人物",
+      "同一服装",
+      "同一地点",
+      "同一天气",
+      "同一光线方向",
+      "同一调色"
+    ],
+    "mustAvoid": [
+      "no text or labels inside the image",
+      "no watermark",
+      "no extra people",
+      "no props beyond the listed ones",
+      "no flash"
+    ]
+  },
+  "references": [
+    {
+      "assetId": "scene-laundry-night-identity",
+      "role": "identity",
+      "status": "pending",
+      "note": "人物参考：只负责脸/发型/体态"
+    },
+    {
+      "assetId": "scene-laundry-night-scene",
+      "role": "scene",
+      "status": "pending",
+      "note": "场景参考：只负责地点结构与空间关系"
+    },
+    {
+      "assetId": "scene-laundry-night-style",
+      "role": "style",
+      "status": "pending",
+      "note": "风格参考：只负责构图/光线/色彩/颗粒，必须来自用户图库"
+    }
+  ],
+  "master": {
+    "confirmedBy": "none"
+  },
+  "shots": [
+    {
+      "shotId": "S16-01",
+      "shotType": "full-body",
+      "camera": "eye_level，35mm",
+      "lens": "35mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 1/9] 2:3 vertical, A full-body shot of an adult model entering a 24-hour laundromat at night, wearing a vintage denim jacket, white t-shirt, dark straight pants, and canvas shoes, pushing the door open, natural relaxed expression, illuminated by fluorescent lights, no flash, shot on, eye level, wide shot, American retro style, lifestyle photography, 35mm lens at f/4, subject and environment both clearly readable, clean unmarked frame.",
+      "size": "FS",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "scene-laundry-night__01.png"
+    },
+    {
+      "shotId": "S16-02",
+      "shotType": "medium",
+      "camera": "low_angle，35mm",
+      "lens": "35mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 2/9] 2:3 vertical, A medium shot of an adult model loading clothes into a washing machine in a laundromat, side profile, wearing a white t-shirt and dark pants, denim jacket draped over shoulder, natural relaxed expression, illuminated by overhead fluorescent lights, no flash, shot on, slightly low angle, American retro lifestyle, 35mm lens at f/2.8, subject and environment both clearly readable, clean unmarked frame.",
+      "size": "MS",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "scene-laundry-night__02.png"
+    },
+    {
+      "shotId": "S16-03",
+      "shotType": "close-up",
+      "camera": "eye_level，35mm",
+      "lens": "35mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 3/9] 2:3 vertical, A close-up shot of an adult model's face seen through the glass door of a washing machine, hands gently touching the glass, curious expression, illuminated by soft fluorescent light from inside the machine and overhead, no flash, shot on at 30cm distance, eye level, American retro style, 35mm lens at f/1.8, shallow depth of field with creamy bokeh, clean unmarked frame.",
+      "size": "CU",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "scene-laundry-night__03.png"
+    },
+    {
+      "shotId": "S16-04",
+      "shotType": "close-up",
+      "camera": "eye_level，35mm",
+      "lens": "35mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 4/9] 2:3 vertical, A close-up shot of an adult model's side profile leaning against the glass door of a washing machine, eyes closed, gentle smile, relaxed mood, illuminated by side fluorescent light, no flash, shot on at 30cm distance, eye level, American retro style, 35mm lens at f/1.8, shallow depth of field with creamy bokeh, clean unmarked frame.",
+      "size": "CU",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "scene-laundry-night__04.png"
+    },
+    {
+      "shotId": "S16-05",
+      "shotType": "medium",
+      "camera": "eye_level，35mm",
+      "lens": "35mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 5/9] 2:3 vertical, A medium shot of an adult model leaning against a washing machine in a laundromat, hands in pockets, looking towards the machine, relaxed posture, wearing a denim jacket and white t-shirt, illuminated by overhead fluorescent lights, no flash, shot on, eye level, American retro lifestyle, 35mm lens at f/2.8, subject and environment both clearly readable, clean unmarked frame.",
+      "size": "MS",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "scene-laundry-night__05.png"
+    },
+    {
+      "shotId": "S16-06",
+      "shotType": "medium-close-up",
+      "camera": "eye_level，35mm",
+      "lens": "35mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 6/9] 2:3 vertical, A close-up shot of an adult model adjusting the collar of a denim jacket, looking down, detailed hand movement, wearing a white t-shirt, illuminated by overhead fluorescent light, no flash, shot on, eye level, American retro style, 35mm lens at f/2, shallow depth of field with creamy bokeh, clean unmarked frame.",
+      "size": "MCU",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "scene-laundry-night__06.png"
+    },
+    {
+      "shotId": "S16-07",
+      "shotType": "full-body",
+      "camera": "low_angle，35mm",
+      "lens": "35mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 7/9] 2:3 vertical, A full-body shot of an adult model sitting on a bench in a laundromat, reading a magazine, legs crossed, relaxed posture, wearing a denim jacket and white t-shirt, illuminated by overhead fluorescent lights, no flash, shot on, slightly low angle, American retro lifestyle, 35mm lens at f/4, subject and environment both clearly readable, clean unmarked frame.",
+      "size": "FS",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "scene-laundry-night__07.png"
+    },
+    {
+      "shotId": "S16-08",
+      "shotType": "medium-close-up",
+      "camera": "eye_level，35mm",
+      "lens": "35mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 8/9] 2:3 vertical, A medium close-up shot of an adult model standing in front of a washing machine, hands resting on the machine, leaning forward, gazing into the rotating drum, wearing a denim jacket and white t-shirt, illuminated by overhead fluorescent light and drum light, no flash, shot on, eye level, American retro style, 35mm lens at f/2, shallow depth of field with creamy bokeh, clean unmarked frame.",
+      "size": "MCU",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "scene-laundry-night__08.png"
+    },
+    {
+      "shotId": "S16-09",
+      "shotType": "close-up",
+      "camera": "high_angle，35mm",
+      "lens": "35mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 9/9] 2:3 vertical, A close-up shot of an adult model's hand pressing a button on a washing machine control panel, wearing a denim jacket sleeve, illuminated by overhead fluorescent light, no flash, shot on, high angle, American retro style, 35mm lens at f/1.8, shallow depth of field with creamy bokeh, clean unmarked frame.",
+      "size": "CU",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "scene-laundry-night__09.png"
+    }
+  ],
+  "lockedHash": "beac9872bbc9"
+}

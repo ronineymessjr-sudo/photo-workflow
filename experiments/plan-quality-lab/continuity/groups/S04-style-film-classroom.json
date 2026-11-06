@@ -1,0 +1,237 @@
+{
+  "continuityGroupId": "日系胶片教室午后-S04",
+  "series": "S04",
+  "briefId": "style-film-classroom",
+  "locked": {
+    "subject": "一名学生打扮的成年人（同一人物，外观以身份参考图为准）",
+    "wardrobe": "学生打扮：白色短袖衬衫与深色长裤，发型整齐低马尾；无浓妆，保持自然肤感",
+    "location": "旧教室（课桌椅现场已有）",
+    "season": "不限定（按场地植被判断）",
+    "weather": "阴天（散射光，无直射硬光）",
+    "timeOfDay": "午后",
+    "light": "关闭室内灯，仅靠窗帘透入的午后侧逆光；让窗光从画面右侧照亮课桌与人物轮廓，不补人工光",
+    "colorGrade": "low-contrast pastel with faint green shadows and fine 400-speed grain",
+    "styleProfile": "从用户选定的风格参考提取：日系、胶片感；low-contrast pastel with faint green shadows and fine 400-speed grain",
+    "mustKeep": [
+      "同一人物",
+      "同一服装",
+      "同一地点",
+      "同一天气",
+      "同一光线方向",
+      "同一调色"
+    ],
+    "mustAvoid": [
+      "no text or labels inside the image",
+      "no watermark",
+      "no extra people",
+      "no props beyond the listed ones",
+      "no flash"
+    ]
+  },
+  "references": [
+    {
+      "assetId": "style-film-classroom-identity",
+      "role": "identity",
+      "status": "pending",
+      "note": "人物参考：只负责脸/发型/体态"
+    },
+    {
+      "assetId": "style-film-classroom-scene",
+      "role": "scene",
+      "status": "pending",
+      "note": "场景参考：只负责地点结构与空间关系"
+    },
+    {
+      "assetId": "style-film-classroom-style",
+      "role": "style",
+      "status": "pending",
+      "note": "风格参考：只负责构图/光线/色彩/颗粒，必须来自用户图库"
+    }
+  ],
+  "master": {
+    "confirmedBy": "none"
+  },
+  "shots": [
+    {
+      "shotId": "S04-01",
+      "shotType": "environmental-wide",
+      "camera": "eye_level，35mm",
+      "lens": "35mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 1/9] 2:3 vertical, Japanese film photography, old classroom afternoon, one adult student sitting at a desk by the window in the right third of frame, white short-sleeve shirt and dark trousers, low ponytail, soft curtain-diffused side-backlight from the right window, no indoor lights, no flash, wooden desks and chairs, quiet youthful mood, natural grain, muted colors, eye-level wide establishing shot, 35mm lens at f/5.6, subject and environment both clearly readable, clean unmarked frame.",
+      "size": "WS",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "style-film-classroom__01.png"
+    },
+    {
+      "shotId": "S04-02",
+      "shotType": "medium",
+      "camera": "eye_level，35mm",
+      "lens": "35mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 2/9] 2:3 vertical, Japanese film photography, old classroom, adult student seated at window-side desk, body turned 30 degrees toward aisle, elbow on desk, fingers lightly touching cheek, eyes lowered, soft side light through sheer curtain from right window, white shirt and dark trousers, low ponytail, eye-level medium shot, natural grain, gentle shadows, no flash, 35mm lens at f/2.8, subject and environment both clearly readable, clean unmarked frame.",
+      "size": "MS",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "style-film-classroom__02.png"
+    },
+    {
+      "shotId": "S04-03",
+      "shotType": "medium-full",
+      "camera": "eye_level，35mm",
+      "lens": "35mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 3/9] 2:3 vertical, Japanese film photography, old classroom afternoon, adult student standing by window facing the light, backlit by soft curtain-diffused sunlight, white shirt and dark trousers, low ponytail, hands at sides, head slightly lowered, gentle rim light on hair and shoulders, eye-level medium full shot, natural grain, no flash, 35mm lens at f/3.5, subject and environment both clearly readable, clean unmarked frame.",
+      "size": "MFS",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "style-film-classroom__03.png"
+    },
+    {
+      "shotId": "S04-04",
+      "shotType": "medium-close-up",
+      "camera": "high_angle，35mm",
+      "lens": "35mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 4/9] 2:3 vertical, Japanese film photography, old classroom, adult student leaning forward at desk, forearms on tabletop, hands softly posed as if writing, head slightly down, soft window light from back right through curtain, white shirt and dark trousers, low ponytail, slightly high angle close medium shot, natural grain, no flash, 35mm lens at f/2, shallow depth of field with creamy bokeh, clean unmarked frame.",
+      "size": "MCU",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "style-film-classroom__04.png"
+    },
+    {
+      "shotId": "S04-05",
+      "shotType": "medium-full",
+      "camera": "ground_level，35mm",
+      "lens": "35mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 5/9] 2:3 vertical, Japanese film photography, old classroom, adult student seated at first window-side desk, legs together and angled, hands folded on lap, relaxed shoulders, looking toward aisle, soft side light from right curtain, white shirt and dark trousers, low ponytail, ground-level low angle medium full shot, wooden desk legs in foreground, natural grain, no flash, 35mm lens at f/3.5, subject and environment both clearly readable, clean unmarked frame.",
+      "size": "MFS",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "style-film-classroom__05.png"
+    },
+    {
+      "shotId": "S04-06",
+      "shotType": "full-body",
+      "camera": "eye_level，35mm",
+      "lens": "35mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 6/9] 2:3 vertical, Japanese film photography, old classroom afternoon, adult student standing between window-side desks with back to camera, hands resting on chair back, head slightly tilted up toward curtain light, soft backlight, white shirt and dark trousers, low ponytail, eye-level full shot from back of room, natural grain, no flash, 35mm lens at f/4, subject and environment both clearly readable, clean unmarked frame.",
+      "size": "FS",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "style-film-classroom__06.png"
+    },
+    {
+      "shotId": "S04-07",
+      "shotType": "close-up",
+      "camera": "high_angle，35mm",
+      "lens": "35mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 7/9] 2:3 vertical, Japanese film photography, old classroom, close-up of adult student hands on wooden desk, one hand flat with softly curled fingertips, other hand resting on desk edge, white shirt cuff visible, soft curtain light from upper right, natural wood grain, high angle detail close-up, natural grain, no flash, 35mm lens at f/1.8, shallow depth of field with creamy bokeh, clean unmarked frame.",
+      "size": "CU",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "style-film-classroom__07.png"
+    },
+    {
+      "shotId": "S04-08",
+      "shotType": "close-up",
+      "camera": "eye_level，35mm",
+      "lens": "35mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 8/9] 2:3 vertical, Japanese film photography, old classroom, adult student crouching between two rows of desks, knees together, arms around lower legs, chin resting on knees, looking straight ahead, soft side light through curtain from right, white shirt and dark trousers, low ponytail, eye-level close shot between desks, natural grain, no flash, 35mm lens at f/1.8, shallow depth of field with creamy bokeh, clean unmarked frame.",
+      "size": "CU",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "style-film-classroom__08.png"
+    },
+    {
+      "shotId": "S04-09",
+      "shotType": "medium-close-up",
+      "camera": "eye_level，35mm",
+      "lens": "35mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hair tied back in a low bun, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], low-contrast pastel with faint green shadows and fine 400-speed grain, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 9/9] 2:3 vertical, Japanese film photography, old classroom afternoon, adult student standing by window-side desk, body angled to window, one hand on chair back, turning head to look back toward camera, calm youthful expression, soft side-backlight through curtain from right rear, white shirt and dark trousers, low ponytail, eye-level medium close shot, natural grain, no flash, 35mm lens at f/2, shallow depth of field with creamy bokeh, clean unmarked frame.",
+      "size": "MCU",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "style-film-classroom__09.png"
+    }
+  ],
+  "lockedHash": "1f139d3dccba"
+}

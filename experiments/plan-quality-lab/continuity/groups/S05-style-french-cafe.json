@@ -1,0 +1,237 @@
+{
+  "continuityGroupId": "法式复古咖啡馆-S05",
+  "series": "S05",
+  "briefId": "style-french-cafe",
+  "locked": {
+    "subject": "一名成年人（同一人物，外观以身份参考图为准）",
+    "wardrobe": "复古风格服装，妆容自然，发型蓬松微乱",
+    "location": "临街咖啡馆（桌椅与杯具现场已有）",
+    "season": "不限定（按场地植被判断）",
+    "weather": "阴天（散射光，无直射硬光）",
+    "timeOfDay": "白天",
+    "light": "利用窗外自然光与店内暖黄吊灯，无闪光灯，必要时用反光板从模特正面补光",
+    "colorGrade": "warm amber highlights, muted browns, gentle contrast, vintage lens character",
+    "styleProfile": "从用户选定的风格参考提取：法式、复古；warm amber highlights, muted browns, gentle contrast, vintage lens character",
+    "mustKeep": [
+      "同一人物",
+      "同一服装",
+      "同一地点",
+      "同一天气",
+      "同一光线方向",
+      "同一调色"
+    ],
+    "mustAvoid": [
+      "no text or labels inside the image",
+      "no watermark",
+      "no extra people",
+      "no props beyond the listed ones",
+      "no flash"
+    ]
+  },
+  "references": [
+    {
+      "assetId": "style-french-cafe-identity",
+      "role": "identity",
+      "status": "pending",
+      "note": "人物参考：只负责脸/发型/体态"
+    },
+    {
+      "assetId": "style-french-cafe-scene",
+      "role": "scene",
+      "status": "pending",
+      "note": "场景参考：只负责地点结构与空间关系"
+    },
+    {
+      "assetId": "style-french-cafe-style",
+      "role": "style",
+      "status": "pending",
+      "note": "风格参考：只负责构图/光线/色彩/颗粒，必须来自用户图库"
+    }
+  ],
+  "master": {
+    "confirmedBy": "none"
+  },
+  "shots": [
+    {
+      "shotId": "S05-01",
+      "shotType": "full-body",
+      "camera": "eye_level，28mm",
+      "lens": "28mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 1/9] 2:3 vertical, Full shot of an adult model standing sideways in a French vintage cafe window, one hand resting on a chair back, gazing out, soft daylight and warm interior lighting, no flash, shot with, no photographer reflection, natural lazy mood, eye level, 28mm lens at f/4, subject and environment both clearly readable, clean unmarked frame.",
+      "size": "FS",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "style-french-cafe__01.png"
+    },
+    {
+      "shotId": "S05-02",
+      "shotType": "medium-close-up",
+      "camera": "eye_level，50mm",
+      "lens": "50mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 2/9] 2:3 vertical, Medium close-up of an adult model sitting sideways by a cafe window, resting chin on hand, soft window light from left, warm interior fill, vintage French cafe, lazy mood, no flash, 50mm lens at f/2, shallow depth of field with creamy bokeh, clean unmarked frame.",
+      "size": "MCU",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "style-french-cafe__02.png"
+    },
+    {
+      "shotId": "S05-03",
+      "shotType": "detail-extreme-close-up",
+      "camera": "eye_level，50mm",
+      "lens": "50mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 3/9] 2:3 vertical, Extreme close-up of a hand gently holding a coffee cup in a French vintage cafe, soft window light, natural skin texture, no flash, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, clean unmarked frame.",
+      "size": "ECU",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "style-french-cafe__03.png"
+    },
+    {
+      "shotId": "S05-04",
+      "shotType": "close-up",
+      "camera": "high_angle，50mm",
+      "lens": "50mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 4/9] 2:3 vertical, Close-up of an adult model resting head on crossed arms at a cafe table, eyes half closed, soft window light from above right, vintage French style, lazy mood, no flash, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, clean unmarked frame.",
+      "size": "CU",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "style-french-cafe__04.png"
+    },
+    {
+      "shotId": "S05-05",
+      "shotType": "medium-close-up",
+      "camera": "eye_level，50mm",
+      "lens": "50mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 5/9] 2:3 vertical, Medium close-up of an adult model standing behind a cafe window, touching glass, side profile, soft reflections on glass, French vintage cafe, no photographer reflection, no flash, 50mm lens at f/2, shallow depth of field with creamy bokeh, clean unmarked frame.",
+      "size": "MCU",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "style-french-cafe__05.png"
+    },
+    {
+      "shotId": "S05-06",
+      "shotType": "close-up",
+      "camera": "eye_level，50mm",
+      "lens": "50mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 6/9] 2:3 vertical, Close-up of an adult model sitting at a window, leaning forward, chin on hands, looking into glass, soft reflections, French vintage cafe, no photographer reflection, no flash, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, clean unmarked frame.",
+      "size": "CU",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "style-french-cafe__06.png"
+    },
+    {
+      "shotId": "S05-07",
+      "shotType": "environmental-wide",
+      "camera": "eye_level，50mm",
+      "lens": "50mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 7/9] 2:3 vertical, Wide shot of a French vintage cafe interior, an adult model sitting in the background near window, foreground empty tables and chairs, warm ambient light, no flash, 50mm lens at f/5.6, subject and environment both clearly readable, clean unmarked frame.",
+      "size": "WS",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "style-french-cafe__07.png"
+    },
+    {
+      "shotId": "S05-08",
+      "shotType": "close-up",
+      "camera": "eye_level，50mm",
+      "lens": "50mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 8/9] 2:3 vertical, Close-up side profile of an adult model in a cafe, face turned to window light, eyes gently closed, soft light and shadow, French vintage, no flash, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, clean unmarked frame.",
+      "size": "CU",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "style-french-cafe__08.png"
+    },
+    {
+      "shotId": "S05-09",
+      "shotType": "full-body",
+      "camera": "low_angle，28mm",
+      "lens": "28mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], warm amber highlights, muted browns, gentle contrast, vintage lens character, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 9/9] 2:3 vertical, Full shot from low angle of an adult model lounging on a chair in a French vintage cafe, lazy gaze, window light backlight, no flash, 28mm lens at f/4, subject and environment both clearly readable, clean unmarked frame.",
+      "size": "FS",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "style-french-cafe__09.png"
+    }
+  ],
+  "lockedHash": "a75f65ae5a6f"
+}

@@ -66,6 +66,8 @@ test('shot target varies with duration without copying upstream shots to fill it
         assert.equal(plan.director.desiredShotCount, count);
         assert.equal(plan.director.shotCountLimited, true);
         assert.equal(plan.shotList.length, 2);
+        assert.equal(plan.shotList[0].title, 'same');
+        assert.equal(plan.shotList[0].description, '走动');
         assert.equal(plan.shotList[1].sourceShotIndex, 2);
         assert.equal(plan.shotList[0].angle, '平视');
         assert.equal(plan.shotList[0].shotSize, '全身');
@@ -220,7 +222,7 @@ test('all inline scripts parse and submit awaits director, shot list reuses resp
     assert.match(html, /if \(plan\.director\) return plan\.shotList \|\| \[\];/);
     assert.match(html, /generateDirectorCandidateForPlan/);
     assert.match(html, /candidate-model-/);
-    assert.match(html, /huggingface:black-forest-labs\/FLUX\.1-schnell/);
+    assert.match(html, /cloudflare:@cf\/black-forest-labs\/flux-1-schnell/);
     assert.match(html, /pollinations:flux/);
     assert.match(html, /pollinations:krea/);
     assert.match(html, /pollinations:sana/);
@@ -247,7 +249,7 @@ test('all inline scripts parse and submit awaits director, shot list reuses resp
     assert.match(html, /c\.poseStatus === 'blocked' \|\| c\.faceQualityStatus === 'blocked'/);
     assert.match(html, /const IS_LOCAL_HOST = \['127\.0\.0\.1', 'localhost', '\[::1\]'\]/);
     assert.match(html, /if \(USE_LOCAL_MODE\) \{/);
-    assert.match(html, /window\.continueAsGuest = function/);
+    assert.match(html, /window\.continueAsGuest = async function/);
     assert.match(html, /localStorage\.setItem\('pa_guest_mode', 'false'\)/);
     assert.equal((html.match(/if \(USE_GUEST_MODE\) \{/g) || []).length, 1);
     assert.match(html, /id="tab-role-home"/);
@@ -277,6 +279,7 @@ test('candidate card explains composition and unverified-face blockers', async (
     const end = html.indexOf('\nfunction formatDirectorGenerationError(error)', start);
     assert.ok(start >= 0 && end > start);
     const context = {
+        window: { location: { hostname: 'photo-workflow.pages.dev' } },
         plan: {
             id: 'test-plan',
             input: { extra: '人脸是画面重点，脸部占画面90%' },

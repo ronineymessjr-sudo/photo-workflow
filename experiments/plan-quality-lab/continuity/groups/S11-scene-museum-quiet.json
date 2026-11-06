@@ -1,0 +1,238 @@
+{
+  "continuityGroupId": "美术馆看展的人-S11",
+  "series": "S11",
+  "briefId": "scene-museum-quiet",
+  "locked": {
+    "subject": "一名成年人（同一人物，外观以身份参考图为准）",
+    "wardrobe": "保持日常看展装束，避免反光面料与大面积亮色，发型整洁不被风扰动",
+    "location": "市美术馆展厅（已获拍摄许可）",
+    "season": "不限定（按场地植被判断）",
+    "weather": "阴天（散射光，无直射硬光）",
+    "timeOfDay": "白天",
+    "light": "仅用展厅现有顶灯与展墙基础照明，关闭闪光灯；不补光，必要时用反光板以外的现场白墙反射光，但本镜不额外加设备",
+    "colorGrade": "black and white with strong grain and high micro-contrast",
+    "styleProfile": "从用户选定的风格参考提取：纪实；black and white with strong grain and high micro-contrast",
+    "mustKeep": [
+      "同一人物",
+      "同一服装",
+      "同一地点",
+      "同一天气",
+      "同一光线方向",
+      "同一调色"
+    ],
+    "mustAvoid": [
+      "no text or labels inside the image",
+      "no watermark",
+      "no extra people",
+      "no props beyond the listed ones",
+      "no flash",
+      "no tripod"
+    ]
+  },
+  "references": [
+    {
+      "assetId": "scene-museum-quiet-identity",
+      "role": "identity",
+      "status": "pending",
+      "note": "人物参考：只负责脸/发型/体态"
+    },
+    {
+      "assetId": "scene-museum-quiet-scene",
+      "role": "scene",
+      "status": "pending",
+      "note": "场景参考：只负责地点结构与空间关系"
+    },
+    {
+      "assetId": "scene-museum-quiet-style",
+      "role": "style",
+      "status": "pending",
+      "note": "风格参考：只负责构图/光线/色彩/颗粒，必须来自用户图库"
+    }
+  ],
+  "master": {
+    "confirmedBy": "none"
+  },
+  "shots": [
+    {
+      "shotId": "S11-01",
+      "shotType": "full-body",
+      "camera": "eye_level，35mm",
+      "lens": "35mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 1/9] 2:3 vertical, documentary photograph, one adult visitor standing at the entrance of an art museum gallery seen from behind, hands relaxed at sides, looking into the exhibition hall, full body with entrance frame and deep gallery space, existing ceiling lights only, no flash, natural quiet mood, eye level, candid reportage style, 35mm lens at f/4, subject and environment both clearly readable, clean unmarked frame.",
+      "size": "FS",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "scene-museum-quiet__01.png"
+    },
+    {
+      "shotId": "S11-02",
+      "shotType": "medium",
+      "camera": "eye_level，35mm",
+      "lens": "35mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 2/9] 2:3 vertical, documentary art museum scene, one adult visitor in side profile quietly looking at a painting on the gallery wall, hands relaxed, natural expression, wall spotlight blossoms in background, no flash, existing ambient light, eye level, muted realistic tones, candid photography, 35mm lens at f/2.8, subject and environment both clearly readable, clean unmarked frame.",
+      "size": "MS",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "scene-museum-quiet__02.png"
+    },
+    {
+      "shotId": "S11-03",
+      "shotType": "medium-close-up",
+      "camera": "eye_level，50mm",
+      "lens": "50mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 3/9] 2:3 vertical, over the shoulder documentary shot, adult visitor standing in front of a framed painting in an art gallery, head tilted slightly up, quiet observation, painting fully visible, soft gallery spotlight, no flash, handheld, eye level behind subject, realistic candid reportage, 50mm lens at f/2, shallow depth of field with creamy bokeh, clean unmarked frame.",
+      "size": "MCU",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "scene-museum-quiet__03.png"
+    },
+    {
+      "shotId": "S11-04",
+      "shotType": "close-up",
+      "camera": "eye_level，50mm",
+      "lens": "50mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 4/9] 2:3 vertical, close-up documentary portrait, adult visitor in side profile quietly observing art in a museum gallery, soft ambient light on face, warm wall spotlight bokeh in background, natural calm expression, no flash, eye level, muted realistic film look, 50mm lens at f/1.8, shallow depth of field with creamy bokeh, clean unmarked frame.",
+      "size": "CU",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "scene-museum-quiet__04.png"
+    },
+    {
+      "shotId": "S11-05",
+      "shotType": "full-body",
+      "camera": "eye_level，35mm",
+      "lens": "35mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 5/9] 2:3 vertical, documentary photograph, adult visitor slowly walking along a museum gallery wall, small steps, head slightly turned toward artworks, hands naturally swinging, full body visible, polished floor reflection, existing gallery lighting, no flash, handheld, low eye level, candid motion, 35mm lens at f/4, subject and environment both clearly readable, clean unmarked frame.",
+      "size": "FS",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "scene-museum-quiet__05.png"
+    },
+    {
+      "shotId": "S11-06",
+      "shotType": "full-body",
+      "camera": "ground_level，35mm",
+      "lens": "35mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 6/9] 2:3 vertical, low angle full body documentary photo, adult visitor pausing in front of a painting in an art museum, feet staggered, hands relaxed in front, looking up at artwork, gallery wall and polished floor visible, existing spotlight, no flash, handheld, ground level perspective, quiet mood, 35mm lens at f/4, subject and environment both clearly readable, clean unmarked frame.",
+      "size": "FS",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "scene-museum-quiet__06.png"
+    },
+    {
+      "shotId": "S11-07",
+      "shotType": "medium-close-up",
+      "camera": "eye_level，50mm",
+      "lens": "50mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 7/9] 2:3 vertical, documentary detail shot, over the shoulder of an adult visitor looking at a painting, painting texture and brushwork in focus, visitor shoulder and back of head as soft foreground, gallery spotlight on artwork, no flash, eye level, realistic museum atmosphere, 50mm lens at f/2, shallow depth of field with creamy bokeh, clean unmarked frame.",
+      "size": "MCU",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "scene-museum-quiet__07.png"
+    },
+    {
+      "shotId": "S11-08",
+      "shotType": "environmental-wide",
+      "camera": "eye_level，35mm",
+      "lens": "35mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 8/9] 2:3 vertical, wide documentary shot of an art museum gallery corridor, one adult visitor standing in the middle facing the depth of the hall seen from behind, gallery walls and ceiling lights forming leading lines, full body, existing lighting only, no flash, handheld, eye level, quiet contemplative atmosphere, 35mm lens at f/5.6, subject and environment both clearly readable, clean unmarked frame.",
+      "size": "WS",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "scene-museum-quiet__08.png"
+    },
+    {
+      "shotId": "S11-09",
+      "shotType": "medium",
+      "camera": "eye_level，35mm",
+      "lens": "35mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, long hair worn loose, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], black and white with strong grain and high micro-contrast, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 9/9] 2:3 vertical, documentary photograph, adult visitor pausing near the exit of a museum gallery, turning head back toward the exhibition wall, calm expression, side profile visible, gallery space and wall lights in background, existing lighting only, no flash, handheld, eye level, quiet ending mood, 35mm lens at f/2.8, subject and environment both clearly readable, clean unmarked frame.",
+      "size": "MS",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "scene-museum-quiet__09.png"
+    }
+  ],
+  "lockedHash": "e007f9cee2f9"
+}

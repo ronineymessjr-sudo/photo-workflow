@@ -1,0 +1,205 @@
+{
+  "backend": "deepseek",
+  "ranAt": "2026-10-27T02:46:25.864Z",
+  "totalBriefs": 28,
+  "pass": 28,
+  "note": "第一轮 23/28；5 组被拒经校验器修复（办公椅/工作台/游泳馆侧窗固有物、近旁条件式）与数量重生成后全过。",
+  "perBrief": [
+    {
+      "id": "ppl-business-portrait",
+      "shotCount": 10,
+      "elapsedSeconds": 24.1,
+      "pass": true,
+      "findings": []
+    },
+    {
+      "id": "ppl-cat-home",
+      "shotCount": 9,
+      "elapsedSeconds": 18.247,
+      "pass": true,
+      "findings": []
+    },
+    {
+      "id": "ppl-chef-kitchen",
+      "shotCount": 10,
+      "elapsedSeconds": 23.451,
+      "pass": true,
+      "findings": []
+    },
+    {
+      "id": "ppl-dancer-studio",
+      "shotCount": 9,
+      "elapsedSeconds": 15.65,
+      "pass": true,
+      "findings": []
+    },
+    {
+      "id": "ppl-elder-hands",
+      "shotCount": 9,
+      "elapsedSeconds": 23.23,
+      "pass": true,
+      "findings": []
+    },
+    {
+      "id": "ppl-kids-sportsday",
+      "shotCount": 9,
+      "elapsedSeconds": 20.417,
+      "pass": true,
+      "findings": []
+    },
+    {
+      "id": "ppl-skater-dusk",
+      "shotCount": 9,
+      "elapsedSeconds": 23.095,
+      "pass": true,
+      "findings": []
+    },
+    {
+      "id": "ppl-swimmer-poolside",
+      "shotCount": 10,
+      "elapsedSeconds": 20.723,
+      "pass": true,
+      "findings": []
+    },
+    {
+      "id": "scene-bookstore-aisle",
+      "shotCount": 9,
+      "elapsedSeconds": 14.902,
+      "pass": true,
+      "findings": []
+    },
+    {
+      "id": "scene-glass-facade",
+      "shotCount": 9,
+      "elapsedSeconds": 18.976,
+      "pass": true,
+      "findings": []
+    },
+    {
+      "id": "scene-greenhouse-humid",
+      "shotCount": 10,
+      "elapsedSeconds": 25.367,
+      "pass": true,
+      "findings": []
+    },
+    {
+      "id": "scene-laundry-night",
+      "shotCount": 9,
+      "elapsedSeconds": 16.618,
+      "pass": true,
+      "findings": []
+    },
+    {
+      "id": "scene-museum-quiet",
+      "shotCount": 9,
+      "elapsedSeconds": 24.621,
+      "pass": true,
+      "findings": []
+    },
+    {
+      "id": "scene-overpass-night",
+      "shotCount": 9,
+      "elapsedSeconds": 13.323,
+      "pass": true,
+      "findings": []
+    },
+    {
+      "id": "scene-parking-garage",
+      "shotCount": 9,
+      "elapsedSeconds": 15.643,
+      "pass": true,
+      "findings": []
+    },
+    {
+      "id": "scene-pool-dusk",
+      "shotCount": 10,
+      "elapsedSeconds": 21.429,
+      "pass": true,
+      "findings": []
+    },
+    {
+      "id": "scene-spiral-stairs",
+      "shotCount": 9,
+      "elapsedSeconds": 27.814,
+      "pass": true,
+      "findings": []
+    },
+    {
+      "id": "scene-underpass-light",
+      "shotCount": 9,
+      "elapsedSeconds": 17.476,
+      "pass": true,
+      "findings": []
+    },
+    {
+      "id": "style-bw-street",
+      "shotCount": 9,
+      "elapsedSeconds": 16.214,
+      "pass": true,
+      "findings": []
+    },
+    {
+      "id": "style-cinema-rooftop",
+      "shotCount": 9,
+      "elapsedSeconds": 14.966,
+      "pass": true,
+      "findings": []
+    },
+    {
+      "id": "style-cyberpunk-rain",
+      "shotCount": 9,
+      "elapsedSeconds": 20.309,
+      "pass": true,
+      "findings": []
+    },
+    {
+      "id": "style-film-classroom",
+      "shotCount": 9,
+      "elapsedSeconds": 22.926,
+      "pass": true,
+      "findings": []
+    },
+    {
+      "id": "style-flower-field",
+      "shotCount": 9,
+      "elapsedSeconds": 16.31,
+      "pass": true,
+      "findings": []
+    },
+    {
+      "id": "style-french-cafe",
+      "shotCount": 9,
+      "elapsedSeconds": 16.651,
+      "pass": true,
+      "findings": []
+    },
+    {
+      "id": "style-gothic-ruin",
+      "shotCount": 10,
+      "elapsedSeconds": 18.004,
+      "pass": true,
+      "findings": []
+    },
+    {
+      "id": "style-hanfu-court",
+      "shotCount": 9,
+      "elapsedSeconds": 15.692,
+      "pass": true,
+      "findings": []
+    },
+    {
+      "id": "style-minimal-white",
+      "shotCount": 9,
+      "elapsedSeconds": 17.772,
+      "pass": true,
+      "findings": []
+    },
+    {
+      "id": "style-newchinese-tea",
+      "shotCount": 10,
+      "elapsedSeconds": 22.38,
+      "pass": true,
+      "findings": []
+    }
+  ]
+}

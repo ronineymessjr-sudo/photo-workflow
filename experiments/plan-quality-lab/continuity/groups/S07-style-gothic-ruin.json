@@ -1,0 +1,257 @@
+{
+  "continuityGroupId": "暗黑哥特废墟人像-S07",
+  "series": "S07",
+  "briefId": "style-gothic-ruin",
+  "locked": {
+    "subject": "一名成年人（同一人物，外观以身份参考图为准）",
+    "wardrobe": "深色长外套、黑色长裤、深色靴子；发型，妆容",
+    "location": "废弃厂房外部围栏内安全区（已获许可，不进入建筑本体）",
+    "season": "不限定（按场地植被判断）",
+    "weather": "阴天（散射光，无直射硬光）",
+    "timeOfDay": "白天",
+    "light": "自然光，阴天漫射光，无补光；避免闪光灯",
+    "colorGrade": "desaturated cool grey, crushed blacks, one warm accent light",
+    "styleProfile": "从用户选定的风格参考提取：暗黑、哥特；desaturated cool grey, crushed blacks, one warm accent light",
+    "mustKeep": [
+      "同一人物",
+      "同一服装",
+      "同一地点",
+      "同一天气",
+      "同一光线方向",
+      "同一调色"
+    ],
+    "mustAvoid": [
+      "no text or labels inside the image",
+      "no watermark",
+      "no extra people",
+      "no props beyond the listed ones",
+      "no flash"
+    ]
+  },
+  "references": [
+    {
+      "assetId": "style-gothic-ruin-identity",
+      "role": "identity",
+      "status": "pending",
+      "note": "人物参考：只负责脸/发型/体态"
+    },
+    {
+      "assetId": "style-gothic-ruin-scene",
+      "role": "scene",
+      "status": "pending",
+      "note": "场景参考：只负责地点结构与空间关系"
+    },
+    {
+      "assetId": "style-gothic-ruin-style",
+      "role": "style",
+      "status": "pending",
+      "note": "风格参考：只负责构图/光线/色彩/颗粒，必须来自用户图库"
+    }
+  ],
+  "master": {
+    "confirmedBy": "none"
+  },
+  "shots": [
+    {
+      "shotId": "S07-01",
+      "shotType": "environmental-wide",
+      "camera": "eye_level，24mm",
+      "lens": "24mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], desaturated cool grey, crushed blacks, one warm accent light, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 1/10] 2:3 vertical, Wide shot of an adult model standing with back to camera, facing a derelict factory exterior, inside a fenced safe zone, dark gothic style, overcast diffuse light, no flash, eye level, desolate atmosphere, 24mm lens at f/5.6, subject and environment both clearly readable, clean unmarked frame.",
+      "size": "WS",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "style-gothic-ruin__01.png"
+    },
+    {
+      "shotId": "S07-02",
+      "shotType": "full-body",
+      "camera": "eye_level，24mm",
+      "lens": "24mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], desaturated cool grey, crushed blacks, one warm accent light, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 2/10] 2:3 vertical, Wide environmental portrait, adult model in profile facing left, standing near a fence with derelict factory wall on right, dark gothic style, overcast side light, subtle fill from white board, no flash, eye level, 24mm lens at f/4, subject and environment both clearly readable, clean unmarked frame.",
+      "size": "FS",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "style-gothic-ruin__02.png"
+    },
+    {
+      "shotId": "S07-03",
+      "shotType": "medium",
+      "camera": "eye_level，85mm",
+      "lens": "85mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], desaturated cool grey, crushed blacks, one warm accent light, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 3/10] 2:3 vertical, Medium shot of an adult model standing in front of a broken window frame, backlit silhouette, side profile, dark gothic atmosphere, natural backlight, subtle fill, no flash, eye level, 85mm lens at f/2.8, subject and environment both clearly readable, clean unmarked frame.",
+      "size": "MS",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "style-gothic-ruin__03.png"
+    },
+    {
+      "shotId": "S07-04",
+      "shotType": "close-up",
+      "camera": "eye_level，85mm",
+      "lens": "85mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], desaturated cool grey, crushed blacks, one warm accent light, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 4/10] 2:3 vertical, Close-up of an adult model's face near a broken window frame, closed eyes, solemn expression, dark gothic style, backlit rim light, subtle fill, no flash, eye level, 85mm lens at f/1.8, shallow depth of field with creamy bokeh, clean unmarked frame.",
+      "size": "CU",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "style-gothic-ruin__04.png"
+    },
+    {
+      "shotId": "S07-05",
+      "shotType": "medium",
+      "camera": "ground_level，24mm",
+      "lens": "24mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], desaturated cool grey, crushed blacks, one warm accent light, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 5/10] 2:3 vertical, Low angle shot of an adult model leaning against a derelict wall, arms crossed, looking forward, dark gothic style, side light emphasizing wall texture, no flash, ground level, 24mm lens at f/2.8, subject and environment both clearly readable, clean unmarked frame.",
+      "size": "MS",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "style-gothic-ruin__05.png"
+    },
+    {
+      "shotId": "S07-06",
+      "shotType": "detail-extreme-close-up",
+      "camera": "high_angle，85mm",
+      "lens": "85mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], desaturated cool grey, crushed blacks, one warm accent light, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 6/10] 2:3 vertical, Extreme close-up of a hand touching a rough derelict wall, fingers slightly spread, dark gothic style, side light, subtle fill, no flash, high angle, 85mm lens at f/1.8, shallow depth of field with creamy bokeh, clean unmarked frame.",
+      "size": "ECU",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "style-gothic-ruin__06.png"
+    },
+    {
+      "shotId": "S07-07",
+      "shotType": "full-body",
+      "camera": "eye_level，85mm",
+      "lens": "85mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], desaturated cool grey, crushed blacks, one warm accent light, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 7/10] 2:3 vertical, Full body silhouette of an adult model standing in front of a derelict factory, backlit, dark gothic style, natural backlight, no flash, eye level, 85mm lens at f/4, subject and environment both clearly readable, clean unmarked frame.",
+      "size": "FS",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "style-gothic-ruin__07.png"
+    },
+    {
+      "shotId": "S07-08",
+      "shotType": "close-up",
+      "camera": "eye_level，85mm",
+      "lens": "85mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], desaturated cool grey, crushed blacks, one warm accent light, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 8/10] 2:3 vertical, Close-up face portrait of an adult model, solemn expression, looking at camera, dark gothic style, side light, subtle fill, no flash, eye level, 85mm lens at f/1.8, shallow depth of field with creamy bokeh, clean unmarked frame.",
+      "size": "CU",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "style-gothic-ruin__08.png"
+    },
+    {
+      "shotId": "S07-09",
+      "shotType": "medium",
+      "camera": "high_angle，24mm",
+      "lens": "24mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], desaturated cool grey, crushed blacks, one warm accent light, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 9/10] 2:3 vertical, High angle shot of an adult model crouching on the ground in a fenced safe zone, holding knees, dark gothic style, overcast light, no flash, high angle, 24mm lens at f/2.8, subject and environment both clearly readable, clean unmarked frame.",
+      "size": "MS",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "style-gothic-ruin__09.png"
+    },
+    {
+      "shotId": "S07-10",
+      "shotType": "environmental-wide",
+      "camera": "eye_level，24mm",
+      "lens": "24mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], desaturated cool grey, crushed blacks, one warm accent light, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 10/10] 2:3 vertical, Wide shot of an adult model walking away towards a fence exit, back view, dark gothic style, natural backlight, no flash, eye level, 24mm lens at f/5.6, subject and environment both clearly readable, clean unmarked frame.",
+      "size": "WS",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "style-gothic-ruin__10.png"
+    }
+  ],
+  "lockedHash": "9ad853c9a12a"
+}

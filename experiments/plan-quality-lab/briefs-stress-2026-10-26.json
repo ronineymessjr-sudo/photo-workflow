@@ -1,0 +1,392 @@
+[
+  {
+    "id": "wa-fisheye-street",
+    "input": {
+      "theme": "鱼眼街头夸张人像",
+      "style": "潮流、大胆",
+      "modelDesc": "一名成年人",
+      "scene": "城市街头过街天桥下",
+      "mood": "张扬",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "仅使用已备的8mm鱼眼镜头；刻意保留桶形畸变，人物可贴近镜头制造夸张变形；禁止进入机动车道。"
+    }
+  },
+  {
+    "id": "wa-14mm-starburst",
+    "input": {
+      "theme": "糖果色超广角仰拍星芒",
+      "style": "糖果色、明快",
+      "modelDesc": "一名成年人",
+      "scene": "彩色居民楼之间的街道",
+      "mood": "俏皮",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "仅14mm超广角；仰拍建筑线条汇聚+路灯星芒；人物服装颜色与糖果色墙面呼应；无助手。"
+    }
+  },
+  {
+    "id": "wa-leg-stretch",
+    "input": {
+      "theme": "贴地超广角拉长比例",
+      "style": "时尚杂志风",
+      "modelDesc": "一名成年人",
+      "scene": "公园直线步道",
+      "mood": "自信",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "仅16mm；机位贴地离人物约半米，利用近大远小拉长腿部线条；只拍站姿和走姿；无闪光灯。"
+    }
+  },
+  {
+    "id": "wa-corridor-depth",
+    "input": {
+      "theme": "狭窄走廊纵深压迫感",
+      "style": "纪实、冷峻",
+      "modelDesc": "一名成年人",
+      "scene": "老居民楼的狭长走廊",
+      "mood": "压抑",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "仅14mm；走廊尽头透视灭点构图；走廊灯光昏暗，只利用现有照明；不用闪光灯。"
+    }
+  },
+  {
+    "id": "wa-gopro-pov",
+    "input": {
+      "theme": "运动相机第一视角骑行",
+      "style": "动感纪录",
+      "modelDesc": "一名戴头盔的成年人",
+      "scene": "滨江绿道骑行道",
+      "mood": "冲劲",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "使用已备的运动相机（超广角定焦）；跟拍与第一视角交替；只走绿道不进机动车道；写出固定相机位置。；自行车已备"
+    }
+  },
+  {
+    "id": "wa-face-distort",
+    "input": {
+      "theme": "近距离超广角夸张面部",
+      "style": "实验、先锋",
+      "modelDesc": "一名成年人（接受夸张变形风格）",
+      "scene": "纯色布景前",
+      "mood": "怪诞",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "仅14mm，镜头距面部约20厘米制造夸张鼻部畸变；布景为现场纯色墙面；需要提示模特此为艺术变形风格。"
+    }
+  },
+  {
+    "id": "lv-desert-ant",
+    "input": {
+      "theme": "沙漠中的小小旅人",
+      "style": "极简、辽阔",
+      "modelDesc": "一名成年人",
+      "scene": "沙丘连绵的沙漠步道",
+      "mood": "孤寂、宏大",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "全部镜头EWS环境远景，人物不超过画面高度十分之一；沙丘线条是主角；无任何补光；防晒站位由模特自定。"
+    }
+  },
+  {
+    "id": "lv-snowfield-minimal",
+    "input": {
+      "theme": "雪原极简负空间",
+      "style": "极简",
+      "modelDesc": "一名穿深色外套的成年人",
+      "scene": "开阔雪原与一排远树",
+      "mood": "安静",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "人占画面不足五分之一；大面积留白给雪地与天空；注意雪地曝光加一档；相机与镜头防寒由现场已有装备解决。"
+    }
+  },
+  {
+    "id": "lv-cityscape-observatory",
+    "input": {
+      "theme": "观景台城市天际线夜景",
+      "style": "都市、璀璨",
+      "modelDesc": "一名成年人",
+      "scene": "对外开放的高层观景平台（可到达）",
+      "mood": "繁华中的宁静",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "人物剪影与整面城市天际线同框；全部使用平台内可站立位置；不翻越护栏；仅利用现场灯光。"
+    }
+  },
+  {
+    "id": "lv-cliff-boardwalk",
+    "input": {
+      "theme": "海边悬崖栈道大远景",
+      "style": "壮阔纪实",
+      "modelDesc": "一名成年人",
+      "scene": "海边悬崖观景栈道",
+      "mood": "辽阔",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "人物只在栈道上行走与驻足，绝不越过护栏；全部镜头EWS或WS交代悬崖、海与人的比例；仅自然光。"
+    }
+  },
+  {
+    "id": "mc-eye-macro",
+    "input": {
+      "theme": "眼睛虹膜微距",
+      "style": "细腻、科学感",
+      "modelDesc": "一名成年人（眼部无妆）",
+      "scene": "窗边柔和散射光下",
+      "mood": "专注",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "使用已备的100mm微距镜头；拍摄虹膜纹理与眼神光；注意眨眼节奏，写明引导口令；不用闪光灯避免刺激。"
+    }
+  },
+  {
+    "id": "mc-fabric-texture",
+    "input": {
+      "theme": "针织面料纹理微距",
+      "style": "质感、温暖",
+      "modelDesc": "一名成年人穿着粗针织毛衣",
+      "scene": "室内柔和侧光下",
+      "mood": "温暖",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "微距拍毛衣纹理与手指互动；侧光强化立体感；裁切大胆，只留织物与局部皮肤；无道具。"
+    }
+  },
+  {
+    "id": "mc-raindrop-glass",
+    "input": {
+      "theme": "玻璃上雨滴微距世界",
+      "style": "朦胧、忧郁",
+      "modelDesc": "一名成年人",
+      "scene": "室内窗边，玻璃上有雨水（等待天然降雨）",
+      "mood": "静谧",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "微距拍玻璃上水珠与背景虚化人影；需要真实降雨，雨停即改拍水珠残留；使用已备微距镜头；不用喷水道具。"
+    }
+  },
+  {
+    "id": "mc-dessert-texture",
+    "input": {
+      "theme": "甜品切面质感微距",
+      "style": "食欲、精致",
+      "modelDesc": "模特不入画",
+      "scene": "室内窗边桌面，窗边自然光",
+      "mood": "甜",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "已备一块切开的蛋糕作唯一道具；微距拍切面层次与奶油光泽；拍摄间隙蛋糕需冷藏，写明保存方式。"
+    }
+  },
+  {
+    "id": "mc-jewelry-control",
+    "input": {
+      "theme": "银饰高反光控制微距",
+      "style": "商业、冷静",
+      "modelDesc": "模特手部入画",
+      "scene": "室内白墙与现有桌面",
+      "mood": "克制",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "已备一件银戒指作唯一道具；微距控制金属反光，用白墙回弹柔化高光；不得使用额外反光板。"
+    }
+  },
+  {
+    "id": "vc-red-dress-wind",
+    "input": {
+      "theme": "高饱和红裙海风",
+      "style": "浓烈、电影感",
+      "modelDesc": "一名穿红色长裙的成年人",
+      "scene": "海边草坡，大风天气",
+      "mood": "炽烈",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "红色长裙已由模特自备；利用大风吹起裙摆的瞬间连拍；注意海风方向与站位的安全；无助手无补光。"
+    }
+  },
+  {
+    "id": "vc-color-powder",
+    "input": {
+      "theme": "彩色粉末爆炸瞬间",
+      "style": "张扬、爆发",
+      "modelDesc": "两名成年人（佩戴护目镜）",
+      "scene": "空旷水泥空地",
+      "mood": "狂欢",
+      "duration": "1小时",
+      "people": "2",
+      "extra": "已备五色无害色粉；逆光让粉尘发光；抛粉方向避开镜头与面部口鼻；写明清理与防护口令。"
+    }
+  },
+  {
+    "id": "vc-neon-cyber",
+    "input": {
+      "theme": "霓虹街区赛博色夜景",
+      "style": "赛博朋克",
+      "modelDesc": "一名成年人",
+      "scene": "夜晚霓虹招牌密集的步行街",
+      "mood": "迷离",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "全部用现场霓虹灯光，让招牌色反射在面部与湿地面；高饱和直出；不进机动车道；无闪光灯。"
+    }
+  },
+  {
+    "id": "vc-color-block",
+    "input": {
+      "theme": "蓝墙黄裙大色块撞色",
+      "style": "极简、高饱和",
+      "modelDesc": "一名穿黄色连衣裙的成年人",
+      "scene": "整面蓝色涂鸦墙前",
+      "mood": "明快",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "黄裙已由模特自备；大面积蓝墙做纯色背景，人物只占画面四分之一；正午硬光也不要补光，保留色块感。"
+    }
+  },
+  {
+    "id": "sea-sunset-silhouette",
+    "input": {
+      "theme": "海边日落剪影",
+      "style": "浪漫、安静",
+      "modelDesc": "一名成年人",
+      "scene": "海滩沙地，日落方向开阔",
+      "mood": "温柔",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "按天空亮部曝光让人物成剪影；只拍日落前后四十分钟窗口；人物不涉水；无补光。"
+    }
+  },
+  {
+    "id": "sea-wave-play",
+    "input": {
+      "theme": "与浪花追逐互动",
+      "style": "活力纪实",
+      "modelDesc": "一名成年人（会游泳，现场有同伴照看）",
+      "scene": "海滩浅滩区",
+      "mood": "欢快",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "人物只在脚踝至膝盖深的浅水区，绝不进入齐腰以上水深；相机保持干燥距离，使用已备长焦；拍浪花拍打与逃离动作。"
+    }
+  },
+  {
+    "id": "sea-longexposure-silk",
+    "input": {
+      "theme": "长曝光丝绢海浪礁石",
+      "style": "空灵",
+      "modelDesc": "模特不入画或远景剪影",
+      "scene": "海边礁石滩",
+      "mood": "禅意",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "使用已备的三脚架与减光镜；快门15秒以上拍丝绢水流；机位选干礁石，涨潮前撤离，写明看潮口令。"
+    }
+  },
+  {
+    "id": "sea-mist-pier",
+    "input": {
+      "theme": "清晨海雾中的栈桥",
+      "style": "清冷、空灵",
+      "modelDesc": "一名成年人",
+      "scene": "海边木质栈桥，清晨有雾",
+      "mood": "缥缈",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "利用海雾做天然柔光与层次；人物只走栈桥面；拍雾中若隐若现的远景与栈桥近景两组；无补光。"
+    }
+  },
+  {
+    "id": "odd-mirror-multiples",
+    "input": {
+      "theme": "镜面反射多重人像",
+      "style": "超现实",
+      "modelPoseDesc": "一名成年人",
+      "scene": "室内，已备三面全身镜",
+      "mood": "迷幻",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "使用已备的三面全身镜制造多重反射；机位隐藏避免入镜；利用镜中镜像构成多重人物；现有室内灯光。"
+    }
+  },
+  {
+    "id": "odd-fairy-wand-blush",
+    "input": {
+      "theme": "蓝调时分仙女棒光绘",
+      "style": "梦幻",
+      "modelDesc": "一名成年人",
+      "scene": "户外开阔空地，日落后蓝调时刻",
+      "mood": "童话",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "已备仙女棒与三脚架；蓝调天空做背景，慢门1-4秒拍光迹；注意防火，备水；写明引燃与挥舞口令。"
+    }
+  },
+  {
+    "id": "odd-milkyway-portrait",
+    "input": {
+      "theme": "银河下的人像",
+      "style": "宏大、神秘",
+      "modelDesc": "一名成年人",
+      "scene": "远离光污染的山间观星平台",
+      "mood": "敬畏",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "使用已备的三脚架与大光圈广角；高ISO长曝光拍银河，人物用微弱头灯补光勾轮廓；夜间安全由同伴陪同。"
+    }
+  },
+  {
+    "id": "odd-negative-space-wall",
+    "input": {
+      "theme": "极简负空间：小人与大墙",
+      "style": "极简艺术",
+      "modelDesc": "一名成年人",
+      "scene": "一整面巨大的浅灰清水墙前",
+      "mood": "孤独、安静",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "人物只占画面二十分之一；百分之九十以上留给墙面肌理与光影；全部镜头EWS；无任何道具。"
+    }
+  },
+  {
+    "id": "odd-busstop-night",
+    "input": {
+      "theme": "公交车站灯箱夜景人像",
+      "style": "都市孤独感",
+      "modelDesc": "一名成年人",
+      "scene": "夜晚路边的公交车站",
+      "mood": "疏离",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "利用站台灯箱与路灯光；人物或坐或立于灯箱光晕内；注意末班车时间限制；不进机动车道。"
+    }
+  },
+  {
+    "id": "odd-jump-float",
+    "input": {
+      "theme": "连拍跳跃悬浮感",
+      "style": "活力、超现实",
+      "modelDesc": "一名成年人（体力允许跳跃）",
+      "scene": "空旷草地",
+      "mood": "轻盈",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "高速连拍抓滞空顶点，写明起跳口令与摄影师快门时机；裙子或衣物飘动是重点；跳跃落地注意缓冲安全。"
+    }
+  },
+  {
+    "id": "odd-rain-glass-portrait",
+    "input": {
+      "theme": "雨夜隔着湿玻璃的人像",
+      "style": "朦胧、情绪",
+      "modelDesc": "一名成年人",
+      "scene": "室内靠窗座位，窗外夜雨",
+      "mood": "忧郁",
+      "duration": "1小时",
+      "people": "1",
+      "extra": "隔着被雨水打湿的玻璃拍室内人像，玻璃水痕做前景虚化；需要真实降雨；室内灯与窗外霓虹做双色温；不用假水痕。"
+    }
+  }
+]

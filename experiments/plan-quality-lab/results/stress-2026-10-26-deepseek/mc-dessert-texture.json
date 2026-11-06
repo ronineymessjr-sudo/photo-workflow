@@ -1,0 +1,17 @@
+{
+  "id": "mc-dessert-texture",
+  "backend": "deepseek",
+  "startedAt": "2026-10-26T13:35:57.453Z",
+  "input": {
+    "theme": "甜品切面质感微距",
+    "style": "食欲、精致",
+    "modelDesc": "模特不入画",
+    "scene": "室内桌面，自然光",
+    "mood": "甜",
+    "duration": "1小时",
+    "people": "1",
+    "extra": "已备一块切开的蛋糕作唯一道具；微距拍切面层次与奶油光泽；拍摄间隙蛋糕需冷藏，写明保存方式。"
+  },
+  "error": "API 422: AI_HARD_CONSTRAINTS_FAILED 本次没有保存：硬性拍摄要求未通过。镜头7使用了未提供、需确认的资源：橱窗或窗户。请调整要求或重新生成。",
+  "elapsedSeconds": 13.566
+}

@@ -1,0 +1,238 @@
+{
+  "continuityGroupId": "桥洞隧道光-S13",
+  "series": "S13",
+  "briefId": "scene-underpass-light",
+  "locked": {
+    "subject": "一名成年人（同一人物，外观以身份参考图为准）",
+    "wardrobe": "建议深色硬挺外套与长裤，避免反光材质，妆发自然冷峻。",
+    "location": "人行桥洞（非机动车道外安全区）",
+    "season": "不限定（按场地植被判断）",
+    "weather": "阴天（散射光，无直射硬光）",
+    "timeOfDay": "白天",
+    "light": "自然光，洞口逆光形成剪影，无补光，利用洞内暗部与外部亮部对比。",
+    "colorGrade": "natural colour with a gentle film curve and consistent white balance",
+    "styleProfile": "从用户选定的风格参考提取：都市、硬朗；natural colour with a gentle film curve and consistent white balance",
+    "mustKeep": [
+      "同一人物",
+      "同一服装",
+      "同一地点",
+      "同一天气",
+      "同一光线方向",
+      "同一调色"
+    ],
+    "mustAvoid": [
+      "no text or labels inside the image",
+      "no watermark",
+      "no extra people",
+      "no props beyond the listed ones",
+      "no flash",
+      "stay out of the restricted area"
+    ]
+  },
+  "references": [
+    {
+      "assetId": "scene-underpass-light-identity",
+      "role": "identity",
+      "status": "pending",
+      "note": "人物参考：只负责脸/发型/体态"
+    },
+    {
+      "assetId": "scene-underpass-light-scene",
+      "role": "scene",
+      "status": "pending",
+      "note": "场景参考：只负责地点结构与空间关系"
+    },
+    {
+      "assetId": "scene-underpass-light-style",
+      "role": "style",
+      "status": "pending",
+      "note": "风格参考：只负责构图/光线/色彩/颗粒，必须来自用户图库"
+    }
+  ],
+  "master": {
+    "confirmedBy": "none"
+  },
+  "shots": [
+    {
+      "shotId": "S13-01",
+      "shotType": "full-body",
+      "camera": "eye_level，35mm",
+      "lens": "35mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 1/9] 2:3 vertical, Urban hard-edged style, a lone adult standing at the entrance of a pedestrian underpass, back to camera, silhouetted against bright tunnel exit, wide shot, eye level, natural backlight, no flash, dark clothing, cool mood, architectural arch framing, safe zone beside non-motorized lane, no vehicles in frame, 35mm lens at f/4, subject and environment both clearly readable, clean unmarked frame.",
+      "size": "FS",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "scene-underpass-light__01.png"
+    },
+    {
+      "shotId": "S13-02",
+      "shotType": "medium",
+      "camera": "eye_level，35mm",
+      "lens": "35mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 2/9] 2:3 vertical, Medium shot, side profile of an adult standing at tunnel exit, backlit silhouette with rim light, eye level, cool urban style, no flash, natural light, dark clothing, hard outline, bright exit background, safe zone, no vehicles, 35mm lens at f/2.8, subject and environment both clearly readable, clean unmarked frame.",
+      "size": "MS",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "scene-underpass-light__02.png"
+    },
+    {
+      "shotId": "S13-03",
+      "shotType": "medium-full",
+      "camera": "eye_level，35mm",
+      "lens": "35mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 3/9] 2:3 vertical, Medium full shot, adult walking towards camera inside pedestrian underpass, eye level, overhead tunnel lights creating light pools and depth, hard urban style, dark clothing, cool mood, no flash, safe zone, no vehicles, 35mm lens at f/3.5, subject and environment both clearly readable, clean unmarked frame.",
+      "size": "MFS",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "scene-underpass-light__03.png"
+    },
+    {
+      "shotId": "S13-04",
+      "shotType": "close-up",
+      "camera": "eye_level，35mm",
+      "lens": "35mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 4/9] 2:3 vertical, Close-up shot, adult with cold expression inside pedestrian underpass, eye level, overhead tunnel light casting subtle shadows, hard urban style, dark clothing, no flash, detailed skin texture, background wall with light patterns, safe zone, 35mm lens at f/1.8, shallow depth of field with creamy bokeh, clean unmarked frame.",
+      "size": "CU",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "scene-underpass-light__04.png"
+    },
+    {
+      "shotId": "S13-05",
+      "shotType": "medium",
+      "camera": "low_angle，35mm",
+      "lens": "35mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 5/9] 2:3 vertical, Low angle shot, adult standing inside underpass looking up, ground level, arch structure converging above, urban hard style, dark clothing, mixed natural and tunnel light, no flash, safe zone, no vehicles, 35mm lens at f/2.8, subject and environment both clearly readable, clean unmarked frame.",
+      "size": "MS",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "scene-underpass-light__05.png"
+    },
+    {
+      "shotId": "S13-06",
+      "shotType": "full-body",
+      "camera": "eye_level，35mm",
+      "lens": "35mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 6/9] 2:3 vertical, Full shot, adult walking away into pedestrian underpass, eye level, tunnel lights creating depth, urban hard style, dark clothing, backlit, no flash, safe zone, no vehicles, cool mood, 35mm lens at f/4, subject and environment both clearly readable, clean unmarked frame.",
+      "size": "FS",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "scene-underpass-light__06.png"
+    },
+    {
+      "shotId": "S13-07",
+      "shotType": "detail-extreme-close-up",
+      "camera": "ground_level，35mm",
+      "lens": "35mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 7/9] 2:3 vertical, Close-up shot of feet and lower legs standing on tunnel floor, ground level, light patterns on concrete floor, hard urban style, dark pants and shoes, no flash, cool mood, safe zone, 35mm lens at f/1.8, shallow depth of field with creamy bokeh, clean unmarked frame.",
+      "size": "ECU",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "scene-underpass-light__07.png"
+    },
+    {
+      "shotId": "S13-08",
+      "shotType": "medium-close-up",
+      "camera": "eye_level，35mm",
+      "lens": "35mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 8/9] 2:3 vertical, Medium close-up, side profile of adult inside tunnel, eye level, tunnel lights as side light, half face lit, hard urban style, dark clothing, no flash, background with bokeh lights, safe zone, 35mm lens at f/2, shallow depth of field with creamy bokeh, clean unmarked frame.",
+      "size": "MCU",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "scene-underpass-light__08.png"
+    },
+    {
+      "shotId": "S13-09",
+      "shotType": "establishing-extreme-wide",
+      "camera": "eye_level，35mm",
+      "lens": "35mm",
+      "distance": "",
+      "action": "",
+      "subjectPlacement": "",
+      "mustKeep": [
+        "同一人物",
+        "同一服装",
+        "同一地点",
+        "同一天气"
+      ],
+      "prompt": "[IDENTITY LOCK], one single person, the same person as the reference image, adult, hairstyle fixed at the reference frame, identical face shape, nose, eye spacing, mouth and jawline in every frame, identical skin tone and identical makeup in every frame, never swap in another face or another model between frames, [REALISM LOCK], shot on a full-frame camera, RAW capture, ISO 400, subtle digital grain, skin shows visible pores, fine peach fuzz, mild redness on nose and knuckles, no retouching, no beauty filter, available light with true falloff, the unlit side drops into shadow, mixed colour temperature between window light and practicals, real venue with wear: scuffed stone, faint water stains, dust in the air, a few scattered real objects, natural optical bokeh with cat-eye vignetting, slight chromatic aberration, gentle lens vignette, documentary realism, not an advertisement, [STYLE LOCK], natural colour with a gentle film curve and consistent white balance, one single lighting direction for the whole series, 2:3 vertical framing, consistent white balance across every frame, [FRAME 9/9] 2:3 vertical, Extreme wide shot, adult standing at tunnel exit with city background, eye level, backlit silhouette, urban hard style, dark clothing, natural light, no flash, safe zone, no vehicles, cool mood, 35mm lens at f/8, subject and environment both clearly readable, clean unmarked frame.",
+      "size": "EWS",
+      "aspect": "2:3 vertical",
+      "props": "",
+      "file": "scene-underpass-light__09.png"
+    }
+  ],
+  "lockedHash": "8b82bc4a9dcc"
+}

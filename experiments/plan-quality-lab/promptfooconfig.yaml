@@ -1,0 +1,30 @@
+description: Fixed photography plan regression cases
+prompts:
+  - '{{scenario}}'
+providers:
+  - file://./promptfoo-provider.mjs
+tests:
+  - vars: { scenario: valid, expected: true }
+    assert:
+      - type: javascript
+        value: 'JSON.parse(output).currentPass === context.vars.expected'
+  - vars: { scenario: missing, expected: false }
+    assert:
+      - type: javascript
+        value: 'JSON.parse(output).currentPass === context.vars.expected'
+  - vars: { scenario: enum, expected: false }
+    assert:
+      - type: javascript
+        value: 'JSON.parse(output).currentPass === context.vars.expected'
+  - vars: { scenario: semantic, expected: false }
+    assert:
+      - type: javascript
+        value: 'JSON.parse(output).currentPass === context.vars.expected'
+  - vars: { scenario: duplicate, expected: false }
+    assert:
+      - type: javascript
+        value: 'JSON.parse(output).currentPass === context.vars.expected'
+  - vars: { scenario: resource, expected: false }
+    assert:
+      - type: javascript
+        value: 'JSON.parse(output).currentPass === context.vars.expected'

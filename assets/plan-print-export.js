@@ -20,19 +20,25 @@
                 return `<article class="print-plan">${summary}<h2>动作提示</h2>${shots.length ? shots.map((shot, index) => `<section class="model-shot"><h3>${String(index + 1).padStart(2, '0')} · ${escapeHtml(shot.title || shot.scene || '拍摄动作')}</h3><p>${escapeHtml(shot.description || '按摄影师现场口令自然完成动作。')}</p></section>`).join('') : '<p>暂无动作内容</p>'}</article>`;
             }
 
+            const references = Array.isArray(plan.aiStudio?.references) ? plan.aiStudio.references : [];
+            const referenceHtml = references.length ? `<h2>摆姿库参考与拍摄转译</h2><table class="overview"><thead><tr><th>原库编号</th><th>参考</th><th>角度</th><th>来源</th></tr></thead><tbody>${references.map(item => `<tr><td>${escapeHtml(item.poseNumber || item.upstreamId || item.sourceItemId)}</td><td>${escapeHtml(item.title)}</td><td>${escapeHtml(readable(item.angles))}</td><td>${escapeHtml(item.attribution || 'RuiC-PoseAtlas')} ${escapeHtml(item.externalUrl || item.sourceUrl || '')}</td></tr>`).join('')}</tbody></table><p>${escapeHtml(plan.aiStudio.guidance?.style || '')}</p>${(plan.aiStudio.guidance?.suggestions || []).map(item => `<p>${escapeHtml(item.direction)}</p>`).join('')}<p class="meta">飞书${plan.aiStudio.sync?.status === 'synced' ? '已核对同步' : '待同步'}</p>` : '';
             const overview = shots.map((shot, index) => `<tr><td>${String(index + 1).padStart(2, '0')}</td><td>${escapeHtml(shot.title || shot.scene || '未命名镜头')}</td><td>${escapeHtml(shot.description || '待补充')}</td><td>${escapeHtml([shot.shotSize, shot.focalLength].filter(Boolean).join(' / ') || '待确认')}</td><td>${escapeHtml(shot.method || shot.angle || '待确认')}</td></tr>`).join('');
             const details = shots.map((shot, index) => {
                 const contract = shot.directorContract || {};
+                const wardrobe = contract.wardrobe_styling || shot.wardrobe || '';
+                const props = contract.shot_props || shot.props || '';
                 const rows = [
                     ['拍什么', shot.title || shot.scene], ['人物动作', shot.description],
                     ['摄影师机位', shot.method || shot.angle], ['构图位置', shot.composition],
                     ['景别与焦段', [shot.shotSize, shot.focalLength].filter(Boolean).join(' · ')],
+                    ...(wardrobe ? [['服装与妆发', wardrobe]] : []),
+                    ...(props && props !== '以实际场地和已有资源为准' ? [['本镜头道具', props]] : []),
                     ['光线', shot.lightingSetup || shot.lighting], ['画面保留', readable(contract.must_show)],
                     ['避免情况', readable(contract.reject_if)], ['取景边界', readable(contract.crop_boundary)]
                 ];
                 return `<section class="shot-detail"><h3>${String(index + 1).padStart(2, '0')} · ${escapeHtml(shot.title || shot.scene || '未命名镜头')}</h3><table>${rows.map(([label, value]) => `<tr><th>${escapeHtml(label)}</th><td>${escapeHtml(value || '待补充')}</td></tr>`).join('')}</table></section>`;
             }).join('');
-            return `<article class="print-plan">${summary}<h2>分镜总表 · ${shots.length} 镜</h2><table class="overview"><thead><tr><th>序号</th><th>拍摄画面</th><th>人物动作</th><th>景别 / 焦段</th><th>机位</th></tr></thead><tbody>${overview || '<tr><td colspan="5">暂无分镜</td></tr>'}</tbody></table><h2>逐镜头执行说明</h2>${details || '<p>暂无分镜细节</p>'}</article>`;
+            return `<article class="print-plan">${summary}${referenceHtml}<h2>分镜总表 · ${shots.length} 镜</h2><table class="overview"><thead><tr><th>序号</th><th>拍摄画面</th><th>人物动作</th><th>景别 / 焦段</th><th>机位</th></tr></thead><tbody>${overview || '<tr><td colspan="5">暂无分镜</td></tr>'}</tbody></table><h2>逐镜头执行说明</h2>${details || '<p>暂无分镜细节</p>'}</article>`;
         }).join('');
         const docTitle = escapeHtml(plans.length === 1 ? plans[0].title || '拍摄方案' : `拍摄方案合集（${plans.length}份）`);
         return `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${docTitle}</title><style>

@@ -1,0 +1,43 @@
+{
+  "comfy": {
+    "url": "http://127.0.0.1:8188",
+    "timeoutSeconds": 300
+  },
+  "model": {
+    "checkpoint": "realvisxlV50_v50Bakedvae.safetensors",
+    "ipadapterPreset": "PLUS FACEID",
+    "ipadapterWeight": 0.85,
+    "ipadapterStartPercent": 0,
+    "ipadapterEndPercent": 0.85,
+    "note": "PLUS FACEID 才会注入身份；PLUS 只做风格参考。权重 0.8–0.9，超过 0.95 会出现贴脸塑料感"
+  },
+  "sampler": {
+    "steps": 30,
+    "cfg": 5.5,
+    "samplerName": "dpmpp_2m",
+    "scheduler": "karras",
+    "denoise": 0.35,
+    "note": "denoise 0.25–0.30 只改五官；0.35–0.40 连脸型一起改。超过 0.5 会把底模的姿势和衣领也改掉"
+  },
+  "canvas": {
+    "width": 896,
+    "height": 1120,
+    "aspect": "4:5",
+    "note": "白底模特图统一 4:5；底模原图 1122×1402 也是 4:5，别用方图"
+  },
+  "prompt": {
+    "positive": "keep the pose, shoulder line, hairstyle volume and the plain white studio background of the base image; adopt the facial identity of the reference face exactly; soft frontal studio light; photorealistic, visible skin pores, no beauty filter",
+    "negative": "plastic skin, airbrushed, HDR, 3d render, CGI, doll face, glowing skin, smooth gradient background, over-sharpened, beauty filter, different hairstyle, changed outfit, altered background, text, watermark, extra fingers, deformed hands"
+  },
+  "postprocess": {
+    "cleanWatermark": true,
+    "aspect": "4:5",
+    "note": "通道出图可能带角标；后处理按 4:5 裁切并清理角标"
+  },
+  "qualityGate": {
+    "identitySimilarity": 0.55,
+    "skinDeltaE": 5,
+    "backgroundCornerVariance": 3,
+    "note": "脸相似度用 ArcFace；肤色用 LAB ΔE；背景四角 RGB 方差"
+  }
+}

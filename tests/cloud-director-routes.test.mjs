@@ -1,8 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHmac } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { createGuestPlanDraft } from '../api/director-plan.mjs';
 import worker from '../api/index.js';
+
+test('template fallback is visibly distinct from a real Director result', async () => {
+    const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+    assert.match(html, /source === 'guest-rule-draft'/);
+    assert.match(html, /以下不是模型生成结果/);
+    assert.match(html, /模板草稿已保存（未连接 Director）/);
+});
 
 test('guest multi-person plan uses interaction-led shots without assuming romance', () => {
     const plan = createGuestPlanDraft({
@@ -24,18 +32,27 @@ test('guest multi-person plan uses interaction-led shots without assuming romanc
     assert.ok(new Set(plan.shotList.map(shot => shot.method)).size > 1);
 });
 
-test('cloud candidate endpoint explains that image delivery is not configured instead of returning 404', async () => {
-    const response = await worker.fetch(new Request('https://unit.test/api/director/generate-candidate', {
+test('cloud image generation blocks guests before any AI binding call', async () => {
+    let aiCalls = 0;
+    const request = () => new Request('https://unit.test/api/director/generate-candidate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dry_run: true }),
-    }), {});
-
-    assert.equal(response.status, 503);
-    assert.equal((await response.json()).error, 'CANDIDATE_IMAGE_DELIVERY_NOT_CONFIGURED');
+        body: JSON.stringify({ candidate_count: 1 }),
+    });
+    const env = { JWT_SECRET: 'unit-test-secret', AI: { run: async () => { aiCalls++; return {}; } } };
+    const anonymous = await worker.fetch(request(), env);
+    assert.equal(anonymous.status, 401);
+    assert.equal((await anonymous.json()).error, 'SIGN_IN_REQUIRED');
+    const authenticated = await worker.fetch(new Request('https://unit.test/api/director/generate-candidate', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token('user-1', 'unit-test-secret')}` },
+        body: JSON.stringify({ candidate_count: 1 }),
+    }), env);
+    assert.equal(authenticated.status, 503);
+    assert.equal((await authenticated.json()).error, 'CANDIDATE_STORAGE_NOT_CONFIGURED');
+    assert.equal(aiCalls, 0);
 });
 
-test('cloud plans do not advertise local-only candidate generation as a connected service', async () => {
+test('cloud plans stay text-only when the Cloudflare AI binding is unavailable', async () => {
     const originalFetch = globalThis.fetch;
     globalThis.fetch = async () => Response.json({ shot_plans: [{ shot_language: 'wide', model_pose: 'Walk together', framing: 'Environment wide' }] });
     try {
@@ -47,11 +64,17 @@ test('cloud plans do not advertise local-only candidate generation as a connecte
         const plan = await response.json();
         assert.equal(response.status, 200);
         assert.equal(plan.director.imageGenerationConnected, false);
-        assert.equal(plan.director.imageGenerationMode, 'cloud-image-delivery-not-configured');
+        assert.equal(plan.director.imageGenerationMode, 'cloud-image-provider-not-configured');
     } finally {
         globalThis.fetch = originalFetch;
     }
 });
+
+function token(uid, secret) {
+    const p = JSON.stringify({ uid, t: Date.now() });
+    const s = createHmac('sha256', secret).update(p).digest('hex');
+    return Buffer.from(JSON.stringify({ p, s })).toString('base64url');
+}
 
 test('schedule UI describes assigned roles without claiming that notifications were sent', async () => {
     const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');

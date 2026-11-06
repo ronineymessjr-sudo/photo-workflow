@@ -1,0 +1,19 @@
+{
+  "id": "window-portrait",
+  "backend": "subagent-glm",
+  "startedAt": "2026-10-26T11:34:07.813Z",
+  "input": {
+    "theme": "窗边人像",
+    "style": "安静，自然",
+    "modelDesc": "一位成年人物",
+    "scene": "室内窗边，窗帘可调",
+    "mood": "柔和",
+    "duration": "1小时",
+    "people": "1",
+    "extra": "仅50mm；只用窗户自然光；无闪光灯、反光板或助手；不爬窗、不拍摄床铺。"
+  },
+  "status": 502,
+  "error": "本次没有保存：镜头1景别代号不支持；镜头1机位代号不支持。请重试或更换模型。",
+  "code": "AI_SHOT_FIELDS_INVALID",
+  "elapsedSeconds": 0.002
+}

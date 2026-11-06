@@ -189,6 +189,22 @@ input::placeholder, textarea::placeholder { color: var(--t3); opacity: 1; }
 .storyboard-details { border-top: 1px solid var(--bd); }
 .storyboard-detail-list { display: grid; gap: 12px; padding: 8px 0 16px; }
 .storyboard-detail-list > div { display: grid; grid-template-columns: 84px minmax(0,1fr); gap: 12px; }
+.storyboard-shot-resources { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; padding-top: 14px; border-top: 1px solid var(--bd); }
+.storyboard-shot-resources label { display: grid; gap: 6px; color: var(--t2); font-size: 12px; min-width: 0; }
+.storyboard-shot-resources input { width: 100%; min-width: 0; padding: 9px 10px; border: 1px solid var(--bd); border-radius: 6px; background: var(--bg); color: var(--t1); font: inherit; }
+.storyboard-size-summary { margin: 0 0 12px; color: var(--t2); font-size: 12px; }
+.brief-chat { margin-bottom: 18px; border: 1px solid var(--bd); border-radius: 6px; }
+.brief-chat [hidden] { display: none !important; }
+#ownAiRememberLabel[hidden] { display: none !important; }
+.brief-chat #briefChatEntry { display: grid; gap: 10px; }
+.brief-chat summary { cursor: pointer; padding: 12px; color: var(--t1); font-weight: 600; }
+.brief-chat-body { display: grid; gap: 10px; padding: 0 12px 12px; }
+.brief-chat-body label, .brief-chat-body p { font-size: 13px; color: var(--t2); }
+.brief-chat-body textarea, .brief-chat-fields input { width: 100%; min-width: 0; box-sizing: border-box; padding: 9px; border: 1px solid var(--bd); border-radius: 6px; background: var(--bg); color: var(--t1); font: inherit; }
+.brief-chat-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+.brief-chat-fields label { display: grid; gap: 5px; }
+.brief-chat-history:empty { display: none; }
+.brief-chat-history p { padding: 8px 10px; margin: 0 0 6px; background: var(--bg2); border-radius: 6px; white-space: pre-wrap; overflow-wrap: anywhere; }
 .shot-reference-gallery { padding: 8px 0 12px; min-width: 0; color: var(--t1); font: 400 13px/1.6 var(--font-sans); }
 .reference-query-label { display: block; margin-bottom: 6px; color: var(--t2); font-size: 12px; }
 .shot-reference-gallery .reference-query { width: 100%; min-width: 0; box-sizing: border-box; font-size: 13px; padding: 10px 12px; border: 1px solid var(--bd); border-radius: 6px; background: var(--bg); color: var(--t1); }
@@ -206,7 +222,9 @@ input::placeholder, textarea::placeholder { color: var(--t3); opacity: 1; }
 .library-plan-actions input { width: auto; min-width: 0; max-width: 100%; }
 .library-plan-session { font-size: 13px; color: var(--t2); }
 @media(max-width: 600px) {
+    .brief-chat-fields { grid-template-columns: 1fr; }
     .storyboard-shot { padding: 14px; }
+    .storyboard-shot-resources { grid-template-columns: 1fr; }
     .storyboard-specs { gap: 8px; }
     .storyboard-detail-list > div { grid-template-columns: 1fr; gap: 2px; }
 }

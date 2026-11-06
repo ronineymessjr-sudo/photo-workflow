@@ -1,1 +1,7 @@
 .wrangler/
+
+# Local runtime artifacts: reference photos, atlas snapshots, probe downloads
+runtime/
+
+# Generated outputs from local studio runs
+outputs/
