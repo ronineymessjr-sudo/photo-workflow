@@ -76,6 +76,22 @@ function token(uid, secret) {
     return Buffer.from(JSON.stringify({ p, s })).toString('base64url');
 }
 
+test('an unavailable reference library returns a recoverable planning error', async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async () => { throw new Error('offline'); };
+    try {
+        const response = await worker.fetch(new Request('https://unit.test/api/director/plan', {
+            method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token('user-1', 'unit-test-secret')}` },
+            body: JSON.stringify({ theme: '自然人像', useReferenceLibrary: true }),
+        }), { JWT_SECRET: 'unit-test-secret' });
+        assert.equal(response.status, 503);
+        assert.equal((await response.json()).error, 'REFERENCE_IMAGES_REQUIRED');
+        assert.equal(response.headers.get('Cache-Control'), 'no-store');
+    } finally {
+        globalThis.fetch = originalFetch;
+    }
+});
+
 test('schedule UI describes assigned roles without claiming that notifications were sent', async () => {
     const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
     assert.match(html, /参与角色：\$\{formatScheduleAudience\(s\.audience\)\}/);

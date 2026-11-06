@@ -759,6 +759,12 @@ export default {
             });
 
         } catch (e) {
+            if (path === '/api/director/plan' && ['REFERENCE_LIBRARY_UNAVAILABLE', 'REFERENCE_IMAGES_REQUIRED', 'UNAVAILABLE_REFERENCE', 'INVALID_REFERENCE_SELECTION'].includes(e?.message)) {
+                const status = e.message === 'INVALID_REFERENCE_SELECTION' ? 400 : 503;
+                return new Response(JSON.stringify({ error: e.message }), {
+                    status, headers: { ...CORS, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+                });
+            }
             if (isStudio) return studioJson(e instanceof AiStudioError ? e.status : 500,
                 { error: e instanceof AiStudioError ? e.code : 'AI_STUDIO_ERROR' }, origin);
             // Contract violations are the product here: report the exact code so the
