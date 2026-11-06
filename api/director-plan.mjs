@@ -92,6 +92,7 @@ export function createTemplatePlan(input, referenceContext) {
         const contract = {
             source: 'template-library-plan', referenceIds: [template.id],
             shot_language: `${shot.title} · ${template.title}`, model_pose: action,
+            shot_size: shot.shotSize, lens: shot.focalLength, camera_angle: shot.angle,
             generator_prompt: `Editorial photograph. ${framing} ${stance} ${shot.focalLength}, ${shot.angle}. Subject and clothing: ${input.modelDesc || ''}. Scene: ${input.scene || ''}. User constraints: ${input.extra || ''}. Pose reference: ${action}. Style: ${input.style || ''}.`,
             wardrobe_styling: input.modelDesc || '沿用用户已确认服装',
             must_show: `${action} ${input.modelDesc || ''}`, reject_if: `extra limbs, duplicate feet, malformed anatomy, text, watermark`,

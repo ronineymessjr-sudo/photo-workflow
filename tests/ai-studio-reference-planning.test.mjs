@@ -11,9 +11,9 @@ function sourceFixture() {
     const calls = [];
     const fetchImpl = async url => {
         calls.push(String(url));
-        if (String(url).endsWith('poses.json')) return Response.json({ poses: [{ id: 'full_single_P019', no: 'P019', category: '坐姿', names: { zh: '安静坐姿测试' }, variants: [{ angle: 'front', full: 'never-download.png' }, { angle: 'side' }] }] });
-        if (String(url).endsWith('costumes.json')) return Response.json({ costumes: [{ id: 'AUT-0006', cat: 'autumn', group: 'top', color: 'brown', main: 'knit', tags: ['brown', 'knit'] }] });
-        if (String(url).endsWith('faces.json')) return Response.json({ images: [{ id: 'teststyle', sec: 'styling', hair: 'semilong', style: '测试造型' }] });
+        if (String(url).endsWith('poses.json')) return Response.json({ poses: [{ id: 'full_single_P019', no: 'P019', category: '坐姿', names: { zh: '安静坐姿测试' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P019_front.jpg' }, { angle: 'side' }] }] });
+        if (String(url).endsWith('costumes.json')) return Response.json({ costumes: [{ id: 'AUT-0006', thumb: 'costume/thumbs/AUT-0006.webp', cat: 'autumn', group: 'top', color: 'brown', main: 'knit', tags: ['brown', 'knit'] }] });
+        if (String(url).endsWith('faces.json')) return Response.json({ images: [{ id: 'teststyle', thumb: 'portrait/thumbs/teststyle.webp', sec: 'face', hair: 'semilong', style: '测试造型' }] });
         throw new Error('UNEXPECTED_FETCH');
     };
     return { calls, fetchImpl };
@@ -28,6 +28,8 @@ test('template plan and candidate compilation retain retrieved pose, processing 
         billing_mode: 'free-credit-first', brief: plan.shotList[0].description, reference_brief: input,
         reference_ids: input.referenceIds, shot_contract: plan.shotList[0].directorContract };
     const resolved = await prepareCloudCandidateReferences(request, { fetchImpl: source.fetchImpl });
+    assert.deepEqual(resolved.templates.map(template => template.kind), ['pose', 'costume', 'portrait']);
+    assert.equal(resolved.templates[2].section, 'face');
     const compiled = compileCloudCandidateRequest(request, resolved);
     assert.equal(plan.director.source, 'template-library-plan');
     assert.match(compiled.prompt, /atlas-pose-full_single_p019/);

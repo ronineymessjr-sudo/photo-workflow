@@ -72,12 +72,16 @@ function makeTemplate(kind, row) {
     const hash = new URLSearchParams({ [kind === 'pose' ? 'pose' : kind === 'costume' ? 'costume' : 'portrait']: upstreamId });
     if (angles.length) hash.set('angle', angles.includes('front') ? 'front' : angles[0]);
     const sourceUrl = `${ATLAS_SITE}${page}?lang=zh#${hash}`;
+    const variants = kind === 'pose' ? row.variants || [] : [];
+    const thumb = kind === 'pose' ? (variants.find(item => item.angle === 'front') || variants[0])?.thumb : row.thumb;
+    const imagePath = typeof thumb === 'string' && /^(?:thumbs\/[A-Za-z0-9_-]+\.jpg|costume\/thumbs\/[A-Za-z0-9_-]+\.webp|portrait\/thumbs\/[A-Za-z0-9_-]+\.webp)$/.test(thumb) ? thumb : null;
     return {
         id: `atlas-${kind}-${upstreamId.toLowerCase()}`,
         upstreamId,
         sourceItemId: upstreamId,
         kind,
         title,
+        englishTitle: kind === 'pose' ? text(row.names?.en, 120) : '',
         description,
         tags,
         category,
@@ -95,7 +99,8 @@ function makeTemplate(kind, row) {
         rightsStatus: 'external_reference',
         rights: { status: 'external_reference', evidence: `${ATLAS_REPOSITORY}/blob/main/LICENSE`, allowedUses: ['agent-reference'] },
         attribution: 'RuiC-PoseAtlas · 原始素材归各原作者所有',
-        source: { type: 'poseatlas', url: sourceUrl, repository: ATLAS_REPOSITORY, itemId: upstreamId },
+        source: { type: 'poseatlas', url: sourceUrl, repository: ATLAS_REPOSITORY, itemId: upstreamId,
+            referenceImageUrl: imagePath ? `${ATLAS_SITE}${imagePath}` : null },
         sourceUrl,
         searchText: normalized([upstreamId, row.no, title, description, ...tags, ...Object.values(row.names || {}), series, season, category, row.color, hair, section, style, ...angles].join(' ')),
     };
