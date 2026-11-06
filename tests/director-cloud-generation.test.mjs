@@ -69,3 +69,25 @@ test('cloud generation rejects missing bindings, unapproved providers, reference
     await assert.rejects(generateCloudCandidate(request, { referenceContext: { ...referenceContext, templates: [{ ...referenceContext.templates[0], referenceImageUrl: 'https://evil.example/a.jpg' }, ...referenceContext.templates.slice(1)] }, fetchImpl, ai }), /UNTRUSTED_REFERENCE_IMAGE/);
     assert.equal(calls, 0);
 });
+
+test('actual image payload preserves a close-up contract without forcing full-body framing', async () => {
+    let imagePrompt;
+    const input = { ...request, brief: 'Quiet expression by a cafe window', scene_brief: 'Cafe window, soft side light', style_direction: 'Editorial',
+        shot_contract: { shot_language: 'Window expression', generator_prompt: 'Close-up portrait, crop at shoulders, soft window side light', referenceIds: ['pose-1'] } };
+    await generateCloudCandidate(input, { referenceContext, fetchImpl, ai: { run: async (_model, payload) => {
+        const form = await new Response(payload.multipart.body, { headers: { 'Content-Type': payload.multipart.contentType } }).formData();
+        imagePrompt = form.get('prompt');
+        return { image: Buffer.from(jpeg).toString('base64') };
+    } } });
+    assert.match(imagePrompt, /Close-up portrait, crop at shoulders/);
+    assert.match(imagePrompt, /soft window side light/);
+    assert.doesNotMatch(imagePrompt, /single full-body|Keep the figure asymmetrical|same bent and lowered arms/);
+});
+
+test('compiled shot includes only its selected pose from a multi-pose plan', () => {
+    const context = { ...referenceContext, templates: [...referenceContext.templates,
+        { id: 'pose-2', kind: 'pose', title: 'Other seated pose' }] };
+    const compiled = compileCloudCandidateRequest({ ...request, shot_contract: { ...contract, referenceIds: ['pose-1'] } }, context);
+    assert.match(compiled.prompt, /pose-1/);
+    assert.doesNotMatch(compiled.prompt, /Other seated pose|pose-2/);
+});

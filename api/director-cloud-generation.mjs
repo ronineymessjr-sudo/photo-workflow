@@ -36,12 +36,15 @@ export function compileCloudCandidateRequest(input, referenceContext) {
         throw new Error('INVALID_GENERATION_REQUEST');
     }
     const shotLanguage = clean(contract.shot_language, 160);
-    const generatorPrompt = clean(contract.generator_prompt, 500);
+    const generatorPrompt = clean(contract.generator_prompt, 900);
     if (!shotLanguage || generatorPrompt.length < 10) throw new Error('SHOT_CONTRACT_REQUIRED');
     const mustShow = list(contract.master_must_show || contract.must_show);
     const rejectIf = list(contract.master_reject_if || contract.reject_if);
     const context = [clean(input.scene_brief, 200), clean(input.style_direction, 100), clean(brief, 200)].filter(Boolean);
-    const templateBrief = referenceContext?.templates.map(template =>
+    const selectedPose = referenceContext?.templates.find(template => template.kind === 'pose' && contract.referenceIds?.includes(template.id))
+        || referenceContext?.templates.find(template => template.kind === 'pose');
+    const shotTemplates = referenceContext?.templates.filter(template => template.kind !== 'pose' || template.id === selectedPose?.id);
+    const templateBrief = shotTemplates?.map(template =>
         `${template.id}: ${template.title}. ${template.description || ''}. ${(template.tags || []).join(', ')}`
     ).join('\n');
     const prompt = [
@@ -53,7 +56,7 @@ export function compileCloudCandidateRequest(input, referenceContext) {
         mustShow.length ? `Must show: ${clean(mustShow.join('; '), 200)}.` : '',
         rejectIf.length ? `Do not include: ${clean(rejectIf.join('; '), 160)}.` : '',
         templateBrief ? `Retrieved template direction (user constraints take priority): ${clean(templateBrief, 350)}` : '',
-        referenceContext ? `Processed template guidance: ${clean(referenceContext.guidance?.suggestions.map(item => item.direction).join(' '), 160)}` : '',
+        referenceContext ? `Processed template guidance: ${clean(referenceContext.guidance?.suggestions.filter(item => item.kind !== 'pose' || item.sourceItemId === selectedPose?.id).map(item => item.direction).join(' '), 160)}` : '',
     ].filter(Boolean).join('\n');
     const avoid = 'text, watermark, collage, extra limbs, duplicate feet, malformed anatomy';
     const dimensions = {
@@ -79,12 +82,7 @@ export async function generateCloudCandidate(input, { ai, referenceContext, fetc
     const references = ['pose', 'costume', 'portrait'].map(kind => referenceContext?.templates.find(template => template.kind === kind));
     if (references.some(reference => !reference?.referenceImageUrl)) throw new Error('REFERENCE_IMAGES_REQUIRED');
     const images = await Promise.all(references.map(reference => fetchReferenceImage(reference.referenceImageUrl, fetchImpl)));
-    let prompt = [
-        `Scene and lighting: ${clean(input.scene_brief || input.reference_brief?.scene, 350)}.`,
-        `Photographic style: ${clean(input.style_direction || input.reference_brief?.style, 150)}.`,
-        `Camera framing: ${clean(input.shot_contract.shot_size, 80)} ${clean(input.shot_contract.lens, 50)} ${clean(input.shot_contract.camera_angle, 50)}.`,
-        'One natural photograph, no lettering or collage. Preserve the exact pose, clothes and face assigned to the three reference images.',
-    ].join('\n');
+    let prompt = compiled.prompt;
     let result;
     try {
         if (referenceContext && /[\u3400-\u9fff]/u.test(prompt)) {
@@ -101,7 +99,7 @@ export async function generateCloudCandidate(input, { ai, referenceContext, fetc
         const outfitDetails = (references[1].tags || []).filter(tag => /^[a-z][a-z -]+$/i.test(tag)).join(', ');
         const poseTitle = clean(references[0].englishTitle, 120);
         const poseDetail = /\bhand on (?:hip|waist)\b/i.test(poseTitle) ? 'Exactly one hand rests on the hip; the opposite arm hangs down by the side.' : '';
-        form.append('prompt', `Create a single full-body photograph of exactly ONE person. The face close-up reference determines the person's face, apparent age and hair. The headless outfit reference determines the COMPLETE outfit, every clothing layer, hosiery, footwear and accessories: ${outfitDetails}. The black-and-white artist drawing determines the body silhouette and limb positions, independently from the outfit's pose. Required pose: ${poseTitle}. ${poseDetail} Keep the figure asymmetrical exactly as in the drawing. ${prompt} Final body pose must match the artist drawing, with exactly the same bent and lowered arms.`);
+        form.append('prompt', `Create a single photograph of exactly ONE person, using the framing specified in the shot contract. The face close-up reference determines the person's face, apparent age and hair. The headless outfit reference determines the COMPLETE outfit, every clothing layer, hosiery, footwear and accessories: ${outfitDetails}. The black-and-white artist drawing determines the body silhouette and limb positions, independently from the outfit's pose. Required pose: ${poseTitle}. ${poseDetail} ${prompt}`);
         form.append('width', String(compiled.width));
         form.append('height', String(compiled.height));
         images.forEach((image, index) => form.append(`input_image_${index}`, image, `reference-${index}`));

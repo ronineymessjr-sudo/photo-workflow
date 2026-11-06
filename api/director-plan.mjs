@@ -89,8 +89,20 @@ export function createTemplatePlan(input, referenceContext) {
         const template = poses[index % poses.length];
         const guidance = referenceContext.guidance.suggestions.find(item => item.sourceItemId === template.id)?.direction || '';
         const action = `摆姿参考：${template.title}。${guidance}`;
-        const scene = locations[index % locations.length] || shot.scene;
+        const scene = locations[(index + Math.floor(index / poses.length)) % locations.length] || shot.scene;
         const lens = fixedLens || shot.focalLength;
+        const wide = /全景|全身|中全景/.test(shot.shotSize);
+        const detail = /特写/.test(shot.shotSize);
+        const method = wide
+            ? '先以平视机位后退，直到人物和环境完整入画，再沿人物侧前方小幅移动寻找背景分离。'
+            : '摄影师站在人物侧前方，镜头与眼睛大致等高，先确定裁切位置，再等待视线和表情自然变化。';
+        const composition = wide
+            ? '人物放在画面一侧三分线，视线方向留白，检查头顶、手指和鞋底边界，避开穿头的背景线条。'
+            : detail ? '围绕服装纹理、手部或表情选一个重点，裁切避开关节，背景保持简洁。'
+                : '以眼睛为焦点，肩线略转向画面内部，视线方向留白，裁切避开肘部和膝盖。';
+        const lighting = /窗|window/i.test(scene)
+            ? '人物距窗约一米，身体与窗面呈约45度，利用窗光侧向塑形，先关掉造成混色的室内灯，再按脸部曝光。'
+            : '先在开阔阴影中找柔和侧光，避开脸上的斑驳直射光，按脸部曝光并保留背景亮部层次。';
         const framing = /全景|全身|中全景/.test(shot.shotSize)
             ? 'Wide environmental head-to-toe full-body photograph. The entire person including both shoes fits inside the frame, with visible ground below the shoes. Person occupies less than half the image.'
             : shot.shotSize;
@@ -100,11 +112,11 @@ export function createTemplatePlan(input, referenceContext) {
             source: 'template-library-plan', referenceIds: [template.id],
             shot_language: `${shot.title} · ${template.title}`, model_pose: action,
             shot_size: shot.shotSize, lens, camera_angle: shot.angle,
-            generator_prompt: `Editorial photograph. ${framing} ${stance} ${lens}, ${shot.angle}. Subject and clothing: ${input.modelDesc || ''}. Scene: ${scene}. User constraints: ${input.extra || ''}. Action: ${action}. Composition: ${shot.composition}. Lighting: ${shot.lighting}. Style: ${input.style || ''}.`,
+            generator_prompt: `Editorial photograph. ${framing} ${stance} ${lens}, ${shot.angle}. Scene: ${scene}. Action: ${action}. Composition: ${composition}. Lighting: ${lighting}. Subject and clothing: ${input.modelDesc || ''}. User constraints: ${input.extra || ''}. Style: ${input.style || ''}.`,
             wardrobe_styling: input.modelDesc || '沿用用户已确认服装',
             must_show: `${action} ${input.modelDesc || ''}`, reject_if: `extra limbs, duplicate feet, malformed anatomy, text, watermark`,
         };
-        return { ...shot, scene, description: action, focalLength: lens, directorContract: contract };
+        return { ...shot, scene, description: action, focalLength: lens, method, composition, lighting, lightingSetup: lighting, directorContract: contract };
     });
     Object.assign(plan, referencePlanFields(referenceContext));
     plan.sections = plan.shotList.map((shot, index) => ({ ti: `镜头 ${index + 1} · ${shot.title}`, ic: '', c: [

@@ -57,6 +57,8 @@ test('template plan and candidate compilation retain retrieved pose, processing 
     assert.ok(plan.sections[0].c.some(line => line.startsWith('摄影师机位：')));
     assert.ok(plan.sections[0].c.some(line => line.startsWith('光线安排：')));
     assert.equal(plan.shotList[1].scene, '咖啡馆窗边');
+    assert.equal(plan.shotList[4].scene, '咖啡馆窗边');
+    assert.equal(plan.shotList[4].directorContract.referenceIds[0], plan.shotList[0].directorContract.referenceIds[0]);
     assert.equal(plan.shotList.every(shot => shot.focalLength === '35mm' && shot.directorContract.lens === '35mm'), true);
     assert.equal(plan.shotList[0].directorContract.referenceIds[0], 'atlas-pose-full_single_p019');
     assert.equal(plan.shotList[1].directorContract.referenceIds[0], 'atlas-pose-full_single_p015');
