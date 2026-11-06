@@ -88,7 +88,7 @@ export function createTemplatePlan(input, referenceContext) {
     plan.shotList = plan.shotList.map((shot, index) => {
         const template = poses[index % poses.length];
         const guidance = referenceContext.guidance.suggestions.find(item => item.sourceItemId === template.id)?.direction || '';
-        const action = `${shot.description}。摆姿参考：${template.title}。${guidance}`;
+        const action = `摆姿参考：${template.title}。${guidance}`;
         const scene = locations[index % locations.length] || shot.scene;
         const lens = fixedLens || shot.focalLength;
         const framing = /全景|全身|中全景/.test(shot.shotSize)
@@ -100,7 +100,7 @@ export function createTemplatePlan(input, referenceContext) {
             source: 'template-library-plan', referenceIds: [template.id],
             shot_language: `${shot.title} · ${template.title}`, model_pose: action,
             shot_size: shot.shotSize, lens, camera_angle: shot.angle,
-            generator_prompt: `Editorial photograph. ${framing} ${stance} ${lens}, ${shot.angle}. Subject and clothing: ${input.modelDesc || ''}. Scene: ${scene}. User constraints: ${input.extra || ''}. Pose reference: ${template.title}. Action: ${shot.description}. Style: ${input.style || ''}.`,
+            generator_prompt: `Editorial photograph. ${framing} ${stance} ${lens}, ${shot.angle}. Subject and clothing: ${input.modelDesc || ''}. Scene: ${scene}. User constraints: ${input.extra || ''}. Action: ${action}. Composition: ${shot.composition}. Lighting: ${shot.lighting}. Style: ${input.style || ''}.`,
             wardrobe_styling: input.modelDesc || '沿用用户已确认服装',
             must_show: `${action} ${input.modelDesc || ''}`, reject_if: `extra limbs, duplicate feet, malformed anatomy, text, watermark`,
         };
@@ -108,7 +108,10 @@ export function createTemplatePlan(input, referenceContext) {
     });
     Object.assign(plan, referencePlanFields(referenceContext));
     plan.sections = plan.shotList.map((shot, index) => ({ ti: `镜头 ${index + 1} · ${shot.title}`, ic: '', c: [
+        `拍摄场景：${shot.scene}`,
         `模板动作：${shot.description}`, `景别与焦段：${shot.shotSize} · ${shot.focalLength}`,
+        `摄影师机位：${shot.angle}，${shot.method}`,
+        `构图安排：${shot.composition}`, `光线安排：${shot.lighting}`,
         `人物与服装：${input.modelDesc || '待确认'}`, `用户限制：${input.extra || '无补充'}`,
     ] }));
     plan.director.source = 'template-library-plan';

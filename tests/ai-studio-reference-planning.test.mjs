@@ -50,6 +50,12 @@ test('template plan and candidate compilation retain retrieved pose, processing 
     assert.match(compiled.prompt, /feet parallel and hip-width apart/);
     assert.match(compiled.prompt, /head-to-toe/);
     assert.equal(plan.shotList[0].scene, '公园长椅');
+    assert.doesNotMatch(plan.shotList[0].description, /人物停留三秒后自然移动/);
+    assert.doesNotMatch(plan.shotList[0].directorContract.generator_prompt, /人物停留三秒后自然移动/);
+    assert.match(plan.shotList[0].directorContract.generator_prompt, /坐稳/);
+    assert.ok(plan.sections[0].c.includes('拍摄场景：公园长椅'));
+    assert.ok(plan.sections[0].c.some(line => line.startsWith('摄影师机位：')));
+    assert.ok(plan.sections[0].c.some(line => line.startsWith('光线安排：')));
     assert.equal(plan.shotList[1].scene, '咖啡馆窗边');
     assert.equal(plan.shotList.every(shot => shot.focalLength === '35mm' && shot.directorContract.lens === '35mm'), true);
     assert.equal(plan.shotList[0].directorContract.referenceIds[0], 'atlas-pose-full_single_p019');
