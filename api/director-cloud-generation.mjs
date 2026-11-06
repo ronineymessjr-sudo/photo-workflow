@@ -82,14 +82,19 @@ export async function generateCloudCandidate(input, { ai, referenceContext, fetc
     const references = ['portrait', 'costume', 'pose'].map(kind => referenceContext?.templates.find(template => template.kind === kind));
     if (references.some(reference => !reference?.referenceImageUrl)) throw new Error('REFERENCE_IMAGES_REQUIRED');
     const images = await Promise.all(references.map(reference => fetchReferenceImage(reference.referenceImageUrl, fetchImpl)));
-    let prompt = compiled.prompt;
+    let prompt = [
+        `Shot contract: ${clean(input.shot_contract.generator_prompt, 1200)}`,
+        `Scene: ${clean(input.scene_brief || input.reference_brief?.scene, 250)}`,
+        `Style: ${clean(input.style_direction || input.reference_brief?.style, 150)}`,
+        `User requirements: ${clean(input.brief, 250)}`,
+    ].join('\n');
     let generationPrompt;
     let result;
     try {
         if (referenceContext && /[\u3400-\u9fff]/u.test(prompt)) {
             const translated = await ai.run('@cf/meta/llama-3.1-8b-instruct-fp8-fast', {
                 messages: [
-                    { role: 'system', content: 'Translate this processed photography contract into one concise English image prompt. Preserve exact subject count, location, pose, framing and clothing. User constraints override template pose and outfit suggestions. Express prohibitions as positive placement: uncrossed legs means feet parallel hip-width apart, straight separated legs; full body means head-to-toe with both shoes and ground beneath visible; trousers means a separate sweater and two trouser legs. Describe a single photograph. Never invent garments or change standing to sitting. Return only the English prompt under 1800 characters, no commentary or text to render.' },
+                    { role: 'system', content: 'Translate this photography contract into concise English camera, pose, lighting and environment instructions. Preserve exact subject count, location, action and framing. Clothing, face, age and hair are supplied by reference images: leave their description to those images. Do not infer garments, accessories, colors or props. Do not change standing to sitting. Preserve cropping instructions exactly; omit body parts outside the requested crop. Return only the English prompt under 1400 characters, no commentary or text to render.' },
                     { role: 'user', content: prompt },
                 ], max_tokens: 600, temperature: 0,
             });

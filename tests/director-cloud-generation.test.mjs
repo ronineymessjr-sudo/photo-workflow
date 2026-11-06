@@ -43,6 +43,7 @@ test('candidate uses the existing Cloudflare AI binding and validates its JPEG o
         return { image: Buffer.from(jpeg).toString('base64') };
     } } });
     assert.equal(calls.length, 2);
+    assert.doesNotMatch(calls[0].input.messages[1].content, /Retrieved template direction|pose-1|costume-1|black, tights/);
     assert.equal(calls[1].model, '@cf/black-forest-labs/flux-2-klein-4b');
     const form = await new Response(calls[1].input.multipart.body, { headers: { 'Content-Type': calls[1].input.multipart.contentType } }).formData();
     assert.match(form.get('prompt'), /35mm eye-level environmental portrait/);
