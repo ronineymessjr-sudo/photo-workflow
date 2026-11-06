@@ -68,6 +68,16 @@ function chooseQuery(kind, prompt) {
     return { query: "短发", hair: "short", section: "face" };
   return { query: "", section: "face" };
 }
+function poseQueries(prompt) {
+  const choices = [
+    [/站姿|站立|standing/i, "站姿"],
+    [/走路|行走|回眸|抓拍|街拍|walk/i, "行走"],
+    [/坐姿|坐着|坐下|sitting/i, "坐姿"],
+    [/靠栏杆|栏杆/i, "栏杆"],
+    [/靠墙|轻靠|倚靠|leaning/i, "靠墙"],
+  ];
+  return choices.filter(([pattern]) => pattern.test(prompt)).map(([, query]) => query);
+}
 export function parseServerIntent(prompt) {
   if (typeof prompt !== "string" || !prompt.trim() || prompt.length > 1800)
     throw Error("INVALID_PROMPT");
@@ -83,12 +93,16 @@ export function parseServerIntent(prompt) {
   );
   const only = /只要|仅要|只需|仅需|只找|只看|only/i.test(prompt);
   const scopes = only ? requestedKinds : requestedKinds;
+  const specs = scopes.flatMap((kind) => {
+    if (kind === "pose") {
+      const queries = poseQueries(prompt);
+      if (queries.length > 1) return queries.map((query) => ({ kind, args: { query, limit: 4 } }));
+    }
+    return [{ kind, args: { ...chooseQuery(kind, prompt), limit: 4 } }];
+  });
   return {
     requestedKinds: scopes,
-    specs: scopes.map((kind) => ({
-      kind,
-      args: { ...chooseQuery(kind, prompt), limit: 4 },
-    })),
+    specs,
     reason: scopes.length ? "explicit-keywords" : "ambiguous",
     confidence: scopes.length ? 0.92 : 0.35,
   };
@@ -136,13 +150,15 @@ export function validateModelHints(raw, intent) {
   }));
 }
 function selectTop(results, allowIds) {
-  const selection = [];
-  for (const row of results) {
-    for (const entry of row.results.slice(0, 2)) {
-      if (entry && allowIds.has(entry.id)) selection.push(entry.id);
-    }
-  }
-  return [...new Set(selection)].slice(0, 6);
+  const poseRows = results.filter(row => row.tool === "search_pose");
+  const poses = [];
+  const addPose = entry => {
+    if (entry && allowIds.has(entry.id) && !poses.includes(entry.id) && poses.length < 4) poses.push(entry.id);
+  };
+  poseRows.forEach(row => addPose(row.results[0]));
+  poseRows.forEach(row => row.results.forEach(addPose));
+  const firstFor = tool => results.find(row => row.tool === tool)?.results.find(entry => entry && allowIds.has(entry.id))?.id;
+  return [...poses, firstFor("search_costume"), firstFor("search_portrait")].filter(Boolean).slice(0, 6);
 }
 export function runServerFirst({ registry, prompt, modelHints = null, requireImageReferences = false, naturalPoseOnly = false } = {}) {
   const intent = parseServerIntent(prompt);

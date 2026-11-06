@@ -81,7 +81,9 @@ export function createTemplatePlan(input, referenceContext) {
     const poses = referenceContext.templates.filter(template => template.kind === 'pose');
     if (!poses.length) throw new Error('POSE_TEMPLATE_REQUIRED');
     const locations = String(input.scene || '场地待确认').split(/[;；\n]+/).map(value => value.trim()).filter(Boolean);
-    const fixedLensMatch = String(input.extra || '').match(/(?:全组|全程|统一|固定|只用|only|must use)[^。\n;；]{0,24}?\b(24|28|35|50|85|105|135)\s*mm\b/i);
+    const fixedLensText = String(input.extra || '');
+    const fixedLensMatch = fixedLensText.match(/(?:全组|全程|统一|固定|只用|only|must use)[^。\n;；]{0,24}?\b(24|28|35|50|85|105|135)\s*mm\b/i)
+        || fixedLensText.match(/\b(24|28|35|50|85|105|135)\s*mm\b[^。\n;；]{0,12}(?:固定|统一|全组|只用)/i);
     const fixedLens = fixedLensMatch ? `${fixedLensMatch[1]}mm` : '';
     plan.shotList = plan.shotList.map((shot, index) => {
         const template = poses[index % poses.length];
