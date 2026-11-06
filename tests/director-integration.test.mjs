@@ -238,9 +238,9 @@ test('all inline scripts parse and submit awaits director, shot list reuses resp
     assert.doesNotMatch(html, /id="action-gen-img-btn">🎨 批量生成9张/);
     assert.match(html, /\[SHOT CONTRACT - HARD\]/);
     assert.match(html, /compileDirectorShotContract/);
-    assert.match(html, /function compileDirectorSceneBrief\(plan\)/);
+    assert.match(html, /function compileDirectorSceneBrief\(plan, shot = null\)/);
     assert.match(html, /USER CONSTRAINTS: '\s*\+ input\.extra/);
-    assert.match(html, /scene_brief: compileDirectorSceneBrief\(plan\)/);
+    assert.match(html, /scene_brief: compileDirectorSceneBrief\(plan, shot\)/);
     assert.match(html, /function formatDirectorGenerationError\(error\)/);
     assert.match(html, /candidate-status-/);
     assert.match(html, /外部生图模型当前超时或暂不可用/);

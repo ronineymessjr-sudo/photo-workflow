@@ -46,22 +46,30 @@ export async function prepareReferenceContext(input, options = {}) {
     if (ids !== undefined && (!Array.isArray(ids) || ids.length > 6 || ids.some(id => typeof id !== 'string') || new Set(ids).size !== ids.length)) {
         throw new Error('INVALID_REFERENCE_SELECTION');
     }
+    const requireImages = input.requireImageReferences === true;
+    const prompt = ['theme', 'style', 'scene', 'mood', 'extra', 'modelDesc'].map(key => String(input[key] || '')).join(' ').slice(0, 1400);
+    const naturalPoseOnly = /自然|放松|轻松|日常|relaxed|natural|casual/i.test(prompt)
+        && !/(?:采用|选择|需要|想要|来个|拍摄|摆|use|want|choose)[^。\n;；]{0,12}(?:跪|后仰|躺|趴|劈叉|倒立|kneel|reclin|supine|prone|split)/i.test(prompt);
     if (!ids?.length) {
-        let prompt = ['theme', 'style', 'scene', 'mood', 'extra', 'modelDesc'].map(key => String(input[key] || '')).join(' ').slice(0, 1700);
-        if (!parseServerIntent(prompt || '姿势').specs.length) prompt += ' 姿势';
-        ids = runServerFirst({ registry, prompt }).selectedIds;
+        let searchPrompt = prompt.slice(0, 1700);
+        if (!parseServerIntent(searchPrompt || '姿势').specs.length) searchPrompt += ' 姿势';
+        ids = runServerFirst({ registry, prompt: searchPrompt, requireImageReferences: requireImages, naturalPoseOnly }).selectedIds;
     }
     let templates = ids.map(id => registry.find(id));
     if (templates.some(template => !template)) throw new Error('UNAVAILABLE_REFERENCE');
-    if (input.requireImageReferences === true) {
-        const prompt = ['theme', 'style', 'scene', 'mood', 'extra', 'modelDesc'].map(key => String(input[key] || '')).join(' ').slice(0, 1400);
-        const automatic = runServerFirst({ registry, prompt: `${prompt} 姿势 服装 人像造型` }).selectedIds.map(id => registry.find(id));
-        templates = ['pose', 'costume', 'portrait'].map(kind => {
-            const usable = template => template?.kind === kind && template.referenceImageUrl && (kind !== 'portrait' || template.section === 'face');
-            const selected = templates.find(usable) || automatic.find(usable);
-            return selected || registry.search({ kind, limit: 50, ...(kind === 'portrait' ? { section: 'face' } : {}) }).results.find(usable);
-        });
-        if (templates.some(template => !template)) throw new Error('REFERENCE_IMAGES_REQUIRED');
+    if (requireImages) {
+        const usable = (template, kind) => template?.kind === kind && template.referenceImageUrl && (kind !== 'portrait' || template.section === 'face');
+        if (templates.some(template => template.sourceUrl && !usable(template, template.kind))) throw new Error('REFERENCE_IMAGES_REQUIRED');
+        const automatic = runServerFirst({ registry, prompt: `${prompt} 姿势 服装 人像造型`, requireImageReferences: true, naturalPoseOnly }).selectedTemplates;
+        const poses = templates.filter(template => usable(template, 'pose')).slice(0, 4);
+        if (!poses.length) {
+            const selected = automatic.find(template => usable(template, 'pose'));
+            if (selected) poses.push(selected);
+        }
+        const costume = templates.find(template => usable(template, 'costume')) || automatic.find(template => usable(template, 'costume'));
+        const portrait = templates.find(template => usable(template, 'portrait')) || automatic.find(template => usable(template, 'portrait'));
+        templates = [...poses, costume, portrait].filter(Boolean);
+        if (!poses.length || !costume || !portrait) throw new Error('REFERENCE_IMAGES_REQUIRED');
     }
     return { templates, library, guidance: deriveReferenceGuidance(templates, input) };
 }

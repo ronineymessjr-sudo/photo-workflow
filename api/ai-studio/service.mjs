@@ -123,7 +123,10 @@ export async function searchStudio({ prompt, planId, expectedRevision, uid, env 
         }
     }
 
-    const result = await runWeakModelAssisted({ registry, prompt, provider });
+    const naturalPoseOnly = /自然|放松|轻松|日常|relaxed|natural|casual/i.test(prompt)
+        && !/(?:采用|选择|需要|想要|来个|拍摄|摆|use|want|choose)[^。\n;；]{0,12}(?:跪|后仰|躺|趴|劈叉|倒立|kneel|reclin|supine|prone|split)/i.test(prompt);
+    const result = await runWeakModelAssisted({ registry, prompt, provider,
+        requireImageReferences: env.POSEATLAS_ENABLED !== 'false', naturalPoseOnly });
     result.library = library;
     result.externalTemplateRequests = library.externalRequests || 0;
     if (result.selectedTemplates.length) result.reply = `已检索并匹配 ${result.selectedTemplates.length} 个候选参考，请选择后生成提案。`;

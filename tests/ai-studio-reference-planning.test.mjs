@@ -11,9 +11,17 @@ function sourceFixture() {
     const calls = [];
     const fetchImpl = async url => {
         calls.push(String(url));
-        if (String(url).endsWith('poses.json')) return Response.json({ poses: [{ id: 'full_single_P019', no: 'P019', category: '坐姿', names: { zh: '安静坐姿测试' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P019_front.jpg' }, { angle: 'side' }] }] });
+        if (String(url).endsWith('poses.json')) return Response.json({ poses: [
+            { id: 'full_single_P019', no: 'P019', category: '坐姿', names: { zh: '安静坐姿测试' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P019_front.jpg' }, { angle: 'side' }] },
+            { id: 'full_single_P015', no: 'P015', category: '行走', names: { zh: '自然行走回眸', en: 'Easy walking look back' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P015_front.jpg' }] },
+            { id: 'full_single_P001', no: 'P001', category: '后仰坐姿', names: { zh: '后仰坐单膝立起' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P001_front.jpg' }] },
+        ] });
         if (String(url).endsWith('costumes.json')) return Response.json({ costumes: [{ id: 'AUT-0006', thumb: 'costume/thumbs/AUT-0006.webp', cat: 'autumn', group: 'top', color: 'brown', main: 'knit', tags: ['brown', 'knit'] }] });
-        if (String(url).endsWith('faces.json')) return Response.json({ images: [{ id: 'teststyle', thumb: 'portrait/thumbs/teststyle.webp', sec: 'face', hair: 'semilong', style: '测试造型' }] });
+        if (String(url).endsWith('faces.json')) return Response.json({ images: [
+            { id: 'teststyle', thumb: 'portrait/thumbs/teststyle.webp', sec: 'face', hair: 'semilong', style: '测试造型' },
+            { id: 'shortface', thumb: 'portrait/thumbs/shortface.webp', sec: 'face', hair: 'short', style: '短发人脸参考' },
+            { id: 'shortstyle', thumb: 'portrait/thumbs/shortstyle.webp', sec: 'styling', hair: 'short', style: '短发妆发造型' },
+        ] });
         throw new Error('UNEXPECTED_FETCH');
     };
     return { calls, fetchImpl };
@@ -21,15 +29,15 @@ function sourceFixture() {
 
 test('template plan and candidate compilation retain retrieved pose, processing and user clothing', async () => {
     const source = sourceFixture();
-    const input = { theme: '秋日人像', scene: '公园长椅', modelDesc: '棕色针织上衣、黑色长裤', extra: '双脚着地，不交叉双腿', useReferenceLibrary: true, referenceIds: ['atlas-pose-full_single_p019'] };
-    const context = await prepareReferenceContext(input, { fetchImpl: source.fetchImpl });
+    const input = { theme: '秋日人像', scene: '公园长椅；咖啡馆窗边', modelDesc: '棕色针织上衣、黑色长裤', extra: '全组只用35mm。双脚着地，不交叉双腿', useReferenceLibrary: true, referenceIds: ['atlas-pose-full_single_p019', 'atlas-pose-full_single_p015'] };
+    const context = await prepareReferenceContext({ ...input, requireImageReferences: true }, { fetchImpl: source.fetchImpl });
     const plan = createTemplatePlan(input, context);
     const request = { provider: 'cloudflare', model: '@cf/black-forest-labs/flux-1-schnell', candidate_count: 1,
         billing_mode: 'free-credit-first', brief: plan.shotList[0].description, reference_brief: input,
-        reference_ids: input.referenceIds, shot_contract: plan.shotList[0].directorContract };
+        reference_ids: plan.aiStudio.references.map(reference => reference.sourceItemId), shot_contract: plan.shotList[0].directorContract };
     const resolved = await prepareCloudCandidateReferences(request, { fetchImpl: source.fetchImpl });
-    assert.deepEqual(resolved.templates.map(template => template.kind), ['pose', 'costume', 'portrait']);
-    assert.equal(resolved.templates[2].section, 'face');
+    assert.deepEqual(resolved.templates.map(template => template.kind), ['pose', 'pose', 'costume', 'portrait']);
+    assert.equal(resolved.templates[3].section, 'face');
     const compiled = compileCloudCandidateRequest(request, resolved);
     assert.equal(plan.director.source, 'template-library-plan');
     assert.match(compiled.prompt, /atlas-pose-full_single_p019/);
@@ -39,6 +47,18 @@ test('template plan and candidate compilation retain retrieved pose, processing 
     assert.match(compiled.prompt, /不交叉双腿/);
     assert.match(compiled.prompt, /feet parallel and hip-width apart/);
     assert.match(compiled.prompt, /head-to-toe/);
+    assert.equal(plan.shotList[0].scene, '公园长椅');
+    assert.equal(plan.shotList[1].scene, '咖啡馆窗边');
+    assert.equal(plan.shotList.every(shot => shot.focalLength === '35mm' && shot.directorContract.lens === '35mm'), true);
+    assert.equal(plan.shotList[0].directorContract.referenceIds[0], 'atlas-pose-full_single_p019');
+    assert.equal(plan.shotList[1].directorContract.referenceIds[0], 'atlas-pose-full_single_p015');
+    assert.equal(plan.aiStudio.references.filter(reference => reference.kind === 'costume').length, 1);
+    assert.equal(plan.aiStudio.references.filter(reference => reference.kind === 'portrait').length, 1);
+    const secondShotRequest = { ...request, brief: plan.shotList[1].description, shot_contract: plan.shotList[1].directorContract };
+    const secondShotReferences = await prepareCloudCandidateReferences(secondShotRequest, { fetchImpl: source.fetchImpl });
+    assert.equal(secondShotReferences.templates.find(template => template.kind === 'pose').id, 'atlas-pose-full_single_p015');
+    assert.equal(resolved.templates.find(template => template.kind === 'costume').id, secondShotReferences.templates.find(template => template.kind === 'costume').id);
+    assert.equal(resolved.templates.find(template => template.kind === 'portrait').id, secondShotReferences.templates.find(template => template.kind === 'portrait').id);
     assert.ok(compiled.prompt.length <= 2048);
     await assert.rejects(prepareCloudCandidateReferences({ ...request, shot_contract: { ...request.shot_contract, referenceIds: ['atlas-pose-forged'] } }, { fetchImpl: source.fetchImpl }), /UNAVAILABLE_REFERENCE/);
     await assert.rejects(prepareCloudCandidateReferences(request, { fetchImpl: async () => { throw new Error('offline'); } }), /UNAVAILABLE_REFERENCE|REFERENCE_LIBRARY_UNAVAILABLE/);
@@ -90,7 +110,7 @@ test('real source IDs survive signed search, explicit proposal, and confirmation
     const env = { JWT_SECRET: 'test-signing-secret-at-least-32-characters' };
     const search = await searchStudio({ prompt: '自然坐姿、秋日棕色针织、中长发', planId: 'plan-1', expectedRevision: 1, uid: 'user-1', env, fetchImpl: source.fetchImpl });
     assert.equal(search.modelCalls, 0);
-    assert.equal(search.library.count, 3);
+    assert.equal(search.library.count, 7);
     const id = 'atlas-pose-full_single_p019';
     assert.ok(search.selectedIds.includes(id));
     const proposal = await createStudioProposal({ searchReceipt: search.searchReceipt, selectedIds: [id], uid: 'user-1', env, fetchImpl: source.fetchImpl });
@@ -100,6 +120,18 @@ test('real source IDs survive signed search, explicit proposal, and confirmation
     assert.match(commit.guidance.brief, /坐稳/);
     assert.equal(commit.conversation.length, 2);
     assert.equal(source.calls.length, 3);
+});
+
+test('live reference search offers only image-backed natural poses and face-section portraits', async () => {
+    const source = sourceFixture();
+    const result = await searchStudio({ prompt: '自然行走回眸、秋日棕色针织、短发人脸参考；避免后仰和跪姿', uid: 'user-1', env: { JWT_SECRET: 'test-signing-secret-at-least-32-characters' }, fetchImpl: source.fetchImpl });
+    assert.ok(result.selectedTemplates.some(template => template.kind === 'pose' && template.upstreamId === 'full_single_P015'));
+    assert.ok(result.selectedTemplates.some(template => template.kind === 'costume'));
+    assert.ok(result.selectedTemplates.some(template => template.kind === 'portrait' && template.section === 'face' && template.hair === 'short'));
+    assert.equal(result.selectedTemplates.some(template => template.id === 'pa-pose-walk'), false);
+    assert.equal(result.selectedTemplates.some(template => template.upstreamId === 'full_single_P001'), false);
+    assert.equal(result.selectedTemplates.some(template => template.upstreamId === 'shortstyle'), false);
+    assert.equal(result.modelCalls, 0);
 });
 
 test('the integrated planning page passes reference selection through its normal submit path', async () => {

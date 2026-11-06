@@ -6341,11 +6341,11 @@ function getDirectorShotFitWarning(plan, shot, selectedIndex) {
     return `需求与当前分镜的取景有冲突：${current} ${recommendation}仍可按当前分镜生成，不会自动改写镜头合同。`;
 }
 
-function compileDirectorSceneBrief(plan) {
+function compileDirectorSceneBrief(plan, shot = null) {
     const input = plan && plan.input || {};
     return [
         input.modelDesc ? 'SUBJECT AND CLOTHING: ' + input.modelDesc : '',
-        input.scene ? 'LOCATION WEATHER AND TIME: ' + input.scene : '',
+        shot?.scene || input.scene ? 'LOCATION WEATHER AND TIME: ' + (shot?.scene || input.scene) : '',
         input.mood ? 'PERSISTENT MOOD: ' + input.mood : '',
         input.style ? 'VISUAL STYLE: ' + input.style : '',
         input.extra ? 'USER CONSTRAINTS: ' + input.extra : ''
@@ -6598,7 +6598,7 @@ async function generateDirectorCandidateForPlan(planId) {
         const generationRequest = {
             request_id: (plan.director && plan.director.requestId || 'photoatelier') + '-image-' + Date.now(),
             brief,
-            scene_brief: compileDirectorSceneBrief(plan),
+            scene_brief: compileDirectorSceneBrief(plan, shot),
             style_direction: plan.input && plan.input.style || '纪实摄影',
             output_count: 1,
             available_lenses: shot.focalLength ? [String(shot.focalLength).split(/或|、|,|，/)[0].trim()] : [],
