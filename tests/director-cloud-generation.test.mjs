@@ -39,6 +39,7 @@ test('candidate uses the existing Cloudflare AI binding and validates its JPEG o
     assert.equal(calls[0].model, '@cf/black-forest-labs/flux-1-schnell');
     assert.match(calls[0].input.prompt, /35mm eye-level environmental portrait/);
     assert.equal(calls[0].input.steps, 4);
+    assert.equal(Object.hasOwn(calls[0].input, 'seed'), false);
     assert.equal(result.model, '@cf/black-forest-labs/flux-1-schnell');
     assert.equal(result.mime, 'image/jpeg');
     assert.deepEqual(result.bytes, jpeg);
