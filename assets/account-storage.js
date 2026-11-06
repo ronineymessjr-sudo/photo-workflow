@@ -1,7 +1,7 @@
 (function (root) {
     if (root.PhotoAtelierAccountStorage) return;
     if (typeof localStorage !== 'undefined') root.__PHOTOATELIER_BOOT_OWNER__ = localStorage.getItem('pa_workspace_owner');
-    const keys = new Set(['pw_plans', 'pw_eq', 'pw_venues', 'pw_models', 'pw_tpl', 'pw_schedule', 'pw_schedules', 'pw_messages', 'pw_todos', 'pa_custom_shots', 'pa_quote_settings']);
+    const keys = new Set(['pw_plans', 'pw_eq', 'pw_venues', 'pw_models', 'pw_tpl', 'pw_schedule', 'pw_schedules', 'pw_messages', 'pw_activity_state', 'pw_todos', 'pa_custom_shots', 'pa_quote_settings']);
     const isBusinessKey = key => keys.has(key) || /^pa_(?:shots|shot_status|shot_rating|shot_keeper|shot_notes|shot_time|shot_images)_[\w-]+$/.test(key);
     let database, changing = false;
     function snapshot() {

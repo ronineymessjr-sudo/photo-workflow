@@ -406,21 +406,6 @@
             min-height: 56px;
             flex-shrink: 0;
         }
-        .brand-dot {
-            width: 28px;
-            height: 28px;
-            border-radius: 6px;
-            background: var(--ac);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        .brand-dot svg {
-            width: 16px;
-            height: 16px;
-            color: #121212;
-        }
         .brand-text {
             font-size: .9rem;
             font-weight: 600;
@@ -2798,31 +2783,6 @@
             background: var(--bg2);
         }
         
-        /* ===== Batch Actions ===== */
-        .batch-bar {
-            display: none;
-            position: fixed;
-            bottom: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--bg3);
-            border: 1px solid var(--bd2);
-            border-radius: 50px;
-            padding: .6rem 1rem;
-            gap: .5rem;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
-            z-index: 99;
-            animation: fadeInUp 0.3s ease;
-        }
-        .batch-bar.active {
-            display: flex;
-        }
-        .batch-bar .count {
-            color: var(--ac);
-            font-weight: 600;
-            padding: 0 .5rem;
-        }
-        
         /* ===== List Search ===== */
         .list-search-wrapper {
             padding: .5rem 0;
@@ -2843,6 +2803,7 @@
     </style>
     <!-- AOS Animation Library -->
     <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet" />
+<link rel="stylesheet" href="assets/ai-studio.css">
 </head>
 <body>
 
@@ -2851,7 +2812,7 @@
     <button class="hamburger-btn" onclick="toggleMobileSidebar()">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
     </button>
-    <div class="mobile-header-title">Photo<span>Atelier</span></div>
+    <div class="mobile-header-title"><img class="brand-logo" src="./favicon.jpg" alt="PhotoAtelier 标志" width="32" height="32">Photo<span>Atelier</span></div>
 </div>
 <!-- Sidebar Overlay -->
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleMobileSidebar()"></div>
@@ -2912,7 +2873,7 @@
 <div id="roleOverlay" style="position:fixed;inset:0;z-index:998;display:none;align-items:center;justify-content:center;background:var(--bg);">
     <div style="text-align:center;max-width:600px;padding:2rem;">
         <div style="margin-bottom:2rem;">
-            <span class="brand-dot" style="display:inline-block;width:16px;height:16px;margin-bottom:1rem;"></span>
+            <img class="brand-logo" src="./favicon.jpg" alt="PhotoAtelier 标志" width="40" height="40" style="display:inline-block;margin-bottom:1rem;">
             <h1 style="font-family:var(--font-serif);font-size:2.5rem;font-weight:600;letter-spacing:-0.03em;margin-bottom:.5rem;">欢迎回来</h1>
             <p style="color:var(--t2);font-size:.95rem;" id="welcomeEmail"></p>
         </div>
@@ -2939,7 +2900,7 @@
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
-            <span class="brand-dot"></span>
+            <img class="brand-logo" src="./favicon.jpg" alt="PhotoAtelier 标志" width="36" height="36">
             <span class="brand-text">Photo<span>Atelier</span></span>
         </div>
         <nav class="sidebar-nav">
@@ -2947,6 +2908,7 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12l9-9 9 9"/><path d="M5 10v11h14V10"/><path d="M9 21v-7h6v7"/></svg>
                 <span class="nav-label">角色工作台</span>
             </button>
+            <div class="studio-nav-section">拍摄流程</div>
             <button class="nav-item active" data-tab="gen" data-role="photographer,model,assistant">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
                 <span class="nav-label" data-i18n="nav.gen">方案生成</span>
@@ -2964,15 +2926,7 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
                 <span class="nav-label" data-i18n="nav.venue">资源库</span>
             </button>
-            <button class="nav-item" data-tab="dashboard" data-role="photographer,assistant">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                <span class="nav-label" data-i18n="nav.dashboard">数据看板</span>
-            </button>
-            <button class="nav-item" data-tab="message" data-role="photographer,model,assistant">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-                <span class="nav-label" data-i18n="nav.message">消息看板</span>
-                <span class="nav-badge" id="t-msg" style="display:none;">0</span>
-            </button>
+            <div class="studio-nav-section">记录与管理</div>
             <button class="nav-item" data-tab="hist" data-role="photographer,assistant">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                 <span class="nav-label" data-i18n="nav.hist">历史记录</span>
@@ -3010,19 +2964,17 @@
                     <button class="lang-btn active" onclick="setLanguage('zh')" data-lang="zh">中文</button>
                     <button class="lang-btn" onclick="setLanguage('en')" data-lang="en">EN</button>
                 </div>
-                <button id="userAvatar" onclick="showTab('settings')" title="个人设置" style="width:28px;height:28px;border-radius:50%;background:var(--ac);border:0;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:600;color:#121212;cursor:pointer;">摄</button>
+                <button id="userAvatar" onclick="PhotoAtelierProfile.open()" title="个人资料" aria-label="个人资料" style="width:32px;height:32px;border-radius:50%;background:var(--ac);border:0;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:600;color:#121212;cursor:pointer;">摄</button>
             </div>
-        </header>
-
         <!-- Quick Actions Bar -->
         <div id="guestModeNotice" hidden style="padding:.6rem 1rem;border-bottom:1px solid var(--bd);color:var(--t2);font-size:.8rem;">
             <span data-i18n="login.guestHint">游客方案仅保存在当前浏览器</span>
             <button class="btn btn-s btn-sm" onclick="logout()" data-i18n="login.button">登录</button>
         </div>
         <div class="quick-actions" style="display:flex;gap:.5rem;margin:1rem 1.5rem 0 1.5rem;padding:.75rem 1rem;background:var(--bg3);border-radius:12px;border:1px solid var(--bd);">
-            <button class="btn btn-s btn-sm" data-role="photographer,assistant" onclick="syncToFeishuBitable()" style="display:flex;align-items:center;gap:.4rem;">
+            <button class="btn btn-s btn-sm" data-role="photographer,assistant" onclick="PhotoAtelierStudio.syncCurrentPlan()" style="display:flex;align-items:center;gap:.4rem;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                同步飞书
+                同步当前方案
             </button>
             <div style="flex:1"></div>
             <div class="search-box" style="position:relative;">
@@ -3030,6 +2982,8 @@
                 <svg style="position:absolute;left:.5rem;top:50%;transform:translateY(-50%);color:var(--t3);" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             </div>
         </div>
+
+        </header>
 
         <div class="tab-cnt" id="tab-role-home">
             <div style="max-width:960px;margin:0 auto;"><div class="panel"><div class="p-head"><h2 id="roleHomeTitle">角色工作台</h2></div><div class="p-body" id="roleHomeContent"></div></div></div>
@@ -3042,52 +2996,55 @@
                     <div class="panel">
                         <div class="p-head"><h2 data-i18n="gen.title">创意需求</h2></div>
                         <div class="p-body">
+                            <details class="brief-chat" id="briefChat">
+                                <summary>用对话描述拍摄需求</summary>
+                                <div class="brief-chat-body">
+                                    <p id="briefChatAvailability" role="status"></p>
+                                    <button type="button" class="btn btn-s" id="briefChatSettings" hidden>前往 AI 设置</button>
+                                    <div id="briefChatEntry" hidden>
+                                    <div id="briefChatHistory" class="brief-chat-history" aria-live="polite"></div>
+                                    <label for="briefChatMessage">想拍什么</label>
+                                    <textarea id="briefChatMessage" maxlength="1000" placeholder="例如：在公园拍一位朋友，只用35mm，不带助手"></textarea>
+                                    <button type="button" class="btn btn-s" id="briefChatSend">整理需求</button>
+                                    <p id="briefChatStatus" role="status"></p>
+                                    <div id="briefChatReview" hidden>
+                                        <h3>确认拍摄需求</h3>
+                                        <div id="briefChatFields" class="brief-chat-fields"></div>
+                                        <p>原始描述和限制会一并保留。</p>
+                                        <button type="button" class="btn btn-p" id="briefChatConfirm">确认并生成方案</button>
+                                    </div>
+                                    </div>
+                                </div>
+                            </details>
                             <form id="briefForm">
-                                <!-- Step Indicator -->
-                                <div class="step-indicator" id="stepIndicator">
-                                    <div class="step-item active" data-step="1">
-                                        <div class="step-num">1</div>
-                                        <span class="step-label">基本信息</span>
+                                <details class="studio-reference-panel" id="studioReferencePanel">
+                                    <summary>摆姿库与 AI Studio</summary>
+                                    <label><input type="checkbox" id="studioReferenceAuto" checked>生成方案时检索摆姿库并编译拍摄参考</label>
+                                    <label for="studioReferencePrompt">检索姿态、衣装与妆发</label>
+                                    <textarea id="studioReferencePrompt" maxlength="1800" placeholder="如自然坐姿、秋季棕色针织、中长发。留空时使用上面的拍摄需求。"></textarea>
+                                    <div class="studio-reference-actions">
+                                        <button type="button" class="btn btn-s" id="studioReferenceSearch">检索 RuiC-PoseAtlas</button>
+                                        <button type="button" class="btn btn-s" id="studioReferenceProposal" disabled>生成当前方案引用提案</button>
+                                        <button type="button" class="btn btn-p" id="studioReferenceConfirm" disabled>确认加入当前方案</button>
                                     </div>
-                                    <div class="step-item" data-step="2">
-                                        <div class="step-num">2</div>
-                                        <span class="step-label">详细描述</span>
-                                    </div>
-                                    <div class="step-item" data-step="3">
-                                        <div class="step-num">3</div>
-                                        <span class="step-label">附加要求</span>
-                                    </div>
-                                </div>
-
+                                    <p id="studioReferenceStatus" role="status">勾选候选后可用于下一次方案生成。已登录并打开方案时，也可确认加入当前方案。</p>
+                                    <div id="studioReferenceResults"></div>
+                                    <div id="studioReferencePreview"></div>
+                                </details>
                                 <!-- Step 1: 基本信息 -->
-                                <div class="step-section" data-step-section="1">
-                                    <div class="step-section-title">基本信息</div>
-                                    <div class="fg"><label data-i18n="gen.theme">拍摄主题（选填）</label><input id="f-theme" placeholder="留空时按场景和人物自然构思"></div>
-                                    <div class="fg"><label data-i18n="gen.style">风格偏好（选填）</label><input id="f-style" placeholder="如：自然纪实、电影感；也可留空"></div>
-                                    <div class="fg"><label data-i18n="gen.mood">预期情绪</label><input id="f-mood" placeholder="如：轻松、克制、热烈"></div>
-                                </div>
+                                
 
                                 <!-- Step 2: 详细描述 -->
                                 <div class="step-section" data-step-section="2">
-                                    <div class="step-section-title">详细描述</div>
+                                    <div class="step-section-title">拍摄需求</div>
                                     <div class="fg">
                                         <label data-i18n="gen.model">模特特征</label>
-                                        <div style="display:flex;gap:.4rem;margin-bottom:.4rem;">
-                                            <select id="importModelSelect" style="flex:1;padding:.4rem .6rem;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;color:var(--t1);font-size:.85rem;">
-                                                <option value="">-- 从模特库导入 --</option>
-                                            </select>
-                                            <button type="button" class="btn btn-s btn-sm" onclick="importFromModel()">导入</button>
-                                        </div>
+                                        
                                         <textarea id="f-model" placeholder="外貌、身材、气质"></textarea>
                                     </div>
                                     <div class="fg">
                                         <label data-i18n="gen.scene">场景偏好</label>
-                                        <div style="display:flex;gap:.4rem;margin-bottom:.4rem;">
-                                            <select id="importVenueSelect" style="flex:1;padding:.4rem .6rem;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;color:var(--t1);font-size:.85rem;">
-                                                <option value="">-- 从场地库导入 --</option>
-                                            </select>
-                                            <button type="button" class="btn btn-s btn-sm" onclick="importFromVenue()">导入</button>
-                                        </div>
+                                        
                                         <textarea id="f-scene" placeholder="拍摄场景"></textarea>
                                     </div>
                                     <div class="g2">
@@ -3100,8 +3057,19 @@
 
                                 <!-- Step 3: 附加要求 -->
                                 <div class="step-section" data-step-section="3">
-                                    <div class="step-section-title">附加要求</div>
-                                    <div class="fg">
+                                    
+                                    
+                                    <div class="fg"><label data-i18n="gen.extra">其他要求</label><textarea id="f-extra" placeholder="服装、道具等"></textarea></div>
+                                </div>
+
+                                
+
+                                <details class="studio-disclosure studio-more-options"><summary>更多选项：风格、资源与参考图</summary><div class="studio-optional-section"><h4>风格与情绪（选填）</h4><div class="step-section" data-step-section="1">
+                                    
+                                    <div class="fg"><label data-i18n="gen.theme">拍摄主题（选填）</label><input id="f-theme" placeholder="留空时按场景和人物自然构思"></div>
+                                    <div class="fg"><label data-i18n="gen.style">风格偏好（选填）</label><input id="f-style" placeholder="如：自然纪实、电影感；也可留空"></div>
+                                    <div class="fg"><label data-i18n="gen.mood">预期情绪</label><input id="f-mood" placeholder="如：轻松、克制、热烈"></div>
+                                </div></div><div class="studio-optional-section"><h4>套用模板</h4><div class="fg">
                                         <label>快速导入模板</label>
                                         <div style="display:flex;gap:.4rem;margin-bottom:.4rem;">
                                             <select id="importTplSelect" style="flex:1;padding:.4rem .6rem;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;color:var(--t1);font-size:.85rem;">
@@ -3109,11 +3077,7 @@
                                             </select>
                                             <button type="button" class="btn btn-p btn-sm" onclick="importFromTpl()">导入</button>
                                         </div>
-                                    </div>
-                                    <div class="fg"><label data-i18n="gen.extra">其他要求</label><textarea id="f-extra" placeholder="服装、道具等"></textarea></div>
-                                </div>
-
-                                <div class="fg" style="margin-top:1rem;">
+                                    </div></div><div class="studio-optional-section"><h4>上传参考图片</h4><div class="fg" style="margin-top:1rem;">
                                     <label>参考图片</label>
                                     <div class="image-upload-area" id="imageUploadArea" onclick="document.getElementById('imageInput').click()">
                                         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--t3);margin:0 auto 0.5rem;">
@@ -3126,13 +3090,21 @@
                                     </div>
                                     <input type="file" id="imageInput" accept="image/*" multiple style="display:none;" onchange="handleImageUpload(this)">
                                     <div class="image-preview-grid" id="imagePreviewGrid"></div>
-                                </div>
-
-                                <button type="submit" class="btn btn-p" id="genBtn" style="width:100%;margin-top:0.5rem;" data-i18n="gen.button"><i data-lucide="zap" style="width:1em;height:1em;vertical-align:middle;margin-right:.3em;"></i>生成并保存</button>
+                                </div></div><div class="studio-optional-section"><h4>模特库</h4><div style="display:flex;gap:.4rem;margin-bottom:.4rem;">
+                                            <select id="importModelSelect" style="flex:1;padding:.4rem .6rem;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;color:var(--t1);font-size:.85rem;">
+                                                <option value="">-- 从模特库导入 --</option>
+                                            </select>
+                                            <button type="button" class="btn btn-s btn-sm" onclick="importFromModel()">导入</button>
+                                        </div></div><div class="studio-optional-section"><h4>场地库</h4><div style="display:flex;gap:.4rem;margin-bottom:.4rem;">
+                                            <select id="importVenueSelect" style="flex:1;padding:.4rem .6rem;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;color:var(--t1);font-size:.85rem;">
+                                                <option value="">-- 从场地库导入 --</option>
+                                            </select>
+                                            <button type="button" class="btn btn-s btn-sm" onclick="importFromVenue()">导入</button>
+                                        </div></div></details><button type="submit" class="btn btn-p" id="genBtn" style="width:100%;margin-top:0.5rem;" data-i18n="gen.button"><i data-lucide="zap" style="width:1em;height:1em;vertical-align:middle;margin-right:.3em;"></i>生成并保存</button>
                             </form>
 
                             <!-- 案例参考 -->
-                            <div class="case-ref">
+                            <details class="studio-disclosure"><summary>参考图分析</summary><div class="case-ref">
                                 <div class="p-head" style="margin-top:1rem"><h2><i data-lucide="camera" style="width:1em;height:1em;vertical-align:middle;margin-right:.3em;"></i>案例参考</h2><button class="btn btn-s btn-sm" id="analyzeImgBtn" onclick="analyzeReference()"><i data-lucide="search" style="width:1em;height:1em;vertical-align:middle;margin-right:.3em;"></i>分析此图</button></div>
                                 <div class="case-ref-input">
                                     <input id="caseRefUrl" placeholder="粘贴参考图 URL（picsum/unsplash/本地均可）" oninput="previewRefImage()">
@@ -3145,10 +3117,12 @@
                                     </div>
                                 </div>
                                 <div class="case-ref-result" id="caseRefResult" style="display:none"></div>
-                            </div>
+                            </div></details>
                         </div>
                     </div>
 
+                    <details class="studio-context-tools">
+                        <summary>参考与拍摄工具</summary>
                     <div class="side-panel">
                         <div class="panel">
                             <div class="p-head"><h2>快速场地</h2></div>
@@ -3182,6 +3156,7 @@
                         </div>
                     </div>
 
+                    </details>
                 </aside>
 
                 <section>
@@ -3224,7 +3199,6 @@
                                 <div class="fg"><label>场地名称</label><input id="v-name" placeholder="如：老洋行酒店公寓"></div>
                                 <div class="fg"><label>地址</label><input id="v-addr" placeholder="详细地址"></div>
                                 <div class="fg"><label>适合风格（逗号分隔）</label><input id="v-styles" placeholder="如：复古、文艺、时尚"></div>
-                                <div class="fg"><label>联系方式</label><input id="v-contact" placeholder="电话或微信"></div>
                                 <div class="fg"><label>备注</label><textarea id="v-note" placeholder="开放时间、收费、注意事项等"></textarea></div>
                                 <button type="submit" class="btn btn-p">+ 添加场地</button>
                             </form>
@@ -3297,10 +3271,7 @@
                         <div class="p-body">
                             <form id="modelForm">
                                 <div class="fg"><label>姓名</label><input id="m-name" placeholder="模特姓名"></div>
-                                <div class="fg"><label>联系方式</label><input id="m-contact" placeholder="电话或微信"></div>
-                                <div class="fg"><label>特征标签（逗号分隔）</label><input id="m-tags" placeholder="如：高挑、长发、文艺气质"></div>
-                                <div class="fg"><label>擅长风格（逗号分隔）</label><input id="m-styles" placeholder="如：时尚、复古、日系"></div>
-                                <div class="fg"><label>备注</label><textarea id="m-note" placeholder="档期、收费标准、合作经历等"></textarea></div>
+                                <div id="modelImagePlaceholder" class="studio-model-image" role="img" aria-label="模特图片预留位置"><span>模特图片</span><small>图片接入位置已预留</small></div><div class="fg"><label>备注</label><textarea id="m-note" placeholder="档期、收费标准、合作经历等"></textarea></div>
                                 <button type="submit" class="btn btn-p">+ 添加模特</button>
                             </form>
                         </div>
@@ -3325,7 +3296,8 @@
 
         <!-- ============ 数据看板 ============ -->
         <div class="tab-cnt" id="tab-dashboard">
-            <div class="grid">
+            <div class="panel"><div class="p-head"><h2>拍摄数据</h2></div><div class="p-body" id="dashboard-real" aria-live="polite">正在读取数据…</div></div>
+            <div class="grid" hidden style="display:none">
                 <section style="grid-column: 1 / -1;">
                     <!-- 顶部统计卡片 -->
                     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem;">
@@ -3864,20 +3836,32 @@
                 <section style="grid-column: 1 / -1;">
                     <div class="panel">
                         <div class="p-head"><h2>设置</h2></div>
-                        <div class="p-body">
+                        <div class="p-body studio-settings-grid">
                             <!-- 用户信息 -->
-                            <div class="fg" id="settingsUserInfo">
-                                <label>👤 账户信息</label>
-                                <div style="display:flex;align-items:center;gap:1rem;padding:.75rem;background:var(--bg-subtle);border-radius:var(--radius);margin-top:.25rem;">
-                                    <div style="width:48px;height:48px;background:var(--ac-gradient);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:#fff;font-weight:600;">
-                                        <span id="settingsUserAvatar">P</span>
+                            <details class="studio-disclosure"><summary>账户</summary><div class="fg studio-settings-account" id="settingsUserInfo">
+                                <div class="profile-summary">
+                                    <div class="profile-avatar">
+                                        <span id="settingsUserAvatar" style="display:flex;align-items:center;justify-content:center;width:48px;height:48px;">P</span>
                                     </div>
-                                    <div style="flex:1;">
+                                    <div class="profile-identity">
                                         <div style="font-weight:600;color:var(--t1);" id="settingsUserName">本地用户</div>
                                         <div style="font-size:.8rem;color:var(--t3);" id="settingsUserEmail">user@local</div>
                                         <div style="font-size:.7rem;color:var(--ac);margin-top:.15rem;" id="settingsUserRole">摄影师</div>
                                     </div>
+                                    <label class="btn btn-s btn-sm profile-upload">更换头像
+                                        <input id="profileImage" type="file" accept="image/jpeg,image/png,image/webp" aria-label="更换头像" aria-describedby="profileImageHint">
+                                    </label>
                                 </div>
+                                <form id="profileForm" class="profile-form">
+                                    <label for="profileName">显示名</label>
+                                    <input id="profileName" maxlength="32" autocomplete="nickname" placeholder="你希望显示的名字" required>
+                                    <small id="profileImageHint">头像支持 JPG、PNG、WebP，最大 5 MB · 资料保存在本机账户</small>
+                                    <div class="profile-actions">
+                                        <button id="profileSave" type="submit" class="btn btn-p btn-sm">保存资料</button>
+                                        <button id="profileRemoveImage" type="button" class="btn btn-s btn-sm">恢复默认头像</button>
+                                    </div>
+                                    <p id="profileStatus" role="status" aria-live="polite"></p>
+                                </form>
                                 <div style="display:flex;gap:.5rem;margin-top:.75rem;">
                                     <select id="settingsRoleSelect" onchange="changeSettingsRole(this.value)" aria-label="选择工作身份" style="max-width:160px;">
                                         <option value="photographer">摄影师</option>
@@ -3886,9 +3870,9 @@
                                     </select>
                                     <button class="btn btn-s btn-sm" onclick="logout()" style="color:var(--er);border-color:var(--er);">退出登录</button>
                                 </div>
-                            </div>
+                            </div></details>
                             
-                            <div class="fg" id="ownAiSettings">
+                            <details class="studio-disclosure"><summary>文字 AI 服务</summary><div class="fg studio-settings-ai" id="ownAiSettings">
                                 <h3 style="font-size:1rem;color:var(--t1);margin-bottom:12px;">接入自己的 AI</h3>
                                 <label for="ownAiProvider">服务商</label>
                                 <select id="ownAiProvider"><option value="">正在读取可用服务…</option></select>
@@ -3901,43 +3885,24 @@
                                     <input id="ownAiConsent" type="checkbox" style="width:auto;flex:none;">
                                     <span id="ownAiConsentText">允许将我填写的密钥和拍摄需求经 Photo Workflow 服务端转交上方供应商；调用可能消耗我在该供应商的付费额度。密钥不保存，刷新页面后需重新填写。</span>
                                 </label>
+                                <label id="ownAiRememberLabel" hidden style="display:flex;gap:8px;align-items:flex-start;margin:12px 0;font-size:.8rem;color:var(--t2);">
+                                    <input id="ownAiRemember" type="checkbox" style="width:auto;flex:none;">
+                                    <span>在此 Windows 账户安全保存，下次自动连接（仅本机）。</span>
+                                </label>
                                 <div style="display:flex;gap:8px;flex-wrap:wrap;">
                                     <button id="ownAiEnable" class="btn btn-s" type="button">本次使用此模型</button>
                                     <button id="ownAiClear" class="btn btn-s" type="button">断开并清除密钥</button>
                                 </div>
                                 <p id="ownAiStatus" role="status" style="font-size:.8rem;color:var(--t2);margin-top:8px;">未接入。此入口只生成文字方案，不生成图片。</p>
-                            </div>
+                            </div></details>
                             <!-- Pexels API Key -->
-                            <div class="fg">
-                                <label>Pexels API Key <span style="font-size:.7rem;color:var(--t3);">（可选，用于自动加载参考图）</span></label>
-                                <div style="display:flex;gap:.5rem;">
-                                    <input type="text" id="settingsPexelsKey" placeholder="粘贴你的 Pexels API Key..." style="flex:1;">
-                                    <button class="btn btn-s btn-sm" onclick="saveSettingsPexelsKey()">保存</button>
-                                </div>
-                                <p style="font-size:.72rem;color:var(--t3);margin-top:.35rem;">
-                                    免费申请：<a href="https://www.pexels.com/api/" target="_blank" style="color:var(--ac);">https://www.pexels.com/api/</a> 
-                                    · 不填也能用，只是无法自动加载图片预览
-                                </p>
-                            </div>
+                            
                             
                             <!-- Data Management -->
-                            <div class="fg">
-                                <label>💾 数据管理</label>
-                                <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
-                                    <button class="btn btn-s btn-sm" onclick="exportAllData()">📤 导出全部数据</button>
-                                    <button class="btn btn-s btn-sm" onclick="document.getElementById('importFileInput').click()">📥 导入数据</button>
-                                    <input type="file" id="importFileInput" accept=".json" style="display:none;" onchange="importAllData(event)">
-                                    <button class="btn btn-d btn-sm" onclick="clearAllData()">🗑️ 清空数据</button>
-                                </div>
-                                <p style="font-size:.72rem;color:var(--t3);margin-top:.35rem;">导出为 JSON 文件，可用于备份和迁移</p>
-                            </div>
+                            
                             
                             <!-- About -->
-                            <div style="padding:1rem;background:var(--bg2);border-radius:var(--radius-sm);font-size:.8rem;color:var(--t3);margin-top:1rem;">
-                                <p><strong>PhotoAtelier</strong> v1.0</p>
-                                <p style="margin-top:.25rem;">摄影师工作流管理工具 · 分镜脚本 · 参考图库 · 日程管理</p>
-                                <p style="margin-top:.25rem;">参考图库支持 25+ 免费商用图库平台</p>
-                            </div>
+                            
                         </div>
                     </div>
                 </section>
@@ -3955,6 +3920,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="assets/account-storage.js"></script>
+<script src="assets/workflow-activity.js"></script>
 <script src="assets/director-client.js"></script>
 <script>
 // i18n System
@@ -4174,6 +4140,11 @@ if (document.getElementById('loginOverlay')) {
         document.getElementById('loginOverlay').style.display = 'flex';
     }
 
+    function safeJsonParse(key, fallback) {
+        try { return JSON.parse(localStorage.getItem(key)) ?? fallback; }
+        catch { return fallback; }
+    }
+
     // Local mode API mock for offline usage
     const localApi = {
         async login(credentials) {
@@ -4209,13 +4180,33 @@ if (document.getElementById('loginOverlay')) {
         },
         async getMessages() {
             return safeJsonParse('pw_messages', []);
+        },
+        async createMessage(data) {
+            const messages = safeJsonParse('pw_messages', []);
+            const message = { ...data, id: crypto.randomUUID(), status: 'new', created_at: new Date().toISOString() };
+            localStorage.setItem('pw_messages', JSON.stringify([message, ...messages]));
+            return { message };
+        },
+        async updateMessageStatus(id, status) {
+            if (!['new', 'pending', 'completed'].includes(status)) throw new Error('无效的消息状态');
+            const messages = safeJsonParse('pw_messages', []);
+            const message = messages.find(item => String(item.id) === String(id));
+            if (!message) throw new Error('消息不存在');
+            message.status = status;
+            localStorage.setItem('pw_messages', JSON.stringify(messages));
+            return { message };
+        },
+        async deleteMessage(id) {
+            const messages = safeJsonParse('pw_messages', []);
+            localStorage.setItem('pw_messages', JSON.stringify(messages.filter(item => String(item.id) !== String(id))));
+            return { success: true };
         }
     };
 
     window.api = {
         base: API_BASE,
         request: async function(path, method, body, timeout = 10000) {
-            if (USE_GUEST_MODE && !['/api/director/plan', '/api/ai/providers', '/api/ai/plan', '/api/auth/login', '/api/auth/methods', '/api/auth/email/send', '/api/auth/email/verify'].includes(path)) {
+            if (USE_GUEST_MODE && !['/api/director/plan', '/api/ai/providers', '/api/ai/plan', '/api/ai/brief', '/api/ai/plan-lite', '/api/auth/login', '/api/auth/methods', '/api/auth/email/send', '/api/auth/email/verify'].includes(path)) {
                 throw new Error('请登录后使用云端保存或团队协作');
             }
             method = method || 'GET';
@@ -4253,9 +4244,9 @@ if (document.getElementById('loginOverlay')) {
         writeToFeishuBitable(app_token, table_id, records) { return this.request('/api/feishu/bitable', 'POST', { app_token, table_id, records }); },
         // Messages
         getMessages() { return USE_BROWSER_STORAGE ? localApi.getMessages() : this.request('/api/messages'); },
-        createMessage(data) { return USE_BROWSER_STORAGE ? Promise.resolve(data) : this.request('/api/messages', 'POST', data); },
-        updateMessageStatus(id, status) { return this.request(`/api/messages/${id}`, 'PATCH', { status }); },
-        deleteMessage(id) { return this.request(`/api/messages/${id}`, 'DELETE'); }
+        createMessage(data) { return USE_BROWSER_STORAGE ? localApi.createMessage(data) : this.request('/api/messages', 'POST', data); },
+        updateMessageStatus(id, status) { return USE_BROWSER_STORAGE ? localApi.updateMessageStatus(id, status) : this.request(`/api/messages/${encodeURIComponent(id)}`, 'PATCH', { status }); },
+        deleteMessage(id) { return USE_BROWSER_STORAGE ? localApi.deleteMessage(id) : this.request(`/api/messages/${encodeURIComponent(id)}`, 'DELETE'); }
     };
 
     window.continueAsGuest = async function() {
@@ -4745,6 +4736,7 @@ function applyRoleExperience(role) {
         el.style.display = roles.includes(role) ? '' : 'none';
     });
     if ($('userAvatar')) $('userAvatar').textContent = config.avatar;
+    window.PhotoAtelierProfile?.render();
     renderRoleHome(role);
     const active = document.querySelector('.nav-item.active');
     if (!active || active.style.display === 'none') showTab('role-home');
@@ -4794,7 +4786,7 @@ function renderRoleHome(role) {
     const empty = '<div class="eq-empty">暂时没有已安排的拍摄</div>';
 
     if (role === 'model') {
-        content.innerHTML = `<div class="stats-row"><div class="stat-card"><div class="stat-num">${assigned.length}</div><div class="stat-label">待参与拍摄</div></div><div class="stat-card"><div class="stat-num">${plans.length}</div><div class="stat-label">可查看方案</div></div></div><div class="p-head" style="padding-left:0;padding-right:0;"><h3>我的拍摄安排</h3></div>${scheduleRows || empty}<div style="display:flex;gap:.5rem;margin-top:1rem;"><button class="btn btn-p btn-sm" onclick="showTab('gen')">创建个人练习方案</button><button class="btn btn-s btn-sm" onclick="showTab('message')">查看通知</button></div>`;
+        content.innerHTML = `<div class="stats-row"><div class="stat-card"><div class="stat-num">${assigned.length}</div><div class="stat-label">待参与拍摄</div></div><div class="stat-card"><div class="stat-num">${plans.length}</div><div class="stat-label">可查看方案</div></div></div><div class="p-head" style="padding-left:0;padding-right:0;"><h3>我的拍摄安排</h3></div>${scheduleRows || empty}<div style="display:flex;gap:.5rem;margin-top:1rem;"><button class="btn btn-p btn-sm" onclick="showTab('gen')">创建个人练习方案</button></div>`;
         return;
     }
     if (role === 'assistant') {
@@ -4820,9 +4812,24 @@ function showTab(tabName) {
     if(tabName==='hist') renderHistFull();
     if(tabName==='backup') updateBackupStats();
     if(tabName==='calendar') { renderCalendar(); renderSchedules(); }
+    if(tabName==='dashboard') renderRealDashboard();
     if(tabName==='message') renderMessages();
     if(tabName==='settings') loadSettingsData();
-    if(tabName==='role-home') renderRoleHome(getCurrentRole());
+    if(tabName==='role-home') { renderRoleHome(getCurrentRole()); renderWorkspaceInbox(); }
+}
+
+async function renderWorkspaceInbox() {
+    try {
+        const result = await api.getMessages();
+        const messages = Array.isArray(result) ? result : result.messages || [];
+        const workspace = document.getElementById('tab-role-home');
+        if (!messages.length || !workspace?.classList.contains('active')) return;
+        const button = document.createElement('button');
+        button.className = 'btn btn-s btn-sm';
+        button.textContent = `消息 ${messages.length}`;
+        button.addEventListener('click', () => showTab('message'));
+        document.getElementById('roleHomeContent').append(button);
+    } catch { /* Empty or unavailable inbox adds no placeholder to the workspace. */ }
 }
 
 // 资源库内部Tab切换
@@ -4864,9 +4871,35 @@ function initTabs() {
 // ===== Message Board (消息看板) =====
 var _msgCache = [];
 var _msgFilter = 'all';
+var _msgLoadError = false;
+
+async function renderRealDashboard() {
+    const target = document.getElementById('dashboard-real');
+    if (!target) return;
+    target.textContent = '正在读取数据…';
+    try {
+        const [planResult, scheduleResult] = await Promise.all([api.getPlans(), api.getSchedules()]);
+        const plans = Array.isArray(planResult) ? planResult : Array.isArray(planResult?.plans) ? planResult.plans : [];
+        const schedules = Array.isArray(scheduleResult) ? scheduleResult : Array.isArray(scheduleResult?.schedules) ? scheduleResult.schedules : [];
+        const now = new Date();
+        const month = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+        const thisMonth = schedules.filter(item => String(item.date || '').startsWith(month)).length;
+        const completed = schedules.filter(item => item.status === 'completed').length;
+        target.replaceChildren();
+        const summary = document.createElement('p');
+        summary.textContent = `已保存方案 ${plans.length} · 本月日程 ${thisMonth} · 已完成日程 ${completed}`;
+        target.append(summary);
+        const hint = document.createElement('p');
+        hint.textContent = schedules.length ? `共 ${schedules.length} 条日程` : '暂无日程';
+        target.append(hint);
+    } catch {
+        target.textContent = '数据读取失败，请检查网络或登录状态后重新打开看板。';
+    }
+}
 
 function renderMessages() {
     api.getMessages().then(function(res) {
+        _msgLoadError = false;
         if (res.messages) {
             _msgCache = res.messages;
         } else if (Array.isArray(res)) {
@@ -4877,7 +4910,7 @@ function renderMessages() {
         updateMsgStats();
         filterMessages(_msgFilter);
     }).catch(function(e) {
-        /* Messages load error */
+        _msgLoadError = true;
         _msgCache = [];
         updateMsgStats();
         filterMessages(_msgFilter);
@@ -4937,7 +4970,7 @@ function filterMessages(status) {
 
     if (filtered.length === 0) {
         listEl.innerHTML = '';
-        if (emptyEl) emptyEl.style.display = 'block';
+        if (emptyEl) { emptyEl.style.display = 'block'; emptyEl.textContent = _msgLoadError ? '消息读取失败，请检查网络或登录状态后重新打开。' : '暂无消息'; }
         return;
     }
     if (emptyEl) emptyEl.style.display = 'none';
@@ -5395,7 +5428,6 @@ function renderVenue() {
             <div class="venue-name">${escHtml(v.name)} <button class="btn-i2" onclick="delVenue('${v.id}')" title="删除" style="margin-left:auto;">✕</button></div>
             ${v.styles?`<div class="venue-tags">${v.styles.split(',').map(s=>`<span class="venue-tag style-tag">${escHtml(s.trim())}</span>`).join('')}</div>`:''}
             ${v.addr?`<div class="venue-addr">${escHtml(v.addr)}</div>`:''}
-            ${v.contact?`<div class="venue-addr">${escHtml(v.contact)}</div>`:''}
             ${v.note?`<div class="venue-note">${escHtml(v.note)}</div>`:''}
             <div class="venue-actions"><button class="btn btn-s btn-sm" onclick="useVenue('${v.id}')">引用到方案</button></div>
         </div>`).join('');
@@ -5405,25 +5437,36 @@ function delVenue(id){ let l=sg(SK.V)||[]; l=l.filter(v=>v.id!==id); ss(SK.V,l);
 function useVenue(id){ const v=(sg(SK.V)||[]).find(x=>x.id===id); if(v){ $('f-scene').value=$('f-scene').value?$('f-scene').value+', '+v.name:v.name; toast('已引用到场景'); } }
 $('venueForm').addEventListener('submit',e=>{
     e.preventDefault();
-    const v={id:Date.now().toString(),name:$('v-name').value.trim(),addr:$('v-addr').value.trim(),styles:$('v-styles').value.trim(),contact:$('v-contact').value.trim(),note:$('v-note').value.trim()};
+    const v={id:Date.now().toString(),name:$('v-name').value.trim(),addr:$('v-addr').value.trim(),styles:$('v-styles').value.trim(),note:$('v-note').value.trim()};
     if(!v.name){toast('请输入场地名称','er');return;}
     const list=sg(SK.V)||[]; list.push(v); ss(SK.V,list);
-    ['v-name','v-addr','v-styles','v-contact','v-note'].forEach(k=>$(k).value='');
+    ['v-name','v-addr','v-styles','v-note'].forEach(k=>$(k).value='');
     renderVenue(); toast('场地已添加','ok');
 });
 
 // ===== Model =====
+function removePresetModels() {
+    const names = new Set(['清冷夜景人像（预置）', '自然生活感人像（预置）', '双人关系拍摄（预置）', '产品使用者（预置）']);
+    const models = sg(SK.M) || [];
+    const examples = models.filter(model => names.has(model.name));
+    if (!examples.length) return;
+    const archiveKey = 'pa_archived_model_examples_v1';
+    const archive = sg(archiveKey) || [];
+    const ids = new Set(archive.map(model => model.id || model.name));
+    const additions = examples.filter(model => !ids.has(model.id || model.name));
+    if (!ss(archiveKey, [...archive, ...additions])) return;
+    ss(SK.M, models.filter(model => !names.has(model.name)));
+}
+
 function renderModel() {
+    removePresetModels();
     const list=sg(SK.M)||[];
     if ($('t-model')) $('t-model').textContent=list.length;
     $('model-total').textContent=`共 ${list.length} 位模特`;
-    if(!list.length){ $('model-list').innerHTML='<div class="eq-empty">模特库为空</div>'; return; }
+    if(!list.length){ $('model-list').innerHTML='<div class="eq-empty">还没有模特，添加后会显示在这里</div>'; return; }
     $('model-list').innerHTML=list.map(m=>`
         <div class="model-card">
             <div class="model-name">${escHtml(m.name)} <button class="btn-i2" onclick="delModel('${m.id}')" title="删除" style="margin-left:auto;">✕</button></div>
-            ${m.styles?`<div class="model-tags">${m.styles.split(',').map(s=>`<span class="model-tag">${escHtml(s.trim())}</span>`).join('')}</div>`:''}
-            <div class="model-meta">${m.avail==='available'?'可用':m.avail==='booked'?'已预约':'暂不可用'} &nbsp;|&nbsp; 肖像权：${m.auth==='authorized'?'已授权':m.auth==='pending'?'待确认':'未授权'}</div>
-            ${m.contact?`<div class="venue-addr">${escHtml(m.contact)}</div>`:''}
             ${m.note?`<div class="model-note">${escHtml(m.note)}</div>`:''}
             <div class="model-actions"><button class="btn btn-s btn-sm" onclick="useModel('${m.id}')">引用到方案</button></div>
         </div>`).join('');
@@ -5432,11 +5475,10 @@ function delModel(id){ let l=sg(SK.M)||[]; l=l.filter(m=>m.id!==id); ss(SK.M,l);
 function useModel(id){ const m=(sg(SK.M)||[]).find(x=>x.id===id); if(m){ $('f-model').value=$('f-model').value?$('f-model').value+', '+m.name:m.name; toast('已引用到方案'); } }
 if($('modelForm')) $('modelForm').addEventListener('submit',e=>{
     e.preventDefault();
-    const m={id:Date.now().toString(),name:$('m-name').value.trim(),styles:$('m-styles').value.trim(),contact:$('m-contact').value.trim(),avail:$('m-avail').value,auth:$('m-auth').value,note:$('m-note').value.trim()};
+    const m={id:Date.now().toString(),name:$('m-name').value.trim(),note:$('m-note').value.trim()};
     if(!m.name){toast('请输入模特名称','er');return;}
     const list=sg(SK.M)||[]; list.push(m); ss(SK.M,list);
-    ['m-name','m-styles','m-contact','m-note'].forEach(k=>$(k).value='');
-    $('m-avail').value='available'; $('m-auth').value='pending';
+    ['m-name','m-note'].forEach(k=>$(k).value='');
     renderModel(); toast('模特已添加','ok');
 });
 
@@ -5454,22 +5496,27 @@ function renderPresetPlanLibrary() {
     const container = $('preset-plan-library');
     if (!container) return;
     container.innerHTML = BUILT_IN_PLAN_PRESETS.map(preset => `
-        <article class="library-plan-row">
+        <article class="library-plan-row studio-preset-card">
             <h3>${escHtml(preset.name)}</h3><p class="reference-rights">${escHtml(preset.desc)}</p>
-            <button class="btn btn-s btn-sm" onclick="useBuiltInPlanPreset('${preset.id}')">选用并编辑</button>
+            <button class="btn btn-p studio-preset-action" onclick="useBuiltInPlanPreset('${preset.id}')">使用并生成</button>
         </article>`).join('');
 }
 
 function useBuiltInPlanPreset(id) {
     const preset = BUILT_IN_PLAN_PRESETS.find(item => item.id === id);
-    if (!preset) return;
-    const input = preset.input;
-    $('f-theme').value = input.theme; $('f-style').value = input.style; $('f-model').value = input.modelDesc;
-    $('f-scene').value = input.scene; $('f-mood').value = input.mood; $('f-dur').value = input.duration;
-    $('f-people').value = input.people; $('f-extra').value = input.extra;
-    if (window._updateStepIndicator) window._updateStepIndicator();
+    if (preset) generateFromPreset(preset.input);
+}
+
+function generateFromPreset(input) {
+    if ($('genBtn').disabled) return false;
+    for (const [field, key] of Object.entries({ 'f-theme':'theme', 'f-style':'style', 'f-model':'modelDesc', 'f-scene':'scene', 'f-mood':'mood', 'f-extra':'extra' })) {
+        $(field).value = input[key] || '';
+    }
+    $('f-dur').value = input.duration || '2小时';
+    $('f-people').value = input.people || '1';
     showTab('gen');
-    toast(`已载入预设：${preset.name}`, 'ok');
+    $('briefForm').requestSubmit();
+    return true;
 }
 
 function renderSavedPlanLibrary() {
@@ -5530,7 +5577,7 @@ function renderTpl() {
     renderPresetPlanLibrary();
     renderSavedPlanLibrary();
     const list=sg(SK.T)||[];
-    $('t-tpl').textContent=list.length;
+    $('t-tpl').textContent=getPlans().length;
     $('tpl-total').textContent=`共 ${list.length} 个模板`;
     if(!list.length){ $('tpl-list').innerHTML='<div class="eq-empty">暂无模板，生成方案后可保存为模板</div>'; return; }
     $('tpl-list').innerHTML=list.map(t=>`
@@ -5538,39 +5585,27 @@ function renderTpl() {
             <div class="tpl-name">📑 ${escHtml(t.name)} <button class="btn-i2" onclick="delTpl('${t.id}')" title="删除">✕</button></div>
             ${t.desc?`<div class="tpl-desc">${escHtml(t.desc)}</div>`:''}
             <div style="font-size:.72rem;color:var(--t3);margin-bottom:.5rem;">${t.count||0} 次使用 · ${new Date(t.at).toLocaleDateString()}</div>
-            <div class="tpl-actions"><button class="btn btn-p btn-sm" onclick="useTpl('${t.id}')">⚡ 使用此模板</button></div>
-            <div class="tpl-use-form" id="tpl-form-${t.id}">
-                <div class="fg"><label>新拍摄主题</label><input id="tpl-theme-${t.id}" placeholder="输入新主题，快速生成"></div>
-                <div style="display:flex;gap:.4rem;"><button class="btn btn-p btn-sm" onclick="genFromTpl('${t.id}')">⚡ 生成</button><button class="btn btn-s btn-sm" onclick="document.getElementById('tpl-form-${t.id}').classList.remove('active')">收起</button></div>
-            </div>
+            <div class="tpl-actions"><button class="btn btn-p studio-preset-action" onclick="useTpl('${t.id}')">使用并生成</button></div>
         </div>`).join('');
 }
 function delTpl(id){ let l=sg(SK.T)||[]; l=l.filter(t=>t.id!==id); ss(SK.T,l); renderTpl(); toast('已删除'); }
-function useTpl(id){ document.getElementById('tpl-form-'+id).classList.toggle('active'); }
-function genFromTpl(id) {
-    const tpl=(sg(SK.T)||[]).find(t=>t.id===id);
-    const theme=document.getElementById('tpl-theme-'+id).value.trim();
-    if(!theme){toast('请输入新主题','er');return;}
-    const inp=tpl.input||{};
-    $('f-theme').value=theme; $('f-style').value=inp.style||''; $('f-model').value=inp.modelDesc||'';
-    $('f-scene').value=inp.scene||''; $('f-mood').value=inp.mood||''; $('f-dur').value=inp.duration||'2小时';
-    $('f-people').value=inp.people||'1'; $('f-extra').value=inp.extra||'';
-    document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
-    document.querySelectorAll('.tab-cnt').forEach(c=>c.classList.remove('active'));
-    document.querySelector('[data-tab="gen"]').classList.add('active');
-    $('tab-gen').classList.add('active');
-    tpl.count=(tpl.count||0)+1;
-    const list=sg(SK.T)||[]; const idx=list.findIndex(t=>t.id===id); if(idx>-1)list[idx]=tpl; ss(SK.T,list);
-    $('briefForm').dispatchEvent(new Event('submit'));
+function useTpl(id) {
+    const list = sg(SK.T) || [];
+    const tpl = list.find(item => item.id === id);
+    if (!tpl?.input) { toast('模板不存在或无效', 'er'); return; }
+    if (!generateFromPreset(tpl.input)) return;
+    tpl.count = (tpl.count || 0) + 1;
+    ss(SK.T, list);
 }
 // ===== 一键导入功能 =====
 function refreshImportSelects() {
+    removePresetModels();
     // 刷新模特选择器
     const modelSelect = $('importModelSelect');
     if (modelSelect) {
         const models = sg(SK.M) || [];
         modelSelect.innerHTML = '<option value="">-- 从模特库导入 --</option>' + 
-            models.map(m => `<option value="${m.id}">${escHtml(m.name)}${m.styles ? ' (' + escHtml(m.styles) + ')' : ''}</option>`).join('');
+            models.map(m => `<option value="${m.id}">${escHtml(m.name)}</option>`).join('');
     }
     // 刷新场地选择器
     const venueSelect = $('importVenueSelect');
@@ -5597,9 +5632,7 @@ function importFromModel() {
     
     const info = [];
     if (m.name) info.push(`姓名：${m.name}`);
-    if (m.styles) info.push(`风格：${m.styles}`);
     if (m.note) info.push(`备注：${m.note}`);
-    if (m.contact) info.push(`联系方式：${m.contact}`);
     
     const current = $('f-model').value.trim();
     $('f-model').value = current ? current + '\n' + info.join('，') : info.join('，');
@@ -5618,7 +5651,6 @@ function importFromVenue() {
     if (v.addr) info.push(`地址：${v.addr}`);
     if (v.styles) info.push(`风格：${v.styles}`);
     if (v.note) info.push(`备注：${v.note}`);
-    if (v.contact) info.push(`联系：${v.contact}`);
     
     const current = $('f-scene').value.trim();
     $('f-scene').value = current ? current + '\n' + info.join('，') : info.join('，');
@@ -6216,18 +6248,68 @@ function inferAspectRatioFromPlan(plan) {
     return 'landscape';
 }
 
-function renderShotInstructions(shot) {
+function renderShotInstructions(shot, showResources = true) {
     const contract = shot.directorContract || {};
     const readable = value => Array.isArray(value) ? value.join('；') : value;
     return '<dl class="storyboard-detail-list">' + [
         ['拍什么', shot.title || shot.scene], ['人物怎么做', shot.description],
         ['摄影师站哪里', shot.method], ['人物放在哪里', shot.composition],
         ['景别与焦段', [shot.shotSize, shot.focalLength].filter(Boolean).join(' · ')],
+        ...(showResources ? [['服装与妆发', directorShotResource(shot, 'wardrobe_styling')],
+            ['本镜头道具', directorShotResource(shot, 'shot_props')]] : []),
         ['光线怎么用', shot.lightingSetup || shot.lighting],
         ['画面保留什么', readable(contract.must_show)], ['哪些情况不要', readable(contract.reject_if)],
         ['取景边界', readable(contract.crop_boundary)],
         ['拍摄提醒', contract.must_show || contract.reject_if || contract.crop_boundary ? '' : shot.notes]
     ].filter(([,value]) => value).map(([label,value]) => '<div><dt>' + label + '</dt><dd>' + escHtml(String(value)) + '</dd></div>').join('') + '</dl>';
+}
+
+function directorShotResource(shot, field) {
+    const contract = shot.directorContract || {};
+    const value = field === 'wardrobe_styling' ? contract.wardrobe_styling || shot.wardrobe : contract.shot_props || shot.props;
+    return value === '以实际场地和已有资源为准' ? '' : value || '';
+}
+
+function renderShotSizeSummary(shots) {
+    const counts = { '远景': 0, '全身': 0, '中景': 0, '近景/特写': 0, '待确认': 0 };
+    shots.forEach(shot => {
+        const size = String(shot.shotSize || '');
+        const group = /中景|中全景|\bMFS\b|\bMS\b/i.test(size) ? '中景'
+            : /远景|全景|\bE?WS\b/i.test(size) ? '远景'
+            : /全身|\bFS\b/i.test(size) ? '全身'
+            : /近景|特写|\bECU\b|\bMCU\b|\bCU\b/i.test(size) ? '近景/特写' : '待确认';
+        counts[group]++;
+    });
+    return Object.entries(counts).filter(([, count]) => count).map(([label, count]) => `${label} ${count}`).join(' · ');
+}
+
+function saveDirectorShotField(element) {
+    const { planId, shotIndex, field } = element.dataset;
+    if (!['wardrobe_styling', 'shot_props'].includes(field)) return;
+    const plans = getPlans();
+    const plan = plans.find(item => String(item.id) === planId);
+    const shot = plan && plan.shotList && plan.shotList[Number(shotIndex)];
+    if (!shot) return;
+    const previous = directorShotResource(shot, field);
+    const value = element.value.trim();
+    shot.directorContract = { ...(shot.directorContract || {}), [field]: value };
+    shot[field === 'wardrobe_styling' ? 'wardrobe' : 'props'] = value;
+    if (!savePlans(plans)) {
+        shot.directorContract = { ...shot.directorContract, [field]: previous };
+        shot[field === 'wardrobe_styling' ? 'wardrobe' : 'props'] = previous;
+        element.value = previous;
+        toast('本地存储不可用，修改未保存', 'er');
+        return;
+    }
+    const key = `pa_shots_${planId}`;
+    try {
+        const saved = JSON.parse(localStorage.getItem(key) || '[]');
+        if (saved[Number(shotIndex)]) {
+            saved[Number(shotIndex)] = shot;
+            localStorage.setItem(key, JSON.stringify(saved));
+        }
+    } catch (_) { /* The plan record remains the source of truth. */ }
+    if (currentPlanData && String(currentPlanData.id) === planId) currentPlanData = plan;
 }
 
 function getDirectorShotFitWarning(plan, shot, selectedIndex) {
@@ -6901,6 +6983,7 @@ function renderPlanContent(plan) {
                     </div></details>
                 </div>
             </header>
+            <p class="storyboard-size-summary" aria-label="成片构成配比">${renderShotSizeSummary(shotList)}</p>
             ${plan.director && plan.director.shotCountLimited ? '<p class="reference-rights">当前生成服务只提供 ' + shotList.length + ' 个不同分镜，尚未达到本次建议数量；未复制镜头补数。</p>' : ''}
             <div class="storyboard-overview"><table><caption>分镜总表</caption><thead><tr><th>序号</th><th>拍摄画面</th><th>景别 / 焦段</th><th>机位</th></tr></thead><tbody>
                 ${shotList.map((s,i)=>`<tr><td>${String(i+1).padStart(2,'0')}</td><td><a href="#shot-detail-${i}" onclick="document.getElementById('shot-detail-${i}').open=true">${escHtml(s.title || s.description || s.scene)}</a></td><td>${escHtml(s.shotSize || '待确认')} / ${escHtml(s.focalLength || '待确认')}</td><td>${escHtml(s.angle || '待确认')}</td></tr>`).join('')}
@@ -6908,7 +6991,11 @@ function renderPlanContent(plan) {
             <div class="storyboard-list">
                 ${shotList.map((shot,i) => `
                     <details class="storyboard-shot" id="shot-detail-${i}"><summary>镜头 ${String(i+1).padStart(2,'0')} · ${escHtml(shot.title || shot.scene || '拍摄细节')}</summary><article>
-                        ${renderShotInstructions(shot)}
+                        ${renderShotInstructions(shot, !plan.director)}
+                        ${plan.director ? `<div class="storyboard-shot-resources">
+                            <label>服装与妆发<input type="text" maxlength="300" data-plan-id="${escHtml(plan.id)}" data-shot-index="${i}" data-field="wardrobe_styling" value="${escHtml(directorShotResource(shot, 'wardrobe_styling'))}" onchange="saveDirectorShotField(this)"></label>
+                            <label>本镜头道具<input type="text" maxlength="300" data-plan-id="${escHtml(plan.id)}" data-shot-index="${i}" data-field="shot_props" value="${escHtml(directorShotResource(shot, 'shot_props'))}" onchange="saveDirectorShotField(this)"></label>
+                        </div>` : ''}
                     </article></details>
                 `).join('')}
             </div>
@@ -6917,7 +7004,8 @@ function renderPlanContent(plan) {
 
 
     const referenceSearch = `<details class="plan-reference-search" id="plan-reference-search"><summary>查找参考图</summary>${renderShotReferenceGallery({scene: [plan.input?.theme, plan.input?.scene].filter(Boolean).join(' ')}, plan.input?.style || '', 'plan')}</details>`;
-    return `<div class="plan-output-wrapper">${jevReviewHtml + metaHtml + shotListHtml + referenceSearch + imgGallery + sectionsHtml + quoteHtml + (plan.director ? '' : commHtml + colorHtml + aiHtml)}</div>`;
+    const studioReferences = window.PhotoAtelierStudio?.renderPlanReferences(plan) || '';
+    return `<div class="plan-output-wrapper">${jevReviewHtml + metaHtml + shotListHtml + studioReferences + referenceSearch + imgGallery + sectionsHtml + quoteHtml + (plan.director ? '' : commHtml + colorHtml + aiHtml)}</div>`;
 }
 
 // 生成分镜脚本
@@ -7866,7 +7954,8 @@ function exportShotList(planId) {
         text += `│ 景别: ${shot.shotSize.padEnd(20)}│ 焦距: ${shot.focalLength.padEnd(20)}│\n`;
         text += `│ 构图: ${shot.composition.padEnd(47)}│\n`;
         text += `│ 灯光: ${shot.lighting.padEnd(47)}│\n`;
-        text += `│ 道具: ${shot.props.padEnd(47)}│\n`;
+        if (plan.director) text += `│ 服装与妆发: ${String(directorShotResource(shot, 'wardrobe_styling')).padEnd(40)}│\n`;
+        text += `│ 道具: ${String(plan.director ? directorShotResource(shot, 'shot_props') : shot.props || '').padEnd(47)}│\n`;
         text += `│ 角度: ${shot.angle.padEnd(20)}│ 情绪: ${shot.mood.padEnd(20)}│\n`;
         text += `│ 时长: ${String(shot.duration + '分钟').padEnd(47)}│\n`;
         text += `├─────────────────────────────────────────────────────────┤\n`;
@@ -9432,7 +9521,7 @@ function getColorGradingPlan(style) {
 
 // ===== Plan Storage =====
 function getPlans(){return sg(SK.P)||[]}
-function savePlans(l){ss(SK.P,l)}
+function savePlans(l){return ss(SK.P,l)}
 async function savePlan(plan){
     const ps=getPlans();
     plan.id=plan.id||Date.now().toString();
@@ -9441,18 +9530,15 @@ async function savePlan(plan){
         plan.coverImage={data:image.data||'',url:image.url||'',name:image.name||'方案图',synthetic:!!image.synthetic};
     }
     const existingIndex=ps.findIndex(item=>String(item.id)===String(plan.id));
+    const previousRevision=existingIndex<0?0:(ps[existingIndex].revision||0);
+    if(existingIndex>=0 && (plan.revision||0)!==previousRevision) throw new Error('方案已有更新，请重新打开后保存。');
+    plan.revision=previousRevision+1;
     if(existingIndex>-1) ps[existingIndex]=plan;
     else ps.unshift(plan);
     if(ps.length>50)ps.pop();
-    savePlans(ps);
+    if(!savePlans(ps)) throw new Error('本地存储不可用或空间不足，方案未保存。请检查浏览器存储设置。');
     if(window.__PHOTOATELIER_LOCAL_MODE__||window.__PHOTOATELIER_GUEST_MODE__) return plan.id;
-    // 同步到数据库API
-    try{
-        await window.api.createPlan(plan);
-        console.log('方案已同步到数据库');
-    }catch(e){
-        console.warn('数据库同步失败，已保存到本地:', e.message);
-    }
+    await window.PhotoAtelierWorkspaceSync?.sync({force:true,noReload:true});
     return plan.id;
 }
 function delPlan(id){let ps=getPlans();ps=ps.filter(p=>p.id!==id);savePlans(ps)}
@@ -9482,10 +9568,13 @@ function loadPlan(id){
 async function handleSubmit(e){
     if(e && e.preventDefault) e.preventDefault();
     const btn=$('genBtn');
+    if(btn.disabled) return;
+    const hadVisiblePlan=$('outCnt').classList.contains('active');
     const btnOrigHTML=btn.innerHTML;
     btn.classList.add('btn-loading');
     btn.innerHTML='<span class="btn-loading-icon">⟳</span> 生成中...';
-    const input={theme:$('f-theme').value.trim(),style:$('f-style').value,modelDesc:$('f-model').value.trim(),scene:$('f-scene').value.trim(),mood:$('f-mood').value.trim(),duration:$('f-dur').value,people:$('f-people').value,extra:$('f-extra').value.trim()};
+    let input={theme:$('f-theme').value.trim(),style:$('f-style').value,modelDesc:$('f-model').value.trim(),scene:$('f-scene').value.trim(),mood:$('f-mood').value.trim(),duration:$('f-dur').value,people:$('f-people').value,extra:$('f-extra').value.trim()};
+    input=window.PhotoAtelierStudio?.augmentInput(input)||input;
     $('outEmpty').classList.remove('active'); $('outCnt').classList.remove('active'); $('outLoad').classList.add('active');
     btn.disabled=true;
     await new Promise(r=>setTimeout(r,900));
@@ -9501,7 +9590,7 @@ async function handleSubmit(e){
         // 初始化报价计算器
         setTimeout(() => calculateQuote(plan.id), 100);
         toast(plan.director?.source === 'guest-rule-draft' ? '模板草稿已保存（未连接 Director）' : '方案已生成并保存','ok');
-    }catch(e){console.error('生成失败:', e); toast('生成失败: ' + (e.message || '未知错误'),'er');$('outLoad').classList.remove('active');$('outEmpty').classList.add('active');}
+    }catch(e){console.error('生成失败:', e); toast('生成失败: ' + (e.message || '未知错误'),'er');$('outLoad').classList.remove('active');$(hadVisiblePlan?'outCnt':'outEmpty').classList.add('active');}
     finally{btn.disabled=false;btn.classList.remove('btn-loading');btn.innerHTML=btnOrigHTML;}
 }
 $('briefForm').addEventListener('submit',handleSubmit);
@@ -9703,37 +9792,6 @@ function savePlanWithImages(plan) {
     }
 })();
 
-// ===== Step Indicator Logic =====
-(function initStepIndicator(){
-    const form=$('briefForm');
-    if(!form)return;
-    const stepFields={
-        1:['f-theme','f-style','f-m-mood'],
-        2:['f-model','f-scene','f-dur','f-people'],
-        3:['f-extra']
-    };
-    function updateSteps(){
-        const items=document.querySelectorAll('#stepIndicator .step-item');
-        let currentActive=1;
-        for(let s=1;s<=3;s++){
-            const fields=stepFields[s];
-            const hasContent=fields.some(id=>{const el=$(id);return el&&(el.value&&el.value.trim()!=='');});
-            if(hasContent)currentActive=s;
-        }
-        items.forEach(item=>{
-            const step=parseInt(item.dataset.step);
-            item.classList.remove('active','completed');
-            if(step<currentActive)item.classList.add('completed');
-            else if(step===currentActive)item.classList.add('active');
-        });
-    }
-    form.addEventListener('input',updateSteps);
-    form.addEventListener('change',updateSteps);
-    // Allow external triggers (e.g. loadPlan)
-    window._updateStepIndicator=updateSteps;
-    updateSteps();
-})();
-
 // ===== Empty State =====
 function showEmptyState(container, type) {
     const emptyStates = {
@@ -9854,54 +9912,6 @@ function handleListSearch(containerId, query, items, renderFn) {
         container.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><h3>无搜索结果</h3><p>没有找到匹配 "${query}" 的内容</p></div>`;
     }
 }
-
-// ===== Batch Operations =====
-(function initBatchOperations() {
-    window.selectedItems = new Set();
-    
-    // Create batch bar
-    const batchBar = document.createElement('div');
-    batchBar.className = 'batch-bar';
-    batchBar.id = 'batchBar';
-    batchBar.innerHTML = `
-        <span class="count">0</span> 已选
-        <button class="btn btn-sm btn-danger" onclick="batchDelete()">删除</button>
-        <button class="btn btn-sm" onclick="clearSelection()">取消</button>
-    `;
-    document.body.appendChild(batchBar);
-    
-    window.toggleBatchSelect = function(id) {
-        if (selectedItems.has(id)) {
-            selectedItems.delete(id);
-        } else {
-            selectedItems.add(id);
-        }
-        updateBatchBar();
-    };
-    
-    window.updateBatchBar = function() {
-        const bar = $('batchBar');
-        const count = $('batchBar .count');
-        if (bar && count) {
-            count.textContent = selectedItems.size;
-            bar.classList.toggle('active', selectedItems.size > 0);
-        }
-    };
-    
-    window.clearSelection = function() {
-        selectedItems.clear();
-        document.querySelectorAll('.batch-checkbox').forEach(cb => cb.checked = false);
-        updateBatchBar();
-    };
-    
-    window.batchDelete = function() {
-        if (selectedItems.size === 0) return;
-        if (!confirm(`确定删除选中的 ${selectedItems.size} 项吗？`)) return;
-        // Delete logic will be handled by the calling function
-        showToast(`已删除 ${selectedItems.size} 项`);
-        clearSelection();
-    };
-})();
 
 // ===== CSV Import =====
 function importCSV() {
@@ -10047,7 +10057,7 @@ function updateBadge(){
     if(eq)eq.textContent=(sg(SK.EQ)||[]).length;
     if(venue)venue.textContent=(sg(SK.V)||[]).length;
     if(model)model.textContent=(sg(SK.M)||[]).length;
-    if(tpl)tpl.textContent=(sg(SK.T)||[]).length;
+    if(tpl)tpl.textContent=getPlans().length;
     if(hist)hist.textContent=getPlans().length;
 }
 
@@ -10931,9 +10941,7 @@ window.syncToFeishuBitable = async function() {
         if (models.length > 0) {
             const modelRecords = models.map(m => ({
                 '姓名': m.name,
-                '联系方式': m.contact || '',
                 '特征': m.traits || '',
-                '标签': m.tags ? m.tags.join(',') : '',
                 '备注': m.note || ''
             }));
             // Feishu sync requires app_token configuration in settings
@@ -11404,9 +11412,6 @@ async function loadAllPlanReferences(planId) {
 
 // ===== Settings Tab =====
 function loadSettingsData() {
-    // Pexels API Key
-    const keyInput = document.getElementById('settingsPexelsKey');
-    if (keyInput) keyInput.value = getPexelsApiKey();
     
     // 用户信息
     try {
@@ -11433,74 +11438,21 @@ function loadSettingsData() {
             if (roleEl) roleEl.textContent = roleNames[role] || role;
         }
     } catch(e) {}
-}
-function saveSettingsPexelsKey() {
-    const keyInput = document.getElementById('settingsPexelsKey');
-    if (!keyInput) return;
-    savePexelsApiKey(keyInput.value);
+    window.PhotoAtelierProfile?.render();
 }
 function setTheme(t) {
     localStorage.setItem('pa_theme', t);
     applyTheme(t);
     toast('主题已切换', 'ok');
 }
-function exportAllData() {
-    const data = {};
-    for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        if (PhotoAtelierAccountStorage.isBusinessKey(k)) {
-            data[k] = localStorage.getItem(k);
-        }
-    }
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `photoatelier_backup_${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-    toast('数据已导出', 'ok');
-}
-function importAllData(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(ev) {
-        try {
-            const data = JSON.parse(ev.target.result);
-            let count = 0;
-            for (const [k, v] of Object.entries(data)) {
-                if (PhotoAtelierAccountStorage.isBusinessKey(k)) {
-                    localStorage.setItem(k, v);
-                    count++;
-                }
-            }
-            toast(`已导入 ${count} 项数据，刷新页面生效`, 'ok');
-            setTimeout(() => location.reload(), 1500);
-        } catch (err) {
-            toast('导入失败：文件格式错误', 'er');
-        }
-    };
-    reader.readAsText(file);
-    e.target.value = '';
-}
-function clearAllData() {
-    if (!confirm('确定要清空所有数据吗？此操作不可恢复！')) return;
-    const keys = [];
-    for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        if (PhotoAtelierAccountStorage.isBusinessKey(k)) keys.push(k);
-    }
-    keys.forEach(k => localStorage.removeItem(k));
-    toast('数据已清空，刷新页面生效', 'ok');
-    setTimeout(() => location.reload(), 1500);
-}
-
 // ===== Init =====
+removePresetModels();
 updateBadge();renderHistMini();renderQuickVenue();renderCalendar();renderSchedules();
 window.addEventListener('offline', function() { toast('网络已断开，当前为离线模式', 'er'); });
 window.addEventListener('online', function() { toast('网络已恢复', 'ok'); });
 </script>
     <link rel="stylesheet" href="./assets/workspace-theme.css">
+    <link rel="stylesheet" href="./assets/open-design-studio.css">
     <!-- AOS Animation Library -->
 <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
 <script>
@@ -11646,5 +11598,8 @@ window.addEventListener('online', function() { toast('网络已恢复', 'ok'); }
 <script type="module" src="assets/workspace-sync.mjs"></script>
 <script src="assets/email-login.js"></script>
 <script src="assets/own-ai.js"></script>
+<script src="assets/brief-chat.js"></script>
+<script src="assets/ai-studio.js"></script>
+<script src="assets/personal-profile.js"></script>
 </body>
 </html>

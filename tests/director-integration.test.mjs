@@ -66,6 +66,8 @@ test('shot target varies with duration without copying upstream shots to fill it
         assert.equal(plan.director.desiredShotCount, count);
         assert.equal(plan.director.shotCountLimited, true);
         assert.equal(plan.shotList.length, 2);
+        assert.equal(plan.shotList[0].title, 'same');
+        assert.equal(plan.shotList[0].description, '走动');
         assert.equal(plan.shotList[1].sourceShotIndex, 2);
         assert.equal(plan.shotList[0].angle, '平视');
         assert.equal(plan.shotList[0].shotSize, '全身');

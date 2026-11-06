@@ -2,17 +2,68 @@ import http from 'node:http';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { randomBytes } from 'node:crypto';
 import { createDirectorPlan } from '../api/director-plan.mjs';
 import { generateDirectorCandidate } from '../api/director-generation.mjs';
 import { buildDirectorIdentityWorkflow } from '../api/director-identity-workflow.mjs';
+import { aiPlanProviders, handleAiPlan } from '../api/ai-plan.mjs';
+import { handleAiBrief } from '../api/ai-brief.mjs';
+import { createLocalAiCredentials } from './local-ai-credentials.mjs';
+import { confirmStudioProposal, createStudioProposal, searchStudio, consumeStudioSearchQuota, AiStudioError } from '../api/ai-studio/service.mjs';
+import { AiStudioQuota } from '../api/ai-studio/quota.mjs';
+import { createWeakProvider } from '../api/ai-studio/weak-provider.mjs';
+import { createLocalFeishuConfig } from './local-feishu-config.mjs';
+import { createLocalFeishuWriter } from './local-feishu-writer.mjs';
 
 const root = path.resolve(fileURLToPath(new URL('../', import.meta.url)));
+const studioPaths = new Set(['/api/ai/plan-lite', '/api/ai/studio/proposals', '/api/ai/studio/confirm',
+    '/api/ai/studio/feishu/status', '/api/ai/studio/feishu/sync']);
+
+async function resolveRemoteStudioUser(authorization, fetchImpl) {
+    if (!/^Bearer [A-Za-z0-9_-]{20,8192}$/.test(authorization || '')) return null;
+    try {
+        const response = await fetchImpl('https://photoatelier-api.photomagic.workers.dev/api/auth/session', {
+            headers: { Authorization: authorization }, redirect: 'error', signal: AbortSignal.timeout(8000),
+        });
+        if (!response.ok) return null;
+        const session = await response.json();
+        return session.success === true && typeof session.user?.id === 'string' ? session.user.id : null;
+    } catch { return null; }
+}
+
+function localStudioQuota() {
+    const objects = new Map();
+    return {
+        idFromName: name => name,
+        get(id) {
+            if (!objects.has(id)) {
+                const values = new Map();
+                const store = { get: async key => values.get(key), put: async (key, value) => values.set(key, value) };
+                let queue = Promise.resolve();
+                const storage = { transaction(callback) {
+                    const result = queue.then(() => callback(store));
+                    queue = result.catch(() => {});
+                    return result;
+                } };
+                objects.set(id, new AiStudioQuota({ storage }));
+            }
+            const object = objects.get(id);
+            return { fetch: (input, init) => object.fetch(input instanceof Request ? input : new Request(input, init)) };
+        },
+    };
+}
+
 export function createServer({
     baseUrl = 'http://127.0.0.1:8004',
     fetchImpl = fetch,
+    aiCredentials = createLocalAiCredentials(),
+    localFeishuConfig = createLocalFeishuConfig({ fetchImpl, localWriter: createLocalFeishuWriter() }),
+    studioEnvironment = {},
+    resolveStudioUser = authorization => resolveRemoteStudioUser(authorization, fetchImpl),
     generationRoot = process.env.DIRECTOR_GENERATION_ROOT || 'D:\\AI项目\\director-master-aesthetic-agent-v0.28.0\\runtime\\photoatelier_external_generations',
 } = {}) {
     const allowedGenerationRoot = path.resolve(generationRoot);
+    const studioEnv = { ...studioEnvironment, JWT_SECRET: randomBytes(32).toString('hex'), AI_STUDIO_QUOTA: localStudioQuota() };
     return http.createServer(async (req, res) => {
         const reply = (status, data) => {
             res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
@@ -22,6 +73,96 @@ export function createServer({
             // Only the loopback UI may invoke this credential-using local service.
             if (!/^127\.0\.0\.1:\d+$/.test(req.headers.host || '')) return reply(403, { error: 'INVALID_HOST' });
             const pathname = new URL(req.url, 'http://127.0.0.1').pathname;
+            if (studioPaths.has(pathname)) {
+                if (pathname === '/api/ai/studio/feishu/status' && req.method === 'GET') {
+                    if (req.headers.origin && req.headers.origin !== `http://${req.headers.host}`) return reply(403, { error: 'INVALID_ORIGIN' });
+                    const uid = await resolveStudioUser(req.headers.authorization);
+                    return uid ? reply(200, await localFeishuConfig.check()) : reply(401, { error: '未登录' });
+                }
+                if (req.method !== 'POST') return reply(405, { error: 'METHOD_NOT_ALLOWED' });
+                if (req.headers.origin !== `http://${req.headers.host}`) return reply(403, { error: 'INVALID_ORIGIN' });
+                if (!/^application\/json(?:\s*;|$)/i.test(req.headers['content-type'] || '')) return reply(415, { error: 'JSON_REQUIRED' });
+                const chunks = [];
+                let size = 0;
+                const limit = pathname === '/api/ai/studio/feishu/sync' ? 256 * 1024
+                    : pathname === '/api/ai/plan-lite' ? 8192 : 32768;
+                for await (const chunk of req) {
+                    size += chunk.length;
+                    if (size > limit) return reply(413, { error: 'REQUEST_TOO_LARGE' });
+                    chunks.push(chunk);
+                }
+                const raw = Buffer.concat(chunks).toString('utf8');
+                let input;
+                try { input = JSON.parse(raw); } catch { return reply(400, { error: 'INVALID_JSON' }); }
+                if (!input || typeof input !== 'object' || Array.isArray(input)) return reply(400, { error: 'INVALID_JSON' });
+                const uid = await resolveStudioUser(req.headers.authorization);
+                try {
+                    if (pathname === '/api/ai/plan-lite') {
+                        const allowed = await consumeStudioSearchQuota({ uid, ip: 'loopback', env: studioEnv });
+                        if (!allowed) return reply(429, { error: 'RATE_LIMITED' });
+                        return reply(200, await searchStudio({
+                            prompt: input.prompt, planId: input.planId, expectedRevision: input.expectedRevision,
+                            uid, env: studioEnv, fetchImpl,
+                            intentProviderFactory: async () => {
+                                const saved = await aiCredentials.load();
+                                if (!saved) return null;
+                                const provider = aiPlanProviders().find(item => item.id === saved.provider);
+                                if (!provider) return null;
+                                return createWeakProvider({ apiKey: saved.apiKey, baseUrl: provider.endpoint.replace(/\/chat\/completions$/, ''),
+                                    model: saved.provider === 'deepseek' && /^deepseek-v4[.]1-?flash$/i.test(saved.model) ? 'deepseek-flash' : saved.model,
+                                    timeoutMs: 8000, fetchImpl });
+                            },
+                        }));
+                    }
+                    if (!uid) return reply(401, { error: '未登录' });
+                    if (pathname === '/api/ai/studio/feishu/sync') {
+                        if (!input.plan || String(input.plan.id) !== input.planId) return reply(400, { error: 'INVALID_PLAN_ID' });
+                        if (/data:image\/[^;]+;base64,/i.test(raw)) return reply(400, { error: 'TEXT_PLAN_REQUIRED' });
+                        return reply(200, { ...await localFeishuConfig.sync({ uid, plan: input.plan }), storage: 'local' });
+                    }
+                    if (pathname === '/api/ai/studio/proposals') return reply(200, await createStudioProposal({
+                        searchReceipt: input.searchReceipt, selectedIds: input.selectedIds, uid, env: studioEnv, fetchImpl,
+                    }));
+                    return reply(200, {
+                        ...await confirmStudioProposal({ proposalToken: input.proposalToken, idempotencyKey: input.idempotencyKey,
+                            uid, env: studioEnv, fetchImpl }), storage: 'local',
+                    });
+                } catch (error) {
+                    return reply(error instanceof AiStudioError ? error.status : 502,
+                        { error: error instanceof AiStudioError ? error.code : 'AI_STUDIO_ERROR' });
+                }
+            }
+            if (pathname === '/api/ai/providers' && req.method === 'GET') return reply(200, { providers: aiPlanProviders() });
+            if (pathname === '/api/ai/local-config' && req.method === 'GET') return reply(200, await aiCredentials.status());
+            if (pathname === '/api/ai/local-config' && ['POST', 'DELETE'].includes(req.method)) {
+                if (req.headers.origin !== `http://${req.headers.host}`) return reply(403, { error: 'INVALID_ORIGIN' });
+                if (req.method === 'DELETE') { await aiCredentials.clear(); return reply(200, { configured: false }); }
+                if (!req.headers['content-type']?.startsWith('application/json')) return reply(415, { error: 'JSON_REQUIRED' });
+                let body = '';
+                for await (const chunk of req) { body += chunk; if (Buffer.byteLength(body) > 4096) return reply(413, { error: 'REQUEST_TOO_LARGE' }); }
+                try { await aiCredentials.save(JSON.parse(body)); }
+                catch { return reply(400, { error: '无法保存模型配置，请检查服务商、模型和本机系统权限。' }); }
+                const status = await aiCredentials.status();
+                return status.configured ? reply(200, status) : reply(500, { error: '本机配置保存后无法读取，请检查 Windows 账户权限。' });
+            }
+            if (['/api/ai/brief', '/api/ai/plan'].includes(pathname) && req.method === 'POST') {
+                if (req.headers.origin && req.headers.origin !== `http://${req.headers.host}`) return reply(403, { error: 'INVALID_ORIGIN' });
+                if (!req.headers['content-type']?.startsWith('application/json')) return reply(415, { error: 'JSON_REQUIRED' });
+                let body = '';
+                for await (const chunk of req) {
+                    body += chunk;
+                    if (Buffer.byteLength(body) > 16000) return reply(413, { error: 'REQUEST_TOO_LARGE' });
+                }
+                let input = JSON.parse(body);
+                if (input.useSaved === true) {
+                    if (req.headers.origin !== `http://${req.headers.host}`) return reply(403, { error: 'INVALID_ORIGIN' });
+                    const saved = await aiCredentials.load();
+                    if (!saved) return reply(503, { error: '本机保存的 AI 配置不可用，请到设置检查。' });
+                    input = { ...saved, ...(pathname === '/api/ai/brief' ? { conversation: input.conversation } : { input: input.input }) };
+                }
+                const result = await (pathname === '/api/ai/brief' ? handleAiBrief : handleAiPlan)(input, {}, { fetchImpl });
+                return reply(result.status, result.body);
+            }
             if (pathname === '/api/director/plan' && req.method === 'POST') {
                 if (req.headers.origin && req.headers.origin !== `http://${req.headers.host}`) return reply(403, { error: 'INVALID_ORIGIN' });
                 if (!req.headers['content-type']?.startsWith('application/json')) return reply(415, { error: 'JSON_REQUIRED' });

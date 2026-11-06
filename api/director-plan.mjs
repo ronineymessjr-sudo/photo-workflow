@@ -1,5 +1,7 @@
+import { prepareReferenceContext, referencePlanFields } from './ai-studio/reference-brief.mjs';
+
 // Shared by the local bridge and the authenticated Worker route.
-export async function createDirectorPlan(input, { baseUrl, fetchImpl = fetch } = {}) {
+export async function createDirectorPlan(input, { baseUrl, fetchImpl = fetch, referenceFetchImpl = fetch } = {}) {
     if (!baseUrl) throw new Error('DIRECTOR_NOT_CONFIGURED');
     if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('INVALID_BRIEF');
     const fields = ['theme', 'style', 'modelDesc', 'scene', 'mood', 'duration', 'people', 'extra'];
@@ -14,8 +16,10 @@ export async function createDirectorPlan(input, { baseUrl, fetchImpl = fetch } =
     const directionNote = cleanInput.theme ? '' : hasCreativeDirection
         ? '主题未指定：请根据已填写的信息自然构思拍摄方向；不要臆造未提供的具体地点、人物关系、服装或道具。'
         : '主题和风格均未指定：请生成一套中性、自然、可执行的人像拍摄方案；不要臆造具体地点、人物身份、关系、服装或道具，并将需现场决定的内容标为待确认。';
-    const compiledBrief = [brief, directionNote].filter(Boolean).join('\n');
-    if (compiledBrief.length > 2000) throw new Error('INVALID_BRIEF');
+    const userBrief = [brief, directionNote].filter(Boolean).join('\n');
+    if (userBrief.length > 2000) throw new Error('INVALID_BRIEF');
+    const referenceContext = await prepareReferenceContext(input, { fetchImpl: referenceFetchImpl });
+    const compiledBrief = [userBrief, referenceContext?.guidance.brief].filter(Boolean).join('\n\n');
     const requestId = `workflow-${crypto.randomUUID()}`;
     const desiredShotCount = resolveShotCount(cleanInput);
     const response = await fetchImpl(`${baseUrl.replace(/\/$/, '')}/v1/photoatelier/shoot-plan`, {
@@ -38,7 +42,7 @@ export async function createDirectorPlan(input, { baseUrl, fetchImpl = fetch } =
     const shotList = executionShots.slice(0, desiredShotCount).map((shot, index) => ({
         id: `${requestId}-${index}`, scene: cleanInput.scene || '场地待确认',
         description: text(shot.model_pose), shotSize: ({ECU:'局部特写',CU:'特写',MCU:'近景',MS:'中景',MFS:'中全景',FS:'全身',WS:'环境全景',EWS:'环境远景'})[shot.shot_size] || text(shot.framing) || sceneScale.shotSize,
-        title: text(shot.framing) || text(shot.model_pose),
+        title: text(shot.shot_language) || text(shot.framing) || text(shot.model_pose),
         sourceShotIndex: shot.sourceIndex,
         method: text(shot.photographer_position), focalLength: text(shot.lens),
         composition: text(shot.model_position), lighting: text(shot.lighting_setup),
@@ -55,6 +59,7 @@ export async function createDirectorPlan(input, { baseUrl, fetchImpl = fetch } =
     }));
     return {
         title: cleanInput.theme || (hasCreativeDirection ? '自由主题拍摄方案' : '自然人像方案'), input: cleanInput, savedAt: new Date().toISOString(),
+        ...referencePlanFields(referenceContext),
         style: cleanInput.style, images: [], shotList,
         references: Array.isArray(result.references) ? result.references : [],
         sections: shotList.map((shot, i) => ({ ti: `镜头 ${i + 1} · ${shot.title}`, ic: '', c: [
