@@ -1,17 +1,21 @@
 import { prepareReferenceContext } from './ai-studio/reference-brief.mjs';
 
-const CLOUDFLARE_MODEL = '@cf/black-forest-labs/flux-1-schnell';
+const CLOUDFLARE_MODEL = '@cf/black-forest-labs/flux-2-klein-4b';
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 const MAX_PROMPT_CHARS = 2048;
 
 export async function prepareCloudCandidateReferences(input, options = {}) {
     compileCloudCandidateRequest(input);
+    for (const ids of [input.reference_ids, input.shot_contract?.referenceIds]) {
+        if (ids !== undefined && (!Array.isArray(ids) || ids.length > 6 || ids.some(id => typeof id !== 'string'))) throw new Error('INVALID_REFERENCE_SELECTION');
+    }
     const context = await prepareReferenceContext({
         ...input.reference_brief,
         scene: input.reference_brief?.scene || input.scene_brief || input.brief,
         style: input.reference_brief?.style || input.style_direction,
         useReferenceLibrary: true,
-        referenceIds: input.shot_contract?.referenceIds?.length ? input.shot_contract.referenceIds : input.reference_ids,
+        referenceIds: [...new Set([...(input.shot_contract?.referenceIds || []), ...(input.reference_ids || [])])],
+        requireImageReferences: true,
     }, options);
     if (!context?.templates.length || !context.templates.some(template => template.sourceUrl)) {
         throw new Error('REFERENCE_LIBRARY_UNAVAILABLE');
@@ -21,7 +25,7 @@ export async function prepareCloudCandidateReferences(input, options = {}) {
 
 export function compileCloudCandidateRequest(input, referenceContext) {
     if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('INVALID_GENERATION_REQUEST');
-    if (input.provider !== 'cloudflare' || input.model !== CLOUDFLARE_MODEL) throw new Error('GENERATION_PROVIDER_NOT_ALLOWED');
+    if (input.provider !== 'cloudflare' || ![CLOUDFLARE_MODEL, '@cf/black-forest-labs/flux-1-schnell'].includes(input.model)) throw new Error('GENERATION_PROVIDER_NOT_ALLOWED');
     if (input.candidate_count !== 1 || input.billing_mode !== 'free-credit-first') throw new Error('GENERATION_BILLING_MODE_NOT_ALLOWED');
     if (input.reference_image_path || input.reference_image_url || input.reference_asset_ids?.length) throw new Error('CLOUD_REFERENCE_IMAGE_NOT_CONFIGURED');
 
@@ -68,10 +72,18 @@ export function compileCloudCandidateRequest(input, referenceContext) {
     };
 }
 
-export async function generateCloudCandidate(input, { ai, referenceContext } = {}) {
+export async function generateCloudCandidate(input, { ai, referenceContext, fetchImpl = fetch } = {}) {
     if (!ai || typeof ai.run !== 'function') throw new Error('IMAGE_PROVIDER_NOT_CONFIGURED');
     const compiled = compileCloudCandidateRequest(input, referenceContext);
-    let prompt = compiled.prompt;
+    const references = ['pose', 'costume', 'portrait'].map(kind => referenceContext?.templates.find(template => template.kind === kind));
+    if (references.some(reference => !reference?.referenceImageUrl)) throw new Error('REFERENCE_IMAGES_REQUIRED');
+    const images = await Promise.all(references.map(reference => fetchReferenceImage(reference.referenceImageUrl, fetchImpl)));
+    let prompt = [
+        `Scene and lighting: ${clean(input.scene_brief || input.reference_brief?.scene, 350)}.`,
+        `Photographic style: ${clean(input.style_direction || input.reference_brief?.style, 150)}.`,
+        `Camera framing: ${clean(input.shot_contract.shot_size, 80)} ${clean(input.shot_contract.lens, 50)} ${clean(input.shot_contract.camera_angle, 50)}.`,
+        'One natural photograph, no lettering or collage. Preserve the exact pose, clothes and face assigned to the three reference images.',
+    ].join('\n');
     let result;
     try {
         if (referenceContext && /[\u3400-\u9fff]/u.test(prompt)) {
@@ -84,8 +96,18 @@ export async function generateCloudCandidate(input, { ai, referenceContext } = {
             if (typeof translated?.response !== 'string' || translated.response.trim().length < 20) throw new Error('PROMPT_TRANSLATION_FAILED');
             prompt = translated.response.trim().slice(0, MAX_PROMPT_CHARS);
         }
-        result = await ai.run(CLOUDFLARE_MODEL, { prompt, steps: compiled.steps });
-    } catch {
+        const form = new FormData();
+        const outfitDetails = (references[1].tags || []).filter(tag => /^[a-z][a-z -]+$/i.test(tag)).join(', ');
+        const poseTitle = clean(references[0].englishTitle, 120);
+        const poseDetail = /\bhand on (?:hip|waist)\b/i.test(poseTitle) ? 'Exactly one hand rests on the hip; the opposite arm hangs down by the side.' : '';
+        form.append('prompt', `Create a single full-body photograph of exactly ONE person. The face close-up reference determines the person's face, apparent age and hair. The headless outfit reference determines the COMPLETE outfit, every clothing layer, hosiery, footwear and accessories: ${outfitDetails}. The black-and-white artist drawing determines the body silhouette and limb positions, independently from the outfit's pose. Required pose: ${poseTitle}. ${poseDetail} Keep the figure asymmetrical exactly as in the drawing. ${prompt} Final body pose must match the artist drawing, with exactly the same bent and lowered arms.`);
+        form.append('width', String(compiled.width));
+        form.append('height', String(compiled.height));
+        images.forEach((image, index) => form.append(`input_image_${index}`, image, `reference-${index}`));
+        const serialized = new Response(form);
+        result = await ai.run(CLOUDFLARE_MODEL, { multipart: { body: serialized.body, contentType: serialized.headers.get('content-type') } });
+    } catch (error) {
+        console.error('reference_image_generation_failed', String(error?.message || error).slice(0, 400));
         throw new Error('IMAGE_PROVIDER_GENERATION_FAILED');
     }
     if (typeof result?.image !== 'string' || result.image.length > Math.ceil(MAX_IMAGE_BYTES * 4 / 3) + 8) {
@@ -95,9 +117,31 @@ export async function generateCloudCandidate(input, { ai, referenceContext } = {
     try { binary = atob(result.image); } catch { throw new Error('IMAGE_PROVIDER_INVALID_RESPONSE'); }
     if (!binary.length || binary.length > MAX_IMAGE_BYTES) throw new Error('IMAGE_PROVIDER_IMAGE_SIZE_INVALID');
     const bytes = Uint8Array.from(binary, char => char.charCodeAt(0));
-    const mime = 'image/jpeg';
+    const mime = bytes[0] === 137 ? 'image/png' : bytes[0] === 82 ? 'image/webp' : 'image/jpeg';
     if (!hasValidImageSignature(bytes, mime)) throw new Error('IMAGE_PROVIDER_INVALID_IMAGE_TYPE');
-    return { ...compiled, bytes, mime };
+    return { ...compiled, bytes, mime, referenceImages: references.map((reference, index) => ({
+        kind: reference.kind, sourceItemId: reference.id, imageIndex: index,
+        sourceUrl: reference.sourceUrl, referenceImageUrl: reference.referenceImageUrl,
+    })) };
+}
+
+async function fetchReferenceImage(rawUrl, fetchImpl) {
+    const url = new URL(rawUrl);
+    if (url.origin !== 'https://hruiccc.github.io' || !/^\/RuiC-PoseAtlas\/(?:thumbs\/[A-Za-z0-9_-]+\.jpg|(?:costume|portrait)\/thumbs\/[A-Za-z0-9_-]+\.webp)$/.test(url.pathname) || url.search || url.hash) throw new Error('UNTRUSTED_REFERENCE_IMAGE');
+    const response = await fetchImpl(url.href, { redirect: 'manual', signal: AbortSignal.timeout(15000) });
+    if (!response.ok || !/^image\/(jpeg|png|webp)(?:;|$)/i.test(response.headers.get('content-type') || '')) throw new Error('REFERENCE_IMAGE_UNAVAILABLE');
+    const reader = response.body.getReader();
+    const chunks = [];
+    let size = 0;
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        size += value.byteLength;
+        if (size > 3 * 1024 * 1024) { await reader.cancel(); throw new Error('REFERENCE_IMAGE_TOO_LARGE'); }
+        chunks.push(value);
+    }
+    if (!size) throw new Error('REFERENCE_IMAGE_UNAVAILABLE');
+    return new Blob(chunks, { type: response.headers.get('content-type') });
 }
 
 function clean(value, max) { return typeof value === 'string' ? value.trim().slice(0, max) : ''; }

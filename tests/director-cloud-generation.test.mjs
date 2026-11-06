@@ -16,6 +16,12 @@ const request = {
     shot_contract: contract,
 };
 const jpeg = new Uint8Array([255, 216, 255, 0]);
+const referenceContext = { guidance: { suggestions: [] }, templates: [
+    { id: 'pose-1', kind: 'pose', englishTitle: 'Standing contrapposto, hand on hip', referenceImageUrl: 'https://hruiccc.github.io/RuiC-PoseAtlas/thumbs/pose.jpg' },
+    { id: 'costume-1', kind: 'costume', tags: ['black', 'tights'], referenceImageUrl: 'https://hruiccc.github.io/RuiC-PoseAtlas/costume/thumbs/outfit.webp' },
+    { id: 'face-1', kind: 'portrait', referenceImageUrl: 'https://hruiccc.github.io/RuiC-PoseAtlas/portrait/thumbs/face.webp' },
+] };
+const fetchImpl = async () => new Response(jpeg, { headers: { 'Content-Type': 'image/jpeg' } });
 
 test('cloud candidate compiler preserves shot contract, constraints, and framing guidance', () => {
     const compiled = compileCloudCandidateRequest(request);
@@ -31,16 +37,22 @@ test('cloud candidate compiler preserves shot contract, constraints, and framing
 
 test('candidate uses the existing Cloudflare AI binding and validates its JPEG output', async () => {
     const calls = [];
-    const result = await generateCloudCandidate(request, { ai: { run: async (model, input) => {
+    const result = await generateCloudCandidate(request, { referenceContext, fetchImpl, ai: { run: async (model, input) => {
         calls.push({ model, input });
+        if (model.includes('llama')) return { response: '35mm eye-level environmental portrait in an autumn park.' };
         return { image: Buffer.from(jpeg).toString('base64') };
     } } });
-    assert.equal(calls.length, 1);
-    assert.equal(calls[0].model, '@cf/black-forest-labs/flux-1-schnell');
-    assert.match(calls[0].input.prompt, /35mm eye-level environmental portrait/);
-    assert.equal(calls[0].input.steps, 4);
-    assert.equal(Object.hasOwn(calls[0].input, 'seed'), false);
-    assert.equal(result.model, '@cf/black-forest-labs/flux-1-schnell');
+    assert.equal(calls.length, 2);
+    assert.equal(calls[1].model, '@cf/black-forest-labs/flux-2-klein-4b');
+    const form = await new Response(calls[1].input.multipart.body, { headers: { 'Content-Type': calls[1].input.multipart.contentType } }).formData();
+    assert.match(form.get('prompt'), /35mm eye-level environmental portrait/);
+    assert.match(form.get('prompt'), /Exactly one hand rests on the hip/);
+    assert.match(form.get('prompt'), /black, tights/);
+    for (let index = 0; index < 3; index++) assert.equal(form.get(`input_image_${index}`).size, jpeg.length);
+    assert.equal(form.get('width'), '768');
+    assert.equal(form.get('height'), '1024');
+    assert.equal(result.referenceImages.length, 3);
+    assert.equal(result.model, '@cf/black-forest-labs/flux-2-klein-4b');
     assert.equal(result.mime, 'image/jpeg');
     assert.deepEqual(result.bytes, jpeg);
 });
@@ -52,6 +64,8 @@ test('cloud generation rejects missing bindings, unapproved providers, reference
     await assert.rejects(generateCloudCandidate({ ...request, provider: 'fal' }, { ai }), /PROVIDER_NOT_ALLOWED/);
     await assert.rejects(generateCloudCandidate({ ...request, billing_mode: 'paid-approved' }, { ai }), /BILLING_MODE_NOT_ALLOWED/);
     await assert.rejects(generateCloudCandidate({ ...request, reference_image_path: 'C:\\private\\ref.png' }, { ai }), /CLOUD_REFERENCE_IMAGE_NOT_CONFIGURED/);
-    await assert.rejects(generateCloudCandidate(request, { ai: { run: async () => ({ image: 'not-base64' }) } }), /IMAGE_PROVIDER_INVALID_RESPONSE/);
+    await assert.rejects(generateCloudCandidate(request, { ai }), /REFERENCE_IMAGES_REQUIRED/);
+    await assert.rejects(generateCloudCandidate(request, { referenceContext, fetchImpl, ai: { run: async model => model.includes('llama') ? { response: 'One environmental portrait in an autumn park.' } : { image: 'not-base64' } } }), /IMAGE_PROVIDER_INVALID_RESPONSE|IMAGE_PROVIDER_GENERATION_FAILED/);
+    await assert.rejects(generateCloudCandidate(request, { referenceContext: { ...referenceContext, templates: [{ ...referenceContext.templates[0], referenceImageUrl: 'https://evil.example/a.jpg' }, ...referenceContext.templates.slice(1)] }, fetchImpl, ai }), /UNTRUSTED_REFERENCE_IMAGE/);
     assert.equal(calls, 0);
 });

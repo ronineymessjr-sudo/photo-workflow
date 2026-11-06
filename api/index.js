@@ -599,14 +599,14 @@ export default {
                 let plan;
                 if (!env.DIRECTOR_API_BASE || !env.DIRECTOR_API_BASE.startsWith('https://')) {
                     plan = createGuestPlanDraft(body);
-                    const referenceContext = await prepareReferenceContext(body);
+                    const referenceContext = await prepareReferenceContext({ ...body, requireImageReferences: Boolean(uid) });
                     Object.assign(plan, referencePlanFields(referenceContext));
                     if (uid && referenceContext?.templates.some(template => template.sourceUrl && template.kind === 'pose')) {
                         plan = createTemplatePlan(body, referenceContext);
                         plan.director.imageGenerationConnected = cloudImageGenerationEnabled(plan, uid, env);
                     }
                 } else {
-                    plan = await createDirectorPlan(body, { baseUrl: env.DIRECTOR_API_BASE });
+                    plan = await createDirectorPlan({ ...body, requireImageReferences: Boolean(uid) }, { baseUrl: env.DIRECTOR_API_BASE });
                     plan.director = { ...plan.director,
                         imageGenerationConnected: cloudImageGenerationEnabled(plan, uid, env),
                         imageGenerationMode: cloudImageGenerationEnabled(plan, uid, env)
@@ -639,17 +639,20 @@ export default {
                                 request_id: typeof body.request_id === 'string' ? body.request_id.slice(0, 128) : assetId,
                                 selected_shot_contract: { source: 'template-library-shot-contract',
                                     referenceIds: referenceContext.templates.map(template => template.id),
+                                    referenceImages: generated.referenceImages,
                                     library: referenceContext.library },
                                 candidateAsset: { id: assetId, url: assetUrl, synthetic: true,
                                     status: 'candidate-awaiting-human-review', source: 'cloudflare-workers-ai',
                                     model: generated.model, poseStatus: 'not-run', poseReasons: [], faceQualityStatus: 'not-run',
                                     shotLanguage: generated.shotLanguage, contractSource: 'template-library-shot-contract',
                                     referenceIds: referenceContext.templates.map(template => template.id),
+                                    referenceImages: generated.referenceImages,
                                     contractFingerprint: '', expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
                                     productionRelease: false },
                             } };
                         } catch (error) {
-                            const code = ['REFERENCE_LIBRARY_UNAVAILABLE', 'INVALID_REFERENCE_SELECTION', 'UNAVAILABLE_REFERENCE',
+                            const code = ['REFERENCE_IMAGES_REQUIRED', 'REFERENCE_IMAGE_UNAVAILABLE', 'REFERENCE_IMAGE_TOO_LARGE', 'UNTRUSTED_REFERENCE_IMAGE',
+                                'REFERENCE_LIBRARY_UNAVAILABLE', 'INVALID_REFERENCE_SELECTION', 'UNAVAILABLE_REFERENCE',
                                 'IMAGE_PROVIDER_NOT_CONFIGURED', 'IMAGE_PROVIDER_GENERATION_FAILED',
                                 'IMAGE_PROVIDER_INVALID_RESPONSE', 'IMAGE_PROVIDER_INVALID_IMAGE_TYPE', 'IMAGE_PROVIDER_IMAGE_SIZE_INVALID',
                                 'GENERATION_PROVIDER_NOT_ALLOWED', 'GENERATION_BILLING_MODE_NOT_ALLOWED', 'CLOUD_REFERENCE_IMAGE_NOT_CONFIGURED',

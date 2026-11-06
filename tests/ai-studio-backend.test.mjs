@@ -185,9 +185,10 @@ test('authenticated production candidates retrieve templates before Cloudflare A
     const sourceCalls = [];
     t.mock.method(globalThis, 'fetch', async url => {
         sourceCalls.push(String(url));
-        if (String(url).endsWith('poses.json')) return Response.json({ poses: [{ id: 'full_single_P019', names: { zh: '安静坐姿' }, category: '坐姿', variants: [{ angle: 'front' }] }] });
-        if (String(url).endsWith('costumes.json')) return Response.json({ costumes: [] });
-        if (String(url).endsWith('faces.json')) return Response.json({ images: [] });
+        if (String(url).endsWith('poses.json')) return Response.json({ poses: [{ id: 'full_single_P019', names: { zh: '安静坐姿' }, category: '坐姿', variants: [{ angle: 'front', thumb: 'thumbs/full_single_P019_front.jpg' }] }] });
+        if (String(url).endsWith('costumes.json')) return Response.json({ costumes: [{ id: 'AUT-0001', cat: 'autumn', main: 'knit', color: 'brown', thumb: 'costume/thumbs/AUT-0001.webp' }] });
+        if (String(url).endsWith('faces.json')) return Response.json({ images: [{ id: 'face001', sec: 'face', thumb: 'portrait/thumbs/face001.webp' }] });
+        if (/\/thumbs\//.test(String(url))) return new Response(new Uint8Array([255, 216, 255, 0]), { headers: { 'Content-Type': 'image/jpeg' } });
         throw new Error('Unexpected template source');
     });
     const jpeg = new Uint8Array([255, 216, 255, 0]);
@@ -208,12 +209,14 @@ test('authenticated production candidates retrieve templates before Cloudflare A
     assert.equal(response.status, 201);
     const result = await response.json();
     assert.equal(aiCalls.length, 2);
-    assert.equal(sourceCalls.length, 3);
-    assert.match(aiCalls[0].input.messages[1].content, /atlas-pose-full_single_p019/);
-    assert.match(aiCalls[0].input.messages[1].content, /坐稳/);
-    assert.deepEqual(result.candidateAsset.referenceIds, ['atlas-pose-full_single_p019']);
-    assert.equal(aiCalls[1].model, '@cf/black-forest-labs/flux-1-schnell');
-    assert.match(aiCalls[1].input.prompt, /seated steadily on a park bench/);
+    assert.equal(sourceCalls.length, 6);
+    assert.match(aiCalls[0].input.messages[1].content, /自然光/);
+    assert.deepEqual(result.candidateAsset.referenceImages.map(image => image.kind), ['pose', 'costume', 'portrait']);
+    assert.equal(aiCalls[1].model, '@cf/black-forest-labs/flux-2-klein-4b');
+    const form = await new Response(aiCalls[1].input.multipart.body, { headers: { 'Content-Type': aiCalls[1].input.multipart.contentType } }).formData();
+    assert.match(form.get('prompt'), /seated steadily on a park bench/);
+    assert.ok(form.get('input_image_0') && form.get('input_image_1') && form.get('input_image_2'));
+    assert.match(form.get('prompt'), /black-and-white artist drawing/);
     assert.equal(result.candidateAsset.status, 'candidate-awaiting-human-review');
     assert.equal(result.candidateAsset.source, 'cloudflare-workers-ai');
     assert.equal(result.candidateAsset.poseStatus, 'not-run');

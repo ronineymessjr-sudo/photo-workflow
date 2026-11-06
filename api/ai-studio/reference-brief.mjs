@@ -51,8 +51,18 @@ export async function prepareReferenceContext(input, options = {}) {
         if (!parseServerIntent(prompt || '姿势').specs.length) prompt += ' 姿势';
         ids = runServerFirst({ registry, prompt }).selectedIds;
     }
-    const templates = ids.map(id => registry.find(id));
+    let templates = ids.map(id => registry.find(id));
     if (templates.some(template => !template)) throw new Error('UNAVAILABLE_REFERENCE');
+    if (input.requireImageReferences === true) {
+        const prompt = ['theme', 'style', 'scene', 'mood', 'extra', 'modelDesc'].map(key => String(input[key] || '')).join(' ').slice(0, 1400);
+        const automatic = runServerFirst({ registry, prompt: `${prompt} 姿势 服装 人像造型` }).selectedIds.map(id => registry.find(id));
+        templates = ['pose', 'costume', 'portrait'].map(kind => {
+            const usable = template => template?.kind === kind && template.referenceImageUrl && (kind !== 'portrait' || template.section === 'face');
+            const selected = templates.find(usable) || automatic.find(usable);
+            return selected || registry.search({ kind, limit: 50, ...(kind === 'portrait' ? { section: 'face' } : {}) }).results.find(usable);
+        });
+        if (templates.some(template => !template)) throw new Error('REFERENCE_IMAGES_REQUIRED');
+    }
     return { templates, library, guidance: deriveReferenceGuidance(templates, input) };
 }
 
@@ -65,6 +75,7 @@ export function referencePlanFields(context) {
             externalUrl: template.sourceUrl, rightsStatus: template.rightsStatus,
             attribution: template.sourceUrl ? 'RuiC-PoseAtlas' : 'PhotoAtelier original',
             focalLength: template.focalLength,
+            referenceImageUrl: template.referenceImageUrl,
         })),
         guidance: context.guidance,
         library: context.library,

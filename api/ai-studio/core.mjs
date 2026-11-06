@@ -125,6 +125,7 @@ export function safeCard(t) {
     id,
     kind,
     title,
+    englishTitle,
     description,
     tags,
     category,
@@ -144,6 +145,7 @@ export function safeCard(t) {
     kind,
     title,
     description: description ?? "",
+    englishTitle: englishTitle || '',
     tags,
     category,
     series,
@@ -156,6 +158,7 @@ export function safeCard(t) {
     poseNumber,
     assetUrl: canDisplay(t) && asset ? `/${asset}` : null,
     sourceUrl: source?.type === "poseatlas" ? source.url : null,
+    referenceImageUrl: source?.type === "poseatlas" ? source.referenceImageUrl || null : null,
     rightsStatus: t.rights.status,
   };
 }
