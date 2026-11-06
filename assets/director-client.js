@@ -15,7 +15,7 @@
     };
     window.generateDirectorCandidate = async function (input) {
         const local = ['127.0.0.1', 'localhost', '[::1]'].includes(location.hostname);
-        if (!local) throw new Error('候选生图暂仅接入本机 Director，云端未配置受保护的生图服务');
+        if (!local) return window.api.request('/api/director/generate-candidate', 'POST', input, 130000);
         const response = await fetch('/api/director/generate-candidate', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(input), signal: AbortSignal.timeout(130000)

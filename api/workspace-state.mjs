@@ -3,6 +3,10 @@ import { applyStudioCommit, applyStudioSyncResult, StudioCommitError } from './a
 
 const MAX_BYTES = 16 * 1024 * 1024;
 const CHUNK_SIZE = 20_000;
+const CANDIDATE_ASSET_LIMIT = 8 * 1024 * 1024;
+const CANDIDATE_ASSET_CHUNK = 1024 * 1024;
+const CANDIDATE_ASSET_RETENTION_MS = 90 * 24 * 60 * 60 * 1000;
+const CANDIDATE_ASSET_MAX_COUNT = 30;
 
 async function readWorkspace(store) {
   const meta = await store.get('meta') || { revision: 0, chunks: 0 };
@@ -27,6 +31,68 @@ export class WorkspaceSync {
 
   async fetch(request) {
     const pathname = new URL(request.url).pathname;
+    const candidateAsset = pathname.match(/^\/candidate-assets\/([a-f0-9]{32})$/i);
+    if (candidateAsset) {
+      const assetId = candidateAsset[1].toLowerCase();
+      const metaKey = `candidate-asset:meta:${assetId}`;
+      if (request.method === 'PUT') {
+        const mime = (request.headers.get('content-type') || '').split(';')[0].toLowerCase();
+        if (!['image/png', 'image/jpeg', 'image/webp'].includes(mime)) return Response.json({ error: 'INVALID_ASSET_TYPE' }, { status: 415 });
+        const bytes = new Uint8Array(await request.arrayBuffer());
+        if (!bytes.length || bytes.length > CANDIDATE_ASSET_LIMIT) return Response.json({ error: 'INVALID_ASSET_SIZE' }, { status: 413 });
+        try {
+          await this.storage.transaction(async store => {
+            const previous = await store.get(metaKey);
+            if (previous) throw new Error('CANDIDATE_ASSET_EXISTS');
+            const partCount = Math.ceil(bytes.length / CANDIDATE_ASSET_CHUNK);
+            for (let index = 0; index < partCount; index++) {
+              const part = bytes.slice(index * CANDIDATE_ASSET_CHUNK, (index + 1) * CANDIDATE_ASSET_CHUNK);
+              await store.put(`candidate-asset:part:${assetId}:${index}`, part);
+            }
+            await store.put(metaKey, { mime, bytes: bytes.length, partCount, createdAt: Date.now(), expiresAt: Date.now() + CANDIDATE_ASSET_RETENTION_MS });
+            if (typeof store.list === 'function') {
+              const assets = [...(await store.list({ prefix: 'candidate-asset:meta:' })).entries()]
+                .sort((a, b) => a[1].createdAt - b[1].createdAt);
+              const expired = assets.filter(([, meta]) => meta.expiresAt <= Date.now());
+              const retained = assets.filter(([, meta]) => meta.expiresAt > Date.now());
+              const toDelete = [...expired, ...retained.slice(0, Math.max(0, retained.length - CANDIDATE_ASSET_MAX_COUNT))];
+              for (const [key, meta] of toDelete) {
+                const id = key.slice('candidate-asset:meta:'.length);
+                for (let index = 0; index < meta.partCount; index++) await store.delete(`candidate-asset:part:${id}:${index}`);
+                await store.delete(key);
+              }
+            }
+          });
+          return Response.json({ stored: true }, { status: 201 });
+        } catch (error) {
+          if (error.message === 'CANDIDATE_ASSET_EXISTS') return Response.json({ error: error.message }, { status: 409 });
+          throw error;
+        }
+      }
+      if (request.method === 'GET') {
+        const asset = await this.storage.transaction(async store => {
+          const meta = await store.get(metaKey);
+          if (!meta) return null;
+          if (meta.expiresAt <= Date.now()) {
+            for (let index = 0; index < meta.partCount; index++) await store.delete(`candidate-asset:part:${assetId}:${index}`);
+            await store.delete(metaKey);
+            return null;
+          }
+          const parts = [];
+          for (let index = 0; index < meta.partCount; index++) {
+            const part = await store.get(`candidate-asset:part:${assetId}:${index}`);
+            if (!part) return null;
+            parts.push(part);
+          }
+          return { meta, parts };
+        });
+        if (!asset) return Response.json({ error: 'CANDIDATE_ASSET_NOT_FOUND' }, { status: 404 });
+        return new Response(new Blob(asset.parts, { type: asset.meta.mime }), {
+          headers: { 'Content-Type': asset.meta.mime, 'Cache-Control': 'private, max-age=3600', 'X-Content-Type-Options': 'nosniff' },
+        });
+      }
+      return Response.json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
+    }
     if (pathname === '/studio/commit' || pathname === '/studio/sync-result') {
       if (request.method !== 'POST') return Response.json({ error: 'METHOD_NOT_ALLOWED' }, { status: 405 });
       const raw = await request.text();

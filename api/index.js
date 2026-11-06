@@ -8,7 +8,8 @@ import { recordWebRequest } from './web-telemetry.mjs';
 import { emailLoginEnabled, handleEmailAuth } from './email-auth.mjs';
 import { aiPlanProviders, handleAiPlan } from './ai-plan.mjs';
 import { handleAiBrief } from './ai-brief.mjs';
-import { confirmStudioProposal, createStudioProposal, searchStudio, consumeStudioSearchQuota, AiStudioError } from './ai-studio/service.mjs';
+import { generateCloudCandidate } from './director-cloud-generation.mjs';
+import { confirmStudioProposal, createStudioProposal, searchStudio, consumeStudioSearchQuota, consumeStudioImageQuota, AiStudioError } from './ai-studio/service.mjs';
 import { checkStudioFeishuConnection, syncStudioPlan } from './ai-studio/feishu-sync.mjs';
 import { workspaceEntryKey } from '../assets/workspace-sync-protocol.mjs';
 export { AiStudioQuota } from './ai-studio/quota.mjs';
@@ -146,6 +147,35 @@ function verifyToken(authHeader, env) {
         if (payload.t > Date.now() + 300000 || Date.now() - payload.t > 7 * 24 * 3600 * 1000) return null;
         return payload.uid;
     } catch { return null; }
+}
+
+function candidatePlanSupportsGeneration(plan) {
+    return Array.isArray(plan?.shotList) && plan.shotList.length > 0 && plan.shotList.every(shot =>
+        typeof shot?.directorContract?.shot_language === 'string' && typeof shot?.directorContract?.generator_prompt === 'string');
+}
+
+function candidateAssetSignature(owner, assetId, expires, env) {
+    return createHmac('sha256', env.JWT_SECRET).update(`${owner}:${assetId}:${expires}`).digest('hex');
+}
+
+function candidateAssetUrl(owner, assetId, env) {
+    const expires = Date.now() + 365 * 24 * 60 * 60 * 1000;
+    const signature = candidateAssetSignature(owner, assetId, expires, env);
+    return `/api/director/candidates/${assetId}?owner=${encodeURIComponent(owner)}&exp=${expires}&sig=${signature}`;
+}
+
+function validCandidateAssetUrl(url, assetId, env) {
+    const owner = url.searchParams.get('owner') || '';
+    const expires = Number(url.searchParams.get('exp'));
+    const signature = url.searchParams.get('sig') || '';
+    if (!owner || owner.length > 128 || !Number.isSafeInteger(expires) || expires <= Date.now()
+        || expires > Date.now() + 366 * 24 * 60 * 60 * 1000 || !/^[a-f0-9]{64}$/i.test(signature) || !env.JWT_SECRET) return null;
+    const expected = candidateAssetSignature(owner, assetId, expires, env);
+    return timingSafeEqual(new TextEncoder().encode(signature.toLowerCase()), new TextEncoder().encode(expected)) ? owner : null;
+}
+
+function cloudImageGenerationEnabled(plan, uid, env) {
+    return Boolean(uid && env.JWT_SECRET && env.PHOTOATELIER_HF_TOKEN && env.WORKSPACE_SYNC && candidatePlanSupportsGeneration(plan));
 }
 
 // ===== Handlers =====
@@ -342,13 +372,15 @@ export default {
         // Parse body
         let body = {};
         if (method === 'POST' || method === 'PUT' || method === 'PATCH') {
-            if (isStudio || path === '/api/ai/plan' || path === '/api/ai/brief' || path === '/api/continuity/asset') {
+            if (isStudio || path === '/api/ai/plan' || path === '/api/ai/brief' || path === '/api/continuity/asset'
+                || path === '/api/director/generate-candidate') {
                 if (!request.headers.get('content-type')?.startsWith('application/json')) return isStudio
                     ? studioJson(415, { error: 'JSON_REQUIRED' }, origin) : Response.json({ error: 'JSON_REQUIRED' }, { status: 415, headers: CORS });
                 // Reference images arrive as base64, so this route needs a larger cap
                 // than the text routes (8MB binary ≈ 11MB base64 + envelope).
                 const limit = isStudio ? (path === '/api/ai/plan-lite' ? 8192 : 32768)
-                    : path === '/api/continuity/asset' ? 12 * 1024 * 1024 : 16000;
+                    : path === '/api/continuity/asset' ? 12 * 1024 * 1024
+                        : path === '/api/director/generate-candidate' ? 24 * 1024 : 16000;
                 const reader = request.body?.getReader();
                 let size = 0, chunks = [];
                 if (reader) {
@@ -432,6 +464,13 @@ export default {
             }
             else if (path === '/api/ai/plan' && method === 'POST') {
                 result = await handleAiPlan(body, env);
+                if (result.status === 200) {
+                    result.body.director = { ...result.body.director,
+                        imageGenerationConnected: cloudImageGenerationEnabled(result.body, uid, env),
+                        imageGenerationMode: cloudImageGenerationEnabled(result.body, uid, env)
+                            ? 'cloud-hf-candidate-review' : 'cloud-image-provider-not-configured',
+                    };
+                }
             }
             else if (path === '/api/ai/brief' && method === 'POST') {
                 result = await handleAiBrief(body, env);
@@ -564,12 +603,73 @@ export default {
                     Object.assign(plan, referencePlanFields(referenceContext));
                 } else {
                     plan = await createDirectorPlan(body, { baseUrl: env.DIRECTOR_API_BASE });
-                    plan.director = { ...plan.director, imageGenerationConnected: false, imageGenerationMode: 'cloud-image-delivery-not-configured' };
+                    plan.director = { ...plan.director,
+                        imageGenerationConnected: cloudImageGenerationEnabled(plan, uid, env),
+                        imageGenerationMode: cloudImageGenerationEnabled(plan, uid, env)
+                            ? 'cloud-hf-candidate-review' : 'cloud-image-provider-not-configured',
+                    };
                 }
                 result = { status: 200, body: await attachJevReview(plan, env) };
             }
             else if (path === '/api/director/generate-candidate' && method === 'POST') {
-                result = { status: 503, body: { error: 'CANDIDATE_IMAGE_DELIVERY_NOT_CONFIGURED', message: '云端候选图回传尚未配置；当前可生成并保存文字分镜。' } };
+                if (!uid) result = { status: 401, body: { error: 'SIGN_IN_REQUIRED' } };
+                else if (!env.PHOTOATELIER_HF_TOKEN) result = { status: 503, body: { error: 'IMAGE_PROVIDER_NOT_CONFIGURED' } };
+                else if (!env.WORKSPACE_SYNC || !env.JWT_SECRET) result = { status: 503, body: { error: 'CANDIDATE_STORAGE_NOT_CONFIGURED' } };
+                else {
+                    const allowed = await consumeStudioImageQuota({ uid, env });
+                    if (allowed === null) result = { status: 503, body: { error: 'IMAGE_QUOTA_NOT_CONFIGURED' } };
+                    else if (!allowed) result = { status: 429, body: { error: 'IMAGE_DAILY_LIMIT_REACHED' } };
+                    else {
+                        try {
+                            const generated = await generateCloudCandidate(body, { token: env.PHOTOATELIER_HF_TOKEN });
+                            const assetId = crypto.randomUUID().replace(/-/g, '');
+                            const object = env.WORKSPACE_SYNC.get(env.WORKSPACE_SYNC.idFromName(`user:${uid}`));
+                            const stored = await object.fetch(new Request(`https://workspace.internal/candidate-assets/${assetId}`, {
+                                method: 'PUT', headers: { 'Content-Type': generated.mime }, body: generated.bytes,
+                            }));
+                            if (!stored.ok) throw new Error('CANDIDATE_ASSET_STORE_FAILED');
+                            const url = candidateAssetUrl(uid, assetId, env);
+                            result = { status: 201, body: {
+                                request_id: typeof body.request_id === 'string' ? body.request_id.slice(0, 128) : assetId,
+                                selected_shot_contract: { source: 'browser-shot-contract' },
+                                candidateAsset: { id: assetId, url, synthetic: true,
+                                    status: 'candidate-awaiting-human-review', source: 'huggingface-inference-providers',
+                                    model: generated.model, poseStatus: 'not-run', poseReasons: [], faceQualityStatus: 'not-run',
+                                    shotLanguage: generated.shotLanguage, contractSource: 'browser-shot-contract',
+                                    contractFingerprint: '', expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
+                                    productionRelease: false },
+                            } };
+                        } catch (error) {
+                            const code = ['IMAGE_PROVIDER_CREDITS_EXHAUSTED', 'IMAGE_PROVIDER_RATE_LIMITED', 'IMAGE_PROVIDER_NOT_CONFIGURED',
+                                'IMAGE_PROVIDER_INVALID_RESPONSE', 'IMAGE_PROVIDER_INVALID_IMAGE_TYPE', 'IMAGE_PROVIDER_IMAGE_SIZE_INVALID',
+                                'GENERATION_PROVIDER_NOT_ALLOWED', 'GENERATION_BILLING_MODE_NOT_ALLOWED', 'CLOUD_REFERENCE_IMAGE_NOT_CONFIGURED',
+                                'INVALID_GENERATION_REQUEST', 'SHOT_CONTRACT_REQUIRED'].includes(error.message)
+                                ? error.message : 'IMAGE_GENERATION_FAILED';
+                            const status = code === 'IMAGE_PROVIDER_CREDITS_EXHAUSTED' ? 402
+                                : code === 'IMAGE_PROVIDER_RATE_LIMITED' ? 429
+                                    : code === 'IMAGE_PROVIDER_NOT_CONFIGURED' ? 503
+                                        : code === 'GENERATION_PROVIDER_NOT_ALLOWED' || code === 'GENERATION_BILLING_MODE_NOT_ALLOWED'
+                                            || code === 'CLOUD_REFERENCE_IMAGE_NOT_CONFIGURED' || code === 'INVALID_GENERATION_REQUEST'
+                                            || code === 'SHOT_CONTRACT_REQUIRED' ? 400 : 502;
+                            result = { status, body: { error: code } };
+                        }
+                    }
+                }
+            }
+            else if (path.startsWith('/api/director/candidates/') && method === 'GET') {
+                const match = path.match(/^\/api\/director\/candidates\/([a-f0-9]{32})$/i);
+                const owner = match && validCandidateAssetUrl(url, match[1].toLowerCase(), env);
+                if (!owner) result = { status: 404, body: { error: 'CANDIDATE_ASSET_NOT_FOUND' } };
+                else if (!env.WORKSPACE_SYNC) result = { status: 503, body: { error: 'CANDIDATE_STORAGE_NOT_CONFIGURED' } };
+                else {
+                    const object = env.WORKSPACE_SYNC.get(env.WORKSPACE_SYNC.idFromName(`user:${owner}`));
+                    const asset = await object.fetch(new Request(`https://workspace.internal/candidate-assets/${match[1].toLowerCase()}`));
+                    if (!asset.ok) result = { status: asset.status, body: await asset.json() };
+                    else return new Response(asset.body, { status: 200, headers: { ...CORS,
+                        'Content-Type': asset.headers.get('Content-Type') || 'application/octet-stream',
+                        'Cache-Control': 'private, max-age=3600', 'X-Content-Type-Options': 'nosniff',
+                    } });
+                }
             }
             else if (path === '/api/director/identity-lock-workflow' && method === 'POST') {
                 if (!uid) result = { status: 401, body: { error: '未登录' } };

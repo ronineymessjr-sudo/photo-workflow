@@ -6362,7 +6362,9 @@ function renderDirectorCandidatePanel(plan) {
     const candidates = (state.generationCandidates || []).filter(c => Number(c.shotIndex) === selected);
     const model = state.selectedCandidateModel || 'huggingface:black-forest-labs/FLUX.1-schnell';
     const aspect = state.selectedCandidateAspect || inferAspectRatioFromPlan(plan);
-    const models = [['huggingface:black-forest-labs/FLUX.1-schnell','FLUX.1-schnell'],['pollinations:flux','Flux'],['pollinations:krea','Krea'],['pollinations:sana','Sana']];
+    const localCandidateModels = ['127.0.0.1', 'localhost', '[::1]'].includes(window.location.hostname);
+    const models = [['huggingface:black-forest-labs/FLUX.1-schnell','FLUX.1-schnell'],
+        ...(localCandidateModels ? [['pollinations:flux','Flux'],['pollinations:krea','Krea'],['pollinations:sana','Sana']] : [])];
     const aspects = [['landscape','横屏 4:3'],['landscape-wide','横屏 16:9'],['square','方形 1:1'],['portrait','竖屏 3:4'],['portrait-tall','竖屏 9:16']];
     const cards = candidates.map(c => {
         if (typeof c.url !== 'string' || !c.url.startsWith('/api/director/candidates/')) return '';
@@ -6373,12 +6375,14 @@ function renderDirectorCandidatePanel(plan) {
         };
         const reviewItems = [
             ...(Array.isArray(c.poseReasons) ? c.poseReasons.map(reason => reasonLabels[reason] || '构图/背景检查项未通过：' + String(reason)) : []),
+            ...(c.poseStatus === 'not-run' || c.faceQualityStatus === 'not-run' ? ['云端未运行自动构图与人脸质量检查，必须人工审核后才能使用。'] : []),
             ...(c.faceQualityStatus === 'blocked' ? ['自动人脸质量评估器尚未接入；这不代表检测到脸部畸形，只表示五官结构、清晰度和皮肤纹理尚未自动验证，需人工复核。'] : [])
         ];
         const reviewHtml = reviewItems.length
             ? '<details class="candidate-review-notes"><summary>检查说明</summary><ul>' + reviewItems.map(item => '<li>' + escHtml(item) + '</li>').join('') + '</ul></details>'
             : '';
-        return '<figure class="candidate-result"><img src="' + escHtml(c.url) + '" alt="镜头 ' + (selected + 1) + ' AI合成候选图"><figcaption>镜头 ' + (selected + 1) + ' · AI合成 · ' + status + '</figcaption>' +
+        const expires = c.expiresAt ? ' · 云端保留至 ' + escHtml(new Date(c.expiresAt).toLocaleDateString()) : '';
+        return '<figure class="candidate-result"><img src="' + escHtml(c.url) + '" alt="镜头 ' + (selected + 1) + ' AI合成候选图"><figcaption>镜头 ' + (selected + 1) + ' · AI合成 · ' + status + expires + '</figcaption>' +
             reviewHtml + (c.shotSnapshot ? '<details><summary>生成时的拍摄要求</summary>' + renderShotInstructions(c.shotSnapshot) + '</details>' : '') + '</figure>';
     }).join('');
     return `<section class="director-candidate-panel" id="img-gallery-${key}">
@@ -6399,7 +6403,7 @@ function renderDirectorCandidatePanel(plan) {
         </details>
         <button class="btn btn-s" id="candidate-gen-btn-${key}" onclick="generateDirectorCandidateForPlan('${key}')" ${shot?'':'disabled'}>生成当前分镜的图</button>
         <p id="candidate-status-${key}" class="reference-rights" aria-live="polite"></p>
-        <p class="reference-rights">AI合成预览，非实拍参考。每次仅生成当前分镜一张，可能消耗供应商额度。</p>
+        <p class="reference-rights">AI合成预览，非实拍参考。每次仅生成当前分镜一张，可能消耗供应商额度；云端图片保留 90 天，须人工审核后使用。</p>
     </section>`;
 }
 
@@ -6408,8 +6412,11 @@ function formatDirectorGenerationError(error) {
     if (/DIRECTOR_GENERATION_UPSTREAM_503:provider_request_failed/.test(message)) {
         return '外部生图模型当前超时或暂不可用；方案和分镜契约已保留，稍后可重试当前分镜。';
     }
+    if (/IMAGE_DAILY_LIMIT_REACHED/.test(message)) return '已达到今天的候选生图上限（5 张），明天可继续。';
+    if (/IMAGE_PROVIDER_NOT_CONFIGURED/.test(message)) return '线上生图服务尚未配置 provider 密钥；文字方案仍已保存。';
+    if (/SIGN_IN_REQUIRED/.test(message)) return '请登录后再生成并保存云端候选图。';
     if (/402|credit|quota/i.test(message)) {
-        return '外部模型免费额度已用完；未切换付费模式，方案和分镜契约已保留。';
+        return '外部模型额度不足或达到调用限制；未自动切换模型，方案和分镜契约已保留。';
     }
     return '生成失败：' + message;
 }
@@ -6554,12 +6561,12 @@ async function generateDirectorCandidateForPlan(planId) {
     const shotSelect = $('candidate-shot-' + planId);
     const shotIndex = Number(shotSelect && shotSelect.value || 0);
     const modelSelect = $('candidate-model-' + planId);
-    const [provider, selectedModel] = String(modelSelect && modelSelect.value || 'pollinations:flux').split(':');
+    const [provider, selectedModel] = String(modelSelect && modelSelect.value || 'huggingface:black-forest-labs/FLUX.1-schnell').split(':');
     const aspectSelect = $('candidate-aspect-' + planId);
     const aspectRatio = aspectSelect && aspectSelect.value || 'landscape';
     const shot = (plan.shotList || [])[shotIndex];
     if (!shot) { toast('没有可用分镜', 'er'); return; }
-    if (!window.generateDirectorCandidate) { toast('本机候选生图接口未加载', 'er'); return; }
+    if (!window.generateDirectorCandidate) { toast('候选生图接口未加载', 'er'); return; }
     const identityRefSelect = $('identity-ref-' + planId);
     const identityReferencePath = identityRefSelect && identityRefSelect.value || '';
     const contract = shot.directorContract && typeof shot.directorContract === 'object' ? shot.directorContract : {};

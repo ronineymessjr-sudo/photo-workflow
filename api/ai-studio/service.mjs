@@ -92,6 +92,11 @@ export async function consumeStudioSearchQuota({ uid, ip, env = {} }) {
     return consumeQuota(env, identity, 'search', 60);
 }
 
+export async function consumeStudioImageQuota({ uid, env = {} }) {
+    if (!uid) return false;
+    return consumeQuota(env, `user:${uid}`, 'image', 5);
+}
+
 async function consumeModelQuota(env, uid) {
     return (await consumeQuota(env, `user:${uid}`, 'model', MODEL_DAILY_LIMIT)) === true;
 }

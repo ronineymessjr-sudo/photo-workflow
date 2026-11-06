@@ -22,6 +22,7 @@ function storage() {
         get: async key => structuredClone(values.get(key)),
         put: async (key, value) => values.set(key, structuredClone(value)),
         delete: async key => values.delete(key),
+        list: async ({ prefix = '' } = {}) => new Map([...values].filter(([key]) => key.startsWith(prefix)).map(([key, value]) => [key, structuredClone(value)])),
     };
     let queue = Promise.resolve();
     store.transaction = callback => {
@@ -133,6 +134,16 @@ test('Worker Studio routes enforce exact origins, bounded JSON, authentication a
     assert.equal(guest.modelCalls, 0);
 });
 
+test('candidate generation quota is capped at five images per user per day', async () => {
+    const quota = new AiStudioQuota({ storage: storage() });
+    const consume = () => quota.fetch(new Request('https://quota.internal/consume', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'image', limit: 5 }),
+    }));
+    for (let index = 0; index < 5; index++) assert.equal((await (await consume()).json()).allowed, true);
+    assert.equal((await (await consume()).json()).allowed, false);
+});
+
 test('Worker confirmation writes only the verified account workspace and replays once', async () => {
     const env = environment();
     assert.equal((await call(env, '/api/workspace/state', { revision: 0, entries: { [planKey('plan-1')]: samplePlan } })).status, 200);
@@ -157,6 +168,45 @@ test('Worker confirmation writes only the verified account workspace and replays
     assert.equal((await call(env, '/api/ai/studio/feishu/sync', { planId: 'plan-1' }, 'user-2')).status, 404);
     assert.equal((await call(env, '/api/ai/studio/feishu/status', undefined, null)).status, 401);
     assert.equal((await (await call(env, '/api/ai/studio/feishu/status')).json()).credential_configured, false);
+});
+
+test('authenticated production image candidates are privately stored and served by signed user URLs', async () => {
+    const env = { ...environment(), PHOTOATELIER_HF_TOKEN: 'hf-test-only-token' };
+    const originalFetch = globalThis.fetch;
+    const png = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 0]);
+    const requests = [];
+    globalThis.fetch = async (url, options) => {
+        requests.push({ url: String(url), headers: options?.headers || {} });
+        if (String(url).startsWith('https://router.huggingface.co/')) {
+            return Response.json({ images: [{ url: 'https://v3.fal.media/private-candidate.png' }] });
+        }
+        return new Response(png, { headers: { 'Content-Type': 'image/png' } });
+    };
+    try {
+        const response = await call(env, '/api/director/generate-candidate', {
+            request_id: 'cloud-smoke-test', provider: 'huggingface', model: 'black-forest-labs/FLUX.1-schnell',
+            candidate_count: 1, billing_mode: 'free-credit-first', aspect_ratio: 'portrait',
+            brief: '秋日公园坐姿人像，棕色针织衫。', scene_brief: '自然光，不使用闪光灯。', style_direction: '低饱和电影感',
+            reference_asset_ids: [],
+            shot_contract: { shot_language: 'park seated portrait', generator_prompt: '35mm eye-level seated portrait, full hands and feet', must_show: 'existing park bench', reject_if: 'flash or cropped feet' },
+        });
+        assert.equal(response.status, 201);
+        const result = await response.json();
+        assert.equal(result.candidateAsset.status, 'candidate-awaiting-human-review');
+        assert.equal(result.candidateAsset.poseStatus, 'not-run');
+        assert.equal(result.candidateAsset.productionRelease, false);
+        assert.match(result.candidateAsset.url, /[?&]sig=[a-f0-9]{64}/);
+        assert.ok(!JSON.stringify(result).includes('hf-test-only-token'));
+        assert.equal(requests[0].headers.Authorization, 'Bearer hf-test-only-token');
+
+        const imageUrl = new URL(result.candidateAsset.url, 'https://worker.example');
+        const image = await worker.fetch(new Request(imageUrl), env);
+        assert.equal(image.status, 200);
+        assert.equal(image.headers.get('Content-Type'), 'image/png');
+        assert.deepEqual(new Uint8Array(await image.arrayBuffer()), png);
+        imageUrl.searchParams.set('owner', 'user-2');
+        assert.equal((await worker.fetch(new Request(imageUrl), env)).status, 404);
+    } finally { globalThis.fetch = originalFetch; }
 });
 
 async function bridge(t, options = {}) {

@@ -25,7 +25,7 @@ jobs:
         run: npm install -g wrangler
 
       - name: Verify shared workspace and existing API contracts
-        run: node --test tests/workspace-sync.test.mjs tests/web-discovery.test.mjs tests/cloud-director-routes.test.mjs tests/director-integration.test.mjs tests/jev-review.test.mjs tests/plan-print-export.test.mjs tests/guest-entry.test.mjs tests/email-auth.test.mjs tests/ai-plan.test.mjs
+        run: node --test tests/workspace-sync.test.mjs tests/web-discovery.test.mjs tests/cloud-director-routes.test.mjs tests/director-cloud-generation.test.mjs tests/ai-studio-backend.test.mjs tests/director-integration.test.mjs tests/jev-review.test.mjs tests/plan-print-export.test.mjs tests/guest-entry.test.mjs tests/email-auth.test.mjs tests/ai-plan.test.mjs
 
       - name: Deploy Worker
         env:
@@ -35,6 +35,7 @@ jobs:
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           MINIMAX_API_KEY: ${{ secrets.MINIMAX_API_KEY }}
+          PHOTOATELIER_HF_TOKEN: ${{ secrets.PHOTOATELIER_HF_TOKEN }}
         run: |
           # 设置密钥
           echo "$JWT_SECRET" | wrangler secret put JWT_SECRET --name photoatelier-api
@@ -47,6 +48,9 @@ jobs:
           echo "$SUPABASE_SERVICE_KEY" | wrangler secret put SUPABASE_SERVICE_KEY --name photoatelier-api
           if [ -n "$MINIMAX_API_KEY" ]; then
             echo "$MINIMAX_API_KEY" | wrangler secret put MINIMAX_API_KEY --name photoatelier-api
+          fi
+          if [ -n "$PHOTOATELIER_HF_TOKEN" ]; then
+            echo "$PHOTOATELIER_HF_TOKEN" | wrangler secret put PHOTOATELIER_HF_TOKEN --name photoatelier-api
           fi
           
           # 部署

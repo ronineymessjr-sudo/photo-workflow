@@ -279,6 +279,7 @@ test('candidate card explains composition and unverified-face blockers', async (
     const end = html.indexOf('\nfunction formatDirectorGenerationError(error)', start);
     assert.ok(start >= 0 && end > start);
     const context = {
+        window: { location: { hostname: 'photo-workflow.pages.dev' } },
         plan: {
             id: 'test-plan',
             input: { extra: '人脸是画面重点，脸部占画面90%' },

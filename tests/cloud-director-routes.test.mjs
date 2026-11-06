@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHmac } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { createGuestPlanDraft } from '../api/director-plan.mjs';
 import worker from '../api/index.js';
@@ -31,18 +32,23 @@ test('guest multi-person plan uses interaction-led shots without assuming romanc
     assert.ok(new Set(plan.shotList.map(shot => shot.method)).size > 1);
 });
 
-test('cloud candidate endpoint explains that image delivery is not configured instead of returning 404', async () => {
-    const response = await worker.fetch(new Request('https://unit.test/api/director/generate-candidate', {
+test('cloud image generation requires a signed-in user and a server-side provider secret', async () => {
+    const request = () => new Request('https://unit.test/api/director/generate-candidate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dry_run: true }),
-    }), {});
-
-    assert.equal(response.status, 503);
-    assert.equal((await response.json()).error, 'CANDIDATE_IMAGE_DELIVERY_NOT_CONFIGURED');
+        body: JSON.stringify({ candidate_count: 1 }),
+    });
+    const anonymous = await worker.fetch(request(), { JWT_SECRET: 'unit-test-secret' });
+    assert.equal(anonymous.status, 401);
+    const authenticated = await worker.fetch(new Request('https://unit.test/api/director/generate-candidate', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token('user-1', 'unit-test-secret')}` },
+        body: JSON.stringify({ candidate_count: 1 }),
+    }), { JWT_SECRET: 'unit-test-secret' });
+    assert.equal(authenticated.status, 503);
+    assert.equal((await authenticated.json()).error, 'IMAGE_PROVIDER_NOT_CONFIGURED');
 });
 
-test('cloud plans do not advertise local-only candidate generation as a connected service', async () => {
+test('cloud plans stay text-only when the external provider is not configured', async () => {
     const originalFetch = globalThis.fetch;
     globalThis.fetch = async () => Response.json({ shot_plans: [{ shot_language: 'wide', model_pose: 'Walk together', framing: 'Environment wide' }] });
     try {
@@ -54,11 +60,17 @@ test('cloud plans do not advertise local-only candidate generation as a connecte
         const plan = await response.json();
         assert.equal(response.status, 200);
         assert.equal(plan.director.imageGenerationConnected, false);
-        assert.equal(plan.director.imageGenerationMode, 'cloud-image-delivery-not-configured');
+        assert.equal(plan.director.imageGenerationMode, 'cloud-image-provider-not-configured');
     } finally {
         globalThis.fetch = originalFetch;
     }
 });
+
+function token(uid, secret) {
+    const p = JSON.stringify({ uid, t: Date.now() });
+    const s = createHmac('sha256', secret).update(p).digest('hex');
+    return Buffer.from(JSON.stringify({ p, s })).toString('base64url');
+}
 
 test('schedule UI describes assigned roles without claiming that notifications were sent', async () => {
     const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');

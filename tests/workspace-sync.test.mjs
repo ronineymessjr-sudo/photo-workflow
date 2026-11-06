@@ -43,6 +43,7 @@ function durable() {
         get: async key => structuredClone(values.get(key)),
         put: async (key, value) => values.set(key, structuredClone(value)),
         delete: async key => values.delete(key),
+        list: async ({ prefix = '' } = {}) => new Map([...values].filter(([key]) => key.startsWith(prefix)).map(([key, value]) => [key, structuredClone(value)])),
         transaction: async fn => fn(storage),
     };
     return new WorkspaceSync({ storage });
@@ -55,6 +56,22 @@ test('durable state survives chunking and rejects a stale write or credential ke
     assert.deepEqual(await (await object.fetch(new Request('https://internal/state'))).json(), { revision: 1, entries });
     assert.equal((await post({ revision: 0, entries: {} })).status, 409);
     assert.equal((await post({ revision: 1, entries: { [workspaceEntryKey('local', 'pw_token', '$value')]: 'not-uploaded' } })).status, 400);
+});
+
+test('candidate images are stored in bounded chunks and returned from private workspace storage', async () => {
+    const object = durable();
+    const source = new Uint8Array(1_500_000);
+    source.set([137, 80, 78, 71, 13, 10, 26, 10]);
+    const assetId = 'a'.repeat(32);
+    const saved = await object.fetch(new Request(`https://internal/candidate-assets/${assetId}`, {
+        method: 'PUT', headers: { 'Content-Type': 'image/png' }, body: source,
+    }));
+    assert.equal(saved.status, 201);
+    const loaded = await object.fetch(new Request(`https://internal/candidate-assets/${assetId}`));
+    assert.equal(loaded.status, 200);
+    assert.equal(loaded.headers.get('Content-Type'), 'image/png');
+    assert.deepEqual(new Uint8Array(await loaded.arrayBuffer()), source);
+    assert.equal((await object.fetch(new Request(`https://internal/candidate-assets/${'b'.repeat(32)}`))).status, 404);
 });
 test('existing login signature protects shared state and selects a separate object per account', async () => {
     const objects = new Map();
