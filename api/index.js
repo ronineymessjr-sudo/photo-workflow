@@ -175,7 +175,7 @@ function validCandidateAssetUrl(url, assetId, env) {
 }
 
 function cloudImageGenerationEnabled(plan, uid, env) {
-    return Boolean(uid && env.JWT_SECRET && env.PHOTOATELIER_FAL_KEY && env.WORKSPACE_SYNC && candidatePlanSupportsGeneration(plan));
+    return Boolean(uid && env.JWT_SECRET && typeof env.AI?.run === 'function' && env.WORKSPACE_SYNC && candidatePlanSupportsGeneration(plan));
 }
 
 // ===== Handlers =====
@@ -613,15 +613,16 @@ export default {
             }
             else if (path === '/api/director/generate-candidate' && method === 'POST') {
                 if (!uid) result = { status: 401, body: { error: 'SIGN_IN_REQUIRED' } };
-                else if (!env.PHOTOATELIER_FAL_KEY) result = { status: 503, body: { error: 'IMAGE_PROVIDER_NOT_CONFIGURED' } };
+                else if (!env.AI || typeof env.AI.run !== 'function') result = { status: 503, body: { error: 'IMAGE_PROVIDER_NOT_CONFIGURED' } };
                 else if (!env.WORKSPACE_SYNC || !env.JWT_SECRET) result = { status: 503, body: { error: 'CANDIDATE_STORAGE_NOT_CONFIGURED' } };
                 else {
                     const allowed = await consumeStudioImageQuota({ uid, env });
                     if (allowed === null) result = { status: 503, body: { error: 'IMAGE_QUOTA_NOT_CONFIGURED' } };
+                    else if (allowed === 'global-limit') result = { status: 429, body: { error: 'GLOBAL_IMAGE_DAILY_LIMIT_REACHED' } };
                     else if (!allowed) result = { status: 429, body: { error: 'IMAGE_DAILY_LIMIT_REACHED' } };
                     else {
                         try {
-                            const generated = await generateCloudCandidate(body, { token: env.PHOTOATELIER_FAL_KEY });
+                            const generated = await generateCloudCandidate(body, { ai: env.AI });
                             const assetId = crypto.randomUUID().replace(/-/g, '');
                             const object = env.WORKSPACE_SYNC.get(env.WORKSPACE_SYNC.idFromName(`user:${uid}`));
                             const stored = await object.fetch(new Request(`https://workspace.internal/candidate-assets/${assetId}`, {
@@ -633,21 +634,19 @@ export default {
                                 request_id: typeof body.request_id === 'string' ? body.request_id.slice(0, 128) : assetId,
                                 selected_shot_contract: { source: 'browser-shot-contract' },
                                 candidateAsset: { id: assetId, url, synthetic: true,
-                                    status: 'candidate-awaiting-human-review', source: 'fal-ai-model-api',
+                                    status: 'candidate-awaiting-human-review', source: 'cloudflare-workers-ai',
                                     model: generated.model, poseStatus: 'not-run', poseReasons: [], faceQualityStatus: 'not-run',
                                     shotLanguage: generated.shotLanguage, contractSource: 'browser-shot-contract',
                                     contractFingerprint: '', expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
                                     productionRelease: false },
                             } };
                         } catch (error) {
-                            const code = ['IMAGE_PROVIDER_CREDITS_EXHAUSTED', 'IMAGE_PROVIDER_RATE_LIMITED', 'IMAGE_PROVIDER_NOT_CONFIGURED', 'IMAGE_PROVIDER_AUTH_FAILED',
+                            const code = ['IMAGE_PROVIDER_NOT_CONFIGURED', 'IMAGE_PROVIDER_GENERATION_FAILED',
                                 'IMAGE_PROVIDER_INVALID_RESPONSE', 'IMAGE_PROVIDER_INVALID_IMAGE_TYPE', 'IMAGE_PROVIDER_IMAGE_SIZE_INVALID',
                                 'GENERATION_PROVIDER_NOT_ALLOWED', 'GENERATION_BILLING_MODE_NOT_ALLOWED', 'CLOUD_REFERENCE_IMAGE_NOT_CONFIGURED',
                                 'INVALID_GENERATION_REQUEST', 'SHOT_CONTRACT_REQUIRED'].includes(error.message)
                                 ? error.message : 'IMAGE_GENERATION_FAILED';
-                            const status = code === 'IMAGE_PROVIDER_CREDITS_EXHAUSTED' ? 402
-                                : code === 'IMAGE_PROVIDER_RATE_LIMITED' ? 429
-                                : code === 'IMAGE_PROVIDER_NOT_CONFIGURED' || code === 'IMAGE_PROVIDER_AUTH_FAILED' ? 503
+                            const status = code === 'IMAGE_PROVIDER_NOT_CONFIGURED' || code === 'IMAGE_PROVIDER_GENERATION_FAILED' ? 503
                                         : code === 'GENERATION_PROVIDER_NOT_ALLOWED' || code === 'GENERATION_BILLING_MODE_NOT_ALLOWED'
                                             || code === 'CLOUD_REFERENCE_IMAGE_NOT_CONFIGURED' || code === 'INVALID_GENERATION_REQUEST'
                                             || code === 'SHOT_CONTRACT_REQUIRED' ? 400 : 502;

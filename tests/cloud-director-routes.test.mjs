@@ -32,23 +32,27 @@ test('guest multi-person plan uses interaction-led shots without assuming romanc
     assert.ok(new Set(plan.shotList.map(shot => shot.method)).size > 1);
 });
 
-test('cloud image generation requires a signed-in user and a server-side provider secret', async () => {
+test('cloud image generation blocks guests before any AI binding call', async () => {
+    let aiCalls = 0;
     const request = () => new Request('https://unit.test/api/director/generate-candidate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ candidate_count: 1 }),
     });
-    const anonymous = await worker.fetch(request(), { JWT_SECRET: 'unit-test-secret' });
+    const env = { JWT_SECRET: 'unit-test-secret', AI: { run: async () => { aiCalls++; return {}; } } };
+    const anonymous = await worker.fetch(request(), env);
     assert.equal(anonymous.status, 401);
+    assert.equal((await anonymous.json()).error, 'SIGN_IN_REQUIRED');
     const authenticated = await worker.fetch(new Request('https://unit.test/api/director/generate-candidate', {
         method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token('user-1', 'unit-test-secret')}` },
         body: JSON.stringify({ candidate_count: 1 }),
-    }), { JWT_SECRET: 'unit-test-secret' });
+    }), env);
     assert.equal(authenticated.status, 503);
-    assert.equal((await authenticated.json()).error, 'IMAGE_PROVIDER_NOT_CONFIGURED');
+    assert.equal((await authenticated.json()).error, 'CANDIDATE_STORAGE_NOT_CONFIGURED');
+    assert.equal(aiCalls, 0);
 });
 
-test('cloud plans stay text-only when the external provider is not configured', async () => {
+test('cloud plans stay text-only when the Cloudflare AI binding is unavailable', async () => {
     const originalFetch = globalThis.fetch;
     globalThis.fetch = async () => Response.json({ shot_plans: [{ shot_language: 'wide', model_pose: 'Walk together', framing: 'Environment wide' }] });
     try {

@@ -4,6 +4,7 @@ import { createHmac } from 'node:crypto';
 import worker from '../api/index.js';
 import { WorkspaceSync } from '../api/workspace-state.mjs';
 import { AiStudioQuota } from '../api/ai-studio/quota.mjs';
+import { consumeStudioImageQuota } from '../api/ai-studio/service.mjs';
 import { applyStudioCommit, applyStudioSyncResult } from '../api/ai-studio/plan-commit.mjs';
 import { createServer } from '../tools/serve-director.mjs';
 
@@ -134,14 +135,24 @@ test('Worker Studio routes enforce exact origins, bounded JSON, authentication a
     assert.equal(guest.modelCalls, 0);
 });
 
-test('candidate generation quota is capped at five images per user per day', async () => {
+test('candidate quota is five per user plus a shared daily free-tier safety cap', async () => {
     const quota = new AiStudioQuota({ storage: storage() });
-    const consume = () => quota.fetch(new Request('https://quota.internal/consume', {
+    const consume = (action, limit) => quota.fetch(new Request('https://quota.internal/consume', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'image', limit: 5 }),
+        body: JSON.stringify({ action, limit }),
     }));
-    for (let index = 0; index < 5; index++) assert.equal((await (await consume()).json()).allowed, true);
-    assert.equal((await (await consume()).json()).allowed, false);
+    for (let index = 0; index < 5; index++) assert.equal((await (await consume('image', 5)).json()).allowed, true);
+    assert.equal((await (await consume('image', 5)).json()).allowed, false);
+    for (let index = 0; index < 50; index++) assert.equal((await (await consume('image-global', 50)).json()).allowed, true);
+    assert.equal((await (await consume('image-global', 50)).json()).allowed, false);
+});
+
+test('image allowance is isolated per signed-in user and refuses guests', async () => {
+    const env = environment();
+    assert.equal(await consumeStudioImageQuota({ uid: null, env }), false);
+    for (let index = 0; index < 5; index++) assert.equal(await consumeStudioImageQuota({ uid: 'user-a', env }), true);
+    assert.equal(await consumeStudioImageQuota({ uid: 'user-a', env }), false);
+    for (let index = 0; index < 5; index++) assert.equal(await consumeStudioImageQuota({ uid: 'user-b', env }), true);
 });
 
 test('Worker confirmation writes only the verified account workspace and replays once', async () => {
@@ -170,47 +181,37 @@ test('Worker confirmation writes only the verified account workspace and replays
     assert.equal((await (await call(env, '/api/ai/studio/feishu/status')).json()).credential_configured, false);
 });
 
-test('authenticated production image candidates are privately stored and served by signed user URLs', async () => {
-    const env = { ...environment(), PHOTOATELIER_FAL_KEY: 'fal-test-only-key' };
-    const originalFetch = globalThis.fetch;
-    const png = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 0]);
-    const requests = [];
-    globalThis.fetch = async (url, options) => {
-        requests.push({ url: String(url), headers: options?.headers || {} });
-        if (String(url) === 'https://queue.fal.run/fal-ai/flux/schnell') return Response.json({
-            status: 'IN_QUEUE', request_id: '1b1c01f2-42d4-4f6c-8cb4-89aee7c5536d',
-            status_url: 'https://queue.fal.run/fal-ai/flux/requests/1b1c01f2-42d4-4f6c-8cb4-89aee7c5536d/status',
-            response_url: 'https://queue.fal.run/fal-ai/flux/requests/1b1c01f2-42d4-4f6c-8cb4-89aee7c5536d',
-        });
-        if (String(url).endsWith('/status')) return Response.json({ status: 'COMPLETED' });
-        if (String(url).includes('/requests/')) return Response.json({ images: [{ url: 'https://v3.fal.media/private-candidate.png' }] });
-        return new Response(png, { headers: { 'Content-Type': 'image/png' } });
-    };
-    try {
-        const response = await call(env, '/api/director/generate-candidate', {
-            request_id: 'cloud-smoke-test', provider: 'fal', model: 'fal-ai/flux/schnell',
-            candidate_count: 1, billing_mode: 'free-credit-first', aspect_ratio: 'portrait',
-            brief: '秋日公园坐姿人像，棕色针织衫。', scene_brief: '自然光，不使用闪光灯。', style_direction: '低饱和电影感',
-            reference_asset_ids: [],
-            shot_contract: { shot_language: 'park seated portrait', generator_prompt: '35mm eye-level seated portrait, full hands and feet', must_show: 'existing park bench', reject_if: 'flash or cropped feet' },
-        });
-        assert.equal(response.status, 201);
-        const result = await response.json();
-        assert.equal(result.candidateAsset.status, 'candidate-awaiting-human-review');
-        assert.equal(result.candidateAsset.poseStatus, 'not-run');
-        assert.equal(result.candidateAsset.productionRelease, false);
-        assert.match(result.candidateAsset.url, /[?&]sig=[a-f0-9]{64}/);
-        assert.ok(!JSON.stringify(result).includes('fal-test-only-key'));
-        assert.equal(requests[0].headers.Authorization, 'Key fal-test-only-key');
+test('authenticated production candidates use Cloudflare AI and private signed storage without provider keys', async () => {
+    const jpeg = new Uint8Array([255, 216, 255, 0]);
+    const aiCalls = [];
+    const env = { ...environment(), AI: { run: async (model, input) => {
+        aiCalls.push({ model, input });
+        return { image: Buffer.from(jpeg).toString('base64') };
+    } } };
+    const response = await call(env, '/api/director/generate-candidate', {
+        request_id: 'cloud-smoke-test', provider: 'cloudflare', model: '@cf/black-forest-labs/flux-1-schnell',
+        candidate_count: 1, billing_mode: 'free-credit-first', aspect_ratio: 'portrait',
+        brief: '秋日公园坐姿人像，棕色针织衫。', scene_brief: '自然光，不使用闪光灯。', style_direction: '低饱和电影感',
+        reference_asset_ids: [],
+        shot_contract: { shot_language: 'park seated portrait', generator_prompt: '35mm eye-level seated portrait, full hands and feet', must_show: 'existing park bench', reject_if: 'flash or cropped feet' },
+    });
+    assert.equal(response.status, 201);
+    const result = await response.json();
+    assert.equal(aiCalls.length, 1);
+    assert.equal(aiCalls[0].model, '@cf/black-forest-labs/flux-1-schnell');
+    assert.equal(result.candidateAsset.status, 'candidate-awaiting-human-review');
+    assert.equal(result.candidateAsset.source, 'cloudflare-workers-ai');
+    assert.equal(result.candidateAsset.poseStatus, 'not-run');
+    assert.equal(result.candidateAsset.productionRelease, false);
+    assert.match(result.candidateAsset.url, /[?&]sig=[a-f0-9]{64}/);
 
-        const imageUrl = new URL(result.candidateAsset.url, 'https://worker.example');
-        const image = await worker.fetch(new Request(imageUrl), env);
-        assert.equal(image.status, 200);
-        assert.equal(image.headers.get('Content-Type'), 'image/png');
-        assert.deepEqual(new Uint8Array(await image.arrayBuffer()), png);
-        imageUrl.searchParams.set('owner', 'user-2');
-        assert.equal((await worker.fetch(new Request(imageUrl), env)).status, 404);
-    } finally { globalThis.fetch = originalFetch; }
+    const imageUrl = new URL(result.candidateAsset.url, 'https://worker.example');
+    const image = await worker.fetch(new Request(imageUrl), env);
+    assert.equal(image.status, 200);
+    assert.equal(image.headers.get('Content-Type'), 'image/jpeg');
+    assert.deepEqual(new Uint8Array(await image.arrayBuffer()), jpeg);
+    imageUrl.searchParams.set('owner', 'user-2');
+    assert.equal((await worker.fetch(new Request(imageUrl), env)).status, 404);
 });
 
 async function bridge(t, options = {}) {

@@ -1,10 +1,10 @@
-const FAL_MODEL = 'fal-ai/flux/schnell';
-const FAL_QUEUE = 'https://queue.fal.run/fal-ai/flux/schnell';
+const CLOUDFLARE_MODEL = '@cf/black-forest-labs/flux-1-schnell';
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+const MAX_PROMPT_CHARS = 2048;
 
 export function compileCloudCandidateRequest(input) {
     if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('INVALID_GENERATION_REQUEST');
-    if (input.provider !== 'fal' || input.model !== FAL_MODEL) throw new Error('GENERATION_PROVIDER_NOT_ALLOWED');
+    if (input.provider !== 'cloudflare' || input.model !== CLOUDFLARE_MODEL) throw new Error('GENERATION_PROVIDER_NOT_ALLOWED');
     if (input.candidate_count !== 1 || input.billing_mode !== 'free-credit-first') throw new Error('GENERATION_BILLING_MODE_NOT_ALLOWED');
     if (input.reference_image_path || input.reference_image_url || input.reference_asset_ids?.length) throw new Error('CLOUD_REFERENCE_IMAGE_NOT_CONFIGURED');
 
@@ -32,94 +32,37 @@ export function compileCloudCandidateRequest(input) {
         landscape: [1024, 768], 'landscape-wide': [1024, 576], square: [768, 768],
         portrait: [768, 1024], 'portrait-tall': [576, 1024],
     }[input.aspect_ratio] || [1024, 768];
+    const aspectDescription = {
+        landscape: 'landscape 4:3 composition', 'landscape-wide': 'wide landscape 16:9 composition',
+        square: 'square composition', portrait: 'portrait 3:4 composition', 'portrait-tall': 'vertical portrait 9:16 composition',
+    }[input.aspect_ratio] || 'landscape 4:3 composition';
+    const compiledPrompt = `${prompt}\nFrame the scene as a ${aspectDescription}. Avoid: ${avoid}.`;
     return {
-        prompt: `${prompt}\nAvoid: ${avoid}.`, width: dimensions[0], height: dimensions[1],
+        prompt: compiledPrompt.slice(0, MAX_PROMPT_CHARS), width: dimensions[0], height: dimensions[1],
         steps: 4, seed: Number.isSafeInteger(input.seed) ? input.seed : Math.floor(Math.random() * 2147483647),
-        shotLanguage, model: FAL_MODEL,
+        shotLanguage, model: CLOUDFLARE_MODEL,
     };
 }
 
-export async function generateCloudCandidate(input, { token, fetchImpl = fetch } = {}) {
-    if (!token) throw new Error('IMAGE_PROVIDER_NOT_CONFIGURED');
+export async function generateCloudCandidate(input, { ai } = {}) {
+    if (!ai || typeof ai.run !== 'function') throw new Error('IMAGE_PROVIDER_NOT_CONFIGURED');
     const compiled = compileCloudCandidateRequest(input);
-    const deadline = Date.now() + 110_000;
-    const auth = { Authorization: `Key ${token}` };
-    const response = await fetchImpl(FAL_QUEUE, {
-        method: 'POST',
-        headers: { ...auth, 'Content-Type': 'application/json', 'X-Fal-Request-Start-Timeout': '90', 'X-Fal-Store-IO': '0' },
-        body: JSON.stringify({
-            prompt: compiled.prompt,
-            image_size: { width: compiled.width, height: compiled.height },
-            num_inference_steps: compiled.steps, seed: compiled.seed, num_images: 1,
-            output_format: 'jpeg', enable_safety_checker: true,
-        }),
-        signal: AbortSignal.timeout(120000),
-    });
-    ensureProviderResponse(response);
-    const queued = await readJson(response);
-    const statusUrl = trustedQueueUrl(queued?.status_url);
-    const resultUrl = trustedQueueUrl(queued?.response_url);
-    if (!statusUrl || !resultUrl || typeof queued.request_id !== 'string') throw new Error('IMAGE_PROVIDER_INVALID_RESPONSE');
     let result;
-    if (queued.status === 'COMPLETED') result = await fetchFalResult(resultUrl, auth, fetchImpl);
-    else {
-        let delay = 1000;
-        while (Date.now() < deadline) {
-            await new Promise(resolve => setTimeout(resolve, delay));
-            const statusResponse = await fetchImpl(statusUrl, { headers: auth, signal: AbortSignal.timeout(15000) });
-            ensureProviderResponse(statusResponse);
-            const status = await readJson(statusResponse);
-            if (status.status === 'COMPLETED') {
-                if (status.error) throw new Error('IMAGE_PROVIDER_GENERATION_FAILED');
-                result = await fetchFalResult(resultUrl, auth, fetchImpl);
-                break;
-            }
-            if (!['IN_QUEUE', 'IN_PROGRESS'].includes(status.status)) throw new Error('IMAGE_PROVIDER_INVALID_RESPONSE');
-            delay = Math.min(delay + 500, 3000);
-        }
+    try {
+        result = await ai.run(CLOUDFLARE_MODEL, { prompt: compiled.prompt, steps: compiled.steps, seed: compiled.seed });
+    } catch {
+        throw new Error('IMAGE_PROVIDER_GENERATION_FAILED');
     }
-    if (!result) throw new Error('IMAGE_PROVIDER_TIMEOUT');
-    const imageUrl = result?.images?.[0]?.url;
-    if (typeof imageUrl !== 'string') throw new Error('IMAGE_PROVIDER_INVALID_RESPONSE');
-    let parsedUrl;
-    try { parsedUrl = new URL(imageUrl); } catch { throw new Error('IMAGE_PROVIDER_INVALID_RESPONSE'); }
-    if (parsedUrl.protocol !== 'https:' || parsedUrl.username || parsedUrl.password
-        || !(/(^|\.)fal\.media$/i.test(parsedUrl.hostname) || /(^|\.)fal\.ai$/i.test(parsedUrl.hostname)
-            || (parsedUrl.hostname === 'storage.googleapis.com' && parsedUrl.pathname.startsWith('/falserverless/')))) {
+    if (typeof result?.image !== 'string' || result.image.length > Math.ceil(MAX_IMAGE_BYTES * 4 / 3) + 8) {
         throw new Error('IMAGE_PROVIDER_INVALID_RESPONSE');
     }
-    const image = await fetchImpl(parsedUrl, { redirect: 'manual', signal: AbortSignal.timeout(30000) });
-    if (!image.ok) throw new Error(`IMAGE_PROVIDER_ASSET_${image.status}`);
-    const mime = (image.headers.get('content-type') || '').split(';')[0].toLowerCase();
-    if (!['image/png', 'image/jpeg', 'image/webp'].includes(mime)) throw new Error('IMAGE_PROVIDER_INVALID_IMAGE_TYPE');
-    const bytes = new Uint8Array(await image.arrayBuffer());
-    if (!bytes.length || bytes.length > MAX_IMAGE_BYTES || !hasValidImageSignature(bytes, mime)) throw new Error('IMAGE_PROVIDER_IMAGE_SIZE_INVALID');
+    let binary;
+    try { binary = atob(result.image); } catch { throw new Error('IMAGE_PROVIDER_INVALID_RESPONSE'); }
+    if (!binary.length || binary.length > MAX_IMAGE_BYTES) throw new Error('IMAGE_PROVIDER_IMAGE_SIZE_INVALID');
+    const bytes = Uint8Array.from(binary, char => char.charCodeAt(0));
+    const mime = 'image/jpeg';
+    if (!hasValidImageSignature(bytes, mime)) throw new Error('IMAGE_PROVIDER_INVALID_IMAGE_TYPE');
     return { ...compiled, bytes, mime };
-}
-
-async function fetchFalResult(url, auth, fetchImpl) {
-    const response = await fetchImpl(url, { headers: auth, signal: AbortSignal.timeout(15000) });
-    ensureProviderResponse(response);
-    return readJson(response);
-}
-
-function trustedQueueUrl(value) {
-    try {
-        const url = new URL(value);
-        return url.protocol === 'https:' && url.hostname === 'queue.fal.run' && !url.username && !url.password ? url : null;
-    } catch { return null; }
-}
-
-function ensureProviderResponse(response) {
-    if (response.ok) return;
-    if (response.status === 402) throw new Error('IMAGE_PROVIDER_CREDITS_EXHAUSTED');
-    if (response.status === 401 || response.status === 403) throw new Error('IMAGE_PROVIDER_AUTH_FAILED');
-    if (response.status === 429) throw new Error('IMAGE_PROVIDER_RATE_LIMITED');
-    throw new Error(`IMAGE_PROVIDER_UPSTREAM_${response.status}`);
-}
-
-async function readJson(response) {
-    try { return await response.json(); } catch { throw new Error('IMAGE_PROVIDER_INVALID_RESPONSE'); }
 }
 
 function clean(value, max) { return typeof value === 'string' ? value.trim().slice(0, max) : ''; }
