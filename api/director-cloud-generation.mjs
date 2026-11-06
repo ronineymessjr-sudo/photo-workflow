@@ -11,7 +11,8 @@ export async function prepareCloudCandidateReferences(input, options = {}) {
     }
     const context = await prepareReferenceContext({
         ...input.reference_brief,
-        scene: input.reference_brief?.scene || input.scene_brief || input.brief,
+        scene: [input.reference_brief?.scene, input.scene_brief, input.brief].filter(Boolean).join('\n'),
+        modelDesc: input.reference_brief?.modelDesc || input.brief,
         style: input.reference_brief?.style || input.style_direction,
         useReferenceLibrary: true,
         referenceIds: [...new Set([...(input.shot_contract?.referenceIds || []), ...(input.reference_ids || [])])],

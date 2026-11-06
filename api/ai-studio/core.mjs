@@ -197,6 +197,8 @@ export function createRegistry(catalog) {
     const scored = [];
     for (const t of items) {
       if (!canAgent(t) || (kind && t.kind !== kind)) continue;
+      if (raw.requireImageReferences && (!t.source?.referenceImageUrl || (t.kind === "portrait" && t.section !== "face"))) continue;
+      if (raw.naturalPoseOnly && t.kind === "pose" && /跪|后仰|躺|趴|劈叉|倒立|kneel|reclin|supine|prone|split|inversion/i.test(`${t.title} ${t.description} ${t.category}`)) continue;
       if (
         filterKeys.some(
           (k) =>
@@ -309,6 +311,8 @@ export function executeTool(registry, name, args) {
     "color",
     "hair",
     "section",
+    "requireImageReferences",
+    "naturalPoseOnly",
   ]);
   if (Object.keys(args).some((k) => !allow.has(k)))
     throw Error("UNKNOWN_ARGUMENT");

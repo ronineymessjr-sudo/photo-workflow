@@ -193,7 +193,7 @@ test('authenticated production candidates retrieve templates before Cloudflare A
     });
     const jpeg = new Uint8Array([255, 216, 255, 0]);
     const aiCalls = [];
-    const env = { ...environment(), AI: { run: async (model, input) => {
+    const env = { ...environment(), POSEATLAS_ENABLED: 'true', AI: { run: async (model, input) => {
         aiCalls.push({ model, input });
         if (model.includes('llama')) return { response: 'One adult in brown knitwear seated steadily on a park bench, muted autumn park colors, natural light, full hands and feet.' };
         return { image: Buffer.from(jpeg).toString('base64') };
@@ -206,7 +206,7 @@ test('authenticated production candidates retrieve templates before Cloudflare A
         reference_ids: ['atlas-pose-full_single_p019'],
         shot_contract: { shot_language: 'park seated portrait', generator_prompt: '35mm eye-level seated portrait, full hands and feet', must_show: 'existing park bench', reject_if: 'flash or cropped feet' },
     });
-    assert.equal(response.status, 201);
+    assert.equal(response.status, 201, await response.clone().text());
     const result = await response.json();
     assert.equal(aiCalls.length, 2);
     assert.equal(sourceCalls.length, 6);

@@ -80,10 +80,15 @@ export function createTemplatePlan(input, referenceContext) {
     const plan = createGuestPlanDraft(input);
     const poses = referenceContext.templates.filter(template => template.kind === 'pose');
     if (!poses.length) throw new Error('POSE_TEMPLATE_REQUIRED');
+    const locations = String(input.scene || '场地待确认').split(/[;；\n]+/).map(value => value.trim()).filter(Boolean);
+    const fixedLensMatch = String(input.extra || '').match(/(?:全组|全程|统一|固定|只用|only|must use)[^。\n;；]{0,24}?\b(24|28|35|50|85|105|135)\s*mm\b/i);
+    const fixedLens = fixedLensMatch ? `${fixedLensMatch[1]}mm` : '';
     plan.shotList = plan.shotList.map((shot, index) => {
         const template = poses[index % poses.length];
         const guidance = referenceContext.guidance.suggestions.find(item => item.sourceItemId === template.id)?.direction || '';
-        const action = `${template.title}。${guidance}`;
+        const action = `${shot.description}。摆姿参考：${template.title}。${guidance}`;
+        const scene = locations[index % locations.length] || shot.scene;
+        const lens = fixedLens || shot.focalLength;
         const framing = /全景|全身|中全景/.test(shot.shotSize)
             ? 'Wide environmental head-to-toe full-body photograph. The entire person including both shoes fits inside the frame, with visible ground below the shoes. Person occupies less than half the image.'
             : shot.shotSize;
@@ -92,12 +97,12 @@ export function createTemplatePlan(input, referenceContext) {
         const contract = {
             source: 'template-library-plan', referenceIds: [template.id],
             shot_language: `${shot.title} · ${template.title}`, model_pose: action,
-            shot_size: shot.shotSize, lens: shot.focalLength, camera_angle: shot.angle,
-            generator_prompt: `Editorial photograph. ${framing} ${stance} ${shot.focalLength}, ${shot.angle}. Subject and clothing: ${input.modelDesc || ''}. Scene: ${input.scene || ''}. User constraints: ${input.extra || ''}. Pose reference: ${action}. Style: ${input.style || ''}.`,
+            shot_size: shot.shotSize, lens, camera_angle: shot.angle,
+            generator_prompt: `Editorial photograph. ${framing} ${stance} ${lens}, ${shot.angle}. Subject and clothing: ${input.modelDesc || ''}. Scene: ${scene}. User constraints: ${input.extra || ''}. Pose reference: ${template.title}. Action: ${shot.description}. Style: ${input.style || ''}.`,
             wardrobe_styling: input.modelDesc || '沿用用户已确认服装',
             must_show: `${action} ${input.modelDesc || ''}`, reject_if: `extra limbs, duplicate feet, malformed anatomy, text, watermark`,
         };
-        return { ...shot, description: action, directorContract: contract };
+        return { ...shot, scene, description: action, focalLength: lens, directorContract: contract };
     });
     Object.assign(plan, referencePlanFields(referenceContext));
     plan.sections = plan.shotList.map((shot, index) => ({ ti: `镜头 ${index + 1} · ${shot.title}`, ic: '', c: [

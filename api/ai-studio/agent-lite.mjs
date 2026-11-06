@@ -62,11 +62,11 @@ function chooseQuery(kind, prompt) {
   }
   if (/(?:霓虹|太空人|宇航员|火星)/.test(prompt))
     return { query: "霓虹色太空人" };
-  if (/中长发|及肩|semilong/.test(prompt))
-    return { query: "中长发", hair: "semilong", section: "styling" };
+    if (/中长发|及肩|semilong/.test(prompt))
+    return { query: "中长发", hair: "semilong", section: "face" };
   if (/短发|short hair/.test(prompt))
-    return { query: "短发", hair: "short", section: "styling" };
-  return { query: "", section: "styling" };
+    return { query: "短发", hair: "short", section: "face" };
+  return { query: "", section: "face" };
 }
 export function parseServerIntent(prompt) {
   if (typeof prompt !== "string" || !prompt.trim() || prompt.length > 1800)
@@ -144,7 +144,7 @@ function selectTop(results, allowIds) {
   }
   return [...new Set(selection)].slice(0, 6);
 }
-export function runServerFirst({ registry, prompt, modelHints = null } = {}) {
+export function runServerFirst({ registry, prompt, modelHints = null, requireImageReferences = false, naturalPoseOnly = false } = {}) {
   const intent = parseServerIntent(prompt);
   // Never reinterpret an explicit, unknown catalog ID as a vague visual intent.
   const explicitIds = [
@@ -176,7 +176,7 @@ export function runServerFirst({ registry, prompt, modelHints = null } = {}) {
       costume: "search_costume",
       portrait: "search_portrait",
     }[kind];
-    const output = executeTool(registry, name, args);
+    const output = executeTool(registry, name, { ...args, ...(requireImageReferences ? { requireImageReferences: true } : {}), ...(naturalPoseOnly && kind === "pose" ? { naturalPoseOnly: true } : {}) });
     const results = output.results.map((t) => ({ ...t }));
     results.forEach((t) => authorized.add(t.id));
     toolTrace.push({ tool: name, args, resultCount: output.total, results });
@@ -235,6 +235,8 @@ export async function runWeakModelAssisted({
   registry,
   prompt,
   provider = null,
+  requireImageReferences = false,
+  naturalPoseOnly = false,
 } = {}) {
   const deterministic = parseServerIntent(prompt);
   if (
@@ -243,7 +245,7 @@ export async function runWeakModelAssisted({
     !provider
   ) {
     return {
-      ...runServerFirst({ registry, prompt }),
+      ...runServerFirst({ registry, prompt, requireImageReferences, naturalPoseOnly }),
       modelCalls: 0,
       modelStatus: provider ? "not-needed" : "not-configured",
     };
@@ -270,7 +272,7 @@ export async function runWeakModelAssisted({
     modelStatus = "model-error";
   }
   return {
-    ...runServerFirst({ registry, prompt, modelHints: hints }),
+    ...runServerFirst({ registry, prompt, modelHints: hints, requireImageReferences, naturalPoseOnly }),
     modelCalls: 1,
     modelStatus,
   };
