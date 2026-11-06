@@ -198,7 +198,8 @@ export function createRegistry(catalog) {
     for (const t of items) {
       if (!canAgent(t) || (kind && t.kind !== kind)) continue;
       if (raw.requireImageReferences && (!t.source?.referenceImageUrl || (t.kind === "portrait" && t.section !== "face"))) continue;
-      if (raw.naturalPoseOnly && t.kind === "pose" && /跪|后仰|躺|趴|劈叉|倒立|kneel|reclin|supine|prone|split|inversion/i.test(`${t.title} ${t.description} ${t.category}`)) continue;
+      if (raw.naturalPoseOnly && t.kind === "pose" && /跪|后仰|躺|趴|劈叉|倒立|双手后撑|双腿斜|双腿悬空|挺胸|单腿.*肩高|M字开腿|kneel|reclin|supine|prone|split|inversion/i.test(`${t.title} ${t.description} ${t.category}`)) continue;
+      if (raw.naturalPoseOnly && t.kind === "pose" && /sexy/i.test(t.series || '')) continue;
       if (
         filterKeys.some(
           (k) =>
@@ -226,7 +227,8 @@ export function createRegistry(catalog) {
       ).length;
       if (query && !matches && !corpus.includes(searchQuery)) continue;
       const score =
-        matches * 10 + (searchQuery && corpus.includes(searchQuery) ? 20 : 0);
+        matches * 10 + (t.kind === 'costume' ? toks.filter(x => normalizeText(t.title).includes(normalizeText(x))).length * 30 : 0)
+        + (searchQuery && corpus.includes(searchQuery) ? 20 : 0);
       scored.push({ item: safeCard(t), score });
     }
     scored.sort(

@@ -12,13 +12,17 @@ function sourceFixture() {
     const fetchImpl = async url => {
         calls.push(String(url));
         if (String(url).endsWith('poses.json')) return Response.json({ poses: [
-            { id: 'full_single_P019', no: 'P019', category: '坐姿', names: { zh: '安静坐姿测试' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P019_front.jpg' }, { angle: 'side' }] },
+            { id: 'full_single_P019', no: 'P019', category: '坐姿', names: { zh: '长椅安静坐姿测试' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P019_front.jpg' }, { angle: 'side' }] },
             { id: 'full_single_P015', no: 'P015', category: '行走', names: { zh: '自然行走回眸', en: 'Easy walking look back' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P015_front.jpg' }] },
             { id: 'full_single_P016', no: 'P016', category: '站姿', names: { zh: '双手撩发的放松站姿', en: 'Relaxed standing pose' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P016_front.jpg' }] },
             { id: 'full_single_P020', no: 'P020', category: '靠栏杆', names: { zh: '轻靠栏杆自然站姿', en: 'Casual rail lean' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P020_front.jpg' }] },
             { id: 'full_single_P001', no: 'P001', category: '后仰坐姿', names: { zh: '后仰坐单膝立起' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P001_front.jpg' }] },
+            { id: 'full_single_P002', no: 'P002', category: '坐姿', names: { zh: '单手支撑・双腿斜向前伸' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P002_front.jpg' }] },
         ] });
-        if (String(url).endsWith('costumes.json')) return Response.json({ costumes: [{ id: 'AUT-0006', thumb: 'costume/thumbs/AUT-0006.webp', cat: 'autumn', group: 'top', color: 'brown', main: 'knit', tags: ['brown', 'knit'] }] });
+        if (String(url).endsWith('costumes.json')) return Response.json({ costumes: [
+            { id: 'AUT-0001', thumb: 'costume/thumbs/AUT-0001.webp', cat: 'autumn', group: 'accessory', color: 'brown', main: 'ribbon', tags: ['brown', 'knit', 'dress'] },
+            { id: 'AUT-0006', thumb: 'costume/thumbs/AUT-0006.webp', cat: 'autumn', group: 'top', color: 'brown', main: 'knit', tags: ['brown', 'knit'] },
+        ] });
         if (String(url).endsWith('faces.json')) return Response.json({ images: [
             { id: 'teststyle', thumb: 'portrait/thumbs/teststyle.webp', sec: 'face', hair: 'semilong', style: '测试造型' },
             { id: 'shortface', thumb: 'portrait/thumbs/shortface.webp', sec: 'face', hair: 'short', style: '短发人脸参考' },
@@ -122,7 +126,7 @@ test('real source IDs survive signed search, explicit proposal, and confirmation
     const env = { JWT_SECRET: 'test-signing-secret-at-least-32-characters' };
     const search = await searchStudio({ prompt: '自然坐姿、秋日棕色针织、中长发', planId: 'plan-1', expectedRevision: 1, uid: 'user-1', env, fetchImpl: source.fetchImpl });
     assert.equal(search.modelCalls, 0);
-    assert.equal(search.library.count, 9);
+    assert.equal(search.library.count, 11);
     const id = 'atlas-pose-full_single_p019';
     assert.ok(search.selectedIds.includes(id));
     const proposal = await createStudioProposal({ searchReceipt: search.searchReceipt, selectedIds: [id], uid: 'user-1', env, fetchImpl: source.fetchImpl });
@@ -140,8 +144,10 @@ test('natural multi-pose search balances four pose variants with one clothing an
     const poses = result.selectedTemplates.filter(template => template.kind === 'pose');
     assert.deepEqual(poses.map(template => template.upstreamId), ['full_single_P016', 'full_single_P015', 'full_single_P019', 'full_single_P020']);
     assert.equal(result.selectedTemplates.filter(template => template.kind === 'costume').length, 1);
+    assert.equal(result.selectedTemplates.find(template => template.kind === 'costume').upstreamId, 'AUT-0006');
     assert.equal(result.selectedTemplates.filter(template => template.kind === 'portrait' && template.section === 'face').length, 1);
     assert.equal(result.selectedTemplates.some(template => template.upstreamId === 'full_single_P001'), false);
+    assert.equal(result.selectedTemplates.some(template => template.upstreamId === 'full_single_P002'), false);
     assert.equal(result.selectedTemplates.length, 6);
 });
 
