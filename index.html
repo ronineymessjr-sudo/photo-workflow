@@ -6609,6 +6609,8 @@ async function generateDirectorCandidateForPlan(planId) {
             candidate_count: 1,
             shot_index: Number.isInteger(shot.sourceShotIndex) ? shot.sourceShotIndex : Math.min(shotIndex, 7),
             shot_contract: Object.keys(contract).length ? contract : undefined,
+            reference_ids: plan.aiStudio?.references?.map(reference => reference.sourceItemId),
+            reference_brief: plan.input,
             judge_mode: 'heuristic',
             billing_mode: 'free-credit-first',
             steps: 4,

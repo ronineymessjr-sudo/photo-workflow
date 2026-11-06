@@ -1,6 +1,6 @@
 // Photo Workflow Backend API - Cloudflare Workers
 import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
-import { createDirectorPlan, createGuestPlanDraft } from './director-plan.mjs';
+import { createDirectorPlan, createGuestPlanDraft, createTemplatePlan } from './director-plan.mjs';
 import { prepareReferenceContext, referencePlanFields } from './ai-studio/reference-brief.mjs';
 import { buildDirectorIdentityWorkflow } from './director-identity-workflow.mjs';
 import { attachJevReview } from './jev-review.mjs';
@@ -8,7 +8,7 @@ import { recordWebRequest } from './web-telemetry.mjs';
 import { emailLoginEnabled, handleEmailAuth } from './email-auth.mjs';
 import { aiPlanProviders, handleAiPlan } from './ai-plan.mjs';
 import { handleAiBrief } from './ai-brief.mjs';
-import { generateCloudCandidate } from './director-cloud-generation.mjs';
+import { generateCloudCandidate, prepareCloudCandidateReferences } from './director-cloud-generation.mjs';
 import { confirmStudioProposal, createStudioProposal, searchStudio, consumeStudioSearchQuota, consumeStudioImageQuota, AiStudioError } from './ai-studio/service.mjs';
 import { checkStudioFeishuConnection, syncStudioPlan } from './ai-studio/feishu-sync.mjs';
 import { workspaceEntryKey } from '../assets/workspace-sync-protocol.mjs';
@@ -601,6 +601,10 @@ export default {
                     plan = createGuestPlanDraft(body);
                     const referenceContext = await prepareReferenceContext(body);
                     Object.assign(plan, referencePlanFields(referenceContext));
+                    if (uid && referenceContext?.templates.some(template => template.sourceUrl && template.kind === 'pose')) {
+                        plan = createTemplatePlan(body, referenceContext);
+                        plan.director.imageGenerationConnected = cloudImageGenerationEnabled(plan, uid, env);
+                    }
                 } else {
                     plan = await createDirectorPlan(body, { baseUrl: env.DIRECTOR_API_BASE });
                     plan.director = { ...plan.director,
@@ -622,7 +626,8 @@ export default {
                     else if (!allowed) result = { status: 429, body: { error: 'IMAGE_DAILY_LIMIT_REACHED' } };
                     else {
                         try {
-                            const generated = await generateCloudCandidate(body, { ai: env.AI });
+                            const referenceContext = await prepareCloudCandidateReferences(body);
+                            const generated = await generateCloudCandidate(body, { ai: env.AI, referenceContext });
                             const assetId = crypto.randomUUID().replace(/-/g, '');
                             const object = env.WORKSPACE_SYNC.get(env.WORKSPACE_SYNC.idFromName(`user:${uid}`));
                             const stored = await object.fetch(new Request(`https://workspace.internal/candidate-assets/${assetId}`, {
@@ -632,21 +637,25 @@ export default {
                             const assetUrl = new URL(candidateAssetUrl(uid, assetId, env), url.origin).href;
                             result = { status: 201, body: {
                                 request_id: typeof body.request_id === 'string' ? body.request_id.slice(0, 128) : assetId,
-                                selected_shot_contract: { source: 'browser-shot-contract' },
+                                selected_shot_contract: { source: 'template-library-shot-contract',
+                                    referenceIds: referenceContext.templates.map(template => template.id),
+                                    library: referenceContext.library },
                                 candidateAsset: { id: assetId, url: assetUrl, synthetic: true,
                                     status: 'candidate-awaiting-human-review', source: 'cloudflare-workers-ai',
                                     model: generated.model, poseStatus: 'not-run', poseReasons: [], faceQualityStatus: 'not-run',
-                                    shotLanguage: generated.shotLanguage, contractSource: 'browser-shot-contract',
+                                    shotLanguage: generated.shotLanguage, contractSource: 'template-library-shot-contract',
+                                    referenceIds: referenceContext.templates.map(template => template.id),
                                     contractFingerprint: '', expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
                                     productionRelease: false },
                             } };
                         } catch (error) {
-                            const code = ['IMAGE_PROVIDER_NOT_CONFIGURED', 'IMAGE_PROVIDER_GENERATION_FAILED',
+                            const code = ['REFERENCE_LIBRARY_UNAVAILABLE', 'INVALID_REFERENCE_SELECTION', 'UNAVAILABLE_REFERENCE',
+                                'IMAGE_PROVIDER_NOT_CONFIGURED', 'IMAGE_PROVIDER_GENERATION_FAILED',
                                 'IMAGE_PROVIDER_INVALID_RESPONSE', 'IMAGE_PROVIDER_INVALID_IMAGE_TYPE', 'IMAGE_PROVIDER_IMAGE_SIZE_INVALID',
                                 'GENERATION_PROVIDER_NOT_ALLOWED', 'GENERATION_BILLING_MODE_NOT_ALLOWED', 'CLOUD_REFERENCE_IMAGE_NOT_CONFIGURED',
                                 'INVALID_GENERATION_REQUEST', 'SHOT_CONTRACT_REQUIRED'].includes(error.message)
                                 ? error.message : 'IMAGE_GENERATION_FAILED';
-                            const status = code === 'IMAGE_PROVIDER_NOT_CONFIGURED' || code === 'IMAGE_PROVIDER_GENERATION_FAILED' ? 503
+                            const status = code === 'REFERENCE_LIBRARY_UNAVAILABLE' || code === 'IMAGE_PROVIDER_NOT_CONFIGURED' || code === 'IMAGE_PROVIDER_GENERATION_FAILED' ? 503
                                         : code === 'GENERATION_PROVIDER_NOT_ALLOWED' || code === 'GENERATION_BILLING_MODE_NOT_ALLOWED'
                                             || code === 'CLOUD_REFERENCE_IMAGE_NOT_CONFIGURED' || code === 'INVALID_GENERATION_REQUEST'
                                             || code === 'SHOT_CONTRACT_REQUIRED' ? 400 : 502;

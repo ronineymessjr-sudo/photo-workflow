@@ -84,7 +84,7 @@ test('loader calls only the three fixed datasets and shares its five-minute memo
     assert.equal(first.templates.length, 3);
     assert.equal(first.externalRequests, 3);
     assert.equal(calls.length, 3);
-    assert.equal(calls.every(call => call.options.redirect === 'error' && call.options.signal instanceof AbortSignal), true);
+    assert.equal(calls.every(call => call.options.redirect === 'manual' && call.options.signal instanceof AbortSignal), true);
     const cached = await loadPoseAtlasCatalog({ fetchImpl, now: 1001 });
     assert.equal(cached.externalRequests, 0);
     assert.equal(cached.cacheStatus, 'hit');

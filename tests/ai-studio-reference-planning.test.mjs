@@ -2,7 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
-import { createDirectorPlan } from '../api/director-plan.mjs';
+import { createDirectorPlan, createTemplatePlan } from '../api/director-plan.mjs';
+import { prepareReferenceContext } from '../api/ai-studio/reference-brief.mjs';
+import { prepareCloudCandidateReferences, compileCloudCandidateRequest } from '../api/director-cloud-generation.mjs';
 import { searchStudio, createStudioProposal, confirmStudioProposal } from '../api/ai-studio/service.mjs';
 
 function sourceFixture() {
@@ -16,6 +18,29 @@ function sourceFixture() {
     };
     return { calls, fetchImpl };
 }
+
+test('template plan and candidate compilation retain retrieved pose, processing and user clothing', async () => {
+    const source = sourceFixture();
+    const input = { theme: '秋日人像', scene: '公园长椅', modelDesc: '棕色针织上衣、黑色长裤', extra: '双脚着地，不交叉双腿', useReferenceLibrary: true, referenceIds: ['atlas-pose-full_single_p019'] };
+    const context = await prepareReferenceContext(input, { fetchImpl: source.fetchImpl });
+    const plan = createTemplatePlan(input, context);
+    const request = { provider: 'cloudflare', model: '@cf/black-forest-labs/flux-1-schnell', candidate_count: 1,
+        billing_mode: 'free-credit-first', brief: plan.shotList[0].description, reference_brief: input,
+        reference_ids: input.referenceIds, shot_contract: plan.shotList[0].directorContract };
+    const resolved = await prepareCloudCandidateReferences(request, { fetchImpl: source.fetchImpl });
+    const compiled = compileCloudCandidateRequest(request, resolved);
+    assert.equal(plan.director.source, 'template-library-plan');
+    assert.match(compiled.prompt, /atlas-pose-full_single_p019/);
+    assert.match(compiled.prompt, /安静坐姿测试/);
+    assert.match(compiled.prompt, /坐稳/);
+    assert.match(compiled.prompt, /黑色长裤/);
+    assert.match(compiled.prompt, /不交叉双腿/);
+    assert.match(compiled.prompt, /feet parallel and hip-width apart/);
+    assert.match(compiled.prompt, /head-to-toe/);
+    assert.ok(compiled.prompt.length <= 2048);
+    await assert.rejects(prepareCloudCandidateReferences({ ...request, shot_contract: { ...request.shot_contract, referenceIds: ['atlas-pose-forged'] } }, { fetchImpl: source.fetchImpl }), /UNAVAILABLE_REFERENCE/);
+    await assert.rejects(prepareCloudCandidateReferences(request, { fetchImpl: async () => { throw new Error('offline'); } }), /UNAVAILABLE_REFERENCE|REFERENCE_LIBRARY_UNAVAILABLE/);
+});
 
 test('normal Director entry compiles selected live references into style and executable shot guidance', async () => {
     const source = sourceFixture();
