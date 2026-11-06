@@ -9,7 +9,7 @@ const contract = {
     reject_if: ['extra people', 'flash lighting', 'cropped feet'],
 };
 const request = {
-    provider: 'huggingface', model: 'black-forest-labs/FLUX.1-schnell', candidate_count: 1,
+    provider: 'fal', model: 'fal-ai/flux/schnell', candidate_count: 1,
     billing_mode: 'free-credit-first', aspect_ratio: 'portrait',
     brief: '当前分镜：自然坐在公园长椅上；仅用现有棕色针织衫。',
     style_direction: '低饱和电影感', scene_brief: '秋日公园，自然光，无助手、无闪光灯。',
@@ -23,30 +23,38 @@ test('cloud candidate compiler preserves the selected shot contract and constrai
     assert.match(compiled.prompt, /35mm eye-level environmental portrait/);
     assert.match(compiled.prompt, /低饱和电影感/);
     assert.match(compiled.prompt, /棕色针织衫/);
-    assert.match(compiled.negativePrompt, /extra people/);
-    assert.match(compiled.negativePrompt, /flash lighting/);
+    assert.match(compiled.prompt, /Do not include: extra people; flash lighting/);
+    assert.match(compiled.prompt, /Avoid: text, watermark/);
     assert.deepEqual([compiled.width, compiled.height, compiled.steps], [768, 1024, 4]);
 });
 
-test('cloud candidate is one fixed HF model request and downloads only a Fal image asset', async () => {
+test('cloud candidate submits one fixed fal model request through its queue and downloads the result', async () => {
     const requests = [];
-    const result = await generateCloudCandidate(request, { token: 'hf-test-token', fetchImpl: async (url, options) => {
+    const result = await generateCloudCandidate(request, { token: 'fal-test-key', fetchImpl: async (url, options) => {
         requests.push({ url: String(url), options });
         if (requests.length === 1) {
-            assert.equal(String(url), 'https://router.huggingface.co/fal-ai/fal-ai/flux/schnell');
-            assert.equal(options.headers.Authorization, 'Bearer hf-test-token');
+            assert.equal(String(url), 'https://queue.fal.run/fal-ai/flux/schnell');
+            assert.equal(options.headers.Authorization, 'Key fal-test-key');
             const body = JSON.parse(options.body);
             assert.match(body.prompt, /35mm eye-level environmental portrait/);
-            assert.match(body.negative_prompt, /cropped feet/);
+            assert.match(body.prompt, /Do not include: extra people; flash lighting; cropped feet/);
             assert.equal(body.num_inference_steps, 4);
-            return Response.json({ images: [{ url: 'https://v3.fal.media/candidate.png' }] });
+            assert.equal(body.num_images, 1);
+            assert.equal(body.enable_safety_checker, true);
+            return Response.json({
+                status: 'IN_QUEUE', request_id: '6ab846b4-c0dc-44e1-b2b3-d937fa678555',
+                status_url: 'https://queue.fal.run/fal-ai/flux/requests/6ab846b4-c0dc-44e1-b2b3-d937fa678555/status',
+                response_url: 'https://queue.fal.run/fal-ai/flux/requests/6ab846b4-c0dc-44e1-b2b3-d937fa678555',
+            });
         }
+        if (String(url).endsWith('/status')) return Response.json({ status: 'COMPLETED' });
+        if (String(url).includes('/requests/')) return Response.json({ images: [{ url: 'https://v3.fal.media/candidate.png' }] });
         assert.equal(String(url), 'https://v3.fal.media/candidate.png');
         assert.equal(options.redirect, 'manual');
         return new Response(png, { headers: { 'Content-Type': 'image/png' } });
     } });
-    assert.equal(requests.length, 2);
-    assert.equal(result.model, 'black-forest-labs/FLUX.1-schnell');
+    assert.equal(requests.length, 4);
+    assert.equal(result.model, 'fal-ai/flux/schnell');
     assert.equal(result.mime, 'image/png');
     assert.deepEqual(result.bytes, png);
 });
@@ -55,9 +63,9 @@ test('cloud generation rejects uncontrolled billing, provider, reference-image, 
     let calls = 0;
     const fetchImpl = async () => { calls++; return Response.json({}); };
     await assert.rejects(generateCloudCandidate(request, { fetchImpl }), /IMAGE_PROVIDER_NOT_CONFIGURED/);
-    await assert.rejects(generateCloudCandidate({ ...request, billing_mode: 'paid-approved' }, { token: 'hf-test-token', fetchImpl }), /BILLING_MODE_NOT_ALLOWED/);
-    await assert.rejects(generateCloudCandidate({ ...request, reference_image_path: 'C:\\private\\ref.png' }, { token: 'hf-test-token', fetchImpl }), /CLOUD_REFERENCE_IMAGE_NOT_CONFIGURED/);
-    await assert.rejects(generateCloudCandidate(request, { token: 'hf-test-token', fetchImpl: async () => {
+    await assert.rejects(generateCloudCandidate({ ...request, billing_mode: 'paid-approved' }, { token: 'fal-test-key', fetchImpl }), /BILLING_MODE_NOT_ALLOWED/);
+    await assert.rejects(generateCloudCandidate({ ...request, reference_image_path: 'C:\\private\\ref.png' }, { token: 'fal-test-key', fetchImpl }), /CLOUD_REFERENCE_IMAGE_NOT_CONFIGURED/);
+    await assert.rejects(generateCloudCandidate(request, { token: 'fal-test-key', fetchImpl: async () => {
         calls++;
         return Response.json({ images: [{ url: 'https://example.com/steal' }] });
     } }), /IMAGE_PROVIDER_INVALID_RESPONSE/);

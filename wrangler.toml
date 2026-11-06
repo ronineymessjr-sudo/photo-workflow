@@ -15,7 +15,7 @@ AI_STUDIO_ALLOWED_ORIGINS = "https://photo-workflow.pages.dev,https://ronineymes
 # SUPABASE_ANON_KEY
 # SUPABASE_SERVICE_KEY (server-only; never included in static assets)
 # MINIMAX_API_KEY
-# PHOTOATELIER_HF_TOKEN (server-only; Inference Providers permission)
+# PHOTOATELIER_FAL_KEY (server-only; fal Model API key)
 
 [ai]
 binding = "AI"
