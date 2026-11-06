@@ -49,7 +49,7 @@ export async function generateCloudCandidate(input, { ai } = {}) {
     const compiled = compileCloudCandidateRequest(input);
     let result;
     try {
-        result = await ai.run(CLOUDFLARE_MODEL, { prompt: compiled.prompt, steps: compiled.steps, seed: compiled.seed });
+        result = await ai.run(CLOUDFLARE_MODEL, { prompt: compiled.prompt, steps: compiled.steps });
     } catch {
         throw new Error('IMAGE_PROVIDER_GENERATION_FAILED');
     }

@@ -629,11 +629,11 @@ export default {
                                 method: 'PUT', headers: { 'Content-Type': generated.mime }, body: generated.bytes,
                             }));
                             if (!stored.ok) throw new Error('CANDIDATE_ASSET_STORE_FAILED');
-                            const url = candidateAssetUrl(uid, assetId, env);
+                            const assetUrl = new URL(candidateAssetUrl(uid, assetId, env), url.origin).href;
                             result = { status: 201, body: {
                                 request_id: typeof body.request_id === 'string' ? body.request_id.slice(0, 128) : assetId,
                                 selected_shot_contract: { source: 'browser-shot-contract' },
-                                candidateAsset: { id: assetId, url, synthetic: true,
+                                candidateAsset: { id: assetId, url: assetUrl, synthetic: true,
                                     status: 'candidate-awaiting-human-review', source: 'cloudflare-workers-ai',
                                     model: generated.model, poseStatus: 'not-run', poseReasons: [], faceQualityStatus: 'not-run',
                                     shotLanguage: generated.shotLanguage, contractSource: 'browser-shot-contract',
