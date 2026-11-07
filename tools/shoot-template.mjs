@@ -80,7 +80,7 @@ async function pickPoses(count) {
     const pack = JSON.parse(await readFile(PACK, 'utf8'));
     const rows = pack.items
         .filter(item => item.briefId === BRIEF)
-        .filter(item => !PICK.length || PICK.includes(item.shotIndex + 1))
+        .filter(item => !PICK.length || PICK.includes(item.shotIndex))
         .sort((a, b) => a.shotIndex - b.shotIndex);
     if (!rows.length) {
         console.log(`模板里没有 ${BRIEF} 的镜头`);
@@ -88,19 +88,27 @@ async function pickPoses(count) {
     }
     const first = rows[0];
     console.log(`模板: ${BRIEF}（${first.theme} / ${first.scene}）`);
-    console.log(`镜头: ${rows.map(r => `#${r.shotIndex + 1} ${r.spec.shot_size}/${r.spec.camera_angle}`).join('  ')}\n`);
+    console.log(`镜头: ${rows.map(r => `#${r.shotIndex} ${r.spec.shot_size}/${r.spec.camera_angle}`).join('  ')}\n`);
 
     // The template's own spec fields are what stop every frame looking the same.
     const shots = rows.map(row => ({
-        shotId: `shot-${String(row.shotIndex + 1).padStart(2, '0')}`,
+        shotId: `shot-${String(row.shotIndex).padStart(2, '0')}`,
         size: row.spec.shot_size,
         camera_angle: row.spec.camera_angle,
         lens: row.lens || row.spec.lens,
         model_pose: row.spec.model_pose,
         model_position: row.spec.model_position,
-        generator_prompt: [row.spec.generator_prompt, row.spec.crop_boundary, row.spec.must_show ? `Must show: ${row.spec.must_show}` : ''].filter(Boolean).join(' '),
-        file: `${BRIEF}__${String(row.shotIndex + 1).padStart(2, '0')}.png`,
-        _light: row.spec.lighting_setup,
+        generator_prompt: row.spec.generator_prompt,
+        // Everything the plan states about this frame, not just the prose.
+        lighting_setup: row.spec.lighting_setup,
+        wardrobe_styling: row.spec.wardrobe_styling,
+        shot_props: row.spec.shot_props,
+        crop_boundary: row.spec.crop_boundary,
+        must_show: row.spec.must_show,
+        reject_if: row.spec.reject_if,
+        aperture: row.aperture,
+        shutter: row.shutter,
+        file: `${BRIEF}__${String(row.shotIndex).padStart(2, '0')}.png`,
     }));
 
     if (USE_POSES) {
@@ -123,7 +131,7 @@ async function pickPoses(count) {
             timeOfDay: '白天',
             styleProfile: '低饱和纪实，自然光为主，禁用闪光灯',
         },
-        shots: shots.map(({ _light, ...shot }) => shot),
+        shots,
     });
     if (!init.body?.group) {
         console.log(`建组失败 ${init.status}: ${JSON.stringify(init.body).slice(0, 200)}`);

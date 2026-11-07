@@ -127,6 +127,13 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
         variant?.camera ? `机位：${variant.camera}` : '',
         variant?.distance ? `拍摄距离：${variant.distance}` : '',
         variant?.subjectPlacement ? `人物在画面中的位置：${variant.subjectPlacement}` : '',
+        // The plan names the light. Not sending it is why frames came back with
+        // generic studio lighting no matter what the shot called for.
+        directive(variant?.lighting) ? `现场光线：${directive(variant.lighting)}` : '',
+        directive(variant?.wardrobe) ? `服装与妆发：${directive(variant.wardrobe)}` : '',
+        directive(variant?.props) ? `道具：${directive(variant.props)}` : '画面不额外添加道具',
+        directive(variant?.crop) ? `裁切要求：${directive(variant.crop)}` : '',
+        directive(variant?.cameraSettings) ? `相机参数：${directive(variant.cameraSettings)}` : '',
     ].filter(Boolean).join('；');
     const direction = await englishPrompt(ai, directionZh);
     const slots = ['identity', 'style'];
@@ -159,6 +166,8 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
         'Reference image 2 is the outfit reference: every visible garment, layer, colour, material and accessory comes from it exactly. Do not invent, replace or simplify clothing.',
         poseNote,
         direction ? `Shot direction: ${direction}.` : '',
+        directive(variant?.mustShow) ? `The frame must contain: ${directive(variant.mustShow)}.` : '',
+        directive(variant?.rejectIf) ? `Reject and redo if any of these appear: ${directive(variant.rejectIf)}.` : '',
         framingLine(variant),
         'Real photographic rendering: visible skin pores and peach fuzz, uneven natural skin tone, true light falloff with genuinely dark shadow areas, mixed colour temperature, worn everyday surfaces with marks and dust, natural lens vignetting, frame not perfectly level.',
         'Avoid: text, captions, watermark, collage, split frames, extra limbs, deformed hands, melted or fused fingers, duplicate subject, plastic skin, beauty filter, HDR glow.',
@@ -289,6 +298,22 @@ async function englishPrompt(ai, prompt) {
         // carries the constraints, just less reliably.
         return prompt;
     }
+}
+
+
+// Fields like "服装与妆发待确认" contain no instruction. Sending them invites the
+// model to invent something, so anything that is only a placeholder is dropped.
+function directive(value) {
+    const raw = typeof value === 'string' ? value.trim() : '';
+    if (!raw) return '';
+    if (/^(?:无|none|n\/a)$/i.test(raw)) return '';
+    if (/待确认|待定|未定|TBD|to be confirmed/i.test(raw) && raw.length < 40) return '';
+    // "服装与妆发待确认；拍摄前确认鞋底防滑…" - keep the actionable tail only.
+    return raw
+        .split(/[；;]/)
+        .filter(part => !/待确认|待定|未定|TBD/i.test(part))
+        .join('；')
+        .trim();
 }
 
 // Framing stated as what SHOULD be visible. Saying "person occupies at most 40%"

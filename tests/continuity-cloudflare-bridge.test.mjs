@@ -240,3 +240,46 @@ test('a pose reference pointing outside the library is ignored, not fetched', as
     assert.equal(fetched.length, 0, '非白名单地址一律不取');
     assert.equal(result.referencesSent, 2, '没有姿势图时退回两张');
 });
+
+test('lighting, must-show, reject-if and camera settings reach the prompt', async () => {
+    const { generateShot } = await import('../api/continuity-generation.mjs');
+    let group = createGroup({
+        input: { theme: '楼梯', scene: '美术馆旋转楼梯' },
+        shots: [{
+            shotId: 'shot-01', size: 'EWS', lens: '16mm', camera_angle: 'overhead',
+            model_pose: '沿内侧扶手慢步下行',
+            model_position: '画面右下三分之一',
+            generator_prompt: 'wide overhead shot of a spiral staircase',
+            lighting_setup: '美术馆顶光与侧窗自然光，禁用闪光灯',
+            wardrobe_styling: '深色针织上衣与长裤',
+            shot_props: '无',
+            crop_boundary: '保留完整螺旋内圈，不裁掉头顶与足部',
+            must_show: '螺旋楼梯的几何弧线、扶手连续曲线',
+            reject_if: '闪光灯硬阴影、画面裁掉足部',
+            aperture: '8',
+            shutter: '1/1000s',
+        }],
+    });
+    for (const role of ['identity', 'scene', 'style']) {
+        group = setReference(group, { role, assetId: `asset-${role}`, status: 'confirmed', path: `/api/continuity/asset/asset-${role}` });
+    }
+    group = confirmMaster(group, { assetId: 'asset-identity', actor: 'human' });
+
+    const result = await generateShot({
+        group, shotId: 'shot-01', providerId: 'cloudflare-flux-klein',
+        env: { AI: { async run(model) {
+            if (String(model).includes('llama')) return { response: 'translated direction' };
+            return { image: Buffer.from(PNG_BYTES).toString('base64') };
+        } } },
+        store: { async put() {}, async get() { return { buffer: PNG_BYTES, meta: { mime: 'image/png' } }; } },
+    });
+
+    // These six items existed in the plan but never reached the model.
+    assert.match(result.sentPrompt, /The frame must contain: 螺旋楼梯的几何弧线/, '必须出现项要进提示词');
+    assert.match(result.sentPrompt, /Reject and redo if any of these appear: 闪光灯硬阴影/, '禁止项要进提示词');
+    assert.match(result.sentPrompt, /美术馆顶光与侧窗自然光/, '光线要进提示词');
+    assert.match(result.sentPrompt, /16mm f\/8 1\/1000s/, '相机参数要进提示词');
+    assert.match(result.sentPrompt, /画面不额外添加道具/, '道具为“无”时要明说，否则模型会自己加');
+    // Placeholder text must not be forwarded: it only invites invention.
+    assert.ok(!/待确认/.test(result.sentPrompt), '“待确认”这类占位不该发给模型');
+});

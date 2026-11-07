@@ -161,6 +161,20 @@ export function normalizeShots(shots = []) {
         size: text(shot.size || shot.shot_size),
         aspect: text(shot.aspect, '2:3'),
         props: text(shot.shot_props || shot.props),
+        // These six were being dropped between the plan and the model, which is
+        // why frames looked like generic studio output: the plan states the
+        // lighting, the must-show list, the reject list, the crop, the wardrobe
+        // and the camera settings, and none of it reached the prompt.
+        lighting: text(shot.lighting_setup || shot.lighting),
+        wardrobe: text(shot.wardrobe_styling || shot.wardrobe),
+        crop: text(shot.crop_boundary || shot.crop),
+        mustShow: text(shot.must_show || shot.mustShow).slice(0, 400),
+        rejectIf: text(shot.reject_if || shot.rejectIf).slice(0, 400),
+        cameraSettings: text(shot.camera_settings || [
+            shot.lens || shot.focal_length,
+            shot.aperture ? `f/${String(shot.aperture).replace(/^f\/?/i, '')}` : '',
+            shot.shutter,
+        ].filter(Boolean).join(' ')),
         file: text(shot.file, `${text(shot.shotId, `shot-${String(index + 1).padStart(2, '0')}`)}.png`),
         // The pose template the operator selected for THIS frame. Without it the
         // model only gets prose about the pose, which is how every frame ended
@@ -258,6 +272,9 @@ export function buildShotRequests(group, { providerId, shotIds = [], seedBase = 
         variant: {
             shotType: shot.shotType, camera: shot.camera, lens: shot.lens,
             distance: shot.distance, action: shot.action, subjectPlacement: shot.subjectPlacement,
+            lighting: shot.lighting, wardrobe: shot.wardrobe, crop: shot.crop,
+            mustShow: shot.mustShow, rejectIf: shot.rejectIf, cameraSettings: shot.cameraSettings,
+            props: shot.props,
         },
         locked: {
             subject: checked.locked.subject, wardrobe: checked.locked.wardrobe,
