@@ -98,7 +98,6 @@ const store = {
 // submitModelScope expects a references array of {role, dataUrl}.
 const references = [];
 for (const [role, file] of Object.entries(referenceFiles)) {
-    referenceFiles;
     const bytes = await readFile(file);
     references.push({ role, dataUrl: `data:image/png;base64,${bytes.toString('base64')}` });
 }
@@ -155,6 +154,13 @@ for (const shot of shots) {
         }
         report.push({ shotId: shot.shotId, ok: true, size: shot.size, angle: shot.camera_angle, seed: submitted.seed, file: shot.file });
     } catch (error) {
+        if (error?.code === 'GENERATION_ACCOUNT_UNVERIFIED') {
+            console.log('账号未通过校验');
+            console.log(`   ${error.message}`);
+            console.log('   完成验证后重跑同一条命令即可，不需要改代码。');
+            process.exitCode = 2;
+            break;
+        }
         console.log(`失败 ${error?.code || ''} ${String(error?.message || error).slice(0, 200)}`);
         report.push({ shotId: shot.shotId, ok: false, error: String(error?.message || error).slice(0, 200) });
     }

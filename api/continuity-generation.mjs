@@ -297,6 +297,17 @@ export async function submitModelScope({ env, prompt, size, seed, references, va
     });
     if (!response.ok) {
         const detail = await response.text().catch(() => '');
+        // 403 on this endpoint is never "bad request": it is ModelScope's
+        // account gate, and the two gates say different things. Reporting them
+        // separately means the fix is a link, not a debugging session.
+        if (response.status === 403) {
+            const message = /bind your Alibaba Cloud account/i.test(detail)
+                ? '魔搭要求先绑定阿里云账号：https://modelscope.cn/my/settings/account'
+                : /email verification|verified accounts/i.test(detail)
+                    ? '魔搭要求先完成邮箱验证：https://modelscope.cn/my/settings/account'
+                    : `魔搭拒绝访问（403）：${detail.slice(0, 160)}`;
+            throw new GenerationError('GENERATION_ACCOUNT_UNVERIFIED', message, 403, { console: 'https://modelscope.cn/my/settings/account' });
+        }
         throw new GenerationError('GENERATION_UPSTREAM_FAILED', `魔搭提交返回 ${response.status}：${detail.slice(0, 200)}`, response.status === 429 ? 429 : 502);
     }
     const payload = await response.json().catch(() => null);
