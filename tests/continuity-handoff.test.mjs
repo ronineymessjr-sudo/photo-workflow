@@ -35,6 +35,26 @@ test('handoff card carries prompt, reference paths and the target filename', asy
     assert.match(card.instruction, /回传/);
 });
 
+test('handoff gives the structured shot contract priority over conflicting raw prompt text', () => {
+    const group = createGroup({
+        input: { theme: '公园与咖啡馆', scene: '咖啡馆窗边' },
+        shots: [{
+            shotId: 'cafe-medium', shotType: '中景', size: 'MS', camera: '平视', lens: '50mm',
+            scene: '咖啡馆窗边', action: '肩线轻转，手自然停在画面内',
+            poseRef: { title: '站立・对立式平衡・手扶腰', direction: '肩颈放松' },
+            generator_prompt: 'Editorial waist-up portrait, 50mm, shoulder-rear camera.',
+        }],
+    });
+
+    const prompt = handoffFor(group, { shotId: 'cafe-medium' }).cards[0].prompt;
+    assert.match(prompt, /景别：中景（MS）/);
+    assert.match(prompt, /机位：平视/);
+    assert.match(prompt, /场景：咖啡馆窗边/);
+    assert.match(prompt, /PoseAtlas 摆姿：站立・对立式平衡・手扶腰/);
+    assert.match(prompt, /原始创意描述.*shoulder-rear camera/);
+    assert.match(prompt, /若原始创意描述与结构化约束冲突/);
+});
+
 test('handoff reports why it is blocked instead of handing over a half contract', async () => {
     let group = createGroup({ input: { theme: '雨夜', scene: '月台' }, shots: [{ shotId: 'shot-01', generator_prompt: 'x' }] });
     const blocked = handoffFor(group);

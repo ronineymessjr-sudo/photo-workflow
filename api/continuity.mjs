@@ -401,6 +401,37 @@ export function attachResult(group, { shotId, assetId, path = '', provider = 'ma
     return checked;
 }
 
+function compileHandoffPrompt(shot) {
+    const size = shot.shotType && shot.shotType !== shot.size
+        ? `${shot.shotType}${shot.size ? `（${shot.size}）` : ''}`
+        : shot.shotType || shot.size;
+    const constraints = [
+        ['景别', size],
+        ['机位', shot.camera],
+        ['焦段', shot.lens],
+        ['拍摄距离', shot.distance],
+        ['场景', shot.scene],
+        ['动作', shot.action],
+        ['人物位置', shot.subjectPlacement],
+        ['现场光线', shot.lighting],
+        ['服装', shot.wardrobe],
+        ['道具', shot.props],
+        ['裁切', shot.crop],
+        ['必须出现', shot.mustShow],
+        ['不得出现', shot.rejectIf],
+        ['PoseAtlas 摆姿', shot.poseRef?.title],
+        ['PoseAtlas 摆姿指导', shot.poseRef?.direction],
+    ].filter(([, value]) => typeof value === 'string' && value.trim())
+        .map(([label, value]) => `${label}：${value.trim()}`);
+    if (!constraints.length) return shot.prompt;
+    return [
+        '请按以下摄影方案生成照片。结构化镜头约束优先级最高：',
+        ...constraints,
+        shot.prompt ? `原始创意描述（只作氛围参考，不得覆盖以上约束）：${shot.prompt}` : '',
+        '若原始创意描述与结构化约束冲突，按结构化约束执行，尤其是景别、机位、焦段、场景和动作。',
+    ].filter(Boolean).join('\n');
+}
+
 export function handoffFor(group, { shotId = '' } = {}) {
     const { group: checked, lockedHash } = requireGroup(group);
     const shots = shotId ? checked.shots.filter(shot => shot.shotId === shotId) : checked.shots;
@@ -460,7 +491,7 @@ export function handoffFor(group, { shotId = '' } = {}) {
                 lens: shot.lens,
                 camera: shot.camera,
                 // Everything a person needs to paste into a chat UI, in one place.
-                prompt: shot.prompt,
+                prompt: compileHandoffPrompt(shot),
                 referencePaths: shotReferenceImages.map(reference => reference.url),
                 referenceImages: shotReferenceImages,
                 instruction: `把 ${shotReferenceImages.length} 张图片参考图拖进对话框，姿势按${poseImageUrl ? '所选摆姿参考图和' : ''}方案文字执行，场景按方案文字执行，粘贴上面的提示词，出图后保存为 ${shot.file}，再回传到本面板。`,
