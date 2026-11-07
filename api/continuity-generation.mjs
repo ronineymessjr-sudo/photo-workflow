@@ -113,7 +113,7 @@ const ADAPTERS = {
 // Cloudflare Workers AI: no API key, the Worker carries the `[ai]` binding. It
 // exposes two reference-image slots only, so `scene` is described in the prompt
 // instead of being uploaded - the caller is told about that gap separately.
-async function callCloudflareWorkersAi({ env, prompt, size, seed, references, variant, poseRef, fetchImpl = fetch }) {
+async function callCloudflareWorkersAi({ env, prompt, size, seed, references, variant, poseRef, anchor, store = null, fetchImpl = fetch }) {
     const ai = env?.AI;
     if (!ai || typeof ai.run !== 'function') {
         throw new GenerationError('GENERATION_NOT_CONFIGURED', '这个部署没有绑定 Workers AI（wrangler.toml 里的 [ai]），无法用 Cloudflare 出图', 503, { missing: ['AI binding'] });
@@ -149,6 +149,21 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
     if (chosen.length < 2) {
         throw new GenerationError('GENERATION_REFERENCE_MISSING', `Cloudflare 需要人物与风格两张参考图，当前只有 ${chosen.length} 张`, 409);
     }
+    // Once an accepted frame exists, edit FROM it instead of from the passport
+    // style reference. A fresh text-to-image call re-samples a face every time;
+    // an edit of a real frame keeps the one that was already approved. This is
+    // the only identity mechanism this model has.
+    let anchorBuffer = null;
+    if (anchor?.assetId) {
+        try {
+            // store must be forwarded: without it readAsset falls back to a
+            // fresh in-memory backend that never saw the uploaded frame.
+            const stored = await readAsset(`/api/continuity/asset/${anchor.assetId}`, { env, store });
+            if (stored?.buffer?.length) anchorBuffer = stored;
+        } catch {
+            anchorBuffer = null;
+        }
+    }
     const portrait = String(size || '').startsWith('1024x1536') || !String(size || '').includes('x');
     const width = portrait ? 768 : 1024;
     const height = portrait ? 1024 : 768;
@@ -164,7 +179,9 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
     // ~400 tokens so nothing important falls off the end.
     const composed = [
         'One photorealistic DSLR photograph of exactly one person.',
-        'Image 1 supplies the face, age and hair. Image 2 supplies the outfit exactly.',
+        anchorBuffer
+            ? 'Image 1 is an earlier frame from this same shoot: keep that exact person - face, hair, skin tone, outfit - and change only the camera position and framing described below. Image 2 supplies the outfit exactly.'
+            : 'Image 1 supplies the face, age and hair. Image 2 supplies the outfit exactly.',
         poseNote,
         direction ? `Shot: ${direction}.` : '',
         directive(variant?.mustShow) ? `Must contain: ${shortList(variant.mustShow)}.` : '',
@@ -183,8 +200,9 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
     // fine structure only appear past ~15.
     form.append('steps', String(STEPS));
     chosen.forEach((reference, index) => {
-        const bytes = reference.buffer instanceof Uint8Array ? reference.buffer : new Uint8Array(reference.buffer || []);
-        form.append(`input_image_${index}`, new Blob([bytes], { type: reference.mime || 'image/png' }), `reference-${index}`);
+        const source = (index === 0 && anchorBuffer) ? anchorBuffer : reference;
+        const bytes = source.buffer instanceof Uint8Array ? source.buffer : new Uint8Array(source.buffer || []);
+        form.append(`input_image_${index}`, new Blob([bytes], { type: source.mime || 'image/png' }), `reference-${index}`);
     });
     if (poseBytes) form.append('input_image_2', new Blob([poseBytes.bytes], { type: poseBytes.mime }), 'reference-2');
     const serialized = new Response(form);
@@ -202,7 +220,7 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
     const binary = atob(result.image);
     const head = binary.charCodeAt(0);
     const contentType = head === 137 ? 'image/png' : head === 255 ? 'image/jpeg' : 'image/webp';
-    return { contentType, base64: result.image, prompt: composed, referencesSent: chosen.length + (poseBytes ? 1 : 0) };
+    return { contentType, base64: result.image, prompt: composed, referencesSent: chosen.length + (poseBytes ? 1 : 0), anchored: Boolean(anchorBuffer) };
 }
 
 /**
@@ -253,6 +271,9 @@ export async function generateShot({ group, shotId, providerId = '', env = {}, f
         variant: request.variant,
         // The pose template the operator picked for THIS frame, if any.
         poseRef: (group.shots || []).find(shot => shot.shotId === shotId)?.poseRef || null,
+        // The accepted frame to edit from. Present from the second shot onward.
+        anchor: request.anchor,
+        store,
     });
 
     const stored = await storeAsset({
@@ -275,6 +296,7 @@ export async function generateShot({ group, shotId, providerId = '', env = {}, f
         // was supposed to follow. Useful whenever output disagrees with the plan.
         sentPrompt: image.prompt || '',
         referencesSent: image.referencesSent ?? references.length,
+        anchored: Boolean(image.anchored),
         // QC is deliberately not filled here: the planner never grades itself.
         qc: { verdict: 'pending' },
     };

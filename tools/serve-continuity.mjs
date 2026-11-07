@@ -10,7 +10,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
     createGroup, setReference, confirmMaster, buildShotRequests,
-    recordQc, continuitySummary, continuitySchema, attachResult, handoffFor, setImageProvider, ContinuityError,
+    recordQc, continuitySummary, continuitySchema, attachResult, handoffFor, setImageProvider, setAnchor, ContinuityError,
 } from '../api/continuity.mjs';
 import { storeAsset, readAsset, AssetError, ASSET_LIMITS } from '../api/continuity-assets.mjs';
 import { generateShot } from '../api/continuity-generation.mjs';
@@ -97,6 +97,9 @@ const server = http.createServer(async (request, response) => {
                     templates: body?.templates, input: body?.input || {},
                     planId: body?.planId || '', selectedIds: body?.selectedIds || [],
                 }));
+            }
+            if (pathname === '/api/continuity/anchor') {
+                return json(200, { group: setAnchor(body?.group, { assetId: body?.assetId, path: body?.path, shotId: body?.shotId }) });
             }
             if (pathname === '/api/continuity/provider') {
                 const provider = assertGroupProvider(body?.group, body?.providerId);

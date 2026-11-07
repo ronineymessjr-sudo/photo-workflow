@@ -13,7 +13,7 @@ import { confirmStudioProposal, createStudioProposal, searchStudio, consumeStudi
 import { checkStudioFeishuConnection, syncStudioPlan } from './ai-studio/feishu-sync.mjs';
 import { workspaceEntryKey } from '../assets/workspace-sync-protocol.mjs';
 export { AiStudioQuota } from './ai-studio/quota.mjs';
-import { createGroup, setReference, confirmMaster, buildShotRequests, recordQc, continuitySummary, continuitySchema, attachResult, handoffFor, setImageProvider, ContinuityError } from './continuity.mjs';
+import { createGroup, setReference, confirmMaster, buildShotRequests, recordQc, continuitySummary, continuitySchema, attachResult, handoffFor, setImageProvider, setAnchor, ContinuityError } from './continuity.mjs';
 import { storeAsset, readAsset } from './continuity-assets.mjs';
 import { generateShot } from './continuity-generation.mjs';
 import { listProviders, recommendProvider, assertGroupProvider } from './continuity-providers.mjs';
@@ -545,6 +545,13 @@ export default {
                         ...recommendProvider({ needReferences, configuredEnv, bindings, maxPriceTier }),
                     },
                 };
+            }
+            else if (path === '/api/continuity/anchor' && method === 'POST') {
+                // Pin an accepted frame so later shots are edited from it rather
+                // than regenerated from noise.
+                result = { status: 200, body: { group: setAnchor(body?.group, {
+                    assetId: body?.assetId, path: body?.path, shotId: body?.shotId,
+                }) } };
             }
             else if (path === '/api/continuity/provider' && method === 'POST') {
                 // Validate before writing: a provider that cannot take references

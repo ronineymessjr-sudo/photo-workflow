@@ -22,6 +22,10 @@ const PICK = (argOf('shots') || '').split(',').map(value => Number(value)).filte
 const OUT = argOf('out') || `runtime/shoot-${BRIEF}`;
 const USE_POSES = args.includes('--poses');
 const DRY_RUN = args.includes('--dry-run');
+// Shoot the tightest frame first, accept it as the identity anchor, then produce
+// the rest as edits of that frame. Without this every frame is a fresh
+// text-to-image sample and the face drifts.
+const ANCHOR_FIRST = !args.includes('--no-anchor');
 const PROVIDER = 'cloudflare-flux-klein';
 const PACK = 'experiments/plan-quality-lab/prompt-packs/2026-10-27-deepseek/06-prompts-all.json';
 
@@ -162,7 +166,18 @@ async function pickPoses(count) {
 
     await mkdir(OUT, { recursive: true });
     const report = [];
-    for (const shot of shots) {
+
+    // Order: closest frame first so the anchor has the largest, clearest face.
+    const closeRank = shot => {
+        const text = `${shot.size} ${shot.camera_angle || ''}`;
+        if (/ECU|CU|特写/i.test(text)) return 0;
+        if (/MCU|近景/i.test(text)) return 1;
+        if (/MS|中景/i.test(text)) return 2;
+        return 3;
+    };
+    const ordered = ANCHOR_FIRST ? [...shots].sort((a, b) => closeRank(a) - closeRank(b)) : shots;
+
+    for (const shot of ordered) {
         const started = Date.now();
         process.stdout.write(`${shot.shotId} ${shot.size.padEnd(4)} ${shot.camera_angle.padEnd(10)} ${shot.lens.padEnd(5)} ... `);
         const generated = await post('/api/continuity/generate', { group, shotId: shot.shotId, providerId: PROVIDER });
@@ -176,8 +191,20 @@ async function pickPoses(count) {
         const imageResponse = await fetch(BASE + result.image.path, { signal: AbortSignal.timeout(60000) });
         const bytes = Buffer.from(await imageResponse.arrayBuffer());
         await writeFile(path.join(OUT, shot.file), bytes);
-        console.log(`ok ${elapsed}s seed ${result.seed} ${Math.round(bytes.length / 1024)}KB`);
-        report.push({ shotId: shot.shotId, size: shot.size, angle: shot.camera_angle, ok: true, seed: result.seed, file: shot.file });
+        const anchoredNote = result.anchored ? ' [锚定编辑]' : '';
+        console.log(`ok ${elapsed}s seed ${result.seed} ${Math.round(bytes.length / 1024)}KB${anchoredNote}`);
+        report.push({ shotId: shot.shotId, size: shot.size, angle: shot.camera_angle, ok: true, seed: result.seed, file: shot.file, anchored: Boolean(result.anchored) });
+
+        // First accepted frame becomes the anchor for everything after it.
+        if (!group.anchor) {
+            const pinned = await post('/api/continuity/anchor', {
+                group, assetId: result.image.assetId, path: result.image.path, shotId: shot.shotId,
+            });
+            if (pinned.body?.group) {
+                group = pinned.body.group;
+                console.log(`   已设为身份锚点（${shot.shotId}），后续镜头从这张编辑`);
+            }
+        }
     }
     console.log(`\n完成 ${report.filter(r => r.ok).length}/${shots.length}  ->  ${OUT}`);
     await writeFile(path.join(OUT, 'report.json'), JSON.stringify({ base: BASE, brief: BRIEF, lockedHash: group.lockedHash, frames: report }, null, 2));

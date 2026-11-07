@@ -283,3 +283,50 @@ test('lighting, must-show, reject-if and camera settings reach the prompt', asyn
     // Placeholder text must not be forwarded: it only invites invention.
     assert.ok(!/待确认/.test(result.sentPrompt), '“待确认”这类占位不该发给模型');
 });
+
+test('an accepted frame becomes the anchor: later shots are edits of it, not fresh samples', async () => {
+    const { generateShot } = await import('../api/continuity-generation.mjs');
+    const { setAnchor } = await import('../api/continuity.mjs');
+
+    let group = createGroup({
+        input: { theme: '楼梯', scene: '美术馆' },
+        shots: [
+            { shotId: 'shot-01', size: 'CU', generator_prompt: 'close portrait' },
+            { shotId: 'shot-02', size: 'FS', generator_prompt: 'full body' },
+        ],
+    });
+    for (const role of ['identity', 'scene', 'style']) {
+        group = setReference(group, { role, assetId: `asset-${role}`, status: 'confirmed', path: `/api/continuity/asset/asset-${role}` });
+    }
+    group = confirmMaster(group, { assetId: 'asset-identity', actor: 'human' });
+
+    // A distinct byte pattern for the anchor so we can tell it apart from the
+    // passport reference in the multipart body.
+    const ANCHOR_BYTES = Buffer.concat([PNG_BYTES, Buffer.from('ANCHORFRAME')]);
+    const store = {
+        async put() {},
+        async get(key) {
+            if (String(key).includes('anchor01')) return { buffer: ANCHOR_BYTES, meta: { mime: 'image/png' } };
+            return { buffer: PNG_BYTES, meta: { mime: 'image/png' } };
+        },
+    };
+
+    // Frame one: no anchor yet.
+    const first = await generateShot({
+        group, shotId: 'shot-01', providerId: 'cloudflare-flux-klein',
+        env: { AI: { async run() { return { image: Buffer.from(PNG_BYTES).toString('base64') }; } } }, store,
+    });
+    assert.equal(first.anchored, false, '第一张还不是编辑');
+    assert.match(first.sentPrompt, /Image 1 supplies the face/, '第一张用证件照式参考');
+
+    // Pin it, then shoot the second frame.
+    group = setAnchor(group, { assetId: 'anchor01', path: '/api/continuity/asset/anchor01', shotId: 'shot-01' });
+    const second = await generateShot({
+        group, shotId: 'shot-02', providerId: 'cloudflare-flux-klein',
+        env: { AI: { async run() { return { image: Buffer.from(PNG_BYTES).toString('base64') }; } } }, store,
+    });
+
+    assert.equal(second.anchored, true, '第二张必须从锚点编辑');
+    assert.match(second.sentPrompt, /an earlier frame from this same shoot/, '提示词要说明这是同一拍摄的上一帧');
+    assert.match(second.sentPrompt, /keep that exact person/, '明确要求保持同一个人，只改机位');
+});

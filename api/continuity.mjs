@@ -141,6 +141,9 @@ export function createGroup({ input = {}, lockedHints = {}, shots = [] } = {}) {
                     : '只负责构图/光线/色彩/颗粒，必须来自用户图库',
         })),
         master: { confirmedBy: 'none' },
+        // The first accepted frame of the shoot. Later frames are edited FROM it,
+        // so the face is carried forward instead of re-sampled from noise.
+        anchor: null,
         shots: normalizeShots(shots),
         qc: {},
         history: [],
@@ -214,6 +217,22 @@ export function setReference(group, { role, assetId, status = 'confirmed', path 
     return checked;
 }
 
+
+// Pin an accepted frame as the shoot's identity anchor. Every later shot is then
+// driven as an edit of this frame rather than a fresh text-to-image generation,
+// which is the only mechanism this model offers for keeping the same face.
+export function setAnchor(group, { assetId, path = '', shotId = '' } = {}) {
+    const { group: checked } = requireGroup(group);
+    if (!text(assetId)) throw new ContinuityError('CONTINUITY_ANCHOR_REQUIRED', '需要成片资产 ID', 400);
+    checked.anchor = {
+        assetId: text(assetId),
+        path: text(path),
+        shotId: text(shotId),
+        setAt: new Date().toISOString(),
+    };
+    return checked;
+}
+
 // The master frame is the continuity anchor: without a human confirming one,
 // running eight more shots only multiplies whatever is already wrong.
 export function confirmMaster(group, { assetId, actor = 'human' } = {}) {
@@ -282,6 +301,9 @@ export function buildShotRequests(group, { providerId, shotIds = [], seedBase = 
             timeOfDay: checked.locked.timeOfDay, styleProfile: checked.locked.styleProfile,
         },
         lockedHash,
+        // Present from the second frame onward: the accepted frame this one should
+        // be edited from.
+        anchor: checked.anchor ? { ...checked.anchor } : null,
         };
     });
 }
