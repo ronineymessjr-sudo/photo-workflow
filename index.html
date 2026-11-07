@@ -6462,7 +6462,12 @@ function compileDirectorShotContract(contract) {
     if (!shotLanguage || !generatorPrompt) {
         throw new Error('当前分镜缺少完整镜头合同：需要 shot_language 和 generator_prompt');
     }
-    const positive = [generatorPrompt, ...mustShow].join(' ').toLowerCase();
+    // Global scene/wardrobe text can contain words such as "half skirt" or a
+    // list of requested shot sizes. Validate only this shot's framing and pose
+    // fields, plus the framing/action portion of the compiled prompt.
+    const scopedPrompt = generatorPrompt.split(/\b(?:Subject and clothing|User constraints|Style):/i)[0];
+    const positive = [shotLanguage, source.shot_size, source.crop_boundary, source.model_pose,
+        scopedPrompt, ...mustShow].filter(Boolean).join(' ').toLowerCase();
     const negative = rejectIf.join(' ').toLowerCase();
     const conflicts = [
         [/不看镜头|look away|not direct gaze/, /脸朝镜头|直视镜头|face toward camera|direct gaze/],
