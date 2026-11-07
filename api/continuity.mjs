@@ -172,7 +172,7 @@ export function normalizeShots(shots = []) {
         camera: text(shot.camera, [text(shot.camera_angle), text(shot.lens)].filter(Boolean).join('，')),
         lens: text(shot.lens),
         distance: text(shot.distance),
-        action: text(shot.model_pose),
+        action: text(shot.model_pose || shot.action),
         subjectPlacement: text(shot.model_position),
         scene: text(shot.scene),
         mustKeep: Array.isArray(shot.mustKeep) ? shot.mustKeep : ['同一人物', '同一服装', '同一地点', '同一天气'],

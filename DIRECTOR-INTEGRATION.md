@@ -10,6 +10,8 @@ For Director v0.28.0, apply the versioned files in `director-overlay-v0.28.0/` b
 Run `node tools/serve-director.mjs` from this checkout and open `http://127.0.0.1:8125/`.
 The photography application's existing login remains required. No credentials were copied into this repository.
 
+The same local origin also serves `/continuity.html` and its `/api/continuity/*` routes. Login/session requests are forwarded to the PhotoAtelier Worker without storing credentials locally. Local continuity generation still requires a valid signed-in session and has no local daily counter; the deployed Worker keeps its per-user and global limits. Automatic local generation also requires an image provider in the server environment.
+
 The existing form now calls `generateDirectorPlan` → `POST /api/director/plan` → Director `/v1/photoatelier/shoot-plan`.
 The plan detail also exposes a single-shot candidate flow: choose a returned shot, click “生成一张候选图”, then `generateDirectorCandidate` → local `POST /api/director/generate-candidate` → Director `/v1/photoatelier/external-generate`.
 

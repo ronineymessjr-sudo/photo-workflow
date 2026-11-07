@@ -14,15 +14,19 @@ import { AiStudioQuota } from '../api/ai-studio/quota.mjs';
 import { createWeakProvider } from '../api/ai-studio/weak-provider.mjs';
 import { createLocalFeishuConfig } from './local-feishu-config.mjs';
 import { createLocalFeishuWriter } from './local-feishu-writer.mjs';
+import { createContinuityHandler } from './serve-continuity.mjs';
 
 const root = path.resolve(fileURLToPath(new URL('../', import.meta.url)));
+const REMOTE_API_BASE = 'https://photoatelier-api.photomagic.workers.dev';
 const studioPaths = new Set(['/api/ai/plan-lite', '/api/ai/studio/proposals', '/api/ai/studio/confirm',
     '/api/ai/studio/feishu/status', '/api/ai/studio/feishu/sync']);
+const authProxyPaths = new Set(['/api/auth/login', '/api/auth/methods', '/api/auth/session',
+    '/api/auth/email/send', '/api/auth/email/verify']);
 
 async function resolveRemoteStudioUser(authorization, fetchImpl) {
     if (!/^Bearer [A-Za-z0-9_-]{20,8192}$/.test(authorization || '')) return null;
     try {
-        const response = await fetchImpl('https://photoatelier-api.photomagic.workers.dev/api/auth/session', {
+        const response = await fetchImpl(`${REMOTE_API_BASE}/api/auth/session`, {
             headers: { Authorization: authorization }, redirect: 'error', signal: AbortSignal.timeout(8000),
         });
         if (!response.ok) return null;
@@ -60,10 +64,17 @@ export function createServer({
     localFeishuConfig = createLocalFeishuConfig({ fetchImpl, localWriter: createLocalFeishuWriter() }),
     studioEnvironment = {},
     resolveStudioUser = authorization => resolveRemoteStudioUser(authorization, fetchImpl),
+    continuityEnvironment = process.env,
+    continuityAssetRoot,
     generationRoot = process.env.DIRECTOR_GENERATION_ROOT || 'D:\\AI项目\\director-master-aesthetic-agent-v0.28.0\\runtime\\photoatelier_external_generations',
 } = {}) {
     const allowedGenerationRoot = path.resolve(generationRoot);
     const studioEnv = { ...studioEnvironment, JWT_SECRET: randomBytes(32).toString('hex'), AI_STUDIO_QUOTA: localStudioQuota() };
+    const continuityHandler = createContinuityHandler({
+        assetRoot: continuityAssetRoot,
+        generationEnv: continuityEnvironment,
+        authorizeGenerate: request => resolveStudioUser(request.headers.authorization).then(Boolean),
+    });
     return http.createServer(async (req, res) => {
         const reply = (status, data) => {
             res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
@@ -73,6 +84,46 @@ export function createServer({
             // Only the loopback UI may invoke this credential-using local service.
             if (!/^127\.0\.0\.1:\d+$/.test(req.headers.host || '')) return reply(403, { error: 'INVALID_HOST' });
             const pathname = new URL(req.url, 'http://127.0.0.1').pathname;
+            if (authProxyPaths.has(pathname)) {
+                const expectedMethod = ['/api/auth/methods', '/api/auth/session'].includes(pathname) ? 'GET' : 'POST';
+                if (req.method !== expectedMethod) return reply(405, { error: 'METHOD_NOT_ALLOWED' });
+                if (expectedMethod === 'POST' && req.headers.origin !== `http://${req.headers.host}`) return reply(403, { error: 'INVALID_ORIGIN' });
+                const headers = { Accept: 'application/json' };
+                if (req.headers.authorization) headers.Authorization = req.headers.authorization;
+                let body;
+                if (expectedMethod === 'POST') {
+                    if (!/^application\/json(?:\s*;|$)/i.test(req.headers['content-type'] || '')) return reply(415, { error: 'JSON_REQUIRED' });
+                    const chunks = [];
+                    let size = 0;
+                    for await (const chunk of req) {
+                        size += chunk.length;
+                        if (size > 8192) return reply(413, { error: 'REQUEST_TOO_LARGE' });
+                        chunks.push(chunk);
+                    }
+                    try { body = JSON.parse(Buffer.concat(chunks).toString('utf8')); }
+                    catch { return reply(400, { error: 'INVALID_JSON' }); }
+                    if (!body || typeof body !== 'object' || Array.isArray(body)) return reply(400, { error: 'INVALID_JSON' });
+                    headers['Content-Type'] = 'application/json';
+                }
+                try {
+                    const upstream = await fetchImpl(`${REMOTE_API_BASE}${pathname}${new URL(req.url, 'http://127.0.0.1').search}`, {
+                        method: expectedMethod, headers, body: body === undefined ? undefined : JSON.stringify(body),
+                        redirect: 'error', signal: AbortSignal.timeout(10000),
+                    });
+                    const raw = await upstream.text();
+                    if (Buffer.byteLength(raw) > 65536) return reply(502, { error: 'AUTH_RESPONSE_TOO_LARGE' });
+                    let payload;
+                    try { payload = JSON.parse(raw); }
+                    catch { return reply(502, { error: 'AUTH_RESPONSE_INVALID' }); }
+                    return reply(upstream.status, payload);
+                } catch {
+                    return reply(502, { error: 'AUTH_SERVICE_UNAVAILABLE' });
+                }
+            }
+            if (pathname === '/continuity.html' || pathname.startsWith('/api/continuity/')) {
+                if (req.headers.origin && req.headers.origin !== `http://${req.headers.host}`) return reply(403, { error: 'INVALID_ORIGIN' });
+                return continuityHandler(req, res);
+            }
             if (studioPaths.has(pathname)) {
                 if (pathname === '/api/ai/studio/feishu/status' && req.method === 'GET') {
                     if (req.headers.origin && req.headers.origin !== `http://${req.headers.host}`) return reply(403, { error: 'INVALID_ORIGIN' });
