@@ -101,6 +101,12 @@ test('template plan aligns selected poses, close crops, and backlight instructio
     assert.match(lookBack.description, /回头/);
     assert.doesNotMatch(lookBack.description, /双手轻放腰侧/);
 
+    const croppedNeckPose = plan.shotList.find(shot => shot.directorContract.referenceIds[0] === 'atlas-pose-full_single_p021'
+        && ['中景', '近景', '特写', '局部特写'].includes(shot.shotSize));
+    assert.ok(croppedNeckPose);
+    assert.match(croppedNeckPose.description, /单手轻触颈侧（上半身裁切适配）/);
+    assert.doesNotMatch(croppedNeckPose.description, /扶腿|腿部动作/);
+
     const rimLight = plan.shotList.find(shot => shot.title === '轮廓光人像');
     assert.match(rimLight.angle, /逆光/);
     assert.match(rimLight.lighting, /人物背后.*勾勒.*轮廓/);
