@@ -2,7 +2,21 @@ import { loadStudioRegistry } from './registry.mjs';
 import { runServerFirst } from './agent-lite.mjs';
 
 const angleNames = { front: '正面', diagonal: '斜侧', side: '侧面', high: '俯视', top: '俯视', overhead: '俯视', low: '仰视', bottom: '仰视' };
-const naturalPoseExclusions = /跪|后仰|躺|趴|劈叉|倒立|双手后撑|双腿斜|双腿悬空|挺胸|单腿.*肩高|单腿.*高抬|M字开腿|举过头|手臂上举|双臂上举|双手抱头|手扶后脑|kneel|reclin|supine|prone|split|inversion|overhead/i;
+const naturalPoseExclusions = /跪|后仰|躺|趴|劈叉|倒立|双手后撑|双腿斜|双腿悬空|挺胸|单腿.*肩高|单腿.*高抬|M字开腿|举过头|手臂上举|双臂上举|双手抱头|手扶后脑|单手抚后脑|双手抚后颈|kneel|reclin|supine|prone|split|inversion|overhead/i;
+// PoseAtlas thumbnails expose several arm/leg actions that their short labels omit.
+// Keep the reviewed source IDs out of generic natural-portrait plans.
+const visuallyUnsuitableNaturalPoseIds = new Set([
+    'full_single_p016', 'full_single_p019', 'full_single_p020', 'full_single_p022',
+    'full_single_p027', 'full_single_p029',
+]);
+const raisedArmPoseIds = new Set([
+    'full_single_p016', 'full_single_p019', 'full_single_p020', 'full_single_p027', 'full_single_p029',
+]);
+
+export function isNaturalPoseRequested(value) {
+    const prompt = String(value || '').replace(/自然(?:光线|光)|natural\s+(?:light|lighting)/gi, '');
+    return /自然|放松|轻松|日常|relaxed|natural|casual/i.test(prompt);
+}
 
 function outfitConstraints(input) {
     const text = [input.modelDesc, input.extra].filter(Boolean).join('；');
@@ -45,13 +59,18 @@ function matchesOutfit(template, constraints) {
 
 function poseConflicts(template, prompt, naturalPoseOnly) {
     const terms = `${template.title} ${template.description} ${template.category}`;
-    if (naturalPoseOnly && naturalPoseExclusions.test(terms)) return true;
+    const upstreamId = String(template.upstreamId || '').toLowerCase();
+    if (naturalPoseOnly && (naturalPoseExclusions.test(terms) || visuallyUnsuitableNaturalPoseIds.has(upstreamId))) return true;
     const bans = [
         [/(?:禁止|不要|避免|不能|不希望)[^。；;]{0,16}跪/, /跪|kneel/i],
         [/(?:禁止|不要|避免|不能|不希望)[^。；;]{0,16}(?:躺|卧|趴)/, /躺|卧|趴|reclin|supine|prone/i],
         [/(?:禁止|不要|避免|不能|不希望)[^。；;]{0,16}(?:举过头|上举|高举|抱头)/, /举过头|上举|高举|抱头|过头|overhead/i],
         [/(?:禁止|不要|避免|不能|不希望)[^。；;]{0,16}交叉双?腿/, /交叉腿|双腿交叠|cross(?:ed|ing)? legs/i],
     ];
+    const forbidsRaisedArms = /(?:禁止|不要|避免|不能|不希望)[^。；;]{0,20}(?:举过头|上举|高举|抱头|抬手过头)/i.test(prompt);
+    if (forbidsRaisedArms && raisedArmPoseIds.has(upstreamId)) return true;
+    const requiresGroundedFeet = /(?:双脚|两脚|双足).{0,8}(?:着地|站稳|踩地)|both feet.{0,24}(?:ground|floor)/i.test(prompt);
+    if (requiresGroundedFeet && /单腿后抬|踮脚|脚离地|抬腿|one (?:foot|leg) lifted|on tiptoe/i.test(terms)) return true;
     return bans.some(([constraint, pose]) => constraint.test(prompt) && pose.test(terms));
 }
 
@@ -91,7 +110,8 @@ export function deriveReferenceGuidance(templates, input = {}) {
             const angles = (template.angles || []).map(angle => angleNames[angle] || angle).join('、');
             if (angles) direction += `可参照原库的${angles}视角，实际机位服从用户限制。`;
         } else if (template.kind === 'costume') {
-            direction = `从参考的色系与单品关系提炼搭配方向。先核实现有服装，再决定配色与层次，缺少单品时用已有同色系服装替换，具体穿搭待确认。`;
+            const wardrobe = String(input.modelDesc || '').trim();
+            direction = `${wardrobe ? `用户指定的完整穿搭为：${wardrobe}。` : ''}库图只辅助参考材质与色系；单品、颜色、裙长、鞋型和层次以用户文字为准，不替换、不增添。忽略参考图中未指定的包袋、首饰、帽子等配饰。`;
         } else {
             direction = '仅提炼发型轮廓、发丝整理和妆容气质，保持实际模特的身份与外貌。先确认发长与可执行的妆发条件。';
         }
@@ -118,7 +138,7 @@ export async function prepareReferenceContext(input, options = {}) {
     }
     const requireImages = input.requireImageReferences === true;
     const prompt = ['theme', 'style', 'scene', 'mood', 'extra', 'modelDesc'].map(key => String(input[key] || '')).join(' ').slice(0, 1400);
-    const naturalPoseOnly = /自然|放松|轻松|日常|relaxed|natural|casual/i.test(prompt)
+    const naturalPoseOnly = isNaturalPoseRequested(prompt)
         && !/(?:采用|选择|需要|想要|来个|拍摄|摆|use|want|choose)[^。\n;；]{0,12}(?:跪|后仰|躺|趴|劈叉|倒立|kneel|reclin|supine|prone|split)/i.test(prompt);
     let templates = (ids || []).map(id => registry.find(id));
     if (templates.some(template => !template)) throw new Error('UNAVAILABLE_REFERENCE');

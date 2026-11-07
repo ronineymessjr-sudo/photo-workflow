@@ -1,4 +1,5 @@
 import { prepareReferenceContext } from './ai-studio/reference-brief.mjs';
+import { loadStudioRegistry } from './ai-studio/registry.mjs';
 
 const CLOUDFLARE_MODEL = '@cf/black-forest-labs/flux-2-klein-9b';
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
@@ -9,15 +10,30 @@ export async function prepareCloudCandidateReferences(input, options = {}) {
     for (const ids of [input.reference_ids, input.shot_contract?.referenceIds]) {
         if (ids !== undefined && (!Array.isArray(ids) || ids.length > 6 || ids.some(id => typeof id !== 'string'))) throw new Error('INVALID_REFERENCE_SELECTION');
     }
+    const { registry, library } = await loadStudioRegistry(options);
+    const requestedIds = [...new Set([...(input.shot_contract?.referenceIds || []), ...(input.reference_ids || [])])];
+    const selectedPoseIds = new Set((input.shot_contract?.referenceIds || []).filter(id => registry.find(id)?.kind === 'pose'));
+    if (!selectedPoseIds.size) {
+        const fallbackPose = requestedIds.find(id => registry.find(id)?.kind === 'pose');
+        if (fallbackPose) selectedPoseIds.add(fallbackPose);
+    }
+    const referenceIds = requestedIds.filter(id => {
+        const template = registry.find(id);
+        return !template || template.kind !== 'pose' || selectedPoseIds.has(id);
+    });
     const context = await prepareReferenceContext({
         ...input.reference_brief,
         scene: [input.reference_brief?.scene, input.scene_brief, input.brief].filter(Boolean).join('\n'),
         modelDesc: input.reference_brief?.modelDesc || input.brief,
         style: input.reference_brief?.style || input.style_direction,
         useReferenceLibrary: true,
-        referenceIds: [...new Set([...(input.shot_contract?.referenceIds || []), ...(input.reference_ids || [])])],
+        referenceIds,
         requireImageReferences: true,
-    }, options);
+    }, { ...options, registry, library });
+    if (selectedPoseIds.size) {
+        context.templates = context.templates.filter(template => template.kind !== 'pose' || selectedPoseIds.has(template.id));
+        context.guidance.suggestions = context.guidance.suggestions.filter(item => item.kind !== 'pose' || selectedPoseIds.has(item.sourceItemId));
+    }
     if (!context?.templates.length || !context.templates.some(template => template.sourceUrl)) {
         throw new Error('REFERENCE_LIBRARY_UNAVAILABLE');
     }
@@ -44,14 +60,16 @@ export function compileCloudCandidateRequest(input, referenceContext) {
     const selectedPose = referenceContext?.templates.find(template => template.kind === 'pose' && contract.referenceIds?.includes(template.id))
         || referenceContext?.templates.find(template => template.kind === 'pose');
     const shotTemplates = referenceContext?.templates.filter(template => template.kind !== 'pose' || template.id === selectedPose?.id);
-    const templateBrief = shotTemplates?.map(template =>
-        `${template.id}: ${template.title}. ${template.description || ''}. ${(template.tags || []).join(', ')}`
+    const templateBrief = shotTemplates?.map(template => template.kind === 'costume'
+        ? `${template.id}: secondary material and color reference only; the written wardrobe contract controls all requested garments and footwear.`
+        : `${template.id}: ${template.title}. ${template.description || ''}. ${(template.tags || []).join(', ')}`
     ).join('\n');
+    const wardrobeContract = clean(contract.wardrobe_styling, 420) || 'Preserve the user specified garments exactly.';
     const prompt = [
         'Create one photorealistic editorial photography candidate. Follow the selected shot contract exactly.',
         `Shot language: ${shotLanguage}.`,
         `Camera and composition: ${generatorPrompt}.`,
-        `Wardrobe: ${clean(contract.wardrobe_styling, 140) || 'Preserve the user specified garments exactly'}.`,
+        `Wardrobe contract: ${wardrobeContract}. This text controls exact garments, colors, skirt length, layers and shoes.`,
         `Scene and constraints: ${context.join('\n')}`,
         mustShow.length ? `Must show: ${clean(mustShow.join('; '), 200)}.` : '',
         rejectIf.length ? `Do not include: ${clean(rejectIf.join('; '), 160)}.` : '',
@@ -97,6 +115,7 @@ export async function generateCloudCandidate(input, { ai, referenceContext, fetc
     let prompt = [
         `Shot contract: ${clean(input.shot_contract.generator_prompt, 1200)}`,
         selectedPose ? `Selected pose library entry: ${clean(selectedPose.title, 120)}. Pose direction: ${clean(poseDirection, 260)}` : '',
+        `Written wardrobe contract: ${clean(input.shot_contract.wardrobe_styling || input.reference_brief?.modelDesc, 420) || 'Preserve the user specified garments exactly.'}`,
         `Scene: ${clean(input.scene_brief || input.reference_brief?.scene, 250)}`,
         `Style: ${clean(input.style_direction || input.reference_brief?.style, 150)}`,
         `User requirements: ${clean(input.brief, 250)}`,
@@ -107,7 +126,7 @@ export async function generateCloudCandidate(input, { ai, referenceContext, fetc
         if (referenceContext && /[\u3400-\u9fff]/u.test(prompt)) {
             const translated = await ai.run('@cf/meta/llama-3.1-8b-instruct-fp8-fast', {
                 messages: [
-                    { role: 'system', content: 'Translate this photography contract into concise English camera, pose, lighting and environment instructions. Preserve exact subject count, location, action and framing. Clothing, face, age and hair are supplied by reference images: leave their description to those images. Do not infer garments, accessories, colors or props. Do not change standing to sitting. Preserve cropping instructions exactly; omit body parts outside the requested crop. Return only the English prompt under 1400 characters, no commentary or text to render.' },
+                    { role: 'system', content: 'Translate this photography contract into concise English camera, pose, wardrobe, lighting and environment instructions. Preserve exact subject count, location, action and framing. The written wardrobe contract controls garment types, colors, layers, skirt length and shoes. The outfit reference image is secondary material and palette guidance only; omit any unrequested accessories or props visible in it. The face reference controls identity, apparent age and hair. Do not change standing to sitting. Preserve cropping instructions exactly; omit body parts outside the requested crop. Return only the English prompt under 1400 characters, no commentary or text to render.' },
                     { role: 'user', content: prompt },
                 ], max_tokens: 600, temperature: 0,
             });
@@ -128,7 +147,8 @@ export async function generateCloudCandidate(input, { ai, referenceContext, fetc
             [/特写|^E?CU$/i, 'Tight close-up of the face or the detail specified by the shot contract.'],
             [/中景|^MS$/i, 'Waist-up portrait. Crop below the waist and preserve the hands when visible.'],
         ].find(([pattern]) => pattern.test(input.shot_contract.shot_size || ''))?.[1] || '';
-        generationPrompt = `Create one photorealistic DSLR photograph of ONE person, with realistic skin texture and a fully rendered real location. Reference image 1, the face photograph, controls facial identity, apparent age, hair and photographic realism. Reference image 2, the outfit, controls every visible garment, layer, color, material, accessory and shoe. Copy those garments faithfully without adding or replacing layers. Follow the selected PoseAtlas action described in the shot contract as text; do not copy a drawing style. Required pose: ${poseTitle}. ${poseDetail} ${prompt} Required camera framing: ${framing || 'Follow the shot contract.'} Render the requested scene as a real photographic environment with natural light and material detail.`;
+        const wardrobeContract = clean(input.shot_contract.wardrobe_styling || input.reference_brief?.modelDesc, 420) || 'Preserve the user specified garments exactly.';
+        generationPrompt = `Create one photorealistic DSLR photograph of ONE person, with realistic skin texture and a fully rendered real location. Reference image 1, the face photograph, controls facial identity, apparent age, hair and photographic realism. The written wardrobe contract is authoritative for exact garments, colors, layers, skirt length and shoes: ${wardrobeContract}. Reference image 2 is secondary guidance for material and palette only. Do not copy unrequested bags, jewelry, hats or other accessories/props from it. Do not replace or add garments. Follow the selected PoseAtlas action described in the shot contract as text; do not copy a drawing style. Required pose: ${poseTitle}. ${poseDetail} ${prompt} Required camera framing: ${framing || 'Follow the shot contract.'} Render the requested scene as a real photographic environment with natural light and material detail.`;
         form.append('prompt', generationPrompt);
         form.append('width', String(compiled.width));
         form.append('height', String(compiled.height));

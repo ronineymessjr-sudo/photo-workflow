@@ -170,6 +170,7 @@ test('site plan and multi-scene candidate generation keep face, outfit, and per-
             { id: 'full_single_P016', no: 'P016', category: '站姿', names: { zh: '轻触发丝站姿' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P016_front.jpg' }] },
             { id: 'full_single_P017', no: 'P017', category: '站姿', names: { zh: '自然回眸站姿' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P017_front.jpg' }] },
             { id: 'full_single_P018', no: 'P018', category: '站姿', names: { zh: '双手轻扶腰侧' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P018_front.jpg' }] },
+            { id: 'full_single_P021', no: 'P021', category: '站姿', names: { zh: '一手抚颈一手扶腿' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P021_front.jpg' }] },
         ] });
         if (target.endsWith('/data/costumes.json')) return Response.json({ costumes: [
             { id: 'AUT-0118', thumb: 'costume/thumbs/AUT-0118.webp', cat: 'autumn', group: 'top', color: 'ivory', main: 'knit', tags: ['knit', 'ivory', 'khaki', 'skirt', 'brown', 'boots'] },
@@ -227,10 +228,14 @@ test('site plan and multi-scene candidate generation keep face, outfit, and per-
         assert.equal(plan.director.source, 'template-library-plan');
         assert.equal(plan.director.imageGenerationConnected, true);
         const fixedRefs = plan.aiStudio.references.filter(reference => reference.kind !== 'pose').map(reference => reference.sourceItemId).sort();
-        const first = plan.shotList[0];
-        const otherScene = plan.shotList.find(shot => shot.scene !== first.scene && shot.directorContract.referenceIds[0] !== first.directorContract.referenceIds[0]);
-        assert.ok(otherScene);
-        for (const shot of [first, otherScene]) {
+        const shots = plan.shotList;
+        const scenes = [...new Set(shots.map(shot => shot.scene))];
+        assert.equal(shots.length, 12);
+        assert.equal(scenes.length, 3);
+        for (const scene of scenes) {
+            assert.equal(new Set(shots.filter(shot => shot.scene === scene).map(shot => shot.directorContract.referenceIds[0])).size, 4);
+        }
+        for (const shot of shots) {
             const candidateResponse = await worker.fetch(new Request('https://unit.test/api/director/generate-candidate', {
                 method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: authorization }, body: JSON.stringify({
                     request_id: `test-${shot.id}`, brief: shot.description, scene_brief: shot.scene,
@@ -249,13 +254,14 @@ test('site plan and multi-scene candidate generation keep face, outfit, and per-
             assert.equal(imageResponse.headers.get('Content-Type'), 'image/png');
             assert.deepEqual([...new Uint8Array(await imageResponse.arrayBuffer())], [...png]);
         }
-        assert.equal(requestPrompts.length, 2);
-        assert.equal(imagePrompts.length, 2);
+        assert.equal(requestPrompts.length, shots.length);
+        assert.equal(imagePrompts.length, shots.length);
         assert.ok(requestPrompts.every(prompt => /米白色针织上衣、卡其色半身裙、棕色短靴/.test(prompt)));
-        assert.ok(requestPrompts[0].includes(first.scene));
-        assert.ok(requestPrompts[1].includes(otherScene.scene));
+        assert.ok(shots.every((shot, index) => requestPrompts[index].includes(shot.scene)));
         assert.ok(imagePrompts.every(prompt => prompt.hasFace && prompt.hasOutfit));
         assert.ok(imagePrompts.every(prompt => /Required pose:/.test(prompt.prompt)));
+        assert.ok(imagePrompts.every(prompt => /written wardrobe contract is authoritative/.test(prompt.prompt)));
+        assert.ok(imagePrompts.every(prompt => /Do not copy unrequested bags, jewelry, hats/.test(prompt.prompt)));
     } finally {
         globalThis.fetch = originalFetch;
     }

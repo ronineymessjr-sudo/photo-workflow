@@ -89,7 +89,7 @@ export function createTemplatePlan(input, referenceContext) {
         'atlas-pose-full_single_p015': '双脚前后错开半步，重心落在后脚；靠镜头一侧的手轻搭髋部，另一只手自然下垂，肩膀放松。',
         'atlas-pose-full_single_p017': '身体转离镜头约四十五度，双脚站稳；头部越过近侧肩回望，肩颈放松，视线落在镜头附近。',
         'atlas-pose-full_single_p018': '双脚与髋同宽站稳，双手轻放腰侧，肘部自然向外不过度撑开；肩膀放松，身体略转向镜头。',
-        'atlas-pose-full_single_p016': '双手轻触鬓角整理发丝，手肘自然弯曲不过度外展；肩颈放松，不把手臂高举过头。',
+        'atlas-pose-full_single_p016': '双臂抬起，双手触及头顶发丝，肘部向两侧打开；仅在用户允许举臂时采用。',
     };
     const framingDirections = {
         '环境全景': { prompt: 'Wide environmental full-body photograph. Keep the person visible head-to-toe within the full location.', crop: '人物全身入画，环境占主要面积，头顶与脚下留出空间。', required: '公园环境、人物全身和场地纵深同时清晰可辨' },
@@ -138,7 +138,7 @@ export function createTemplatePlan(input, referenceContext) {
             : '先在开阔阴影中找柔和侧光，避开脸上的斑驳直射光，按脸部曝光并保留背景亮部层次。';
         const stance = /(?:不|禁止)交叉双?腿/.test(input.extra || '')
             ? 'Both feet parallel and hip-width apart on the ground. Legs straight and separated, weight evenly on both feet.' : '';
-        const wardrobe = `${wardrobeRequirement ? `人物与服装硬性要求：${wardrobeRequirement}。` : ''}严格参照已匹配的服装库图片，保留用户指定的单品、颜色、材质和层次，不替换、不增添。`;
+        const wardrobe = `${wardrobeRequirement ? `人物与服装硬性要求：${wardrobeRequirement}。` : ''}用户文字是单品、颜色、裙长、鞋型和层次的唯一硬约束；服装库图片只辅助参考材质与色系。只保留文字指定的服装，不复制未指定的包袋、首饰、帽子或其他配饰，不替换、不增添。`;
         const title = titleDirections[shot.title] || shot.title;
         const contract = {
             source: 'template-library-plan', referenceIds: [template.id],

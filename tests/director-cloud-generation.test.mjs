@@ -35,6 +35,47 @@ test('cloud candidate compiler preserves shot contract, constraints, and framing
     assert.deepEqual([compiled.width, compiled.height, compiled.steps], [768, 1024, 4]);
 });
 
+test('a mismatched costume reference cannot add accessories or replace the written wardrobe', () => {
+    const wardrobe = '成年女性模特，米白针织上衣、卡其半身裙、棕色短靴；不要包袋或首饰';
+    const input = { ...request, reference_brief: { modelDesc: wardrobe }, shot_contract: {
+        ...contract, wardrobe_styling: `用户指定穿搭：${wardrobe}。用户文字是单品、颜色、裙长、鞋型和层次的唯一硬约束。`,
+    } };
+    const context = { ...referenceContext, templates: referenceContext.templates.map(template => template.kind === 'costume'
+        ? { ...template, tags: ['ivory', 'knit', 'khaki', 'skirt', 'boots', 'bag', 'gold', 'necklace'] }
+        : template) };
+    const compiled = compileCloudCandidateRequest(input, context);
+    assert.match(compiled.prompt, /用户文字是单品、颜色、裙长、鞋型和层次的唯一硬约束/);
+    assert.match(compiled.prompt, /secondary material and color reference only/);
+    assert.doesNotMatch(compiled.prompt, /bag, gold, necklace/);
+});
+
+test('image prompt follows explicit wardrobe text over extras in the outfit image', async () => {
+    const wardrobe = '成年女性模特，米白针织上衣、卡其半身裙、棕色短靴；不要包袋或首饰';
+    const input = { ...request, reference_brief: { modelDesc: wardrobe }, shot_contract: {
+        ...contract, wardrobe_styling: `用户指定穿搭：${wardrobe}。用户文字是单品、颜色、裙长、鞋型和层次的唯一硬约束。`,
+    } };
+    const context = { ...referenceContext, templates: referenceContext.templates.map(template => template.kind === 'costume'
+        ? { ...template, tags: ['ivory', 'knit', 'khaki', 'skirt', 'boots', 'bag', 'gold', 'necklace'] }
+        : template) };
+    let imagePrompt;
+    let translationPrompt;
+    await generateCloudCandidate(input, { referenceContext: context, fetchImpl, ai: { run: async (_model, payload) => {
+        if (_model.includes('llama')) {
+            translationPrompt = payload.messages[1].content;
+            return { response: 'Photorealistic portrait, preserve the specified ivory knit top, khaki skirt, brown ankle boots, pose and park location.' };
+        }
+        const form = await new Response(payload.multipart.body, { headers: { 'Content-Type': payload.multipart.contentType } }).formData();
+        imagePrompt = String(form.get('prompt'));
+        return { image: Buffer.from(jpeg).toString('base64') };
+    } } });
+    assert.match(translationPrompt, /Written wardrobe contract: 用户指定穿搭/);
+    assert.match(translationPrompt, /棕色短靴/);
+    assert.match(imagePrompt, /written wardrobe contract is authoritative/);
+    assert.match(imagePrompt, /米白针织上衣、卡其半身裙、棕色短靴/);
+    assert.match(imagePrompt, /Do not copy unrequested bags, jewelry, hats or other accessories\/props/);
+    assert.doesNotMatch(imagePrompt, /bag, gold, necklace/);
+});
+
 test('candidate uses the existing Cloudflare AI binding and validates its JPEG output', async () => {
     const calls = [];
     const result = await generateCloudCandidate(request, { referenceContext, fetchImpl, ai: { run: async (model, input) => {
@@ -50,7 +91,7 @@ test('candidate uses the existing Cloudflare AI binding and validates its JPEG o
     assert.match(form.get('prompt'), /Exactly one hand rests on the hip/);
     assert.match(form.get('prompt'), /Follow the selected PoseAtlas action described in the shot contract as text/);
     assert.doesNotMatch(form.get('prompt'), /black-and-white artist drawing/);
-    assert.match(form.get('prompt'), /without adding or replacing layers/);
+    assert.match(form.get('prompt'), /Do not replace or add garments/);
     assert.equal(result.prompt, form.get('prompt'));
     for (let index = 0; index < 2; index++) assert.equal(form.get(`input_image_${index}`).size, jpeg.length);
     assert.equal(form.has('input_image_2'), false);
