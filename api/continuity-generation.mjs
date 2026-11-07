@@ -1,4 +1,5 @@
 // Image-service adapters for one shot at a time.
+const STEPS = 24;
 //
 // Rules this file enforces:
 //   - no credential -> 503 GENERATION_NOT_CONFIGURED listing the exact env vars,
@@ -121,19 +122,26 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
     // instructions measurably degrades it, and both the shot text and the pose /
     // camera fields are user input in Chinese. Translate the whole direction in
     // one call so the model sees one language.
+    // The plan is verbose - a single pose sentence can run 60 characters. The
+    // prompt cap is ~512 tokens, so each field is trimmed to the part that
+    // changes the picture; the rest lives in the contract for review.
+    const clamp = (value, max) => {
+        const text = typeof value === 'string' ? value.trim() : '';
+        return text.length > max ? `${text.slice(0, max)}…` : text;
+    };
     const directionZh = [
-        prompt,
-        variant?.action ? `姿势与动作：${variant.action}` : '',
-        variant?.camera ? `机位：${variant.camera}` : '',
-        variant?.distance ? `拍摄距离：${variant.distance}` : '',
-        variant?.subjectPlacement ? `人物在画面中的位置：${variant.subjectPlacement}` : '',
+        clamp(prompt, 220),
+        variant?.action ? `姿势与动作：${clamp(variant.action, 70)}` : '',
+        variant?.camera ? `机位：${clamp(variant.camera, 26)}` : '',
+        variant?.subjectPlacement ? `人物在画面中的位置：${clamp(variant.subjectPlacement, 40)}` : '',
         // The plan names the light. Not sending it is why frames came back with
         // generic studio lighting no matter what the shot called for.
-        directive(variant?.lighting) ? `现场光线：${directive(variant.lighting)}` : '',
+        directive(variant?.lighting) ? `现场光线：${clamp(directive(variant.lighting), 80)}` : '',
         directive(variant?.wardrobe) ? `服装与妆发：${directive(variant.wardrobe)}` : '',
         directive(variant?.props) ? `道具：${directive(variant.props)}` : '画面不额外添加道具',
-        directive(variant?.crop) ? `裁切要求：${directive(variant.crop)}` : '',
-        directive(variant?.cameraSettings) ? `相机参数：${directive(variant.cameraSettings)}` : '',
+        // Crop is already expressed by the framing line, and "16mm f/8 1/1000s"
+        // is not something a diffusion model can act on as text - it becomes a
+        // depth-of-field instruction below instead.
     ].filter(Boolean).join('；');
     const direction = await englishPrompt(ai, directionZh);
     const slots = ['identity', 'style'];
@@ -144,38 +152,36 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
     const portrait = String(size || '').startsWith('1024x1536') || !String(size || '').includes('x');
     const width = portrait ? 768 : 1024;
     const height = portrait ? 1024 : 768;
-    // Fetch the operator's pose template BEFORE building the prompt: its role has
-    // to be described inside the prompt, and FLUX accepts three references.
-    // Sending only two is why every frame defaulted to a straight-on stance no
-    // matter what the plan asked for.
-    let poseBytes = null;
-    let poseNote = '';
-    if (poseRef?.imageUrl) {
-        const pose = await fetchLibraryImage(poseRef.imageUrl, fetchImpl);
-        if (pose) {
-            poseBytes = pose;
-            poseNote = `Reference image 3 is a body-pose reference${poseRef.title ? ` (${poseRef.title})` : ''}: copy its body geometry, limb placement and weight distribution. It carries no identity and no clothing.`;
-        }
-    }
-    // The shot text alone does not tell the model what the images are for.
-    // Without this, a wide environmental description produced a street with no
-    // person in it, and a close shot invented a different face.
+    // Pose handling: the library's pose images are black-and-white anatomical
+    // line drawings. Black Forest Labs states that mixing drawing registers with
+    // photographic references confuses the editor, and a nude body diagram also
+    // leaks into the generated body and clothing. So the pose is carried as TEXT
+    // (which the plan already describes in detail), not as a third image.
+    const poseNote = poseRef?.title ? `Required pose: ${poseRef.title}.` : '';
+    const poseBytes = null;
+    // The prompt budget matters: FLUX.2 klein states a ~512 token cap and that
+    // longer prompts degrade rather than truncate cleanly. The version below runs
+    // ~400 tokens so nothing important falls off the end.
     const composed = [
-        'Create one photorealistic DSLR photograph containing exactly ONE person.',
-        'Reference image 1 is the face photograph: it defines facial identity, apparent age, skin tone and hair. The person in the result must be this same individual, not a similar-looking model.',
-        'Reference image 2 is the outfit reference: every visible garment, layer, colour, material and accessory comes from it exactly. Do not invent, replace or simplify clothing.',
+        'One photorealistic DSLR photograph of exactly one person.',
+        'Image 1 supplies the face, age and hair. Image 2 supplies the outfit exactly.',
         poseNote,
-        direction ? `Shot direction: ${direction}.` : '',
-        directive(variant?.mustShow) ? `The frame must contain: ${directive(variant.mustShow)}.` : '',
-        directive(variant?.rejectIf) ? `Reject and redo if any of these appear: ${directive(variant.rejectIf)}.` : '',
+        direction ? `Shot: ${direction}.` : '',
+        directive(variant?.mustShow) ? `Must contain: ${shortList(variant.mustShow)}.` : '',
+        directive(variant?.rejectIf) ? `Redo if: ${shortList(variant.rejectIf)}.` : '',
         framingLine(variant),
-        'Real photographic rendering: visible skin pores and peach fuzz, uneven natural skin tone, true light falloff with genuinely dark shadow areas, mixed colour temperature, worn everyday surfaces with marks and dust, natural lens vignetting, frame not perfectly level.',
-        'Avoid: text, captions, watermark, collage, split frames, extra limbs, deformed hands, melted or fused fingers, duplicate subject, plastic skin, beauty filter, HDR glow.',
+        depthOfField(variant?.cameraSettings),
+        'Real skin with visible pores, true light falloff, mixed colour temperature, worn surfaces, slight imperfect level.',
+        'No text, watermark, collage, extra limbs, deformed hands, plastic skin, HDR glow.',
     ].filter(Boolean).join(' ');
     const form = new FormData();
     form.append('prompt', composed);
     form.append('width', String(width));
     form.append('height', String(height));
+    // 4 steps is the model's "concepting" setting (sub-second previews). For a
+    // frame we intend to keep, the 9B variant wants ~25: texture, skin detail and
+    // fine structure only appear past ~15.
+    form.append('steps', String(STEPS));
     chosen.forEach((reference, index) => {
         const bytes = reference.buffer instanceof Uint8Array ? reference.buffer : new Uint8Array(reference.buffer || []);
         form.append(`input_image_${index}`, new Blob([bytes], { type: reference.mime || 'image/png' }), `reference-${index}`);
@@ -285,7 +291,7 @@ async function englishPrompt(ai, prompt) {
             messages: [
                 {
                     role: 'system',
-                    content: 'Translate the user text into concise English photography instructions. Keep every concrete constraint: how many people, framing and crop, camera height, subject position, pose and action, location and its details, time of day, weather, lighting direction, garments, colour grade. Do not add anything that is not stated. Do not describe faces or clothing beyond what is given, since reference images supply those. Return only the English text.',
+                    content: 'Translate the user text into concise English photography instructions, 90 words maximum. Keep every concrete constraint: how many people, framing and crop, camera height, subject position, pose and action, location and its details, time of day, weather, lighting direction and quality, colour grade. Compress repetition instead of expanding it. Do not add anything that is not stated. Do not describe faces or clothing beyond what is given, since reference images supply those. Return only the English text, no preamble.',
                 },
                 { role: 'user', content: prompt },
             ],
@@ -314,6 +320,31 @@ function directive(value) {
         .filter(part => !/待确认|待定|未定|TBD/i.test(part))
         .join('；')
         .trim();
+}
+
+
+// Keep the first three items of a verification list: beyond that the prompt
+// budget is better spent on the pose and the light.
+function shortList(value) {
+    return directive(value)
+        .split(/[、,，]/)
+        .map(item => item.trim())
+        .filter(Boolean)
+        .slice(0, 2)
+        .map(item => (item.length > 20 ? `${item.slice(0, 20)}…` : item))
+        .join('；');
+}
+
+// Aperture and shutter mean nothing to the text encoder, but their visual
+// consequences do: aperture sets how much is sharp, shutter freezes or blurs.
+function depthOfField(cameraSettings) {
+    const raw = directive(cameraSettings);
+    if (!raw) return '';
+    const aperture = Number((raw.match(/f\/?(\d+(?:\.\d+)?)/) || [])[1]);
+    if (!aperture) return '';
+    if (aperture >= 8) return 'Deep focus: the whole scene is sharp from foreground to background.';
+    if (aperture <= 2) return 'Very shallow focus: only the face is sharp, background falls into soft blur.';
+    return 'Moderate depth of field: subject sharp, background gently softened.';
 }
 
 // Framing stated as what SHOULD be visible. Saying "person occupies at most 40%"

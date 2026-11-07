@@ -175,7 +175,7 @@ test('generateShot reports a missing AI binding as 503, not a crash', async () =
     );
 });
 
-test('the pose template selected for a frame becomes a third reference image', async () => {
+test('the selected pose reaches the model as text, never as a line drawing', async () => {
     const { generateShot } = await import('../api/continuity-generation.mjs');
     // A group whose shot carries a pose template from the library.
     let group = createGroup({
@@ -209,13 +209,13 @@ test('the pose template selected for a frame becomes a third reference image', a
         env: { AI: envAI }, store, fetchImpl: fakeFetch,
     });
 
-    assert.equal(fetched.length, 1, '必须去取那一张姿势模板图');
-    assert.match(fetched[0], /RuiC-PoseAtlas\/thumbs\/full_sexy_P003_front\.jpg/);
-    assert.equal(result.referencesSent, 3, '脸 + 服装 + 姿势 = 三张参考图');
-    // The prompt must explain what the third image is for, and carry the pose the
-    // operator selected.
-    assert.match(result.sentPrompt, /Reference image 3 is a body-pose reference/);
-    assert.match(result.sentPrompt, /顶胯回眸|body geometry/);
+    // The library's pose images are black-and-white anatomical drawings. Sending
+    // one alongside two photographs mixes visual registers, which Black Forest
+    // Labs documents as confusing the editor, so the pose must travel as text.
+    assert.equal(fetched.length, 0, '黑白线稿不该作为参考图上传');
+    assert.equal(result.referencesSent, 2, '只有脸 + 服装两张写实参考图');
+    // The selected pose still has to reach the model, as words.
+    assert.match(result.sentPrompt, /Required pose: 顶胯回眸/);
     assert.equal(aiCalls.filter(m => m.includes('flux')).length, 1);
 });
 
@@ -275,10 +275,10 @@ test('lighting, must-show, reject-if and camera settings reach the prompt', asyn
     });
 
     // These six items existed in the plan but never reached the model.
-    assert.match(result.sentPrompt, /The frame must contain: 螺旋楼梯的几何弧线/, '必须出现项要进提示词');
-    assert.match(result.sentPrompt, /Reject and redo if any of these appear: 闪光灯硬阴影/, '禁止项要进提示词');
+    assert.match(result.sentPrompt, /Must contain: 螺旋楼梯的几何弧线/, '必须出现项要进提示词');
+    assert.match(result.sentPrompt, /Redo if: .*闪光灯硬阴影/, '禁止项要进提示词');
     assert.match(result.sentPrompt, /美术馆顶光与侧窗自然光/, '光线要进提示词');
-    assert.match(result.sentPrompt, /16mm f\/8 1\/1000s/, '相机参数要进提示词');
+    assert.match(result.sentPrompt, /Deep focus/, 'f/8 应转译成景深描述，纯参数模型不认');
     assert.match(result.sentPrompt, /画面不额外添加道具/, '道具为“无”时要明说，否则模型会自己加');
     // Placeholder text must not be forwarded: it only invites invention.
     assert.ok(!/待确认/.test(result.sentPrompt), '“待确认”这类占位不该发给模型');
