@@ -5,12 +5,12 @@ import worker from '../api/index.js';
 const BASE = 'https://photoatelier.test';
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 
-async function call(path, body, method = 'POST') {
+async function call(path, body, method = 'POST', env = {}) {
     const response = await worker.fetch(new Request(`${BASE}${path}`, {
         method,
         headers: JSON_HEADERS,
         body: method === 'GET' ? undefined : JSON.stringify(body || {}),
-    }), {}, {});
+    }), env, {});
     return { status: response.status, body: await response.json() };
 }
 
@@ -35,6 +35,18 @@ test('continuity schema advertises providers, roles and qc items', async () => {
     assert.equal(body.providers['deepseek-vision'].canGenerate, false);
     assert.equal(body.providers['gpt-image-2'].supportsReferences, true);
     assert.equal(body.qcItems.length, 7);
+});
+
+test('continuity provider catalog reports Seedream readiness without exposing credentials', async () => {
+    const missing = await call('/api/continuity/providers?needReferences=true', null, 'GET');
+    assert.equal(missing.status, 200);
+    assert.equal(missing.body.configuredIds.includes('volcengine-seedream'), false);
+
+    const configured = await call('/api/continuity/providers?needReferences=true', null, 'GET', { ARK_API_KEY: 'test-only-provider-key' });
+    assert.equal(configured.status, 200);
+    assert.equal(configured.body.configuredIds.includes('volcengine-seedream'), true);
+    assert.equal(configured.body.apiReadyIds.includes('volcengine-seedream'), true);
+    assert.equal(JSON.stringify(configured.body).includes('test-only-provider-key'), false);
 });
 
 test('an initialised group starts blocked with three pending references', async () => {

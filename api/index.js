@@ -533,7 +533,8 @@ export default {
             else if (path === '/api/continuity/providers' && method === 'GET') {
                 const needReferences = url.searchParams.get('needReferences') !== 'false';
                 const maxPriceTier = url.searchParams.get('maxPriceTier') || '';
-                const configuredEnv = { OPENAI_API_KEY: env.OPENAI_API_KEY, CONTINUITY_IMAGE_ENDPOINT: env.CONTINUITY_IMAGE_ENDPOINT, CONTINUITY_IMAGE_KEY: env.CONTINUITY_IMAGE_KEY };
+                const configuredEnv = { OPENAI_API_KEY: env.OPENAI_API_KEY, CONTINUITY_IMAGE_ENDPOINT: env.CONTINUITY_IMAGE_ENDPOINT,
+                    CONTINUITY_IMAGE_KEY: env.CONTINUITY_IMAGE_KEY, ARK_API_KEY: env.ARK_API_KEY };
                 // Workers AI needs no key but does need the binding, so pass it in:
                 // without this the catalogue can never recommend the free brush
                 // even on a deployment that has it.

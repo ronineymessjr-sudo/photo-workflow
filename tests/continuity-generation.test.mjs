@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { generateShot, GenerationError } from '../api/continuity-generation.mjs';
 import { prescreen, mergeScores, summariseVision, PRE_SCREEN_ITEMS } from '../api/continuity-vision.mjs';
-import { createGroup, setReference, confirmMaster } from '../api/continuity.mjs';
+import { createGroup, setReference, confirmMaster, setAnchor } from '../api/continuity.mjs';
 import { storeAsset, createMemoryStore } from '../api/continuity-assets.mjs';
 
 const PNG_1PX = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
@@ -18,6 +18,30 @@ async function readyGroup(store) {
     }
     return confirmMaster(group, { assetId: group.references[0].assetId });
 }
+
+test('Seedream sends identity, scene and style, with the accepted anchor first', async () => {
+    const store = createMemoryStore();
+    const group = await readyGroup(store);
+    setAnchor(group, { assetId: group.references[0].assetId });
+    let sent;
+    await generateShot({ group, shotId: 'shot-01', providerId: 'volcengine-seedream', env: { ARK_API_KEY: 'test-only' }, store,
+        fetchImpl: async (_url, options) => {
+            sent = JSON.parse(options.body);
+            return Response.json({ data: [{ b64_json: PNG_1PX.split(',')[1] }] });
+        },
+    });
+    assert.equal(sent.image.length, 4, 'anchor plus all three role references must reach the provider');
+    assert.equal(sent.image.every(image => image.startsWith('data:image/png;base64,')), true);
+});
+
+test('Seedream cannot silently ignore an unreadable accepted anchor', async () => {
+    const store = createMemoryStore();
+    const group = await readyGroup(store);
+    setAnchor(group, { assetId: 'deadbeefdeadbeef' });
+    await assert.rejects(generateShot({ group, shotId: 'shot-01', providerId: 'volcengine-seedream', env: { ARK_API_KEY: 'test-only' }, store,
+        fetchImpl: async () => assert.fail('missing anchor must stop before any provider request'),
+    }), error => error.code === 'GENERATION_ANCHOR_MISSING');
+});
 
 test('generation without credentials fails closed and names the missing env vars', async () => {
     const store = createMemoryStore();

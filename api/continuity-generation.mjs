@@ -127,10 +127,10 @@ async function callSeedream({ env, prompt, size, seed, references, variant, pose
     const images = [];
     if (anchor?.assetId) {
         const stored = await readAsset(`/api/continuity/asset/${anchor.assetId}`, { env, store });
-        if (stored?.buffer?.length) images.push(dataUrlFor(stored.buffer, stored.mime));
+        if (!stored?.buffer?.length) throw new GenerationError('GENERATION_ANCHOR_MISSING', '已锁定的母图读不到；停止生成，不能退回无母图请求', 409);
+        images.push(dataUrlFor(stored.buffer, stored.mime));
     }
-    for (const reference of references.filter(item => item.role === 'identity' || item.role === 'style')) {
-        if (images.length >= 3) break;
+    for (const reference of references) {
         images.push(reference.dataUrl);
     }
 
