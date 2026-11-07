@@ -80,6 +80,8 @@ export function referencePlanFields(context) {
         references: context.templates.map(template => ({
             sourceItemId: template.id, upstreamId: template.upstreamId, poseNumber: template.poseNumber,
             title: template.title, kind: template.kind, angles: template.angles || [],
+            section: template.section || '',
+            tags: template.tags || [],
             externalUrl: template.sourceUrl, rightsStatus: template.rightsStatus,
             attribution: template.sourceUrl ? 'RuiC-PoseAtlas' : 'PhotoAtelier original',
             focalLength: template.focalLength,

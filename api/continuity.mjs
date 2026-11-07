@@ -24,7 +24,8 @@ export const CONTINUITY_PROVIDERS = {
         maxReferences: 6,
         supportsSeed: true,
         canGenerate: true,
-        imageSlots: ['identity', 'style'],
+        imageSlots: ['identity', 'scene', 'style'],
+        requiredImageSlots: ['identity', 'style'],
     },
     'cloudflare-flux-klein': {
         label: 'Cloudflare Workers AI · FLUX.2 Klein（已绑定 [ai]，免密钥）',
@@ -35,6 +36,7 @@ export const CONTINUITY_PROVIDERS = {
         canGenerate: true,
         // Only identity and style get an image slot; scene is prompt-only.
         imageSlots: ['identity', 'style'],
+        requiredImageSlots: ['identity', 'style'],
     },
     'gpt-image-2': {
         label: 'GPT Image 2 / 2.5',
@@ -121,14 +123,16 @@ export function buildLocked(input = {}, hints = {}) {
     return {
         subject: hints.subject || `${text(input.modelDesc, '一名成年人')}（同一人物，外观以身份参考图为准）`,
         wardrobe: hints.wardrobe || text(input.wardrobeNote, '开拍前确认一套，全系列不换'),
-        location: scene,
+        location: hints.location || scene,
         season: hints.season || (/春|花田|油菜花/.test(`${scene} ${extra}`) ? '春' : /雪|冬/.test(`${scene} ${extra}`) ? '冬' : /夏|泳池/.test(`${scene} ${extra}`) ? '夏' : '不限定'),
         weather,
         timeOfDay,
         light: hints.light || text(input.light, '按现场可用光'),
         colorGrade: hints.colorGrade || text(input.style, '按题材统一调色'),
         styleProfile: hints.styleProfile || `从用户选定的风格参考提取：${text(input.style, '按题材')}`,
-        mustKeep: ['同一人物', '同一服装', '同一地点', '同一天气', '同一光线方向', '同一调色'],
+        mustKeep: Array.isArray(hints.mustKeep)
+            ? hints.mustKeep
+            : ['同一人物', '同一服装', '同一地点', '同一天气', '同一光线方向', '同一调色'],
         mustAvoid: Array.isArray(hints.mustAvoid) ? hints.mustAvoid : [],
     };
 }
@@ -170,6 +174,7 @@ export function normalizeShots(shots = []) {
         distance: text(shot.distance),
         action: text(shot.model_pose),
         subjectPlacement: text(shot.model_position),
+        scene: text(shot.scene),
         mustKeep: Array.isArray(shot.mustKeep) ? shot.mustKeep : ['同一人物', '同一服装', '同一地点', '同一天气'],
         prompt: text(shot.prompt || shot.generator_prompt),
         size: text(shot.size || shot.shot_size),
@@ -198,6 +203,7 @@ export function normalizeShots(shots = []) {
             title: text(shot.poseRef.title),
             imageUrl: text(shot.poseRef.imageUrl),
             angle: text(shot.poseRef.angle),
+            direction: text(shot.poseRef.direction),
         } : null,
     }));
 }
@@ -302,6 +308,7 @@ export function buildShotRequests(group, { providerId, shotIds = [], seedBase = 
         variant: {
             shotType: shot.shotType, camera: shot.camera, lens: shot.lens,
             distance: shot.distance, action: shot.action, subjectPlacement: shot.subjectPlacement,
+            scene: shot.scene,
             lighting: shot.lighting, wardrobe: shot.wardrobe, crop: shot.crop,
             mustShow: shot.mustShow, rejectIf: shot.rejectIf, cameraSettings: shot.cameraSettings,
             props: shot.props,

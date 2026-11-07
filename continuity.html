@@ -56,6 +56,7 @@
     .ref-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
     .ref-actions { display: grid; gap: 8px; margin-top: 12px; }
     .thumb { width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); }
+    .shot-thumb { width: 112px; aspect-ratio: 3/4; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); }
     .thumb.empty { display: grid; place-items: center; color: var(--muted); font-size: 12px; }
     .badge { font-size: 11px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
     .badge.confirmed, .badge.pass { color: var(--accent); border-color: var(--accent); }
@@ -82,7 +83,7 @@
 <body>
 <main>
     <h1>连续性分组</h1>
-    <p class="muted">一次拍摄 = 一份锁定契约 + 三张角色化参考 + 主图确认 + 逐镜请求 + 每图质检。没有"一条提示词出九张"这种按钮。</p>
+    <p class="muted">从方案页导入后，逐镜保留场景、摄影师机位和 PoseAtlas 的脸/衣装/摆姿选择。每镜单独生成；你检查并确认首张后，它才会作为后续镜头的锚点。</p>
 
     <h2>1. 建立分组</h2>
     <section class="card">
@@ -107,7 +108,7 @@
         <div id="summary" class="row" style="margin-top:10px"></div>
     </section>
 
-    <h2>2. 三张参考图（角色分开，缺一不可）</h2>
+    <h2>2. 人物、场景和衣装参考</h2>
     <section id="refs" class="refs"></section>
     <div class="row">
         <button id="master">确认主参考图（人工）</button>
@@ -139,7 +140,7 @@
     <h2>规则</h2>
     <ul class="rule">
         <li>锁定字段只能来自原始需求，镜头层不得改写。</li>
-        <li>参考图分人物 / 场景 / 风格三档，风格参考必须来自你自己的图库。</li>
+        <li>人脸和衣装可由方案选用的 PoseAtlas 条目临时读取；原始图库图片不会复制入库。场景默认使用逐镜方案描述，也可上传现场照片。</li>
         <li>主参考图必须人工确认，之后才允许批量生成。</li>
         <li>每个镜头单独请求，携带同一套锁定条件与同一组参考。</li>
         <li>不支持参考图的模型一律拒绝，不做纯文字降级。</li>

@@ -4,6 +4,7 @@ import { generateShot, GenerationError } from '../api/continuity-generation.mjs'
 import { prescreen, mergeScores, summariseVision, PRE_SCREEN_ITEMS } from '../api/continuity-vision.mjs';
 import { createGroup, setReference, confirmMaster, setAnchor } from '../api/continuity.mjs';
 import { storeAsset, createMemoryStore } from '../api/continuity-assets.mjs';
+import { groupFromStudio } from '../api/continuity-studio-bridge.mjs';
 
 const PNG_1PX = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
 
@@ -32,6 +33,85 @@ test('Seedream sends identity, scene and style, with the accepted anchor first',
     });
     assert.equal(sent.image.length, 4, 'anchor plus all three role references must reach the provider');
     assert.equal(sent.image.every(image => image.startsWith('data:image/png;base64,')), true);
+});
+
+test('Cloudflare prompt translation carries the selected PoseAtlas pose and direction', async () => {
+    const store = createMemoryStore();
+    const group = await readyGroup(store);
+    group.shots[0].poseRef = {
+        id: 'pose-test', title: '自然错步站姿', angle: 'diagonal',
+        direction: '双脚错开站稳，肩颈放松，右手轻扶衣襟。',
+    };
+    let translated;
+    await generateShot({
+        group, shotId: 'shot-01', providerId: 'cloudflare-flux-klein',
+        env: { AI: { run: async (model, input) => {
+            if (model === '@cf/meta/llama-3.1-8b-instruct-fp8-fast') {
+                translated = input.messages[1].content;
+                return { response: 'A natural full-body portrait at a station, subject walking.' };
+            }
+            assert.equal(model, '@cf/black-forest-labs/flux-2-klein-9b');
+            return { image: PNG_1PX.split(',')[1] };
+        } } },
+        store,
+        fetchImpl: async () => assert.fail('library refs are not used in this fixture'),
+    });
+    assert.match(translated, /自然错步站姿/);
+    assert.match(translated, /diagonal/);
+    assert.match(translated, /双脚错开站稳，肩颈放松/);
+});
+
+test('a Studio plan fetches only selected PoseAtlas face and costume refs and compiles its per-shot direction', async () => {
+    const store = createMemoryStore();
+    const portrait = {
+        id: 'atlas-portrait-test', kind: 'portrait', section: 'face', upstreamId: 'portrait-test', title: '中长发人像',
+        referenceImageUrl: 'https://hruiccc.github.io/RuiC-PoseAtlas/portrait/thumbs/face-test.webp',
+    };
+    const costume = {
+        id: 'atlas-costume-test', kind: 'costume', upstreamId: 'costume-test', title: '秋季棕色针织', tags: ['棕色', '针织'],
+        referenceImageUrl: 'https://hruiccc.github.io/RuiC-PoseAtlas/costume/thumbs/coat-test.webp',
+    };
+    const pose = {
+        id: 'atlas-pose-test', kind: 'pose', upstreamId: 'pose-test', title: '自然错步站姿', angles: ['diagonal'],
+        referenceImageUrl: 'https://hruiccc.github.io/RuiC-PoseAtlas/thumbs/pose-test.jpg',
+    };
+    let group = groupFromStudio({
+        templates: [portrait, costume, pose], input: { theme: '秋日双场景', modelDesc: '一名成年人', style: '自然纪实' },
+        planId: 'plan-test', planRevision: 4,
+        guidance: { style: '柔和自然光', suggestions: [{ sourceItemId: pose.id, direction: '双脚自然错开，肩颈放松。' }] },
+        shots: [{
+            id: 'shot-01', scene: '河边公园', shotSize: '全身', focalLength: '50mm',
+            directorContract: {
+                scene: '河边公园', referenceIds: [pose.id], shot_size: '全身', camera_angle: '侧前方平视',
+                model_pose: '双脚自然错开，右手轻扶衣襟', model_position: '人物位于画面左侧',
+                generator_prompt: '秋日河边公园全身人像，人物轻扶衣襟。',
+            },
+        }],
+    }).group;
+    group = confirmMaster(group, { assetId: group.references.find(reference => reference.role === 'identity').assetId });
+
+    const libraryUrls = [];
+    let sent;
+    const result = await generateShot({
+        group, shotId: 'shot-01', providerId: 'volcengine-seedream', env: { ARK_API_KEY: 'test-only' }, store,
+        fetchImpl: async (url, options = {}) => {
+            if (String(url).startsWith('https://hruiccc.github.io/')) {
+                libraryUrls.push(String(url));
+                return new Response(Uint8Array.from([1, 2, 3]), { headers: { 'Content-Type': 'image/webp' } });
+            }
+            sent = JSON.parse(options.body);
+            return Response.json({ data: [{ b64_json: PNG_1PX.split(',')[1] }] });
+        },
+    });
+
+    assert.deepEqual(libraryUrls, [portrait.referenceImageUrl, costume.referenceImageUrl]);
+    assert.equal(sent.image.length, 2, 'PoseAtlas 姿势通过方案动作文字，不作为第三张素描图发送');
+    assert.match(sent.prompt, /河边公园/);
+    assert.match(sent.prompt, /自然错步站姿/);
+    assert.match(sent.prompt, /双脚自然错开，肩颈放松/);
+    assert.match(sent.prompt, /侧前方平视/);
+    assert.match(sent.prompt, /秋季棕色针织/);
+    assert.equal(result.referencesSent, 2);
 });
 
 test('Seedream cannot silently ignore an unreadable accepted anchor', async () => {

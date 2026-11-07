@@ -49,6 +49,29 @@ test('continuity provider catalog reports Seedream readiness without exposing cr
     assert.equal(JSON.stringify(configured.body).includes('test-only-provider-key'), false);
 });
 
+test('the Studio bridge imports plan shots and retains selected library references', async () => {
+    const { status, body } = await call('/api/continuity/from-studio', {
+        planId: 'plan-api-1', planRevision: 3,
+        input: { theme: '双场景人像', modelDesc: '一名成年人', style: '自然纪实' },
+        templates: [
+            { id: 'face-1', kind: 'portrait', section: 'face', upstreamId: 'f001', title: '短发人像', referenceImageUrl: 'https://hruiccc.github.io/RuiC-PoseAtlas/portrait/thumbs/f001.webp' },
+            { id: 'costume-1', kind: 'costume', upstreamId: 'c001', title: '棕色针织', referenceImageUrl: 'https://hruiccc.github.io/RuiC-PoseAtlas/costume/thumbs/c001.webp' },
+            { id: 'pose-1', kind: 'pose', upstreamId: 'p001', title: '自然坐姿', angles: ['diagonal'] },
+        ],
+        guidance: { suggestions: [{ sourceItemId: 'pose-1', direction: '坐稳，肩颈放松。' }] },
+        shots: [
+            { id: 'a', shotSize: '全身', directorContract: { scene: '公园', referenceIds: ['pose-1'], generator_prompt: '公园全身人像。' } },
+            { id: 'b', shotSize: '近景', directorContract: { scene: '咖啡馆', referenceIds: ['pose-1'], generator_prompt: '咖啡馆近景。' } },
+        ],
+    });
+    assert.equal(status, 200);
+    assert.equal(body.ready, false);
+    assert.equal(body.group.studio.planRevision, 3);
+    assert.equal(body.group.shots.length, 2);
+    assert.deepEqual(body.group.shots.map(shot => shot.scene), ['公园', '咖啡馆']);
+    assert.deepEqual(body.group.references.map(reference => reference.status), ['confirmed', 'confirmed', 'confirmed']);
+});
+
 test('an initialised group starts blocked with three pending references', async () => {
     const { status, body } = await call('/api/continuity/init', sampleInput());
     assert.equal(status, 200);

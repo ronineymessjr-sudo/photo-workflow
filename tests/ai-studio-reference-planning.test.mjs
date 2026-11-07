@@ -81,6 +81,7 @@ test('template plan and candidate compilation retain retrieved pose, processing 
     assert.equal(plan.shotList[3].directorContract.referenceIds[0], 'atlas-pose-full_single_p020');
     assert.equal(plan.aiStudio.references.filter(reference => reference.kind === 'costume').length, 1);
     assert.equal(plan.aiStudio.references.filter(reference => reference.kind === 'portrait').length, 1);
+    assert.ok(['brown', 'knit'].every(tag => plan.aiStudio.references.find(reference => reference.kind === 'costume').tags.includes(tag)));
     const secondShotRequest = { ...request, brief: plan.shotList[1].description, shot_contract: plan.shotList[1].directorContract };
     const secondShotReferences = await prepareCloudCandidateReferences(secondShotRequest, { fetchImpl: source.fetchImpl });
     assert.equal(secondShotReferences.templates.find(template => template.kind === 'pose').id, 'atlas-pose-full_single_p015');

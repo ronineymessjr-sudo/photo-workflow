@@ -380,6 +380,7 @@ export default {
                 // than the text routes (8MB binary ≈ 11MB base64 + envelope).
                 const limit = isStudio ? (path === '/api/ai/plan-lite' ? 8192 : 32768)
                     : path === '/api/continuity/asset' ? 12 * 1024 * 1024
+                        : path === '/api/continuity/from-studio' ? 96 * 1024
                         : path === '/api/director/generate-candidate' ? 24 * 1024 : 16000;
                 const reader = request.body?.getReader();
                 let size = 0, chunks = [];
@@ -562,7 +563,9 @@ export default {
             }
             else if (path === '/api/continuity/from-studio' && method === 'POST') {
                 result = { status: 200, body: groupFromStudio({
-                    templates: body?.templates, input: body?.input || {}, planId: body?.planId || '', selectedIds: body?.selectedIds || [],
+                    templates: body?.templates, input: body?.input || {}, planId: body?.planId || '',
+                    planRevision: body?.planRevision, selectedIds: body?.selectedIds || [],
+                    shots: body?.shots || [], guidance: body?.guidance || {},
                 }) };
             }
             else if (path === '/api/continuity/handoff' && method === 'POST') {

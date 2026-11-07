@@ -11,7 +11,7 @@ const STEPS = 24;
 //
 // Provider -> adapter mapping lives in PROVIDER_ADAPTERS; unknown providers fail.
 
-import { assertReadyToGenerate, buildShotRequests, ContinuityError } from './continuity.mjs';
+import { assertReadyToGenerate, buildShotRequests, ContinuityError, CONTINUITY_PROVIDERS } from './continuity.mjs';
 import { storeAsset, readAsset, AssetError } from './continuity-assets.mjs';
 // Workers on compatibility_date 2024-01-01 does not inject a global Buffer.
 // Import it explicitly instead of raising the compat date, which would change
@@ -117,7 +117,7 @@ async function callReferenceJson({ env, fetchImpl, prompt, size, aspect, seed, r
 // Cost: 0.2 CNY per output image, billed per image actually produced.
 const SEEDREAM_MODEL = 'doubao-seedream-4-0-250828';
 
-async function callSeedream({ env, prompt, size, seed, references, variant, poseRef, anchor, store = null, fetchImpl = fetch }) {
+async function callSeedream({ env, prompt, size, seed, references, variant, poseRef, anchor, locked, store = null, fetchImpl = fetch }) {
     const key = env?.ARK_API_KEY;
     if (!key) {
         throw new GenerationError('GENERATION_NOT_CONFIGURED', '缺少火山方舟 ARK_API_KEY', 503, { missing: ['ARK_API_KEY'] });
@@ -134,10 +134,33 @@ async function callSeedream({ env, prompt, size, seed, references, variant, pose
         images.push(reference.dataUrl);
     }
 
+    const direction = [
+        prompt,
+        locked?.subject ? `人物：${locked.subject}` : '',
+        locked?.wardrobe ? `全组服装保持：${locked.wardrobe}` : '',
+        locked?.styleProfile ? `整体风格：${locked.styleProfile}` : '',
+        locked?.weather ? `天气：${locked.weather}` : '',
+        locked?.timeOfDay ? `时间：${locked.timeOfDay}` : '',
+        variant?.scene ? `本镜场景：${variant.scene}` : '',
+        variant?.shotType ? `景别：${variant.shotType}` : '',
+        variant?.camera ? `机位：${variant.camera}` : '',
+        variant?.lens ? `焦段：${variant.lens}` : '',
+        poseRef?.title ? `摆姿库姿势：${poseRef.title}${poseRef.angle ? `，参考角度${poseRef.angle}` : ''}` : '',
+        poseRef?.direction ? `摆姿指导：${poseRef.direction}` : '',
+        variant?.action ? `动作：${variant.action}` : '',
+        variant?.subjectPlacement ? `构图：${variant.subjectPlacement}` : '',
+        variant?.lighting ? `光线：${variant.lighting}` : '',
+        variant?.wardrobe ? `服装：${variant.wardrobe}` : '',
+        variant?.crop ? `裁切：${variant.crop}` : '',
+        variant?.mustShow ? `必须出现：${variant.mustShow}` : '',
+        variant?.rejectIf ? `不得出现：${variant.rejectIf}` : '',
+        '同一组保持参考人物的脸、年龄、发型与身份；服装只按衣装参考，不增添其他单品。每次只改变本镜要求的动作、机位和场景。',
+    ].filter(Boolean).join('\n');
+
     const portrait = String(size || '').includes('1024x1536') || !String(size || '').includes('x');
     const body = {
         model: SEEDREAM_MODEL,
-        prompt,
+        prompt: direction,
         // No translation step: Ark handles Chinese directly, and the plan is
         // written in Chinese.
         size: portrait ? '2K' : '2K',
@@ -179,7 +202,7 @@ async function callSeedream({ env, prompt, size, seed, references, variant, pose
         mime = imageResponse.headers.get('content-type')?.split(';')[0] || 'image/png';
         bytes = new Uint8Array(await imageResponse.arrayBuffer());
     }
-    return { contentType: mime, base64: Buffer.from(bytes).toString('base64'), prompt, referencesSent: images.length, anchored: Boolean(anchor?.assetId) };
+    return { contentType: mime, base64: Buffer.from(bytes).toString('base64'), prompt: direction, referencesSent: images.length, anchored: Boolean(anchor?.assetId) };
 }
 
 const ADAPTERS = {
@@ -192,7 +215,7 @@ const ADAPTERS = {
 // Cloudflare Workers AI: no API key, the Worker carries the `[ai]` binding. It
 // exposes two reference-image slots only, so `scene` is described in the prompt
 // instead of being uploaded - the caller is told about that gap separately.
-async function callCloudflareWorkersAi({ env, prompt, size, seed, references, variant, poseRef, anchor, store = null, fetchImpl = fetch }) {
+async function callCloudflareWorkersAi({ env, prompt, size, seed, references, variant, poseRef, anchor, locked, store = null, fetchImpl = fetch }) {
     const ai = env?.AI;
     if (!ai || typeof ai.run !== 'function') {
         throw new GenerationError('GENERATION_NOT_CONFIGURED', '这个部署没有绑定 Workers AI（wrangler.toml 里的 [ai]），无法用 Cloudflare 出图', 503, { missing: ['AI binding'] });
@@ -210,6 +233,16 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
     };
     const directionZh = [
         clamp(prompt, 220),
+        poseRef ? `摆姿库约束：${[
+            poseRef.title ? `指定姿势${clamp(poseRef.title, 36)}` : '',
+            poseRef.angle ? `参考方向${clamp(poseRef.angle, 20)}` : '',
+            poseRef.direction ? clamp(poseRef.direction, 90) : '',
+        ].filter(Boolean).join('；')}` : '',
+        variant?.scene ? `本镜场景：${clamp(variant.scene, 80)}` : '',
+        locked?.wardrobe ? `全组服装保持：${clamp(locked.wardrobe, 80)}` : '',
+        locked?.styleProfile ? `整体风格：${clamp(locked.styleProfile, 60)}` : '',
+        locked?.weather ? `天气：${clamp(locked.weather, 24)}` : '',
+        locked?.timeOfDay ? `时间：${clamp(locked.timeOfDay, 24)}` : '',
         variant?.action ? `姿势与动作：${clamp(variant.action, 70)}` : '',
         variant?.camera ? `机位：${clamp(variant.camera, 26)}` : '',
         variant?.subjectPlacement ? `人物在画面中的位置：${clamp(variant.subjectPlacement, 40)}` : '',
@@ -326,17 +359,31 @@ export async function generateShot({ group, shotId, providerId = '', env = {}, f
     // References must be readable bytes, not just ids: an unreadable asset is a
     // configuration error, not a reason to fall back to text-only.
     const references = [];
+    const provider = CONTINUITY_PROVIDERS[providerId];
+    const imageSlots = provider?.imageSlots || provider?.roles || [];
+    const requiredImageSlots = provider?.requiredImageSlots || imageSlots;
     for (const reference of request.references) {
-        const assetPath = (group.references || []).find(item => item.role === reference.role)?.path;
-        if (!assetPath) throw new GenerationError('GENERATION_REFERENCE_BYTES_MISSING', `参考图没有存储路径：${reference.role}`, 409);
+        if (!imageSlots.includes(reference.role)) continue;
+        const definition = (group.references || []).find(item => item.role === reference.role);
+        const assetPath = definition?.path;
         let asset;
-        try {
-            asset = await readAsset(assetPath, { env, store });
-        } catch (error) {
-            if (error instanceof AssetError) throw new GenerationError('GENERATION_REFERENCE_INVALID', error.message, 409);
-            throw error;
+        if (assetPath) {
+            try {
+                asset = await readAsset(assetPath, { env, store });
+            } catch (error) {
+                if (error instanceof AssetError) throw new GenerationError('GENERATION_REFERENCE_INVALID', error.message, 409);
+                throw error;
+            }
+        } else if (definition?.referenceImageUrl) {
+            const external = await fetchLibraryImage(definition.referenceImageUrl, fetchImpl);
+            if (external) asset = { buffer: external.bytes, mime: external.mime };
         }
-        if (!asset) throw new GenerationError('GENERATION_REFERENCE_MISSING', `参考图读不到：${reference.role}`, 409);
+        if (!asset) {
+            if (requiredImageSlots.includes(reference.role)) {
+                throw new GenerationError('GENERATION_REFERENCE_MISSING', `参考图读不到：${reference.role}`, 409);
+            }
+            continue;
+        }
         references.push({ role: reference.role, assetId: reference.assetId, mime: asset.mime, buffer: asset.buffer, dataUrl: dataUrlFor(asset.buffer, asset.mime) });
     }
 
@@ -348,6 +395,7 @@ export async function generateShot({ group, shotId, providerId = '', env = {}, f
         // Framing lives on the shot variant; the adapter needs it to state what
         // must be visible instead of leaving the crop to the model.
         variant: request.variant,
+        locked: request.locked,
         // The pose template the operator picked for THIS frame, if any.
         poseRef: (group.shots || []).find(shot => shot.shotId === shotId)?.poseRef || null,
         // The accepted frame to edit from. Present from the second shot onward.

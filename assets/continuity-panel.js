@@ -7,8 +7,8 @@
 const STORAGE_KEY = 'photoatelier.continuity.v1';
 const ROLES = [
     { role: 'identity', label: '人物参考', hint: '只负责脸、发型、体态' },
-    { role: 'scene', label: '场景参考', hint: '只负责地点结构、背景、空间关系' },
-    { role: 'style', label: '风格参考', hint: '只负责构图、光线、色彩、颗粒；必须来自你的图库' },
+    { role: 'scene', label: '场景参考', hint: '默认使用方案里的场地描述；也可以上传现场照片' },
+    { role: 'style', label: '衣装参考', hint: '只负责衣服、材质与配色；优先使用方案选定的服装库条目' },
 ];
 const QC_LABELS = {
     identity: '人物身份一致', wardrobe: '服装未改变', 'place-weather': '地点与天气一致',
@@ -18,6 +18,20 @@ const QC_LABELS = {
 
 let state = load();
 let schema = null;
+
+function safeThumbUrl(raw) {
+    if (typeof raw !== 'string' || !raw) return '';
+    try {
+        const url = new URL(raw, location.origin);
+        if (url.origin === location.origin
+            && /^\/api\/continuity\/asset\/[a-f0-9]{16}$/.test(url.pathname)
+            && !url.search && !url.hash) return url.href;
+        if (url.origin === 'https://hruiccc.github.io'
+            && /^\/RuiC-PoseAtlas\/(?:thumbs\/[A-Za-z0-9_-]+\.jpg|(?:costume|portrait)\/thumbs\/[A-Za-z0-9_-]+\.webp)$/.test(url.pathname)
+            && !url.search && !url.hash) return url.href;
+    } catch { }
+    return '';
+}
 
 function load() {
     try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { return {}; }
@@ -37,9 +51,10 @@ function el(tag, attrs = {}, children = []) {
     return node;
 }
 async function api(path, body, method = 'POST') {
+    const token = localStorage.getItem('pw_token');
     const response = await fetch(path, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: method === 'GET' ? undefined : JSON.stringify(body || {}),
     });
     const payload = await response.json().catch(() => ({}));
@@ -112,14 +127,17 @@ function renderReferences() {
         const reference = state.group.references.find(item => item.role === definition.role) || {};
         const status = reference.status || 'pending';
         const badge = status === 'confirmed' ? '已确认' : status === 'missing' ? '缺失' : '待确认';
-        const thumb = (state.thumbs || {})[definition.role];
+        const thumb = safeThumbUrl((state.thumbs || {})[definition.role])
+            || safeThumbUrl(reference.referenceImageUrl);
         host.append(el('div', { class: 'ref-card' }, [
             el('div', { class: 'ref-head' }, [
                 el('strong', { text: definition.label }),
                 el('span', { class: `badge ${status}`, text: badge }),
             ]),
             el('p', { class: 'muted', text: definition.hint }),
-            thumb ? el('img', { src: thumb, class: 'thumb', alt: definition.label }) : el('div', { class: 'thumb empty', text: '未选图' }),
+            thumb ? el('img', { src: thumb, class: 'thumb', alt: definition.label, loading: 'lazy' })
+                : el('div', { class: 'thumb empty', text: reference.textOnly ? '按方案文字锁定' : '未选图' }),
+            reference.note ? el('p', { class: 'muted small', text: reference.note }) : null,
             el('div', { class: 'ref-actions' }, [
                 el('input', {
                     type: 'file', accept: 'image/jpeg,image/png,image/webp',
@@ -202,6 +220,8 @@ function renderShots() {
     const body = el('tbody');
     for (const shot of shots) {
         const verdict = state.qc?.[shot.shotId];
+        const result = state.results?.[shot.shotId];
+        const resultThumb = safeThumbUrl(result?.image?.path);
         const verdictText = !verdict ? '未质检'
             : verdict.verdict === 'pass' ? '通过'
                 : verdict.verdict === 'retry' ? `重做（${verdict.failed.join('、')}）` : '待人工确认';
@@ -218,6 +238,12 @@ function renderShots() {
                 el('button', { class: 'ghost', text: '取请求', onclick: () => requestShot(shot.shotId) }),
                 el('button', { class: 'ghost', text: '生成这张', onclick: () => generateShot(shot.shotId) }),
                 el('button', { class: 'ghost', text: '质检', onclick: () => openQc(shot.shotId) }),
+                resultThumb ? el('div', { class: 'row' }, [
+                    el('img', { src: resultThumb, class: 'shot-thumb', alt: `${shot.shotId} 生成结果` }),
+                    state.group?.anchor?.shotId === shot.shotId
+                        ? el('span', { class: 'badge confirmed', text: '当前锚点' })
+                        : el('button', { class: 'ghost', text: '人工确认此图并作为后续镜头锚点', onclick: () => setAnchor(shot.shotId) }),
+                ]) : null,
             ]),
         ]));
     }
@@ -256,7 +282,24 @@ async function generateShot(shotId) {
     state.results = { ...(state.results || {}), [shotId]: payload };
     output.textContent = JSON.stringify(payload, null, 2);
     save();
+    render();
     toast(`${shotId} 已生成：${payload.image.assetId}`, 'ok');
+}
+
+async function setAnchor(shotId) {
+    const result = state.results?.[shotId];
+    if (!result?.image?.assetId || !result?.image?.path) {
+        toast('先生成并检查这一镜，再设置锚点。', 'error');
+        return;
+    }
+    const { ok, payload } = await api('/api/continuity/anchor', {
+        group: state.group, assetId: result.image.assetId, path: result.image.path, shotId,
+    });
+    if (!ok) { toast(payload.error || '设置锚点失败', 'error'); return; }
+    state.group = payload.group;
+    save();
+    render();
+    toast(`${shotId} 已设为后续镜头的身份锚点。`, 'ok');
 }
 
 async function prescreenShot(shotId) {
@@ -304,7 +347,8 @@ async function openHandoff(shotId) {
         },
     });
 
-    const refs = el('div', { class: 'refs' }, card.referencePaths.map((path, index) => el('div', { class: 'ref-card' }, [
+    const safeReferencePaths = card.referencePaths.map(safeThumbUrl).filter(Boolean);
+    const refs = el('div', { class: 'refs' }, safeReferencePaths.map((path, index) => el('div', { class: 'ref-card' }, [
         el('div', { class: 'ref-head' }, [
             el('strong', { text: ['人物参考', '场景参考', '风格参考'][index] || `参考 ${index + 1}` }),
         ]),
@@ -345,8 +389,8 @@ async function openHandoff(shotId) {
         refs,
         el('h3', { text: '出图后回传', style: 'margin-top:18px' }),
         uploader,
-        result?.image ? el('div', { class: 'row' }, [
-            el('img', { src: result.image.path, class: 'thumb', alt: '回传结果', style: 'max-width:220px' }),
+        safeThumbUrl(result?.image?.path) ? el('div', { class: 'row' }, [
+            el('img', { src: safeThumbUrl(result.image.path), class: 'thumb', alt: '回传结果', style: 'max-width:220px' }),
         ]) : null,
         el('div', { class: 'row' }, [
             el('button', { class: 'ghost', text: '视觉初筛', onclick: () => prescreenShot(shotId) }),
@@ -418,6 +462,49 @@ function render() {
     renderSummary();
 }
 
+async function importStudioPlanFromQuery() {
+    const params = new URLSearchParams(location.search);
+    const planId = params.get('planId');
+    if (!planId) return false;
+    let plans;
+    try { plans = JSON.parse(localStorage.getItem('pw_plans') || '[]'); } catch { plans = []; }
+    const plan = Array.isArray(plans) ? plans.find(item => String(item.id) === planId) : null;
+    if (!plan || !Array.isArray(plan.aiStudio?.references) || !Array.isArray(plan.shotList)) {
+        toast('找不到带有参考库的本地摄影方案，请从方案页重新打开。', 'error');
+        return false;
+    }
+    const references = plan.aiStudio.references;
+    const templates = references.map(item => ({
+        ...item,
+        id: item.sourceItemId || item.id,
+        sourceUrl: item.externalUrl || item.sourceUrl || '',
+    }));
+    const input = {
+        ...(plan.input || {}),
+        theme: plan.input?.theme || plan.title || '摄影方案',
+        scene: plan.input?.scene || '',
+        style: plan.input?.style || plan.aiStudio.guidance?.style || '',
+    };
+    const { ok, payload } = await api('/api/continuity/from-studio', {
+        templates, input, planId: String(plan.id), planRevision: plan.revision || 0,
+        selectedIds: templates.map(item => item.id), shots: plan.shotList,
+        guidance: plan.aiStudio.guidance || {},
+    });
+    if (!ok) { toast(payload.error || '方案导入连续性工作台失败', 'error'); return false; }
+    state.group = payload.group;
+    state.qc = {};
+    state.results = {};
+    state.thumbs = Object.fromEntries((payload.group.references || [])
+        .filter(reference => reference.referenceImageUrl)
+        .map(reference => [reference.role, reference.referenceImageUrl]));
+    save();
+    history.replaceState(null, '', location.pathname);
+    render();
+    const shots = payload.group.shots?.length || 0;
+    toast(`已从「${plan.title || input.theme}」导入 ${shots} 个镜头、${templates.length} 条 PoseAtlas 参考；先核对人脸/衣装，再人工确认主参考。`, 'ok');
+    return true;
+}
+
 async function boot() {
     const schemaResponse = await api('/api/continuity/schema', null, 'GET');
     schema = schemaResponse.payload;
@@ -461,6 +548,7 @@ async function boot() {
         const file = event.target.files?.[0];
         if (file) importGroup(file);
     });
+    await importStudioPlanFromQuery();
     render();
 }
 
