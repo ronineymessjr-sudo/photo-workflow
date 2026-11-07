@@ -19,6 +19,17 @@ AI_STUDIO_ALLOWED_ORIGINS = "https://photo-workflow.pages.dev,https://photo.roni
 [ai]
 binding = "AI"
 
+# Reference images for continuity groups.
+# KV is the pragmatic choice: R2 needs its own dashboard activation (billing
+# details) before `wrangler r2 bucket create` works, while KV is available
+# immediately and the free tier (1GB, 100k reads/day) covers reference stills.
+# Values are base64, capped at 8MB per asset by the app; KV's limit is 25MB.
+# Swap to R2 (binding CONTINUITY_ASSETS) once it is enabled - the app prefers R2
+# automatically when that binding exists.
+[[kv_namespaces]]
+binding = "CONTINUITY_KV"
+id = "0ad84e60521a4089825a0e81f19a2d50"
+
 [[durable_objects.bindings]]
 name = "WORKSPACE_SYNC"
 class_name = "WorkspaceSync"

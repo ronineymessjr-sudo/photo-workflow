@@ -1,0 +1,47 @@
+# Pages 部署时排除的东西。
+#
+# 这个仓库的根目录同时放着 Worker 源码（api/）和 Pages 静态站（index.html +
+# assets/），直接 `wrangler pages deploy .` 会把服务端源码当静态文件公开出去，
+# 还会上传 693M 的实验目录。这里只发布前端真正需要的东西。
+#
+# 语法同 .gitignore，作用域是部署根目录。
+
+# 服务端源码：绝不能当静态资源暴露
+api/
+functions/
+
+# 开发期目录
+tests/
+experiments/
+handoff/
+tools/
+comfy/
+docs/
+runtime/
+outputs/
+node_modules/
+.git/
+.github/
+.vscode/
+.wrangler/
+
+# 大体积/无关产物
+experiments/
+director-overlay-v0.28.0/
+release-candidates/
+发布产物/
+交接包与资料/
+
+# 配置文件与脚本（含账号、密钥线索）
+wrangler.toml
+package.json
+package-lock.json
+deploy.sh
+.env
+.env.*
+.dev.vars
+*.log
+
+# 本地凭据/快照
+*.pem
+*.key

@@ -534,11 +534,15 @@ export default {
                 const needReferences = url.searchParams.get('needReferences') !== 'false';
                 const maxPriceTier = url.searchParams.get('maxPriceTier') || '';
                 const configuredEnv = { OPENAI_API_KEY: env.OPENAI_API_KEY, CONTINUITY_IMAGE_ENDPOINT: env.CONTINUITY_IMAGE_ENDPOINT, CONTINUITY_IMAGE_KEY: env.CONTINUITY_IMAGE_KEY };
+                // Workers AI needs no key but does need the binding, so pass it in:
+                // without this the catalogue can never recommend the free brush
+                // even on a deployment that has it.
+                const bindings = { AI: env.AI };
                 result = {
                     status: 200,
                     body: {
                         providers: listProviders({ needReferences, maxPriceTier }),
-                        ...recommendProvider({ needReferences, configuredEnv, maxPriceTier }),
+                        ...recommendProvider({ needReferences, configuredEnv, bindings, maxPriceTier }),
                     },
                 };
             }
@@ -778,7 +782,13 @@ export default {
                     headers: { ...CORS, 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'X-Request-Id': requestId }
                 });
             }
-            const failure = { status: 500, body: { error: '服务器暂时不可用，请稍后重试' } };
+            // Continuity routes surface the real cause: a bare 500 there is
+            // undebuggable from the client, and these are the routes that store
+            // uploaded bytes and call the image model.
+            const detail = path.startsWith('/api/continuity/') ? String(e?.message || e).slice(0, 300) : '';
+            const failure = { status: 500, body: detail
+                ? { error: '服务器暂时不可用，请稍后重试', code: 'CONTINUITY_INTERNAL', detail }
+                : { error: '服务器暂时不可用，请稍后重试' } };
             const requestId = recordWebRequest(request, failure, env, body);
             return new Response(JSON.stringify(failure.body), {
                 status: 500, 

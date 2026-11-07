@@ -5,3 +5,6 @@ runtime/
 
 # Generated outputs from local studio runs
 outputs/
+
+# Dependencies: wrangler and friends are installed locally, never committed
+node_modules/

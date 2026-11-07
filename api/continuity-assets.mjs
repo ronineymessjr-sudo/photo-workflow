@@ -1,3 +1,8 @@
+// Workers on compatibility_date 2024-01-01 does not inject a global Buffer.
+// Import it explicitly instead of raising the compat date, which would change
+// unrelated fetch/crypto behaviour across the whole Worker.
+import { Buffer } from 'node:buffer';
+
 // Reference-asset storage for continuity groups.
 //
 // Three backends, in priority order, all behind one function:

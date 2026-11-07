@@ -12,6 +12,10 @@
 
 import { assertReadyToGenerate, buildShotRequests, ContinuityError } from './continuity.mjs';
 import { storeAsset, readAsset, AssetError } from './continuity-assets.mjs';
+// Workers on compatibility_date 2024-01-01 does not inject a global Buffer.
+// Import it explicitly instead of raising the compat date, which would change
+// unrelated fetch/crypto behaviour across the whole Worker.
+import { Buffer } from 'node:buffer';
 
 export class GenerationError extends Error {
     constructor(code, message, status = 502, details = undefined) {
