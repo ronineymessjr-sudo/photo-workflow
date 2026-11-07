@@ -4667,6 +4667,12 @@ function closeShortcutsModal(e) {
             SESSION_VERIFIED = false;
             window.__PHOTOATELIER_SESSION_VERIFIED__ = false;
             // Keep the account cache intact when the server is unreachable.
+            const cached = safeJsonParse(USER_KEY, null);
+            const cachedEmail = typeof cached?.email === 'string' ? cached.email.trim() : '';
+            const emailInput = document.getElementById('loginEmail');
+            if (emailInput && !emailInput.value.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cachedEmail) && cachedEmail.length <= 255) {
+                emailInput.value = cachedEmail;
+            }
             document.getElementById('clearExpiredLogin').style.display = 'inline-flex';
             toast(e.message || '登录验证失败，请重新登录', 'er');
         }

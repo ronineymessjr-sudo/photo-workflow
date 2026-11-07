@@ -234,3 +234,21 @@ test('successful cloud login switches guest storage to authenticated server stor
     assert.match(r.html, /onclick="continueAsGuest\(\)"/);
     assert.match(r.html, /!IS_LOCAL_HOST && localStorage\.getItem\(TOKEN_KEY\) === 'local-token'/);
 });
+
+test('expired session restores only the cached account email in the login field', async () => {
+    const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+    const recovery = html.match(/const cached = safeJsonParse\(USER_KEY, null\);[\s\S]*?emailInput\.value = cachedEmail;\s*\}/)?.[0];
+    assert.ok(recovery);
+    function restore(cachedEmail, currentValue = '') {
+        const input = { value: currentValue };
+        runInNewContext(recovery, {
+            USER_KEY: 'pw_user',
+            safeJsonParse: () => ({ email: cachedEmail }),
+            document: { getElementById: id => id === 'loginEmail' ? input : null },
+        });
+        return input.value;
+    }
+    assert.equal(restore(email), email);
+    assert.equal(restore('not-an-email'), '');
+    assert.equal(restore(email, 'manual@example.com'), 'manual@example.com');
+});
