@@ -155,8 +155,12 @@ test('generateShot routes cloudflare through the Workers AI adapter, two images 
         group: readyGroup(), shotId: 'shot-01', providerId: 'cloudflare-flux-klein',
         env, store,
     });
-    assert.equal(calls.length, 1);
-    assert.equal(calls[0], '@cf/black-forest-labs/flux-2-klein-9b');
+    // Two AI calls now: one translation pass for the Chinese pose/camera fields,
+    // then exactly one image generation. Never more than one image call.
+    const imageCalls = calls.filter(model => model.includes('flux'));
+    assert.equal(imageCalls.length, 1, '一个镜头只能调一次图像模型');
+    assert.equal(imageCalls[0], '@cf/black-forest-labs/flux-2-klein-9b');
+    assert.ok(calls.length <= 2, `最多一次翻译 + 一次出图，实际 ${calls.length} 次`);
     assert.equal(result.provider, 'cloudflare-flux-klein');
     assert.equal(result.adapter, 'cloudflare-workers-ai');
     assert.equal(result.qc.verdict, 'pending');

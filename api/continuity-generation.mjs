@@ -118,10 +118,17 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
         throw new GenerationError('GENERATION_NOT_CONFIGURED', '这个部署没有绑定 Workers AI（wrangler.toml 里的 [ai]），无法用 Cloudflare 出图', 503, { missing: ['AI binding'] });
     }
     // FLUX reads English. A prompt mixing Chinese guidance into English
-    // instructions measurably degrades it, and the contract's locked fields
-    // (wardrobe, location) are user input in Chinese. Translate first, and keep
-    // every constraint rather than summarising it away.
-    prompt = await englishPrompt(ai, prompt);
+    // instructions measurably degrades it, and both the shot text and the pose /
+    // camera fields are user input in Chinese. Translate the whole direction in
+    // one call so the model sees one language.
+    const directionZh = [
+        prompt,
+        variant?.action ? `姿势与动作：${variant.action}` : '',
+        variant?.camera ? `机位：${variant.camera}` : '',
+        variant?.distance ? `拍摄距离：${variant.distance}` : '',
+        variant?.subjectPlacement ? `人物在画面中的位置：${variant.subjectPlacement}` : '',
+    ].filter(Boolean).join('；');
+    const direction = await englishPrompt(ai, directionZh);
     const slots = ['identity', 'style'];
     const chosen = slots.map(role => references.find(reference => reference.role === role)).filter(Boolean);
     if (chosen.length < 2) {
@@ -137,7 +144,7 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
         'Create one photorealistic DSLR photograph containing exactly ONE person.',
         'Reference image 1 is the face photograph: it defines facial identity, apparent age, skin tone and hair. The person in the result must be this same individual, not a similar-looking model.',
         'Reference image 2 is the outfit reference: every visible garment, layer, colour, material and accessory comes from it exactly. Do not invent, replace or simplify clothing.',
-        `Shot contract: ${prompt}`,
+        direction ? `Shot direction: ${direction}.` : '',
         framingLine(variant),
         'Real photographic rendering: visible skin pores and peach fuzz, uneven natural skin tone, true light falloff with genuinely dark shadow areas, mixed colour temperature, worn everyday surfaces with marks and dust, natural lens vignetting, frame not perfectly level.',
         'Avoid: text, captions, watermark, collage, split frames, extra limbs, deformed hands, melted or fused fingers, duplicate subject, plastic skin, beauty filter, HDR glow.',
@@ -277,4 +284,17 @@ function framingLine(variant) {
     ];
     const line = rules.find(([pattern]) => pattern.test(raw))?.[1] || 'Frame the person according to the shot contract, with the face clearly visible.';
     return `${line} Exactly one person appears in the frame.`;
+}
+
+// The shot contract already carries the pose, camera angle, distance and where
+// the subject sits in the frame. The adapter used to send only the framing, so
+// every result came back as a straight-on standing figure no matter what the
+// plan asked for - that is what made the first shoot look like passport photos.
+function compositionLine(variant = {}) {
+    const parts = [];
+    if (variant.action) parts.push(`Pose and action: ${variant.action}.`);
+    if (variant.camera) parts.push(`Camera: ${variant.camera}.`);
+    if (variant.distance) parts.push(`Distance: ${variant.distance}.`);
+    if (variant.subjectPlacement) parts.push(`Subject placement: ${variant.subjectPlacement}.`);
+    return parts.join(' ');
 }
