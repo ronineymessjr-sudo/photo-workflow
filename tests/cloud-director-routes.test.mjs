@@ -52,6 +52,54 @@ test('cloud image generation blocks guests before any AI binding call', async ()
     assert.equal(aiCalls, 0);
 });
 
+test('continuity image generation blocks guests and applies the user and shared daily limits', async () => {
+    const secret = 'unit-test-secret';
+    const actions = [];
+    let userAllowed = false;
+    let globalAllowed = false;
+    let aiCalls = 0;
+    const env = {
+        JWT_SECRET: secret,
+        AI: { run: async () => { aiCalls += 1; return {}; } },
+        AI_STUDIO_QUOTA: {
+            idFromName: name => name,
+            get(id) {
+                return {
+                    async fetch(input, init) {
+                        const request = input instanceof Request ? input : new Request(input, init);
+                        const { action } = await request.json();
+                        actions.push({ id, action });
+                        return Response.json({ allowed: action === 'image' ? userAllowed : globalAllowed });
+                    },
+                };
+            },
+        },
+    };
+    const makeRequest = authorization => new Request('https://unit.test/api/continuity/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(authorization ? { Authorization: authorization } : {}) },
+        body: JSON.stringify({}),
+    });
+
+    const guest = await worker.fetch(makeRequest(), env);
+    assert.equal(guest.status, 401);
+    assert.equal((await guest.json()).error, 'SIGN_IN_REQUIRED');
+    assert.deepEqual(actions, []);
+
+    const authorization = `Bearer ${token('user-1', secret)}`;
+    const userLimited = await worker.fetch(makeRequest(authorization), env);
+    assert.equal(userLimited.status, 429);
+    assert.equal((await userLimited.json()).error, 'IMAGE_DAILY_LIMIT_REACHED');
+    assert.deepEqual(actions.map(item => item.action), ['image']);
+
+    userAllowed = true;
+    const globallyLimited = await worker.fetch(makeRequest(authorization), env);
+    assert.equal(globallyLimited.status, 429);
+    assert.equal((await globallyLimited.json()).error, 'GLOBAL_IMAGE_DAILY_LIMIT_REACHED');
+    assert.deepEqual(actions.map(item => item.action), ['image', 'image', 'image-global']);
+    assert.equal(aiCalls, 0);
+});
+
 test('cloud plans stay text-only when the Cloudflare AI binding is unavailable', async () => {
     const originalFetch = globalThis.fetch;
     globalThis.fetch = async () => Response.json({ shot_plans: [{ shot_language: 'wide', model_pose: 'Walk together', framing: 'Environment wide' }] });

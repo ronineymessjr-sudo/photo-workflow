@@ -576,10 +576,19 @@ export default {
                 result = { status: 200, body: { group, asset } };
             }
             else if (path === '/api/continuity/generate' && method === 'POST') {
-                const generated = await generateShot({
-                    group: body?.group, shotId: body?.shotId, providerId: body?.providerId, env,
-                });
-                result = { status: 200, body: generated };
+                if (!uid) result = { status: 401, body: { error: 'SIGN_IN_REQUIRED' } };
+                else {
+                    const allowed = await consumeStudioImageQuota({ uid, env });
+                    if (allowed === null) result = { status: 503, body: { error: 'IMAGE_QUOTA_NOT_CONFIGURED' } };
+                    else if (allowed === 'global-limit') result = { status: 429, body: { error: 'GLOBAL_IMAGE_DAILY_LIMIT_REACHED' } };
+                    else if (!allowed) result = { status: 429, body: { error: 'IMAGE_DAILY_LIMIT_REACHED' } };
+                    else {
+                        const generated = await generateShot({
+                            group: body?.group, shotId: body?.shotId, providerId: body?.providerId, env,
+                        });
+                        result = { status: 200, body: generated };
+                    }
+                }
             }
             else if (path === '/api/continuity/prescreen' && method === 'POST') {
                 const shot = (body?.group?.shots || []).find(item => item.shotId === body?.shotId);

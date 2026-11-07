@@ -17,6 +17,8 @@ const argOf = name => {
     return index >= 0 ? args[index + 1] : '';
 };
 const BASE = (argOf('base') || 'https://photo.ronineymessjrstudio.cn').replace(/\/$/, '');
+const SESSION_TOKEN = process.env.PHOTOATELIER_SESSION_TOKEN || '';
+const IS_LOOPBACK = /^https?:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?$/i.test(BASE);
 const BRIEF = argOf('brief') || 'scene-spiral-stairs';
 const PICK = (argOf('shots') || '').split(',').map(value => Number(value)).filter(Number.isFinite);
 const OUT = argOf('out') || `runtime/shoot-${BRIEF}`;
@@ -32,7 +34,10 @@ const PACK = 'experiments/plan-quality-lab/prompt-packs/2026-10-27-deepseek/06-p
 async function post(pathname, body, timeout = 180000) {
     const response = await fetch(BASE + pathname, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+            'Content-Type': 'application/json',
+            ...(SESSION_TOKEN ? { Authorization: `Bearer ${SESSION_TOKEN}` } : {}),
+        },
         body: JSON.stringify(body),
         signal: AbortSignal.timeout(timeout),
     });
@@ -81,6 +86,9 @@ async function pickPoses(count) {
 }
 
 (async () => {
+    if (!SESSION_TOKEN && !IS_LOOPBACK) {
+        throw new Error('PHOTOATELIER_SESSION_TOKEN_REQUIRED');
+    }
     const pack = JSON.parse(await readFile(PACK, 'utf8'));
     const rows = pack.items
         .filter(item => item.briefId === BRIEF)
