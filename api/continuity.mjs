@@ -106,6 +106,22 @@ function text(value, fallback = '') {
     return typeof value === 'string' ? value.trim() : fallback;
 }
 
+function safeReferenceImageUrl(raw) {
+    try {
+        const url = new URL(raw);
+        if (url.origin !== 'https://hruiccc.github.io'
+            || !/^\/RuiC-PoseAtlas\/(?:thumbs\/[A-Za-z0-9_-]+\.jpg|(?:costume|portrait)\/thumbs\/[A-Za-z0-9_-]+\.webp)$/.test(url.pathname)
+            || url.search || url.hash) return '';
+        return url.href;
+    } catch { return ''; }
+}
+
+function handoffReferenceReady(reference) {
+    if (reference.status !== 'confirmed') return false;
+    if (reference.path || safeReferenceImageUrl(reference.referenceImageUrl)) return true;
+    return reference.role === 'scene' && reference.textOnly === true;
+}
+
 // The locked block may only be filled from the original brief. Later steps read
 // it; nothing else writes it.
 export function buildLocked(input = {}, hints = {}) {
@@ -306,10 +322,14 @@ export function buildShotRequests(group, { providerId, shotIds = [], seedBase = 
         references,
         // Only these may differ between shots of one group.
         variant: {
+            // Raw label plus size code: adapters turn these into an actual
+            // composition instruction. A bare "medium-close-up" tells a model
+            // nothing about how much of the body to include.
+            size: shot.size,
             shotType: shot.shotType, camera: shot.camera, lens: shot.lens,
             distance: shot.distance, action: shot.action, subjectPlacement: shot.subjectPlacement,
             scene: shot.scene,
-            lighting: shot.lighting, wardrobe: shot.wardrobe, crop: shot.crop,
+            scene: shot.scene, lighting: shot.lighting, wardrobe: shot.wardrobe, crop: shot.crop,
             mustShow: shot.mustShow, rejectIf: shot.rejectIf, cameraSettings: shot.cameraSettings,
             props: shot.props,
         },
@@ -377,11 +397,18 @@ export function handoffFor(group, { shotId = '' } = {}) {
         // A skeleton from the studio converter has no shots yet; that is a blocker,
         // not an error, and the caller needs to know both reasons.
         if (shotId) throw new ContinuityError('CONTINUITY_SHOT_UNKNOWN', `没有这个镜头：${shotId}`, 404);
-        const pendingRoles = checked.references.filter(reference => reference.status !== 'confirmed' || !reference.path);
+        const pendingRoles = checked.references.filter(reference => !handoffReferenceReady(reference));
         return {
             continuityGroupId: checked.continuityGroupId,
             lockedHash,
-            references: checked.references.map(reference => ({ role: reference.role, assetId: reference.assetId, path: reference.path || '', status: reference.status })),
+            references: checked.references.map(reference => ({
+                role: reference.role,
+                assetId: reference.assetId,
+                path: reference.path || '',
+                referenceImageUrl: safeReferenceImageUrl(reference.referenceImageUrl),
+                textOnly: reference.textOnly === true,
+                status: reference.status,
+            })),
             masterConfirmed: checked.master?.confirmedBy === 'human',
             ready: false,
             blockedReason: `还没有镜头：先补方案或手工添加；${pendingRoles.length ? `参考图未就绪：${pendingRoles.map(reference => reference.role).join('、')}` : '参考图已就绪'}`,
@@ -392,9 +419,14 @@ export function handoffFor(group, { shotId = '' } = {}) {
         role: reference.role,
         assetId: reference.assetId,
         path: reference.path || '',
+        referenceImageUrl: safeReferenceImageUrl(reference.referenceImageUrl),
+        textOnly: reference.textOnly === true,
         status: reference.status,
     }));
-    const missing = references.filter(reference => reference.status !== 'confirmed' || !reference.path);
+    const missing = references.filter(reference => !handoffReferenceReady(reference));
+    const referenceImages = references
+        .map(reference => ({ role: reference.role, url: reference.path || reference.referenceImageUrl }))
+        .filter(reference => reference.url);
     return {
         continuityGroupId: checked.continuityGroupId,
         lockedHash,
@@ -404,17 +436,25 @@ export function handoffFor(group, { shotId = '' } = {}) {
         blockedReason: missing.length
             ? `参考图未就绪：${missing.map(reference => reference.role).join('、')}`
             : checked.master?.confirmedBy === 'human' ? '' : '主参考图未人工确认',
-        cards: shots.map(shot => ({
-            shotId: shot.shotId,
-            file: shot.file || `${shot.shotId}.png`,
-            size: shot.size,
-            lens: shot.lens,
-            camera: shot.camera,
-            // Everything a person needs to paste into a chat UI, in one place.
-            prompt: shot.prompt,
-            referencePaths: references.map(reference => reference.path).filter(Boolean),
-            instruction: `把 ${references.length} 张参考图拖进对话框，粘贴上面的提示词，出图后保存为 ${shot.file}，再回传到本面板。`,
-        })),
+        cards: shots.map(shot => {
+            const poseImageUrl = safeReferenceImageUrl(shot.poseRef?.imageUrl);
+            const shotReferenceImages = [
+                ...referenceImages,
+                ...(poseImageUrl ? [{ role: 'pose', title: text(shot.poseRef?.title), url: poseImageUrl }] : []),
+            ];
+            return {
+                shotId: shot.shotId,
+                file: shot.file || `${shot.shotId}.png`,
+                size: shot.size,
+                lens: shot.lens,
+                camera: shot.camera,
+                // Everything a person needs to paste into a chat UI, in one place.
+                prompt: shot.prompt,
+                referencePaths: shotReferenceImages.map(reference => reference.url),
+                referenceImages: shotReferenceImages,
+                instruction: `把 ${shotReferenceImages.length} 张图片参考图拖进对话框，姿势按${poseImageUrl ? '所选摆姿参考图和' : ''}方案文字执行，场景按方案文字执行，粘贴上面的提示词，出图后保存为 ${shot.file}，再回传到本面板。`,
+            };
+        }),
     };
 }
 

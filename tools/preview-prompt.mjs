@@ -17,6 +17,7 @@ const argOf = name => {
 };
 const BRIEF = argOf('brief') || 'scene-spiral-stairs';
 const SHOTS = (argOf('shots') || '').split(',').map(Number).filter(Number.isFinite);
+const PROVIDER = argOf('provider') || 'cloudflare-flux-klein';
 const PACK = 'experiments/plan-quality-lab/prompt-packs/2026-10-27-deepseek/06-prompts-all.json';
 
 const pack = JSON.parse(await readFile(PACK, 'utf8'));
@@ -71,6 +72,7 @@ const store = { async put() {}, async get() { return { buffer: PNG, meta: { mime
 // marker, which makes it obvious when a field would reach the model untranslated.
 let translateCalls = 0;
 const env = {
+    ARK_API_KEY: 'preview-stub',
     AI: {
         async run(model, payload) {
             if (String(model).includes('llama')) {
@@ -85,9 +87,17 @@ const env = {
 
 for (const shot of shots) {
     const result = await generateShot({
-        group, shotId: shot.shotId, providerId: 'cloudflare-flux-klein',
+        group, shotId: shot.shotId, providerId: PROVIDER,
         env, store,
-        fetchImpl: async () => new Response(PNG, { status: 200, headers: { 'content-type': 'image/jpeg' } }),
+        // Stub whichever upstream the selected provider talks to.
+        fetchImpl: async url => {
+            if (String(url).includes('ark.cn-beijing.volces.com')) {
+                return new Response(JSON.stringify({ data: [{ b64_json: PNG.toString('base64') }] }), {
+                    status: 200, headers: { 'content-type': 'application/json' },
+                });
+            }
+            return new Response(PNG, { status: 200, headers: { 'content-type': 'image/jpeg' } });
+        },
     });
     console.log(`\n${'='.repeat(78)}`);
     console.log(`${shot.shotId}  ${shot.size}  ${shot.camera_angle}  ${shot.lens}  参考图 ${result.referencesSent} 张  seed ${result.seed}`);

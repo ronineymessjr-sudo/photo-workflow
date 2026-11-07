@@ -372,3 +372,35 @@ test('seedream adapter: no key is 503, and the request carries references as bas
     assert.match(sent.body.prompt, /[\u4e00-\u9fa5]/, '方案是中文，Seedream 原生支持中文提示词');
     assert.equal(result.provider, 'volcengine-seedream');
 });
+
+test('framing follows the size code, not the machine label', async () => {
+    const { generateShot } = await import('../api/continuity-generation.mjs');
+    // shotType is normalised to "medium-close-up" etc. The framing regexes only
+    // understand MCU/ECU/WS codes, so before this fix every frame silently fell
+    // through to the generic fallback and came back as a full standing figure.
+    const cases = [
+        ['MCU', 'Head-and-shoulders framing'],
+        ['ECU', 'Tight close-up'],
+        ['FS', 'Head-to-toe framing'],
+        ['EWS', 'Wide environmental framing'],
+    ];
+    for (const [size, expected] of cases) {
+        let group = createGroup({
+            input: { theme: 't', scene: 's' },
+            shots: [{ shotId: 'shot-01', size, generator_prompt: 'studio portrait' }],
+        });
+        for (const role of ['identity', 'scene', 'style']) {
+            group = setReference(group, { role, assetId: `asset-${role}`, status: 'confirmed', path: `/api/continuity/asset/asset-${role}` });
+        }
+        group = confirmMaster(group, { assetId: 'asset-identity', actor: 'human' });
+        const result = await generateShot({
+            group, shotId: 'shot-01', providerId: 'cloudflare-flux-klein',
+            env: { AI: { async run(model) {
+                if (String(model).includes('llama')) return { response: 'direction' };
+                return { image: Buffer.from(PNG_BYTES).toString('base64') };
+            } } },
+            store: { async put() {}, async get() { return { buffer: PNG_BYTES, meta: { mime: 'image/png' } }; } },
+        });
+        assert.match(result.sentPrompt, new RegExp(expected), `${size} 必须落到正确的取景描述`);
+    }
+});

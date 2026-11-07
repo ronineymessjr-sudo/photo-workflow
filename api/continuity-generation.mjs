@@ -106,6 +106,73 @@ async function callReferenceJson({ env, fetchImpl, prompt, size, aspect, seed, r
 }
 
 
+
+// Framing as a composition instruction, not a label. "medium-close-up" left the
+// model to invent the crop, which is why every frame came back filling the
+// height with a full standing figure. These say exactly where the frame edge
+// falls and how much space to leave.
+// One field list shared by every adapter.
+//
+// This exists because the Cloudflare adapter and the Seedream adapter each built
+// their own prompt and drifted: Seedream silently lost the framing instruction,
+// so every frame came back as a full standing figure filling the frame. Adding a
+// field here now reaches both.
+function directionFields({ prompt, locked, variant, poseRef, framing }) {
+    return [
+        ['prompt', prompt],
+        ['subject', locked?.subject],
+        ['wardrobeGroup', directive(locked?.wardrobe)],
+        ['style', locked?.styleProfile],
+        ['location', locked?.location],
+        ['weather', locked?.weather],
+        ['timeOfDay', locked?.timeOfDay],
+        ['framing', framing],
+        ['pose', poseRef?.title ? `摆姿库姿势：${poseRef.title}${poseRef.angle ? `（参考角度 ${poseRef.angle}）` : ''}` : ''],
+        ['poseDirection', poseRef?.direction],
+        ['action', variant?.action],
+        ['camera', variant?.camera],
+        ['lens', variant?.lens],
+        ['placement', variant?.subjectPlacement],
+        ['lighting', variant?.lighting],
+        ['wardrobeShot', directive(variant?.wardrobe)],
+        ['props', directive(variant?.props)],
+        ['crop', directive(variant?.crop)],
+        ['mustShow', variant?.mustShow],
+        ['rejectIf', variant?.rejectIf],
+    ].filter(([, value]) => typeof value === 'string' && value.trim());
+}
+
+const FIELD_LABELS_ZH = {
+    prompt: '画面', subject: '人物', wardrobeGroup: '全组服装', style: '风格',
+    location: '场景', weather: '天气', timeOfDay: '时间', framing: '取景',
+    pose: '姿势', poseDirection: '摆姿指导', action: '动作', camera: '机位',
+    lens: '焦段', placement: '构图位置', lighting: '光线', wardrobeShot: '服装',
+    props: '道具', crop: '裁切', mustShow: '必须出现', rejectIf: '不得出现',
+};
+
+const FRAMING_ZH = {
+    ECU: '极特写：只拍脸部局部（眼睛或嘴唇），脸占画面八成以上，其余全是皮肤与背景虚化',
+    CU: '特写：只拍脸和脖子，头顶留少许空间，画面下沿止于锁骨附近，不出现胸部与手',
+    MCU: '近景（半身特写）：头肩到胸线，画面下沿落在胸部，不拍到手，人物占画面高度约六成',
+    MS: '中景：腰部以上，能看到双手，人物占画面高度约七成',
+    MFS: '中全景：膝盖以上，人物占画面高度约八成',
+    FS: '全身：从头到脚完整入画，头顶留约十分之一空间，脚下地面必须露出，人物不要顶到画框上下边缘',
+    WS: '全景：人物只占画面高度的三分之一到二分之一，环境与建筑是主体，人物明显小于画框',
+    EWS: '远景：人物很小，占画面高度不足五分之一，以空间、建筑和光线为主',
+};
+
+function framingZh(variant) {
+    const code = String(variant?.size || '').trim().toUpperCase();
+    if (FRAMING_ZH[code]) return FRAMING_ZH[code];
+    const raw = String(variant?.shotType || '');
+    if (/特写|close/i.test(raw) && /中|medium/i.test(raw)) return FRAMING_ZH.MCU;
+    if (/特写|close/i.test(raw)) return FRAMING_ZH.CU;
+    if (/全身|full/i.test(raw)) return FRAMING_ZH.FS;
+    if (/全景|wide/i.test(raw)) return FRAMING_ZH.WS;
+    if (/中景|medium/i.test(raw)) return FRAMING_ZH.MS;
+    return '';
+}
+
 // Doubao-Seedream (Volcengine Ark) adapter.
 //
 // Why this provider exists alongside Cloudflare:
@@ -134,28 +201,17 @@ async function callSeedream({ env, prompt, size, seed, references, variant, pose
         images.push(reference.dataUrl);
     }
 
+    // Same field list the Cloudflare adapter draws from, so a field can no
+    // longer reach one provider and silently miss another.
+    const fields = directionFields({ prompt, locked, variant, poseRef, framing: framingZh(variant) });
     const direction = [
-        prompt,
-        locked?.subject ? `人物：${locked.subject}` : '',
-        locked?.wardrobe ? `全组服装保持：${locked.wardrobe}` : '',
-        locked?.styleProfile ? `整体风格：${locked.styleProfile}` : '',
-        locked?.weather ? `天气：${locked.weather}` : '',
-        locked?.timeOfDay ? `时间：${locked.timeOfDay}` : '',
-        variant?.scene ? `本镜场景：${variant.scene}` : '',
-        variant?.shotType ? `景别：${variant.shotType}` : '',
-        variant?.camera ? `机位：${variant.camera}` : '',
-        variant?.lens ? `焦段：${variant.lens}` : '',
-        poseRef?.title ? `摆姿库姿势：${poseRef.title}${poseRef.angle ? `，参考角度${poseRef.angle}` : ''}` : '',
-        poseRef?.direction ? `摆姿指导：${poseRef.direction}` : '',
-        variant?.action ? `动作：${variant.action}` : '',
-        variant?.subjectPlacement ? `构图：${variant.subjectPlacement}` : '',
-        variant?.lighting ? `光线：${variant.lighting}` : '',
-        variant?.wardrobe ? `服装：${variant.wardrobe}` : '',
-        variant?.crop ? `裁切：${variant.crop}` : '',
-        variant?.mustShow ? `必须出现：${variant.mustShow}` : '',
-        variant?.rejectIf ? `不得出现：${variant.rejectIf}` : '',
-        '同一组保持参考人物的脸、年龄、发型与身份；服装只按衣装参考，不增添其他单品。每次只改变本镜要求的动作、机位和场景。',
-    ].filter(Boolean).join('\n');
+        ...fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`),
+        '同一组保持参考人物的脸、年龄、发型与身份；服装只按衣装参考，不增添其他单品。',
+        '每次只改变本镜要求的动作、机位与场景。',
+        // The complaint that produced this line: every frame filled the height
+        // with a standing figure. Say the crop out loud.
+        '不要让人物顶到画框上下边缘；人物在画面中的大小必须服从上面的取景要求。',
+    ].join('\n');
 
     const portrait = String(size || '').includes('1024x1536') || !String(size || '').includes('x');
     const body = {
@@ -499,7 +555,10 @@ function depthOfField(cameraSettings) {
 // Framing stated as what SHOULD be visible. Saying "person occupies at most 40%"
 // read as permission to omit the person entirely and produced an empty street.
 function framingLine(variant) {
-    const raw = String(variant?.shotType || variant?.shotSize || '');
+    // Prefer the raw size code (EWS/MCU/CU...). shotType arrives as a machine
+    // label like "medium-close-up", which none of the patterns below match, so
+    // every frame silently fell through to the generic fallback line.
+    const raw = String(variant?.size || variant?.shotType || variant?.shotSize || '');
     const rules = [
         [/环境全景|环境远景|^(?:E?WS)$/i, 'Wide environmental framing: the person is small but unmistakably present, walking or standing in the middle distance, with the surrounding street clearly readable around them.'],
         [/中全景|^MFS$/i, 'Knee-up framing: crop above the knees, showing head, torso and hands.'],
