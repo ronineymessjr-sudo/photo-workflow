@@ -330,3 +330,45 @@ test('an accepted frame becomes the anchor: later shots are edits of it, not fre
     assert.match(second.sentPrompt, /an earlier frame from this same shoot/, '提示词要说明这是同一拍摄的上一帧');
     assert.match(second.sentPrompt, /keep that exact person/, '明确要求保持同一个人，只改机位');
 });
+
+test('seedream adapter: no key is 503, and the request carries references as base64', async () => {
+    const { generateShot } = await import('../api/continuity-generation.mjs');
+    let group = createGroup({
+        input: { theme: '楼梯', scene: '美术馆' },
+        shots: [{ shotId: 'shot-01', size: 'MCU', generator_prompt: '近景人像' }],
+    });
+    for (const role of ['identity', 'scene', 'style']) {
+        group = setReference(group, { role, assetId: `asset-${role}`, status: 'confirmed', path: `/api/continuity/asset/asset-${role}` });
+    }
+    group = confirmMaster(group, { assetId: 'asset-identity', actor: 'human' });
+    const store = { async put() {}, async get() { return { buffer: PNG_BYTES, meta: { mime: 'image/png' } }; } };
+
+    // Missing key must fail closed with the variable name, never fall back.
+    await assert.rejects(
+        () => generateShot({ group, shotId: 'shot-01', providerId: 'volcengine-seedream', env: {}, store }),
+        error => error.status === 503 && /ARK_API_KEY/.test(JSON.stringify(error.details || error.message)),
+    );
+
+    // With a key, capture the outgoing request.
+    let sent = null;
+    const result = await generateShot({
+        group, shotId: 'shot-01', providerId: 'volcengine-seedream',
+        env: { ARK_API_KEY: 'test-key' }, store,
+        fetchImpl: async (url, init) => {
+            sent = { url: String(url), body: JSON.parse(init.body), auth: init.headers.Authorization };
+            return new Response(JSON.stringify({ data: [{ b64_json: Buffer.from(PNG_BYTES).toString('base64') }] }), {
+                status: 200, headers: { 'content-type': 'application/json' },
+            });
+        },
+    });
+
+    assert.match(sent.url, /ark\.cn-beijing\.volces\.com\/api\/v3\/images\/generations/);
+    assert.equal(sent.auth, 'Bearer test-key');
+    assert.equal(sent.body.model, 'doubao-seedream-4-0-250828');
+    assert.ok(Array.isArray(sent.body.image) && sent.body.image.length >= 2, '两张参考图以 base64 传过去');
+    assert.ok(sent.body.image[0].startsWith('data:image/'), '参考图必须是 data URL');
+    assert.equal(sent.body.watermark, false, '不要平台水印');
+    // Native Chinese prompt: no translation pass should run for this provider.
+    assert.match(sent.body.prompt, /[\u4e00-\u9fa5]/, '方案是中文，Seedream 原生支持中文提示词');
+    assert.equal(result.provider, 'volcengine-seedream');
+});

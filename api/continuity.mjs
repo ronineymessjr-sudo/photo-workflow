@@ -15,6 +15,17 @@ import { createHash } from 'node:crypto';
 export const CONTINUITY_ROLES = ['identity', 'scene', 'style'];
 
 export const CONTINUITY_PROVIDERS = {
+    'volcengine-seedream': {
+        // The strongest option for one shoot with one face: 14 references, native
+        // Chinese, and a batch mode that returns related frames in one request.
+        label: '火山方舟 · Doubao-Seedream 4.0（0.2 元/张）',
+        supportsReferences: true,
+        roles: CONTINUITY_ROLES,
+        maxReferences: 6,
+        supportsSeed: true,
+        canGenerate: true,
+        imageSlots: ['identity', 'style'],
+    },
     'cloudflare-flux-klein': {
         label: 'Cloudflare Workers AI · FLUX.2 Klein（已绑定 [ai]，免密钥）',
         supportsReferences: true,

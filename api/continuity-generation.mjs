@@ -33,6 +33,7 @@ export const PROVIDER_ADAPTERS = {
     'flux-kontext': 'reference-json',
     'sdxl-ipadapter': 'reference-json',
     'cloudflare-flux-klein': 'cloudflare-workers-ai',
+    'volcengine-seedream': 'volcengine-seedream',
 };
 
 function dataUrlFor(buffer, mime) {
@@ -104,10 +105,88 @@ async function callReferenceJson({ env, fetchImpl, prompt, size, aspect, seed, r
     return picked.url ? fetchImageAsBase64(picked.url, fetchImpl) : picked;
 }
 
+
+// Doubao-Seedream (Volcengine Ark) adapter.
+//
+// Why this provider exists alongside Cloudflare:
+//   - up to 14 reference images (FLUX.2 klein allows 4 and demands one visual register)
+//   - native Chinese prompts, so the plan text no longer needs translating
+//   - "sequential_image_generation" produces a batch of related frames in ONE
+//     request, which is the closest thing to an actual continuous shoot
+//   - reachable from mainland China without a custom domain
+// Cost: 0.2 CNY per output image, billed per image actually produced.
+const SEEDREAM_MODEL = 'doubao-seedream-4-0-250828';
+
+async function callSeedream({ env, prompt, size, seed, references, variant, poseRef, anchor, store = null, fetchImpl = fetch }) {
+    const key = env?.ARK_API_KEY;
+    if (!key) {
+        throw new GenerationError('GENERATION_NOT_CONFIGURED', '缺少火山方舟 ARK_API_KEY', 503, { missing: ['ARK_API_KEY'] });
+    }
+    // Ark takes images as base64 data URLs or public URLs. Our references are
+    // stored bytes, so they go in as data URLs, anchor first when one exists.
+    const images = [];
+    if (anchor?.assetId) {
+        const stored = await readAsset(`/api/continuity/asset/${anchor.assetId}`, { env, store });
+        if (stored?.buffer?.length) images.push(dataUrlFor(stored.buffer, stored.mime));
+    }
+    for (const reference of references.filter(item => item.role === 'identity' || item.role === 'style')) {
+        if (images.length >= 3) break;
+        images.push(reference.dataUrl);
+    }
+
+    const portrait = String(size || '').includes('1024x1536') || !String(size || '').includes('x');
+    const body = {
+        model: SEEDREAM_MODEL,
+        prompt,
+        // No translation step: Ark handles Chinese directly, and the plan is
+        // written in Chinese.
+        size: portrait ? '2K' : '2K',
+        response_format: 'url',
+        watermark: false,
+        sequential_image_generation: 'disabled',
+    };
+    if (images.length) body.image = images;
+    if (Number.isSafeInteger(seed)) body.seed = seed;
+
+    let response;
+    try {
+        response = await fetchImpl('https://ark.cn-beijing.volces.com/api/v3/images/generations', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+            body: JSON.stringify(body),
+            signal: AbortSignal.timeout(120000),
+        });
+    } catch (error) {
+        throw new GenerationError('GENERATION_UPSTREAM_FAILED', `火山方舟请求失败：${String(error?.message || error).slice(0, 200)}`, 502);
+    }
+    if (!response.ok) {
+        const detail = await response.text().catch(() => '');
+        throw new GenerationError('GENERATION_UPSTREAM_FAILED', `火山方舟返回 ${response.status}：${detail.slice(0, 200)}`, response.status === 429 ? 429 : 502);
+    }
+    const payload = await response.json().catch(() => null);
+    const first = payload?.data?.[0];
+    if (!first?.url && !first?.b64_json) {
+        throw new GenerationError('GENERATION_INVALID_RESPONSE', '火山方舟返回里没有图片', 502);
+    }
+    let bytes;
+    let mime = 'image/png';
+    if (first.b64_json) {
+        const binary = atob(first.b64_json);
+        bytes = Uint8Array.from(binary, character => character.charCodeAt(0));
+    } else {
+        const imageResponse = await fetchImpl(first.url, { signal: AbortSignal.timeout(60000) });
+        if (!imageResponse.ok) throw new GenerationError('GENERATION_INVALID_RESPONSE', '下载生成结果失败', 502);
+        mime = imageResponse.headers.get('content-type')?.split(';')[0] || 'image/png';
+        bytes = new Uint8Array(await imageResponse.arrayBuffer());
+    }
+    return { contentType: mime, base64: Buffer.from(bytes).toString('base64'), prompt, referencesSent: images.length, anchored: Boolean(anchor?.assetId) };
+}
+
 const ADAPTERS = {
     'openai-images-edits': callOpenAiEdits,
     'reference-json': callReferenceJson,
     'cloudflare-workers-ai': callCloudflareWorkersAi,
+    'volcengine-seedream': callSeedream,
 };
 
 // Cloudflare Workers AI: no API key, the Worker carries the `[ai]` binding. It
