@@ -181,9 +181,12 @@
         renderPlanReferences(plan) {
             const references = plan.aiStudio?.references || [];
             if (!references.length) return '';
-            return `<section class="studio-reference-summary"><h3>摆姿库参考与拍摄转译</h3><ul>${references.map(item => {
+            return `<section class="studio-reference-summary"><h3>摆姿库参考与拍摄转译</h3><ul class="studio-reference-list">${references.map(item => {
                 const url = sourceLink(item.externalUrl || item.sourceUrl);
-                return `<li>${escape(item.poseNumber || item.upstreamId || item.sourceItemId)} · ${escape(item.title)} · ${escape((item.angles || []).join(' / '))}${url ? ` <a href="${escape(url)}" target="_blank" rel="noopener noreferrer">原站参考</a>` : ''}</li>`;
+                const image = sourceLink(item.referenceImageUrl);
+                const preview = /\.(?:jpg|webp)$/.test(image) ? `<img src="${escape(image)}" alt="${escape(item.title)}" loading="lazy">` : '';
+                const kind = { pose: '摆姿', costume: '服装', portrait: '人脸' }[item.kind] || '参考';
+                return `<li>${preview}<strong>${kind} · ${escape(item.title)}</strong><span>${escape(item.poseNumber || item.upstreamId || item.sourceItemId)} · ${escape((item.angles || []).join(' / '))}</span>${url ? ` <a href="${escape(url)}" target="_blank" rel="noopener noreferrer">原站参考</a>` : ''}</li>`;
             }).join('')}</ul><p>${escape(plan.aiStudio.guidance?.style || '')}</p><ul>${(plan.aiStudio.guidance?.suggestions || []).map(item => `<li>${escape(item.direction)}</li>`).join('')}</ul><p>飞书${plan.aiStudio.sync?.status === 'synced' ? '已核对同步' : '待同步'}</p><button type="button" class="btn btn-s btn-sm" data-studio-sync="${escape(plan.id)}">同步方案和参考到飞书</button></section>`;
         },
         syncPlan,

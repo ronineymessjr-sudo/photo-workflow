@@ -295,6 +295,11 @@ test('candidate card explains composition and unverified-face blockers', async (
                     poseStatus: 'blocked',
                     poseReasons: ['visual-energy-too-central', 'camera-angle-not-machine-verified'],
                     faceQualityStatus: 'blocked'
+                }, {
+                    url: 'https://photoatelier-api.photomagic.workers.dev/api/director/candidates/cloud-test', shotIndex: 2,
+                    poseStatus: 'not-run', faceQualityStatus: 'not-run'
+                }, {
+                    url: 'https://untrusted.example/api/director/candidates/hidden', shotIndex: 1
                 }]
             }
         },
@@ -310,4 +315,7 @@ test('candidate card explains composition and unverified-face blockers', async (
     assert.match(context.result, /需求与当前分镜的取景有冲突/);
     assert.match(context.result, /建议切换到镜头 03/);
     assert.match(context.result, /不会自动改写镜头合同/);
+    assert.match(context.result, /src="https:\/\/photoatelier-api\.photomagic\.workers\.dev\/api\/director\/candidates\/cloud-test"/);
+    assert.match(context.result, /alt="镜头 3 AI合成候选图"/);
+    assert.doesNotMatch(context.result, /untrusted\.example/);
 });

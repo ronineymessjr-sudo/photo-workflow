@@ -3585,7 +3585,7 @@
                 updateDashboard(localData);
                 
                 // 然后尝试从API获取更多数据
-                var API_BASE = window.api ? window.api.base : 'https://photoatelier-api.photomagic.workers.dev';
+                var API_BASE = window.api ? window.api.base : (localStorage.getItem('pa_api_base') || (globalThis.location?.origin || ''));
                 var token = localStorage.getItem('pw_token');
                 
                 if (token) {
@@ -4115,7 +4115,7 @@ if (document.getElementById('loginOverlay')) {
 
 // ===== Auth System & App Entry =====
 (function() {
-    const API_BASE = localStorage.getItem('pa_api_base') || 'https://photoatelier-api.photomagic.workers.dev';
+    const API_BASE = localStorage.getItem('pa_api_base') || (globalThis.location?.origin || '');
     const IS_LOCAL_HOST = ['127.0.0.1', 'localhost', '[::1]'].includes(location.hostname);
     const TOKEN_KEY = 'pw_token';
     const USER_KEY = 'pw_user';
@@ -6359,7 +6359,7 @@ function renderDirectorCandidatePanel(plan) {
     const shot = shots[selected];
     const fitWarning = shot ? getDirectorShotFitWarning(plan, shot, selected) : '';
     const key = escHtml(String(plan.id));
-    const candidates = (state.generationCandidates || []).filter(c => Number(c.shotIndex) === selected);
+    const candidates = state.generationCandidates || [];
     const model = state.selectedCandidateModel || 'cloudflare:@cf/black-forest-labs/flux-2-klein-9b';
     const aspect = state.selectedCandidateAspect || inferAspectRatioFromPlan(plan);
     const localCandidateModels = ['127.0.0.1', 'localhost', '[::1]'].includes(window.location.hostname);
@@ -6367,7 +6367,11 @@ function renderDirectorCandidatePanel(plan) {
         ...(localCandidateModels ? [['pollinations:flux','Flux'],['pollinations:krea','Krea'],['pollinations:sana','Sana']] : [])];
     const aspects = [['landscape','横屏 4:3'],['landscape-wide','横屏 16:9'],['square','方形 1:1'],['portrait','竖屏 3:4'],['portrait-tall','竖屏 9:16']];
     const cards = candidates.map(c => {
-        if (typeof c.url !== 'string' || !c.url.startsWith('/api/director/candidates/')) return '';
+        const apiBase = String(window.api?.base || (globalThis.location?.origin || '')).replace(/\/$/, '');
+        const trustedOrigins = ['https://photoatelier-api.photomagic.workers.dev', apiBase].filter(Boolean);
+        if (typeof c.url !== 'string' || !(c.url.startsWith('/api/director/candidates/') || trustedOrigins.some(origin => c.url.startsWith(origin + '/api/director/candidates/')))) return '';
+        const candidateIndex = Math.max(0, Math.min(shots.length - 1, Number(c.shotIndex) || 0));
+        const candidateShot = c.shotSnapshot || shots[candidateIndex] || {};
         const status = c.poseStatus === 'blocked' || c.faceQualityStatus === 'blocked' ? '检查未通过' : '待人工确认';
         const reasonLabels = {
             'visual-energy-too-central': '人物与画面视觉重心偏中央，本镜头要求偏离中心。',
@@ -6382,18 +6386,18 @@ function renderDirectorCandidatePanel(plan) {
             ? '<details class="candidate-review-notes"><summary>检查说明</summary><ul>' + reviewItems.map(item => '<li>' + escHtml(item) + '</li>').join('') + '</ul></details>'
             : '';
         const expires = c.expiresAt ? ' · 云端保留至 ' + escHtml(new Date(c.expiresAt).toLocaleDateString()) : '';
-        return '<figure class="candidate-result"><img src="' + escHtml(c.url) + '" alt="镜头 ' + (selected + 1) + ' AI合成候选图"><figcaption>镜头 ' + (selected + 1) + ' · AI合成 · ' + status + expires + '</figcaption>' +
+        return '<figure class="candidate-result"><img src="' + escHtml(c.url) + '" alt="镜头 ' + (candidateIndex + 1) + ' AI合成候选图"><figcaption>镜头 ' + (candidateIndex + 1) + ' · ' + escHtml(candidateShot.scene || '') + ' · ' + escHtml(candidateShot.shotSize || '') + ' · AI合成 · ' + status + expires + '</figcaption>' +
             reviewHtml + (c.shotSnapshot ? '<details><summary>生成时的拍摄要求</summary>' + renderShotInstructions(c.shotSnapshot) + '</details>' : '') + '</figure>';
     }).join('');
     return `<section class="director-candidate-panel" id="img-gallery-${key}">
-        <h3>分镜候选图</h3>
-        <label for="candidate-shot-${key}">选择分镜</label>
+        <h3>组照候选图</h3>
+        <label for="candidate-shot-${key}">选择要生成的分镜</label>
         <select id="candidate-shot-${key}" onchange="selectDirectorCandidateShot('${key}', this.value)">
             ${shots.map((s,i)=>`<option value="${i}" ${i===selected?'selected':''}>${String(i+1).padStart(2,'0')} · ${escHtml(s.title || s.description || s.scene)}</option>`).join('')}
         </select>
         ${fitWarning ? '<p class="reference-rights" role="status" style="border-left:3px solid var(--warn);padding:.55rem .7rem;margin:.5rem 0;">' + escHtml(fitWarning) + '</p>' : ''}
         <div class="candidate-workspace">
-            <div class="candidate-results" id="candidate-grid-${key}">${cards || '<p class="candidate-empty">该分镜暂无候选图</p>'}</div>
+            <div class="candidate-results" id="candidate-grid-${key}">${cards || '<p class="candidate-empty">该方案暂无候选图</p>'}</div>
             <aside class="candidate-brief"><h4>镜头 ${selected+1} · 拍摄要求</h4>${shot ? renderShotInstructions(shot) : ''}</aside>
         </div>
         <details class="candidate-options"><summary>生成设置</summary>
@@ -6403,7 +6407,7 @@ function renderDirectorCandidatePanel(plan) {
         </details>
         <button class="btn btn-s" id="candidate-gen-btn-${key}" onclick="generateDirectorCandidateForPlan('${key}')" ${shot?'':'disabled'}>生成当前分镜的图</button>
         <p id="candidate-status-${key}" class="reference-rights" aria-live="polite"></p>
-        <p class="reference-rights">AI合成预览，非实拍参考。每次仅生成当前分镜一张，可能消耗供应商额度；云端图片保留 90 天，须人工审核后使用。</p>
+        <p class="reference-rights">AI合成预览，非实拍参考。每次生成当前分镜一张，每人每天最多 5 张，全站每天最多 6 张。云端图片保留 90 天，须人工审核后使用。</p>
     </section>`;
 }
 
