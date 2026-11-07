@@ -228,11 +228,16 @@ export function buildShotRequests(group, { providerId, shotIds = [], seedBase = 
     if (!selected.length) throw new ContinuityError('CONTINUITY_SHOTS_EMPTY', '没有可生成的镜头', 400);
     const seedIndex = Number(String(checked.continuityGroupId).replace(/\D/g, '').slice(-3)) || 1;
     const references = checked.references.map(reference => ({ assetId: reference.assetId, role: reference.role, status: reference.status }));
-    return selected.map((shot, index) => ({
+    // Seeds must derive from the shot's position in the WHOLE group, not from its
+    // index in the current request. Generating one shot at a time (the normal
+    // case) otherwise gave every frame the same seed.
+    return selected.map(shot => {
+        const groupIndex = checked.shots.findIndex(item => item.shotId === shot.shotId);
+        return {
         shotId: shot.shotId,
         provider: providerId,
         modelSupportsSeed: provider.supportsSeed,
-        seed: seedBase + seedIndex * 100 + index,
+        seed: seedBase + seedIndex * 100 + Math.max(0, groupIndex),
         prompt: shot.prompt,
         size: shot.size,
         aspect: shot.aspect,
@@ -248,7 +253,8 @@ export function buildShotRequests(group, { providerId, shotIds = [], seedBase = 
             timeOfDay: checked.locked.timeOfDay, styleProfile: checked.locked.styleProfile,
         },
         lockedHash,
-    }));
+        };
+    });
 }
 
 export function judgeQc(scores = {}, { humanConfirmed = false, reviewer = 'none' } = {}) {

@@ -112,11 +112,16 @@ const ADAPTERS = {
 // Cloudflare Workers AI: no API key, the Worker carries the `[ai]` binding. It
 // exposes two reference-image slots only, so `scene` is described in the prompt
 // instead of being uploaded - the caller is told about that gap separately.
-async function callCloudflareWorkersAi({ env, prompt, size, seed, references }) {
+async function callCloudflareWorkersAi({ env, prompt, size, seed, references, variant }) {
     const ai = env?.AI;
     if (!ai || typeof ai.run !== 'function') {
         throw new GenerationError('GENERATION_NOT_CONFIGURED', '这个部署没有绑定 Workers AI（wrangler.toml 里的 [ai]），无法用 Cloudflare 出图', 503, { missing: ['AI binding'] });
     }
+    // FLUX reads English. A prompt mixing Chinese guidance into English
+    // instructions measurably degrades it, and the contract's locked fields
+    // (wardrobe, location) are user input in Chinese. Translate first, and keep
+    // every constraint rather than summarising it away.
+    prompt = await englishPrompt(ai, prompt);
     const slots = ['identity', 'style'];
     const chosen = slots.map(role => references.find(reference => reference.role === role)).filter(Boolean);
     if (chosen.length < 2) {
@@ -125,8 +130,20 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references }) 
     const portrait = String(size || '').startsWith('1024x1536') || !String(size || '').includes('x');
     const width = portrait ? 768 : 1024;
     const height = portrait ? 1024 : 768;
+    // The shot text alone does not tell the model what the two images are for.
+    // Without this, a wide environmental description produced a street with no
+    // person in it, and a close shot invented a different face.
+    const composed = [
+        'Create one photorealistic DSLR photograph containing exactly ONE person.',
+        'Reference image 1 is the face photograph: it defines facial identity, apparent age, skin tone and hair. The person in the result must be this same individual, not a similar-looking model.',
+        'Reference image 2 is the outfit reference: every visible garment, layer, colour, material and accessory comes from it exactly. Do not invent, replace or simplify clothing.',
+        `Shot contract: ${prompt}`,
+        framingLine(variant),
+        'Real photographic rendering: visible skin pores and peach fuzz, uneven natural skin tone, true light falloff with genuinely dark shadow areas, mixed colour temperature, worn everyday surfaces with marks and dust, natural lens vignetting, frame not perfectly level.',
+        'Avoid: text, captions, watermark, collage, split frames, extra limbs, deformed hands, melted or fused fingers, duplicate subject, plastic skin, beauty filter, HDR glow.',
+    ].filter(Boolean).join(' ');
     const form = new FormData();
-    form.append('prompt', prompt);
+    form.append('prompt', composed);
     form.append('width', String(width));
     form.append('height', String(height));
     chosen.forEach((reference, index) => {
@@ -194,6 +211,9 @@ export async function generateShot({ group, shotId, providerId = '', env = {}, f
     const image = await adapter({
         env, fetchImpl, prompt: request.prompt, size,
         aspect: request.aspect, seed: request.seed, references,
+        // Framing lives on the shot variant; the adapter needs it to state what
+        // must be visible instead of leaving the crop to the model.
+        variant: request.variant,
     });
 
     const stored = await storeAsset({
@@ -215,4 +235,46 @@ export async function generateShot({ group, shotId, providerId = '', env = {}, f
         // QC is deliberately not filled here: the planner never grades itself.
         qc: { verdict: 'pending' },
     };
+}
+
+// Translate Chinese guidance so the model receives one language. Constraints are
+// preserved rather than summarised: dropping "大衣" or "傍晚" silently changes
+// the picture, which is worse than a longer prompt.
+async function englishPrompt(ai, prompt) {
+    if (typeof prompt !== 'string' || !prompt.trim()) return '';
+    if (!/[\u3400-\u9fff]/.test(prompt)) return prompt;
+    try {
+        const translated = await ai.run('@cf/meta/llama-3.1-8b-instruct-fp8-fast', {
+            messages: [
+                {
+                    role: 'system',
+                    content: 'Translate the user text into concise English photography instructions. Keep every concrete constraint: how many people, framing and crop, camera height, subject position, pose and action, location and its details, time of day, weather, lighting direction, garments, colour grade. Do not add anything that is not stated. Do not describe faces or clothing beyond what is given, since reference images supply those. Return only the English text.',
+                },
+                { role: 'user', content: prompt },
+            ],
+            max_tokens: 500, temperature: 0,
+        });
+        const text = typeof translated?.response === 'string' ? translated.response.trim() : '';
+        return text.length > 20 ? text : prompt;
+    } catch {
+        // A failed translation must not block generation; the original text still
+        // carries the constraints, just less reliably.
+        return prompt;
+    }
+}
+
+// Framing stated as what SHOULD be visible. Saying "person occupies at most 40%"
+// read as permission to omit the person entirely and produced an empty street.
+function framingLine(variant) {
+    const raw = String(variant?.shotType || variant?.shotSize || '');
+    const rules = [
+        [/环境全景|环境远景|^(?:E?WS)$/i, 'Wide environmental framing: the person is small but unmistakably present, walking or standing in the middle distance, with the surrounding street clearly readable around them.'],
+        [/中全景|^MFS$/i, 'Knee-up framing: crop above the knees, showing head, torso and hands.'],
+        [/全身|^FS$/i, 'Head-to-toe framing: both shoes and the ground under them are visible, with margin above the head.'],
+        [/近景|^MCU$/i, 'Head-and-shoulders framing: crop below the shoulders, face fully in frame.'],
+        [/特写|^E?CU$/i, 'Tight close-up: face fills most of the frame. Do not invent hands or props.'],
+        [/中景|^MS$/i, 'Waist-up framing: crop below the waist, hands visible when they are in frame.'],
+    ];
+    const line = rules.find(([pattern]) => pattern.test(raw))?.[1] || 'Frame the person according to the shot contract, with the face clearly visible.';
+    return `${line} Exactly one person appears in the frame.`;
 }
