@@ -3,7 +3,8 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomBytes } from 'node:crypto';
-import { createDirectorPlan } from '../api/director-plan.mjs';
+import { createDirectorPlan, createTemplatePlan } from '../api/director-plan.mjs';
+import { prepareReferenceContext } from '../api/ai-studio/reference-brief.mjs';
 import { generateDirectorCandidate } from '../api/director-generation.mjs';
 import { buildDirectorIdentityWorkflow } from '../api/director-identity-workflow.mjs';
 import { aiPlanProviders, handleAiPlan } from '../api/ai-plan.mjs';
@@ -222,7 +223,15 @@ export function createServer({
                     body += chunk;
                     if (Buffer.byteLength(body) > 16000) return reply(413, { error: 'BRIEF_TOO_LARGE' });
                 }
-                return reply(200, await createDirectorPlan(JSON.parse(body), { baseUrl, fetchImpl }));
+                const input = JSON.parse(body);
+                if (input.useReferenceLibrary === true || input.referenceIds?.length) {
+                    const referenceContext = await prepareReferenceContext({
+                        ...input,
+                        requireImageReferences: input.requireImageReferences === true,
+                    }, { fetchImpl });
+                    return reply(200, createTemplatePlan(input, referenceContext));
+                }
+                return reply(200, await createDirectorPlan(input, { baseUrl, fetchImpl, referenceFetchImpl: fetchImpl }));
             }
             if (pathname === '/api/director/generate-candidate' && req.method === 'POST') {
                 if (req.headers.origin && req.headers.origin !== 'http://' + req.headers.host) return reply(403, { error: 'INVALID_ORIGIN' });
@@ -291,8 +300,15 @@ export function createServer({
             res.writeHead(200, { 'Content-Type': types[path.extname(target)] || 'application/octet-stream', 'Cache-Control': 'no-store' });
             res.end(content);
         } catch (error) {
-            reply(error.code === 'ENOENT' ? 404 : error instanceof SyntaxError || error.message === 'INVALID_BRIEF' ? 400 : 502,
-                { error: error.message?.startsWith('DIRECTOR_') ? error.message : '摄影 Agent 请求失败，请检查服务和输入；未使用旧模板替代。' });
+            const referenceFailure = ['REFERENCE_LIBRARY_UNAVAILABLE', 'REFERENCE_IMAGES_REQUIRED', 'UNAVAILABLE_REFERENCE', 'INVALID_REFERENCE_SELECTION',
+                'POSE_REFERENCE_CONFLICTS_WITH_USER_CONSTRAINTS', 'WARDROBE_REFERENCE_MISMATCH'].includes(error.message);
+            const status = error.code === 'ENOENT' ? 404
+                : error instanceof SyntaxError || error.message === 'INVALID_BRIEF' || error.message === 'INVALID_REFERENCE_SELECTION'
+                    || error.message === 'POSE_REFERENCE_CONFLICTS_WITH_USER_CONSTRAINTS' ? 400
+                    : error.message === 'WARDROBE_REFERENCE_MISMATCH' ? 422
+                        : referenceFailure ? 503 : 502;
+            reply(status, { error: referenceFailure || error.message?.startsWith('DIRECTOR_')
+                ? error.message : '摄影 Agent 请求失败，请检查服务和输入；未使用旧模板替代。' });
         }
     });
 }

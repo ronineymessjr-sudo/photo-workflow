@@ -170,6 +170,48 @@ test('loopback bridge serves UI, blocks cross-origin and private files', async t
     assert.equal((await fetch(base + '/api/director/plan', { ...options, body: '{' })).status, 400);
 });
 
+test('main PhotoAtelier plan route uses the selected reference-library workflow', async t => {
+    let directorCalls = 0;
+    const fetched = [];
+    const fetchImpl = async url => {
+        const target = String(url);
+        fetched.push(target);
+        if (target.endsWith('/data/poses.json')) return Response.json({ poses: [
+            { id: 'full_single_P015', no: 'P015', category: '站姿', names: { zh: '手扶腰自然站姿' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P015_front.jpg' }] },
+            { id: 'full_single_P016', no: 'P016', category: '站姿', names: { zh: '自然整理发丝' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P016_front.jpg' }] },
+            { id: 'full_single_P017', no: 'P017', category: '站姿', names: { zh: '站立回眸' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P017_front.jpg' }] },
+            { id: 'full_single_P018', no: 'P018', category: '站姿', names: { zh: '双手轻扶腰侧' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P018_front.jpg' }] },
+        ] });
+        if (target.endsWith('/data/costumes.json')) return Response.json({ costumes: [
+            { id: 'AUT-0006', thumb: 'costume/thumbs/AUT-0006.webp', cat: 'autumn', group: 'top', color: 'brown', main: 'knit', tags: ['brown', 'knit', 'skirt', 'boots'] },
+        ] });
+        if (target.endsWith('/data/faces.json')) return Response.json({ images: [
+            { id: 'test-face', thumb: 'portrait/thumbs/test-face.webp', sec: 'face', hair: 'medium', style: '自然人像参考' },
+        ] });
+        if (target.endsWith('/v1/photoatelier/shoot-plan')) {
+            directorCalls++;
+            return Response.json({ shot_plans: [{ model_pose: '来自旧 Director 路径' }] });
+        }
+        throw new Error('UNEXPECTED_FETCH');
+    };
+    const server = createServer({ fetchImpl });
+    await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+    t.after(() => new Promise(resolve => server.close(resolve)));
+    const response = await fetch(`http://127.0.0.1:${server.address().port}/api/director/plan`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+            theme: '秋日人像', scene: '公园小径；木亭长椅', modelDesc: '棕色针织上衣',
+            duration: '1小时', people: '1', useReferenceLibrary: true, requireImageReferences: true,
+            referenceIds: ['atlas-pose-full_single_p015', 'atlas-pose-full_single_p016', 'atlas-pose-full_single_p017', 'atlas-pose-full_single_p018', 'atlas-costume-aut-0006', 'atlas-portrait-test-face'],
+        }),
+    });
+    assert.equal(response.status, 200, `${await response.clone().text()} ${JSON.stringify(fetched)}`);
+    const plan = await response.json();
+    assert.equal(plan.director.source, 'template-library-plan');
+    assert.equal(directorCalls, 0);
+    assert.deepEqual([...new Set(plan.shotList.map(shot => shot.scene))], ['公园小径', '木亭长椅']);
+    assert.equal(plan.shotList.every(shot => shot.directorContract.referenceIds[0].startsWith('atlas-pose-')), true);
+});
+
 test('loopback bridge serves only generated PNG candidates', async t => {
     const generationRoot = await mkdtemp(path.join(os.tmpdir(), 'photoatelier-generation-'));
     const candidateName = 'workflow-test-candidate.png';

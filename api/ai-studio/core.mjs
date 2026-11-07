@@ -198,7 +198,7 @@ export function createRegistry(catalog) {
     for (const t of items) {
       if (!canAgent(t) || (kind && t.kind !== kind)) continue;
       if (raw.requireImageReferences && (!t.source?.referenceImageUrl || (t.kind === "portrait" && t.section !== "face"))) continue;
-      if (raw.naturalPoseOnly && t.kind === "pose" && /跪|后仰|躺|趴|劈叉|倒立|双手后撑|双腿斜|双腿悬空|挺胸|单腿.*肩高|M字开腿|kneel|reclin|supine|prone|split|inversion/i.test(`${t.title} ${t.description} ${t.category}`)) continue;
+      if (raw.naturalPoseOnly && t.kind === "pose" && /跪|后仰|躺|趴|劈叉|倒立|双手后撑|双腿斜|双腿悬空|挺胸|单腿.*肩高|单腿.*高抬|M字开腿|举过头|手臂上举|双臂上举|抱头|手扶后脑|kneel|reclin|supine|prone|split|inversion|overhead/i.test(`${t.title} ${t.description} ${t.category}`)) continue;
       if (raw.naturalPoseOnly && t.kind === "pose" && /sexy/i.test(t.series || '')) continue;
       if (
         filterKeys.some(

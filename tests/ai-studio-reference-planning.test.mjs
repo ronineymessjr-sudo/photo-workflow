@@ -15,13 +15,18 @@ function sourceFixture() {
             { id: 'full_single_P019', no: 'P019', category: '坐姿', names: { zh: '长椅安静坐姿测试' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P019_front.jpg' }, { angle: 'side' }] },
             { id: 'full_single_P015', no: 'P015', category: '行走', names: { zh: '自然行走回眸', en: 'Easy walking look back' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P015_front.jpg' }] },
             { id: 'full_single_P016', no: 'P016', category: '站姿', names: { zh: '双手撩发的放松站姿', en: 'Relaxed standing pose' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P016_front.jpg' }] },
+            { id: 'full_single_P017', no: 'P017', category: '站姿', names: { zh: '站立自然回眸', en: 'Relaxed standing look back' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P017_front.jpg' }] },
+            { id: 'full_single_P018', no: 'P018', category: '站姿', names: { zh: '双手轻扶腰侧', en: 'Relaxed hands at waist' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P018_front.jpg' }] },
             { id: 'full_single_P020', no: 'P020', category: '靠栏杆', names: { zh: '轻靠栏杆自然站姿', en: 'Casual rail lean' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P020_front.jpg' }] },
             { id: 'full_single_P001', no: 'P001', category: '后仰坐姿', names: { zh: '后仰坐单膝立起' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P001_front.jpg' }] },
             { id: 'full_single_P002', no: 'P002', category: '坐姿', names: { zh: '单手支撑・双腿斜向前伸' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P002_front.jpg' }] },
+            { id: 'full_single_P027', no: 'P027', category: '站姿', names: { zh: '双手举过头伸展' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P027_front.jpg' }] },
         ] });
         if (String(url).endsWith('costumes.json')) return Response.json({ costumes: [
             { id: 'AUT-0001', thumb: 'costume/thumbs/AUT-0001.webp', cat: 'autumn', group: 'accessory', color: 'brown', main: 'ribbon', tags: ['brown', 'knit', 'dress'] },
-            { id: 'AUT-0006', thumb: 'costume/thumbs/AUT-0006.webp', cat: 'autumn', group: 'top', color: 'brown', main: 'knit', tags: ['brown', 'knit'] },
+            { id: 'AUT-0006', thumb: 'costume/thumbs/AUT-0006.webp', cat: 'autumn', group: 'top', color: 'brown', main: 'knit', tags: ['brown', 'knit', 'black', 'pants'] },
+            { id: 'AUT-0162', thumb: 'costume/thumbs/AUT-0162.webp', cat: 'autumn', group: 'inner', color: 'white', main: 'bra', tags: ['white', 'bra', 'black', 'bag'] },
+            { id: 'AUT-0118', thumb: 'costume/thumbs/AUT-0118.webp', cat: 'autumn', group: 'top', color: 'ivory', main: 'knit', tags: ['ivory', 'khaki', 'skirt', 'brown', 'boots'] },
         ] });
         if (String(url).endsWith('faces.json')) return Response.json({ images: [
             { id: 'teststyle', thumb: 'portrait/thumbs/teststyle.webp', sec: 'face', hair: 'semilong', style: '测试造型' },
@@ -32,6 +37,41 @@ function sourceFixture() {
     };
     return { calls, fetchImpl };
 }
+
+test('automatic references choose varied natural poses and match the requested outfit', async () => {
+    const source = sourceFixture();
+    const input = {
+        theme: '秋日公园人像', style: '自然、克制、电影感',
+        modelDesc: '成年女性模特，米白色针织上衣、卡其色半身裙、棕色短靴；自然妆发',
+        scene: '公园竹林小径；湖边木栈道；木亭长椅', mood: '安静松弛', duration: '2小时', people: '1',
+        extra: '自然轻松，双脚着地；禁止跪姿、躺姿、趴姿、双手举过头；不出现额外道具、同行人物，不拍无人物环境镜头；全组固定35mm',
+        useReferenceLibrary: true,
+    };
+    const context = await prepareReferenceContext({ ...input, requireImageReferences: true }, { fetchImpl: source.fetchImpl });
+    const poses = context.templates.filter(template => template.kind === 'pose');
+    assert.ok(poses.length >= 3);
+    assert.ok(new Set(poses.map(template => template.id)).size >= 3);
+    assert.equal(poses.some(template => /跪|后仰|躺|趴|举过头|上举|抱头/.test(template.title)), false);
+    assert.equal(context.templates.find(template => template.kind === 'costume')?.upstreamId, 'AUT-0118');
+    assert.equal(context.templates.find(template => template.kind === 'portrait')?.section, 'face');
+
+    const plan = createTemplatePlan(input, context);
+    assert.deepEqual([...new Set(plan.shotList.map(shot => shot.scene))], ['公园竹林小径', '湖边木栈道', '木亭长椅']);
+    assert.equal(plan.shotList.every(shot => shot.directorContract.referenceIds.length === 1), true);
+    assert.ok(new Set(plan.shotList.map(shot => shot.directorContract.referenceIds[0])).size >= 3);
+    assert.ok(plan.shotList.every(shot => /米白色针织上衣、卡其色半身裙、棕色短靴/.test(shot.wardrobe)));
+    assert.ok(plan.shotList.every(shot => /不额外添加道具/.test(shot.directorContract.shot_props)));
+    assert.ok(plan.shotList.every(shot => shot.angle !== '肩后' && !/肩后情境/.test(shot.title)));
+    assert.doesNotMatch(plan.shotList.map(shot => `${shot.title} ${shot.description} ${shot.props}`).join('\n'), /同行人物|橱窗|推门|拿取饮品|无人物环境/);
+});
+
+test('reference selection rejects a pose that directly violates a user ban', async () => {
+    const source = sourceFixture();
+    await assert.rejects(prepareReferenceContext({
+        theme: '人像拍摄', extra: '禁止双手举过头', useReferenceLibrary: true,
+        referenceIds: ['atlas-pose-full_single_p027'],
+    }, { fetchImpl: source.fetchImpl }), /POSE_REFERENCE_CONFLICTS_WITH_USER_CONSTRAINTS/);
+});
 
 test('template plan and candidate compilation retain retrieved pose, processing and user clothing', async () => {
     const source = sourceFixture();
@@ -138,7 +178,7 @@ test('real source IDs survive signed search, explicit proposal, and confirmation
     const env = { JWT_SECRET: 'test-signing-secret-at-least-32-characters' };
     const search = await searchStudio({ prompt: '自然坐姿、秋日棕色针织、中长发', planId: 'plan-1', expectedRevision: 1, uid: 'user-1', env, fetchImpl: source.fetchImpl });
     assert.equal(search.modelCalls, 0);
-    assert.equal(search.library.count, 11);
+    assert.equal(search.library.count, 16);
     const id = 'atlas-pose-full_single_p019';
     assert.ok(search.selectedIds.includes(id));
     const proposal = await createStudioProposal({ searchReceipt: search.searchReceipt, selectedIds: [id], uid: 'user-1', env, fetchImpl: source.fetchImpl });

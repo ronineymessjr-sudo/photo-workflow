@@ -118,6 +118,149 @@ test('cloud plans stay text-only when the Cloudflare AI binding is unavailable',
     }
 });
 
+test('the deployed site honors reference-library planning even when Director is configured', async () => {
+    const originalFetch = globalThis.fetch;
+    const fetched = [];
+    globalThis.fetch = async url => {
+        const target = String(url);
+        fetched.push(target);
+        if (target.endsWith('/data/poses.json')) return Response.json({ poses: [
+            { id: 'full_single_P015', no: 'P015', category: '站姿', names: { zh: '手扶腰自然站姿' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P015_front.jpg' }] },
+            { id: 'full_single_P016', no: 'P016', category: '站姿', names: { zh: '自然整理发丝' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P016_front.jpg' }] },
+            { id: 'full_single_P017', no: 'P017', category: '站姿', names: { zh: '站立回眸' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P017_front.jpg' }] },
+            { id: 'full_single_P018', no: 'P018', category: '站姿', names: { zh: '双手轻扶腰侧' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P018_front.jpg' }] },
+        ] });
+        if (target.endsWith('/data/costumes.json')) return Response.json({ costumes: [
+            { id: 'AUT-0006', thumb: 'costume/thumbs/AUT-0006.webp', cat: 'autumn', group: 'top', color: 'brown', main: 'knit', tags: ['brown', 'knit', 'skirt', 'boots'] },
+        ] });
+        if (target.endsWith('/data/faces.json')) return Response.json({ images: [
+            { id: 'test-face', thumb: 'portrait/thumbs/test-face.webp', sec: 'face', hair: 'medium', style: '自然人像参考' },
+        ] });
+        throw new Error('Director must not replace a requested reference plan');
+    };
+    try {
+        const response = await worker.fetch(new Request('https://unit.test/api/director/plan', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+                theme: '秋日人像', scene: '公园小径；木亭长椅', modelDesc: '棕色针织上衣',
+                duration: '1小时', people: '1', useReferenceLibrary: true,
+                referenceIds: ['atlas-pose-full_single_p015', 'atlas-pose-full_single_p016', 'atlas-pose-full_single_p017', 'atlas-pose-full_single_p018', 'atlas-costume-aut-0006', 'atlas-portrait-test-face'],
+            }),
+        }), { DIRECTOR_API_BASE: 'https://director.example.test' });
+        const plan = await response.json();
+        assert.equal(response.status, 200);
+        assert.equal(plan.director.source, 'template-library-plan');
+        assert.equal(fetched.length, 3);
+        assert.deepEqual([...new Set(plan.shotList.map(shot => shot.scene))], ['公园小径', '木亭长椅']);
+    } finally {
+        globalThis.fetch = originalFetch;
+    }
+});
+
+test('site plan and multi-scene candidate generation keep face, outfit, and per-shot pose references aligned', async () => {
+    const originalFetch = globalThis.fetch;
+    const requestPrompts = [];
+    const imagePrompts = [];
+    const stored = new Map();
+    const png = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+    const webp = Buffer.from([82, 73, 70, 70, 4, 0, 0, 0, 87, 69, 66, 80]);
+    globalThis.fetch = async url => {
+        const target = String(url);
+        if (target.endsWith('/data/poses.json')) return Response.json({ poses: [
+            { id: 'full_single_P015', no: 'P015', category: '站姿', names: { zh: '自然错步站姿' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P015_front.jpg' }] },
+            { id: 'full_single_P016', no: 'P016', category: '站姿', names: { zh: '轻触发丝站姿' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P016_front.jpg' }] },
+            { id: 'full_single_P017', no: 'P017', category: '站姿', names: { zh: '自然回眸站姿' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P017_front.jpg' }] },
+            { id: 'full_single_P018', no: 'P018', category: '站姿', names: { zh: '双手轻扶腰侧' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P018_front.jpg' }] },
+        ] });
+        if (target.endsWith('/data/costumes.json')) return Response.json({ costumes: [
+            { id: 'AUT-0118', thumb: 'costume/thumbs/AUT-0118.webp', cat: 'autumn', group: 'top', color: 'ivory', main: 'knit', tags: ['knit', 'ivory', 'khaki', 'skirt', 'brown', 'boots'] },
+        ] });
+        if (target.endsWith('/data/faces.json')) return Response.json({ images: [
+            { id: 'test-face', thumb: 'portrait/thumbs/test-face.webp', sec: 'face', hair: 'medium', style: '自然人像参考' },
+        ] });
+        if (target.endsWith('.webp')) return new Response(webp, { headers: { 'Content-Type': 'image/webp' } });
+        throw new Error('UNEXPECTED_REFERENCE_FETCH');
+    };
+    const workspace = {
+        idFromName: name => name,
+        get: id => ({ fetch: async request => {
+            const req = request instanceof Request ? request : new Request(request);
+            const key = new URL(req.url).pathname;
+            if (req.method === 'PUT') {
+                stored.set(`${id}:${key}`, { bytes: new Uint8Array(await req.arrayBuffer()), type: req.headers.get('Content-Type') });
+                return new Response(null, { status: 201 });
+            }
+            const asset = stored.get(`${id}:${key}`);
+            return asset ? new Response(asset.bytes, { headers: { 'Content-Type': asset.type } }) : Response.json({ error: 'missing' }, { status: 404 });
+        } }),
+    };
+    const env = {
+        JWT_SECRET: 'unit-test-secret', DIRECTOR_API_BASE: 'https://director.example.test', WORKSPACE_SYNC: workspace,
+        AI_STUDIO_QUOTA: { idFromName: value => value, get: () => ({ fetch: async () => Response.json({ allowed: true }) }) },
+        AI: { async run(model, input) {
+            if (model.includes('llama')) {
+                if (input.response_format?.json_schema) return { response: JSON.stringify({ answers: {
+                    brief_sufficient: { noul: 0.05 }, shot_sequence_quality: { score: 2, confidence: 0.9 },
+                    execution_feasibility: { score: 2, confidence: 0.9 }, duplicate_risk: { noul: 0.05 },
+                    reference_alignment: { score: 2, confidence: 0.9 },
+                } }) };
+                requestPrompts.push(input.messages[1].content);
+                return { response: 'Photorealistic portrait of one adult woman. Preserve the exact outfit and selected natural pose. Keep the requested location and framing.' };
+            }
+            const form = await new Response(input.multipart.body, { headers: { 'Content-Type': input.multipart.contentType } }).formData();
+            imagePrompts.push({ prompt: String(form.get('prompt')), hasFace: form.has('input_image_0'), hasOutfit: form.has('input_image_1') });
+            return { image: png.toString('base64') };
+        } },
+    };
+    const authorization = `Bearer ${token('user-1', env.JWT_SECRET)}`;
+    try {
+        const planResponse = await worker.fetch(new Request('https://unit.test/api/director/plan', {
+            method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: authorization }, body: JSON.stringify({
+                theme: '秋日公园人像', style: '自然、克制、电影感',
+                modelDesc: '成年女性模特，米白色针织上衣、卡其色半身裙、棕色短靴；自然妆发',
+                scene: '公园竹林小径；湖边木栈道；木亭长椅', mood: '安静松弛', duration: '2小时', people: '1',
+                extra: '自然轻松，双脚着地；禁止跪姿、躺姿、趴姿、双手举过头；不出现额外道具、同行人物，不拍无人物环境镜头；全组固定35mm',
+                useReferenceLibrary: true,
+            }),
+        }), env);
+        assert.equal(planResponse.status, 200);
+        const plan = await planResponse.json();
+        assert.equal(plan.director.source, 'template-library-plan');
+        assert.equal(plan.director.imageGenerationConnected, true);
+        const fixedRefs = plan.aiStudio.references.filter(reference => reference.kind !== 'pose').map(reference => reference.sourceItemId).sort();
+        const first = plan.shotList[0];
+        const otherScene = plan.shotList.find(shot => shot.scene !== first.scene && shot.directorContract.referenceIds[0] !== first.directorContract.referenceIds[0]);
+        assert.ok(otherScene);
+        for (const shot of [first, otherScene]) {
+            const candidateResponse = await worker.fetch(new Request('https://unit.test/api/director/generate-candidate', {
+                method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: authorization }, body: JSON.stringify({
+                    request_id: `test-${shot.id}`, brief: shot.description, scene_brief: shot.scene,
+                    style_direction: plan.input.style, provider: 'cloudflare', model: '@cf/black-forest-labs/flux-2-klein-9b',
+                    candidate_count: 1, billing_mode: 'free-credit-first', aspect_ratio: 'portrait',
+                    reference_ids: plan.aiStudio.references.map(reference => reference.sourceItemId),
+                    reference_brief: plan.input, shot_contract: shot.directorContract,
+                }),
+            }), env);
+            assert.equal(candidateResponse.status, 201);
+            const candidate = await candidateResponse.json();
+            assert.deepEqual(candidate.candidateAsset.referenceImages.map(reference => reference.sourceItemId).sort(), fixedRefs);
+            assert.ok(candidate.candidateAsset.referenceIds.includes(shot.directorContract.referenceIds[0]));
+            const imageResponse = await worker.fetch(new Request(new URL(candidate.candidateAsset.url, 'https://unit.test')), env);
+            assert.equal(imageResponse.status, 200);
+            assert.equal(imageResponse.headers.get('Content-Type'), 'image/png');
+            assert.deepEqual([...new Uint8Array(await imageResponse.arrayBuffer())], [...png]);
+        }
+        assert.equal(requestPrompts.length, 2);
+        assert.equal(imagePrompts.length, 2);
+        assert.ok(requestPrompts.every(prompt => /米白色针织上衣、卡其色半身裙、棕色短靴/.test(prompt)));
+        assert.ok(requestPrompts[0].includes(first.scene));
+        assert.ok(requestPrompts[1].includes(otherScene.scene));
+        assert.ok(imagePrompts.every(prompt => prompt.hasFace && prompt.hasOutfit));
+        assert.ok(imagePrompts.every(prompt => /Required pose:/.test(prompt.prompt)));
+    } finally {
+        globalThis.fetch = originalFetch;
+    }
+});
+
 function token(uid, secret) {
     const p = JSON.stringify({ uid, t: Date.now() });
     const s = createHmac('sha256', secret).update(p).digest('hex');

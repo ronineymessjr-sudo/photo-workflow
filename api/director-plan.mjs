@@ -101,12 +101,25 @@ export function createTemplatePlan(input, referenceContext) {
         '特写': { prompt: 'Tight close-up of the face or the clothing detail specified by the shot.', crop: '紧凑特写，只保留本镜指定的面部或服装细节。', required: '本镜指定的面部表情或服装纹理细节' },
         '局部特写': { prompt: 'Tight detail close-up of the exact hand, fabric or accessory named in the shot.', crop: '局部取景，关节不被画框切断，背景保持简洁。', required: '指定的手部、衣料或配饰细节' },
     };
+    const titleDirections = {
+        '环境建立镜头': '环境人像建立', '人物进入镜头': '全身人像', '动作主镜头': '摆姿主镜头',
+        '前景层次镜头': '前景层次人像', '表情与质感镜头': '自然表情近景', '关系细节镜头': '人物与服装细节',
+        '构图变化镜头': '侧向构图人像', '光线过渡镜头': '柔光过渡人像', '主视觉镜头': '主视觉人像',
+        '收束细节镜头': '眼神收束近景', '肩后情境镜头': '单人回眸构图', '轮廓光镜头': '轮廓光人像',
+        '框景镜头': '环境线条人像', '侧面姿态镜头': '侧身人像', '道具互动镜头': '人物与服装细节',
+        '环境切片镜头': '环境人像收束',
+    };
+    const wardrobeRequirement = String(input.modelDesc || '').trim();
+    const scenePoseCounts = new Map();
     plan.shotList = plan.shotList.map((shot, index) => {
-        const template = poses[index % poses.length];
+        const scene = locations[Math.floor(index * locations.length / plan.shotList.length)] || shot.scene;
+        const scenePoseIndex = scenePoseCounts.get(scene) || 0;
+        scenePoseCounts.set(scene, scenePoseIndex + 1);
+        const template = poses[scenePoseIndex % poses.length];
         const guidance = referenceContext.guidance.suggestions.find(item => item.sourceItemId === template.id)?.direction || '';
         const action = `摆姿参考：${template.title}。${poseDirections[template.id] || guidance}`;
-        const scene = locations[Math.floor(index * locations.length / plan.shotList.length)] || shot.scene;
         const lens = fixedLens || shot.focalLength;
+        const angle = /肩后|over[- ]the[- ]shoulder/i.test(shot.angle) ? '平视' : shot.angle;
         const wide = ['环境全景', '环境远景', '全身'].includes(shot.shotSize);
         const detail = ['近景', '特写', '局部特写'].includes(shot.shotSize);
         const framing = framingDirections[shot.shotSize] || {
@@ -114,8 +127,8 @@ export function createTemplatePlan(input, referenceContext) {
             required: `${shot.shotSize}构图与清晰人物主体`,
         };
         const method = wide
-            ? `摄影师后退至人物和场景完整入画，采用${shot.angle}机位，并留意背景线条不要穿过头部。`
-            : `摄影师站在人物侧前方，采用${shot.angle}机位，先确认${framing.crop}再引导动作。`;
+            ? `摄影师后退至人物和场景完整入画，采用${angle}机位，并留意背景线条不要穿过头部。`
+            : `摄影师站在人物侧前方，采用${angle}机位，先确认${framing.crop}再引导动作。`;
         const composition = wide
             ? '人物放在画面一侧三分线，视线方向留白，检查头顶、手指和鞋底边界，避开穿头的背景线条。'
             : detail ? '围绕服装纹理、手部或表情选一个重点，裁切避开关节，背景保持简洁。'
@@ -125,18 +138,20 @@ export function createTemplatePlan(input, referenceContext) {
             : '先在开阔阴影中找柔和侧光，避开脸上的斑驳直射光，按脸部曝光并保留背景亮部层次。';
         const stance = /(?:不|禁止)交叉双?腿/.test(input.extra || '')
             ? 'Both feet parallel and hip-width apart on the ground. Legs straight and separated, weight evenly on both feet.' : '';
-        const wardrobe = '服装严格参照所选服装库图片，保持可见单品、颜色、材质和层次，不按标题猜测或增添单品。';
+        const wardrobe = `${wardrobeRequirement ? `人物与服装硬性要求：${wardrobeRequirement}。` : ''}严格参照已匹配的服装库图片，保留用户指定的单品、颜色、材质和层次，不替换、不增添。`;
+        const title = titleDirections[shot.title] || shot.title;
         const contract = {
             source: 'template-library-plan', referenceIds: [template.id],
-            shot_language: `${shot.title} · ${template.title}`, model_pose: action,
-            shot_size: shot.shotSize, lens, camera_angle: shot.angle,
+            shot_language: `${title} · ${template.title}`, model_pose: action,
+            shot_size: shot.shotSize, lens, camera_angle: angle,
             scene, photographer_position: method, model_position: composition,
             lighting_setup: lighting, wardrobe_styling: wardrobe, shot_props: '不额外添加道具，只保留场地已有元素。',
             crop_boundary: framing.crop, must_show: `${framing.required}；${action}`,
             reject_if: 'wrong crop, added or replaced garments, extra limbs, malformed hands, text, watermark',
             generator_prompt: `Editorial photograph. ${framing.prompt} ${stance} ${lens}, ${shot.angle}. Scene: ${scene}. Action: ${action}. Composition: ${composition}. Crop: ${framing.crop}. Lighting: ${lighting}. Subject and clothing: ${input.modelDesc || ''}. User constraints: ${input.extra || ''}. Style: ${input.style || ''}.`,
         };
-        return { ...shot, scene, description: action, focalLength: lens, method, composition, lighting, lightingSetup: lighting, wardrobe, directorContract: contract };
+        return { ...shot, title, scene, angle, description: action, focalLength: lens, method, composition, lighting, lightingSetup: lighting, wardrobe,
+            props: '不额外添加道具，只保留场地已有元素。', directorContract: contract };
     });
     Object.assign(plan, referencePlanFields(referenceContext));
     plan.sections = plan.shotList.map((shot, index) => ({ ti: `镜头 ${index + 1} · ${shot.title}`, ic: '', c: [

@@ -1,7 +1,77 @@
 import { loadStudioRegistry } from './registry.mjs';
-import { runServerFirst, parseServerIntent } from './agent-lite.mjs';
+import { runServerFirst } from './agent-lite.mjs';
 
 const angleNames = { front: '正面', diagonal: '斜侧', side: '侧面', high: '俯视', top: '俯视', overhead: '俯视', low: '仰视', bottom: '仰视' };
+const naturalPoseExclusions = /跪|后仰|躺|趴|劈叉|倒立|双手后撑|双腿斜|双腿悬空|挺胸|单腿.*肩高|单腿.*高抬|M字开腿|举过头|手臂上举|双臂上举|双手抱头|手扶后脑|kneel|reclin|supine|prone|split|inversion|overhead/i;
+
+function outfitConstraints(input) {
+    const text = [input.modelDesc, input.extra].filter(Boolean).join('；');
+    const segments = text.split(/[，,、；;。\n]+/).map(value => value.trim()).filter(Boolean);
+    const colors = [];
+    const garments = new Set();
+    const addColor = (id, values, primaryValues) => {
+        if (!colors.some(color => color.id === id)) colors.push({ id, values, primaryValues });
+    };
+    for (const segment of segments) {
+        const hasClothing = /衣服|穿着|穿搭|服装|上衣|上装|针织|毛衣|衬衫|裙|裤|靴|鞋|外套|coat|shirt|knit|skirt|pants|boots|jacket/i.test(segment);
+        if (!hasClothing) continue;
+        if (/上衣|上装|衣服|衬衫|毛衣|针织|coat|shirt|knit|jacket/i.test(segment)) garments.add('top');
+        if (/针织|毛衣|knit/i.test(segment)) garments.add('knit');
+        if (/半身裙|裙子|裙|skirt/i.test(segment)) garments.add('skirt');
+        if (/短靴|靴|boots/i.test(segment)) garments.add('boots');
+        if (/长裤|裤子|裤|pants|trousers/i.test(segment)) garments.add('pants');
+        if (/米白|象牙|奶油|ivory|cream|off[- ]white/i.test(segment)) addColor('ivory', ['ivory', '米白', '象牙', '米色', '白色', 'white', 'beige'], ['ivory', 'beige']);
+        else if (/米色|beige/i.test(segment)) addColor('beige', ['beige', '米色', '米白', '象牙', 'ivory'], ['beige', 'ivory']);
+        else if (/卡其|khaki/i.test(segment)) addColor('khaki', ['khaki', '卡其'], ['khaki']);
+        else if (/棕色|咖啡色|brown/i.test(segment)) addColor('brown', ['brown', '棕色', '咖啡'], ['brown']);
+        else if (/黑色|black/i.test(segment)) addColor('black', ['black', '黑色'], ['black']);
+        else if (/白色|white/i.test(segment)) addColor('white', ['white', '白色', 'ivory'], ['white', 'ivory']);
+    }
+    return { colors, garments: [...garments], text: segments.filter(segment => /衣服|穿着|穿搭|服装|上衣|上装|针织|毛衣|衬衫|裙|裤|靴|鞋|外套|coat|shirt|knit|skirt|pants|boots|jacket/i.test(segment)).join('，') };
+}
+
+function matchesOutfit(template, constraints) {
+    if (!constraints.colors.length && !constraints.garments.length) return true;
+    const corpus = [template.title, template.description, template.category, template.color, ...(template.tags || [])].join(' ').toLowerCase();
+    const garmentTerms = {
+        top: ['top', '上装', '上衣', '衬衫', '毛衣', '针织'], knit: ['knit', '针织', '毛衣'],
+        skirt: ['skirt', '半身裙', '裙'], boots: ['boots', '靴'], pants: ['pants', 'trousers', '长裤', '裤'],
+    };
+    const primary = constraints.colors[0];
+    if (primary && !primary.primaryValues.includes(String(template.color || '').toLowerCase())) return false;
+    if (constraints.colors.some(color => !color.values.some(value => corpus.includes(value.toLowerCase())))) return false;
+    return constraints.garments.every(garment => (garmentTerms[garment] || [garment]).some(value => corpus.includes(value)));
+}
+
+function poseConflicts(template, prompt, naturalPoseOnly) {
+    const terms = `${template.title} ${template.description} ${template.category}`;
+    if (naturalPoseOnly && naturalPoseExclusions.test(terms)) return true;
+    const bans = [
+        [/(?:禁止|不要|避免|不能|不希望)[^。；;]{0,16}跪/, /跪|kneel/i],
+        [/(?:禁止|不要|避免|不能|不希望)[^。；;]{0,16}(?:躺|卧|趴)/, /躺|卧|趴|reclin|supine|prone/i],
+        [/(?:禁止|不要|避免|不能|不希望)[^。；;]{0,16}(?:举过头|上举|高举|抱头)/, /举过头|上举|高举|抱头|过头|overhead/i],
+        [/(?:禁止|不要|避免|不能|不希望)[^。；;]{0,16}交叉双?腿/, /交叉腿|双腿交叠|cross(?:ed|ing)? legs/i],
+    ];
+    return bans.some(([constraint, pose]) => constraint.test(prompt) && pose.test(terms));
+}
+
+function searchMatchingCostume(registry, input, candidates, constraints, requireImages) {
+    const explicit = input.referenceIds?.map(id => registry.find(id)).find(template => template?.kind === 'costume');
+    if (explicit) {
+        if (!matchesOutfit(explicit, constraints)) throw Error('WARDROBE_REFERENCE_MISMATCH');
+        return explicit;
+    }
+    const automatic = candidates.find(template => template.kind === 'costume' && (!requireImages || template.referenceImageUrl));
+    if (!constraints.colors.length && !constraints.garments.length) return automatic;
+    const query = constraints.garments.join(' ');
+    const colors = constraints.colors[0]?.primaryValues || [];
+    const results = new Map();
+    for (const color of colors.length ? colors : [undefined]) {
+        const matches = registry.search({ kind: 'costume', color, query, limit: 50 }).results;
+        for (const template of matches) results.set(template.id, template);
+    }
+    return [...results.values()].find(template => (!requireImages || template.referenceImageUrl) && matchesOutfit(template, constraints));
+}
 
 export function deriveReferenceGuidance(templates, input = {}) {
     const style = [input.style, input.mood].filter(Boolean).join('，') || '按用户已填写的场景与情绪确定';
@@ -50,27 +120,30 @@ export async function prepareReferenceContext(input, options = {}) {
     const prompt = ['theme', 'style', 'scene', 'mood', 'extra', 'modelDesc'].map(key => String(input[key] || '')).join(' ').slice(0, 1400);
     const naturalPoseOnly = /自然|放松|轻松|日常|relaxed|natural|casual/i.test(prompt)
         && !/(?:采用|选择|需要|想要|来个|拍摄|摆|use|want|choose)[^。\n;；]{0,12}(?:跪|后仰|躺|趴|劈叉|倒立|kneel|reclin|supine|prone|split)/i.test(prompt);
-    if (!ids?.length) {
-        let searchPrompt = prompt.slice(0, 1700);
-        if (!parseServerIntent(searchPrompt || '姿势').specs.length) searchPrompt += ' 姿势';
-        ids = runServerFirst({ registry, prompt: searchPrompt, requireImageReferences: requireImages, naturalPoseOnly }).selectedIds;
-    }
-    let templates = ids.map(id => registry.find(id));
+    let templates = (ids || []).map(id => registry.find(id));
     if (templates.some(template => !template)) throw new Error('UNAVAILABLE_REFERENCE');
-    if (requireImages) {
-        const usable = (template, kind) => template?.kind === kind && template.referenceImageUrl && (kind !== 'portrait' || template.section === 'face');
-        if (templates.some(template => template.sourceUrl && !usable(template, template.kind))) throw new Error('REFERENCE_IMAGES_REQUIRED');
-        const automatic = runServerFirst({ registry, prompt: `${prompt} 姿势 服装 人像造型`, requireImageReferences: true, naturalPoseOnly }).selectedTemplates;
-        const poses = templates.filter(template => usable(template, 'pose')).slice(0, 4);
-        if (!poses.length) {
-            const selected = automatic.find(template => usable(template, 'pose'));
-            if (selected) poses.push(selected);
-        }
-        const costume = templates.find(template => usable(template, 'costume')) || automatic.find(template => usable(template, 'costume'));
-        const portrait = templates.find(template => usable(template, 'portrait')) || automatic.find(template => usable(template, 'portrait'));
-        templates = [...poses, costume, portrait].filter(Boolean);
-        if (!poses.length || !costume || !portrait) throw new Error('REFERENCE_IMAGES_REQUIRED');
+    const searchPrompt = prompt.slice(0, 1700);
+    const hasSpecificPose = /站姿|站立|坐姿|坐着|走路|行走|回眸|靠墙|倚靠|栏杆|walk|sitting|standing/i.test(searchPrompt);
+    const poseQueryPrompt = `${searchPrompt} ${hasSpecificPose ? '' : '站姿'} 服装 人像造型`;
+    let automatic = runServerFirst({ registry, prompt: poseQueryPrompt, requireImageReferences: requireImages, naturalPoseOnly }).selectedTemplates;
+    if (automatic.filter(template => template.kind === 'pose').length < 3) {
+        const fallback = runServerFirst({ registry, prompt: '站姿', requireImageReferences: requireImages, naturalPoseOnly }).selectedTemplates;
+        automatic = [...automatic, ...fallback.filter(template => !automatic.some(item => item.id === template.id))];
     }
+    const usable = (template, kind) => template?.kind === kind && (!requireImages || template.referenceImageUrl) && (kind !== 'portrait' || template.section === 'face');
+    const selectedPoseIds = new Set(input.referenceIds || []);
+    const explicitPoses = templates.filter(template => usable(template, 'pose'));
+    if (explicitPoses.some(template => selectedPoseIds.has(template.id) && poseConflicts(template, prompt, naturalPoseOnly))) {
+        throw new Error('POSE_REFERENCE_CONFLICTS_WITH_USER_CONSTRAINTS');
+    }
+    const poses = [...explicitPoses, ...automatic.filter(template => usable(template, 'pose') && !explicitPoses.some(item => item.id === template.id)
+        && !poseConflicts(template, prompt, naturalPoseOnly))].slice(0, 4);
+    const constraints = outfitConstraints(input);
+    const costume = searchMatchingCostume(registry, input, [...templates, ...automatic], constraints, requireImages);
+    const portrait = templates.find(template => usable(template, 'portrait')) || automatic.find(template => usable(template, 'portrait'));
+    templates = [...poses, costume, portrait].filter(Boolean);
+    if ((constraints.colors.length || constraints.garments.length) && !costume) throw new Error('WARDROBE_REFERENCE_MISMATCH');
+    if (!poses.length || !costume || !portrait) throw new Error(requireImages ? 'REFERENCE_IMAGES_REQUIRED' : 'REFERENCE_LIBRARY_UNAVAILABLE');
     return { templates, library, guidance: deriveReferenceGuidance(templates, input) };
 }
 

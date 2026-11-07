@@ -1,7 +1,7 @@
 // Photo Workflow Backend API - Cloudflare Workers
 import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 import { createDirectorPlan, createGuestPlanDraft, createTemplatePlan } from './director-plan.mjs';
-import { prepareReferenceContext, referencePlanFields } from './ai-studio/reference-brief.mjs';
+import { prepareReferenceContext } from './ai-studio/reference-brief.mjs';
 import { buildDirectorIdentityWorkflow } from './director-identity-workflow.mjs';
 import { attachJevReview } from './jev-review.mjs';
 import { recordWebRequest } from './web-telemetry.mjs';
@@ -621,14 +621,16 @@ export default {
             // Auth
             else if (path === '/api/director/plan' && method === 'POST') {
                 let plan;
-                if (!env.DIRECTOR_API_BASE || !env.DIRECTOR_API_BASE.startsWith('https://')) {
-                    plan = createGuestPlanDraft(body);
+                const wantsReferencePlan = body.useReferenceLibrary === true || body.referenceIds?.length > 0;
+                if (wantsReferencePlan) {
                     const referenceContext = await prepareReferenceContext({ ...body, requireImageReferences: Boolean(uid) });
-                    Object.assign(plan, referencePlanFields(referenceContext));
-                    if (uid && referenceContext?.templates.some(template => template.sourceUrl && template.kind === 'pose')) {
-                        plan = createTemplatePlan(body, referenceContext);
-                        plan.director.imageGenerationConnected = cloudImageGenerationEnabled(plan, uid, env);
+                    if (!referenceContext?.templates.some(template => template.kind === 'pose' && template.sourceUrl)) {
+                        throw new Error('REFERENCE_LIBRARY_UNAVAILABLE');
                     }
+                    plan = createTemplatePlan(body, referenceContext);
+                    plan.director.imageGenerationConnected = Boolean(uid) && cloudImageGenerationEnabled(plan, uid, env);
+                } else if (!env.DIRECTOR_API_BASE || !env.DIRECTOR_API_BASE.startsWith('https://')) {
+                    plan = createGuestPlanDraft(body);
                 } else {
                     plan = await createDirectorPlan({ ...body, requireImageReferences: Boolean(uid) }, { baseUrl: env.DIRECTOR_API_BASE });
                     plan.director = { ...plan.director,
@@ -678,13 +680,16 @@ export default {
                         } catch (error) {
                             const code = ['REFERENCE_IMAGES_REQUIRED', 'REFERENCE_IMAGE_UNAVAILABLE', 'REFERENCE_IMAGE_TOO_LARGE', 'UNTRUSTED_REFERENCE_IMAGE',
                                 'REFERENCE_LIBRARY_UNAVAILABLE', 'INVALID_REFERENCE_SELECTION', 'UNAVAILABLE_REFERENCE',
+                                'POSE_REFERENCE_CONFLICTS_WITH_USER_CONSTRAINTS', 'WARDROBE_REFERENCE_MISMATCH',
                                 'IMAGE_PROVIDER_NOT_CONFIGURED', 'IMAGE_PROVIDER_GENERATION_FAILED', 'IMAGE_PROVIDER_FREE_QUOTA_EXHAUSTED',
                                 'IMAGE_PROVIDER_INVALID_RESPONSE', 'IMAGE_PROVIDER_INVALID_IMAGE_TYPE', 'IMAGE_PROVIDER_IMAGE_SIZE_INVALID',
                                 'GENERATION_PROVIDER_NOT_ALLOWED', 'GENERATION_BILLING_MODE_NOT_ALLOWED', 'CLOUD_REFERENCE_IMAGE_NOT_CONFIGURED',
                                 'INVALID_GENERATION_REQUEST', 'SHOT_CONTRACT_REQUIRED'].includes(error.message)
                                 ? error.message : 'IMAGE_GENERATION_FAILED';
                             const status = code === 'IMAGE_PROVIDER_FREE_QUOTA_EXHAUSTED' ? 429
-                                : code === 'REFERENCE_LIBRARY_UNAVAILABLE' || code === 'IMAGE_PROVIDER_NOT_CONFIGURED' || code === 'IMAGE_PROVIDER_GENERATION_FAILED' ? 503
+                                : code === 'WARDROBE_REFERENCE_MISMATCH' ? 422
+                                    : code === 'POSE_REFERENCE_CONFLICTS_WITH_USER_CONSTRAINTS' || code === 'INVALID_REFERENCE_SELECTION' ? 400
+                                        : code === 'REFERENCE_LIBRARY_UNAVAILABLE' || code === 'IMAGE_PROVIDER_NOT_CONFIGURED' || code === 'IMAGE_PROVIDER_GENERATION_FAILED' ? 503
                                         : code === 'GENERATION_PROVIDER_NOT_ALLOWED' || code === 'GENERATION_BILLING_MODE_NOT_ALLOWED'
                                             || code === 'CLOUD_REFERENCE_IMAGE_NOT_CONFIGURED' || code === 'INVALID_GENERATION_REQUEST'
                                             || code === 'SHOT_CONTRACT_REQUIRED' ? 400 : 502;
@@ -785,8 +790,10 @@ export default {
             });
 
         } catch (e) {
-            if (path === '/api/director/plan' && ['REFERENCE_LIBRARY_UNAVAILABLE', 'REFERENCE_IMAGES_REQUIRED', 'UNAVAILABLE_REFERENCE', 'INVALID_REFERENCE_SELECTION'].includes(e?.message)) {
-                const status = e.message === 'INVALID_REFERENCE_SELECTION' ? 400 : 503;
+            if (path === '/api/director/plan' && ['REFERENCE_LIBRARY_UNAVAILABLE', 'REFERENCE_IMAGES_REQUIRED', 'UNAVAILABLE_REFERENCE', 'INVALID_REFERENCE_SELECTION',
+                'POSE_REFERENCE_CONFLICTS_WITH_USER_CONSTRAINTS', 'WARDROBE_REFERENCE_MISMATCH'].includes(e?.message)) {
+                const status = e.message === 'WARDROBE_REFERENCE_MISMATCH' ? 422
+                    : ['INVALID_REFERENCE_SELECTION', 'POSE_REFERENCE_CONFLICTS_WITH_USER_CONSTRAINTS'].includes(e.message) ? 400 : 503;
                 return new Response(JSON.stringify({ error: e.message }), {
                     status, headers: { ...CORS, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
                 });
