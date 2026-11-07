@@ -85,17 +85,37 @@ export function createTemplatePlan(input, referenceContext) {
     const fixedLensMatch = fixedLensText.match(/(?:全组|全程|统一|固定|只用|only|must use)[^。\n;；]{0,24}?\b(24|28|35|50|85|105|135)\s*mm\b/i)
         || fixedLensText.match(/\b(24|28|35|50|85|105|135)\s*mm\b[^。\n;；]{0,12}(?:固定|统一|全组|只用)/i);
     const fixedLens = fixedLensMatch ? `${fixedLensMatch[1]}mm` : '';
+    const poseDirections = {
+        'atlas-pose-full_single_p015': '双脚前后错开半步，重心落在后脚；靠镜头一侧的手轻搭髋部，另一只手自然下垂，肩膀放松。',
+        'atlas-pose-full_single_p017': '身体转离镜头约四十五度，双脚站稳；头部越过近侧肩回望，肩颈放松，视线落在镜头附近。',
+        'atlas-pose-full_single_p018': '双脚与髋同宽站稳，双手轻放腰侧，肘部自然向外不过度撑开；肩膀放松，身体略转向镜头。',
+        'atlas-pose-full_single_p016': '双手轻触鬓角整理发丝，手肘自然弯曲不过度外展；肩颈放松，不把手臂高举过头。',
+    };
+    const framingDirections = {
+        '环境全景': { prompt: 'Wide environmental full-body photograph. Keep the person visible head-to-toe within the full location.', crop: '人物全身入画，环境占主要面积，头顶与脚下留出空间。', required: '公园环境、人物全身和场地纵深同时清晰可辨' },
+        '环境远景': { prompt: 'Environmental long shot. Keep the person small but clearly identifiable in the location.', crop: '人物完整入画并保留较多环境，不裁切头脚。', required: '人物完整轮廓、场地结构与人物所处位置' },
+        '全身': { prompt: 'Full-body portrait. Show the person from head to toe, including both shoes and ground beneath them.', crop: '从头顶至双鞋完整入画，头顶与脚下留有边距。', required: '完整人物、双鞋与脚下地面' },
+        '中全景': { prompt: 'Medium-full portrait. Crop above the knees, showing the head, torso and hands.', crop: '膝上取景，头部、躯干和正在摆姿的双手均完整入画。', required: '膝上构图、头部、躯干和动作手部' },
+        '中景': { prompt: 'Waist-up portrait. Crop below the waist and keep the face and visible hands in frame.', crop: '腰部以上取景，肩膀、脸和参与动作的手留在画面内。', required: '腰上构图、清晰面部和动作手部' },
+        '近景': { prompt: 'Head-and-shoulders portrait. Crop below the shoulders and keep the entire face in frame.', crop: '肩部以上近景，完整保留面部与发顶。', required: '清晰面部表情、发型和肩部姿态' },
+        '特写': { prompt: 'Tight close-up of the face or the clothing detail specified by the shot.', crop: '紧凑特写，只保留本镜指定的面部或服装细节。', required: '本镜指定的面部表情或服装纹理细节' },
+        '局部特写': { prompt: 'Tight detail close-up of the exact hand, fabric or accessory named in the shot.', crop: '局部取景，关节不被画框切断，背景保持简洁。', required: '指定的手部、衣料或配饰细节' },
+    };
     plan.shotList = plan.shotList.map((shot, index) => {
         const template = poses[index % poses.length];
         const guidance = referenceContext.guidance.suggestions.find(item => item.sourceItemId === template.id)?.direction || '';
-        const action = `摆姿参考：${template.title}。${guidance}`;
-        const scene = locations[(index + Math.floor(index / poses.length)) % locations.length] || shot.scene;
+        const action = `摆姿参考：${template.title}。${poseDirections[template.id] || guidance}`;
+        const scene = locations[Math.floor(index * locations.length / plan.shotList.length)] || shot.scene;
         const lens = fixedLens || shot.focalLength;
-        const wide = /全景|全身|中全景/.test(shot.shotSize);
-        const detail = /特写/.test(shot.shotSize);
+        const wide = ['环境全景', '环境远景', '全身'].includes(shot.shotSize);
+        const detail = ['近景', '特写', '局部特写'].includes(shot.shotSize);
+        const framing = framingDirections[shot.shotSize] || {
+            prompt: `Photographic framing ${shot.shotSize}.`, crop: `按${shot.shotSize}取景，保持人物主体完整。`,
+            required: `${shot.shotSize}构图与清晰人物主体`,
+        };
         const method = wide
-            ? '先以平视机位后退，直到人物和环境完整入画，再沿人物侧前方小幅移动寻找背景分离。'
-            : '摄影师站在人物侧前方，镜头与眼睛大致等高，先确定裁切位置，再等待视线和表情自然变化。';
+            ? `摄影师后退至人物和场景完整入画，采用${shot.angle}机位，并留意背景线条不要穿过头部。`
+            : `摄影师站在人物侧前方，采用${shot.angle}机位，先确认${framing.crop}再引导动作。`;
         const composition = wide
             ? '人物放在画面一侧三分线，视线方向留白，检查头顶、手指和鞋底边界，避开穿头的背景线条。'
             : detail ? '围绕服装纹理、手部或表情选一个重点，裁切避开关节，背景保持简洁。'
@@ -103,20 +123,20 @@ export function createTemplatePlan(input, referenceContext) {
         const lighting = /窗|window/i.test(scene)
             ? '人物距窗约一米，身体与窗面呈约45度，利用窗光侧向塑形，先关掉造成混色的室内灯，再按脸部曝光。'
             : '先在开阔阴影中找柔和侧光，避开脸上的斑驳直射光，按脸部曝光并保留背景亮部层次。';
-        const framing = /全景|全身|中全景/.test(shot.shotSize)
-            ? 'Wide environmental head-to-toe full-body photograph. The entire person including both shoes fits inside the frame, with visible ground below the shoes. Person occupies less than half the image.'
-            : shot.shotSize;
         const stance = /(?:不|禁止)交叉双?腿/.test(input.extra || '')
             ? 'Both feet parallel and hip-width apart on the ground. Legs straight and separated, weight evenly on both feet.' : '';
+        const wardrobe = '服装严格参照所选服装库图片，保持可见单品、颜色、材质和层次，不按标题猜测或增添单品。';
         const contract = {
             source: 'template-library-plan', referenceIds: [template.id],
             shot_language: `${shot.title} · ${template.title}`, model_pose: action,
             shot_size: shot.shotSize, lens, camera_angle: shot.angle,
-            generator_prompt: `Editorial photograph. ${framing} ${stance} ${lens}, ${shot.angle}. Scene: ${scene}. Action: ${action}. Composition: ${composition}. Lighting: ${lighting}. Subject and clothing: ${input.modelDesc || ''}. User constraints: ${input.extra || ''}. Style: ${input.style || ''}.`,
-            wardrobe_styling: input.modelDesc || '沿用用户已确认服装',
-            must_show: `${action} ${input.modelDesc || ''}`, reject_if: `extra limbs, duplicate feet, malformed anatomy, text, watermark`,
+            scene, photographer_position: method, model_position: composition,
+            lighting_setup: lighting, wardrobe_styling: wardrobe, shot_props: '不额外添加道具，只保留场地已有元素。',
+            crop_boundary: framing.crop, must_show: `${framing.required}；${action}`,
+            reject_if: 'wrong crop, added or replaced garments, extra limbs, malformed hands, text, watermark',
+            generator_prompt: `Editorial photograph. ${framing.prompt} ${stance} ${lens}, ${shot.angle}. Scene: ${scene}. Action: ${action}. Composition: ${composition}. Crop: ${framing.crop}. Lighting: ${lighting}. Subject and clothing: ${input.modelDesc || ''}. User constraints: ${input.extra || ''}. Style: ${input.style || ''}.`,
         };
-        return { ...shot, scene, description: action, focalLength: lens, method, composition, lighting, lightingSetup: lighting, directorContract: contract };
+        return { ...shot, scene, description: action, focalLength: lens, method, composition, lighting, lightingSetup: lighting, wardrobe, directorContract: contract };
     });
     Object.assign(plan, referencePlanFields(referenceContext));
     plan.sections = plan.shotList.map((shot, index) => ({ ti: `镜头 ${index + 1} · ${shot.title}`, ic: '', c: [
@@ -124,7 +144,7 @@ export function createTemplatePlan(input, referenceContext) {
         `模板动作：${shot.description}`, `景别与焦段：${shot.shotSize} · ${shot.focalLength}`,
         `摄影师机位：${shot.angle}，${shot.method}`,
         `构图安排：${shot.composition}`, `光线安排：${shot.lighting}`,
-        `人物与服装：${input.modelDesc || '待确认'}`, `用户限制：${input.extra || '无补充'}`,
+        `人物与服装：${shot.wardrobe}`, `用户限制：${input.extra || '无补充'}`,
     ] }));
     plan.director.source = 'template-library-plan';
     plan.director.submittedBrief += `\n${referenceContext.guidance.brief}`;
