@@ -112,7 +112,7 @@ const ADAPTERS = {
 // Cloudflare Workers AI: no API key, the Worker carries the `[ai]` binding. It
 // exposes two reference-image slots only, so `scene` is described in the prompt
 // instead of being uploaded - the caller is told about that gap separately.
-async function callCloudflareWorkersAi({ env, prompt, size, seed, references, variant }) {
+async function callCloudflareWorkersAi({ env, prompt, size, seed, references, variant, poseRef, fetchImpl = fetch }) {
     const ai = env?.AI;
     if (!ai || typeof ai.run !== 'function') {
         throw new GenerationError('GENERATION_NOT_CONFIGURED', '这个部署没有绑定 Workers AI（wrangler.toml 里的 [ai]），无法用 Cloudflare 出图', 503, { missing: ['AI binding'] });
@@ -137,13 +137,27 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
     const portrait = String(size || '').startsWith('1024x1536') || !String(size || '').includes('x');
     const width = portrait ? 768 : 1024;
     const height = portrait ? 1024 : 768;
-    // The shot text alone does not tell the model what the two images are for.
+    // Fetch the operator's pose template BEFORE building the prompt: its role has
+    // to be described inside the prompt, and FLUX accepts three references.
+    // Sending only two is why every frame defaulted to a straight-on stance no
+    // matter what the plan asked for.
+    let poseBytes = null;
+    let poseNote = '';
+    if (poseRef?.imageUrl) {
+        const pose = await fetchLibraryImage(poseRef.imageUrl, fetchImpl);
+        if (pose) {
+            poseBytes = pose;
+            poseNote = `Reference image 3 is a body-pose reference${poseRef.title ? ` (${poseRef.title})` : ''}: copy its body geometry, limb placement and weight distribution. It carries no identity and no clothing.`;
+        }
+    }
+    // The shot text alone does not tell the model what the images are for.
     // Without this, a wide environmental description produced a street with no
     // person in it, and a close shot invented a different face.
     const composed = [
         'Create one photorealistic DSLR photograph containing exactly ONE person.',
         'Reference image 1 is the face photograph: it defines facial identity, apparent age, skin tone and hair. The person in the result must be this same individual, not a similar-looking model.',
         'Reference image 2 is the outfit reference: every visible garment, layer, colour, material and accessory comes from it exactly. Do not invent, replace or simplify clothing.',
+        poseNote,
         direction ? `Shot direction: ${direction}.` : '',
         framingLine(variant),
         'Real photographic rendering: visible skin pores and peach fuzz, uneven natural skin tone, true light falloff with genuinely dark shadow areas, mixed colour temperature, worn everyday surfaces with marks and dust, natural lens vignetting, frame not perfectly level.',
@@ -157,6 +171,7 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
         const bytes = reference.buffer instanceof Uint8Array ? reference.buffer : new Uint8Array(reference.buffer || []);
         form.append(`input_image_${index}`, new Blob([bytes], { type: reference.mime || 'image/png' }), `reference-${index}`);
     });
+    if (poseBytes) form.append('input_image_2', new Blob([poseBytes.bytes], { type: poseBytes.mime }), 'reference-2');
     const serialized = new Response(form);
     let result;
     try {
@@ -172,7 +187,7 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
     const binary = atob(result.image);
     const head = binary.charCodeAt(0);
     const contentType = head === 137 ? 'image/png' : head === 255 ? 'image/jpeg' : 'image/webp';
-    return { contentType, base64: result.image };
+    return { contentType, base64: result.image, prompt: composed, referencesSent: chosen.length + (poseBytes ? 1 : 0) };
 }
 
 /**
@@ -221,6 +236,8 @@ export async function generateShot({ group, shotId, providerId = '', env = {}, f
         // Framing lives on the shot variant; the adapter needs it to state what
         // must be visible instead of leaving the crop to the model.
         variant: request.variant,
+        // The pose template the operator picked for THIS frame, if any.
+        poseRef: (group.shots || []).find(shot => shot.shotId === shotId)?.poseRef || null,
     });
 
     const stored = await storeAsset({
@@ -239,6 +256,10 @@ export async function generateShot({ group, shotId, providerId = '', env = {}, f
         lockedHash: request.lockedHash,
         references: request.references,
         image: { assetId: stored.assetId, path: stored.path, bytes: stored.bytes, durable: stored.durable },
+        // What was actually sent, so a frame can be traced back to the template it
+        // was supposed to follow. Useful whenever output disagrees with the plan.
+        sentPrompt: image.prompt || '',
+        referencesSent: image.referencesSent ?? references.length,
         // QC is deliberately not filled here: the planner never grades itself.
         qc: { verdict: 'pending' },
     };
@@ -297,4 +318,24 @@ function compositionLine(variant = {}) {
     if (variant.distance) parts.push(`Distance: ${variant.distance}.`);
     if (variant.subjectPlacement) parts.push(`Subject placement: ${variant.subjectPlacement}.`);
     return parts.join(' ');
+}
+
+// Only the approved reference library is fetched. Anything else is refused
+// rather than proxied, so a crafted poseRef cannot make the Worker fetch an
+// arbitrary URL.
+async function fetchLibraryImage(rawUrl, fetchImpl = fetch) {
+    let url;
+    try { url = new URL(rawUrl); } catch { return null; }
+    if (url.origin !== 'https://hruiccc.github.io') return null;
+    if (!/^\/RuiC-PoseAtlas\/(?:thumbs\/[A-Za-z0-9_-]+\.jpg|(?:costume|portrait)\/thumbs\/[A-Za-z0-9_-]+\.webp)$/.test(url.pathname)) return null;
+    if (url.search || url.hash) return null;
+    try {
+        const response = await fetchImpl(url.href, { redirect: 'manual', signal: AbortSignal.timeout(15000) });
+        if (!response.ok || !/^image\/(jpeg|png|webp)(?:;|$)/i.test(response.headers.get('content-type') || '')) return null;
+        const bytes = new Uint8Array(await response.arrayBuffer());
+        if (!bytes.length || bytes.length > 3 * 1024 * 1024) return null;
+        return { bytes, mime: response.headers.get('content-type').split(';')[0] };
+    } catch {
+        return null;
+    }
 }

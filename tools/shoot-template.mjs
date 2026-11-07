@@ -20,6 +20,8 @@ const BASE = (argOf('base') || 'https://photo.ronineymessjrstudio.cn').replace(/
 const BRIEF = argOf('brief') || 'scene-spiral-stairs';
 const PICK = (argOf('shots') || '').split(',').map(value => Number(value)).filter(Number.isFinite);
 const OUT = argOf('out') || `runtime/shoot-${BRIEF}`;
+const USE_POSES = args.includes('--poses');
+const DRY_RUN = args.includes('--dry-run');
 const PROVIDER = 'cloudflare-flux-klein';
 const PACK = 'experiments/plan-quality-lab/prompt-packs/2026-10-27-deepseek/06-prompts-all.json';
 
@@ -37,6 +39,42 @@ async function post(pathname, body, timeout = 180000) {
 }
 
 const dataUrl = async file => `data:image/png;base64,${(await readFile(file)).toString('base64')}`;
+
+
+// Pose library entries are filtered hard: the catalogue also contains poses that
+// are not appropriate for a general shoot. Only neutral standing, seated,
+// turning and leaning categories are eligible, and a second pass rejects any
+// title that references those categories.
+// Only the standard-photography series is eligible. The catalogue's other
+// series (full_sexy, duo, upper) contain poses that are not appropriate to feed
+// an image model for a general shoot, so they are excluded at the series level
+// rather than relying on keyword matching alone.
+const POSE_SERIES = 'full_std';
+const POSE_BLOCKED = /挤胸|事业线|性感|大胆|趴|跪|M字|后入|骑乘|贴身|正常位|侧卧|撩|劈叉|倒立|吻|翘臀|打开/i;
+
+async function pickPoses(count) {
+    const response = await fetch('https://hruiccc.github.io/RuiC-PoseAtlas/data/poses.json', { signal: AbortSignal.timeout(20000) });
+    if (!response.ok) return [];
+    const data = await response.json();
+    const eligible = (data.poses || []).filter(pose =>
+        pose.series === POSE_SERIES && !POSE_BLOCKED.test(pose.names?.zh || ''));
+    // Spread across camera angles so consecutive frames are not the same view.
+    const angles = ['front', 'side', 'diagonal', 'high', 'low', 'front'];
+    const picked = [];
+    for (let index = 0; index < count && index < eligible.length; index += 1) {
+        const pose = eligible[index * 3 % eligible.length];
+        const wanted = angles[index % angles.length];
+        const variant = (pose.variants || []).find(item => item.angle === wanted) || (pose.variants || [])[0];
+        if (!variant?.thumb) continue;
+        picked.push({
+            id: pose.id,
+            title: pose.names?.zh || pose.id,
+            imageUrl: `https://hruiccc.github.io/RuiC-PoseAtlas/${variant.thumb}`,
+            angle: variant.angle,
+        });
+    }
+    return picked;
+}
 
 (async () => {
     const pack = JSON.parse(await readFile(PACK, 'utf8'));
@@ -64,6 +102,12 @@ const dataUrl = async file => `data:image/png;base64,${(await readFile(file)).to
         file: `${BRIEF}__${String(row.shotIndex + 1).padStart(2, '0')}.png`,
         _light: row.spec.lighting_setup,
     }));
+
+    if (USE_POSES) {
+        const poses = await pickPoses(shots.length);
+        shots.forEach((shot, index) => { if (poses[index]) shot.poseRef = poses[index]; });
+        console.log(`姿势模板: ${poses.map((pose, index) => `${shots[index].shotId}←${pose.angle}/${pose.title}`).join('  ')}\n`);
+    }
 
     const init = await post('/api/continuity/init', {
         input: {

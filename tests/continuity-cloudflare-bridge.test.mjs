@@ -174,3 +174,69 @@ test('generateShot reports a missing AI binding as 503, not a crash', async () =
         error => error.status === 503 && /AI/.test(error.message),
     );
 });
+
+test('the pose template selected for a frame becomes a third reference image', async () => {
+    const { generateShot } = await import('../api/continuity-generation.mjs');
+    // A group whose shot carries a pose template from the library.
+    let group = createGroup({
+        input: { theme: '楼梯', scene: '美术馆旋转楼梯' },
+        shots: [{
+            shotId: 'shot-01', size: 'EWS', lens: '16mm', camera_angle: 'overhead',
+            model_pose: '沿内侧扶手慢步下行', model_position: '画面右下三分之一',
+            generator_prompt: 'wide overhead shot of a spiral staircase',
+            poseRef: { id: 'full_sexy_P003', title: '顶胯回眸', imageUrl: 'https://hruiccc.github.io/RuiC-PoseAtlas/thumbs/full_sexy_P003_front.jpg', angle: 'front' },
+        }],
+    });
+    for (const role of ['identity', 'scene', 'style']) {
+        group = setReference(group, { role, assetId: `asset-${role}`, status: 'confirmed', path: `/api/continuity/asset/asset-${role}` });
+    }
+    group = confirmMaster(group, { assetId: 'asset-identity', actor: 'human' });
+
+    const aiCalls = [];
+    const envAI = { async run(model, payload) { aiCalls.push(model); return { image: Buffer.from(PNG_BYTES).toString('base64') }; } };
+    const store = { async put() {}, async get() { return { buffer: PNG_BYTES, meta: { mime: 'image/png' } }; } };
+
+    // The library fetch must be the only outbound request, and it must be the
+    // approved origin - a crafted poseRef cannot make the Worker fetch elsewhere.
+    const fetched = [];
+    const fakeFetch = async url => {
+        fetched.push(String(url));
+        return new Response(PNG_BYTES, { status: 200, headers: { 'content-type': 'image/jpeg' } });
+    };
+
+    const result = await generateShot({
+        group, shotId: 'shot-01', providerId: 'cloudflare-flux-klein',
+        env: { AI: envAI }, store, fetchImpl: fakeFetch,
+    });
+
+    assert.equal(fetched.length, 1, '必须去取那一张姿势模板图');
+    assert.match(fetched[0], /RuiC-PoseAtlas\/thumbs\/full_sexy_P003_front\.jpg/);
+    assert.equal(result.referencesSent, 3, '脸 + 服装 + 姿势 = 三张参考图');
+    // The prompt must explain what the third image is for, and carry the pose the
+    // operator selected.
+    assert.match(result.sentPrompt, /Reference image 3 is a body-pose reference/);
+    assert.match(result.sentPrompt, /顶胯回眸|body geometry/);
+    assert.equal(aiCalls.filter(m => m.includes('flux')).length, 1);
+});
+
+test('a pose reference pointing outside the library is ignored, not fetched', async () => {
+    const { generateShot } = await import('../api/continuity-generation.mjs');
+    let group = createGroup({
+        input: { theme: 'x', scene: 'y' },
+        shots: [{ shotId: 'shot-01', size: 'MS', generator_prompt: 'portrait', poseRef: { id: 'evil', imageUrl: 'https://example.com/track.jpg' } }],
+    });
+    for (const role of ['identity', 'scene', 'style']) {
+        group = setReference(group, { role, assetId: `asset-${role}`, status: 'confirmed', path: `/api/continuity/asset/asset-${role}` });
+    }
+    group = confirmMaster(group, { assetId: 'asset-identity', actor: 'human' });
+
+    const fetched = [];
+    const result = await generateShot({
+        group, shotId: 'shot-01', providerId: 'cloudflare-flux-klein',
+        env: { AI: { async run() { return { image: Buffer.from(PNG_BYTES).toString('base64') }; } } },
+        store: { async put() {}, async get() { return { buffer: PNG_BYTES, meta: { mime: 'image/png' } }; } },
+        fetchImpl: async url => { fetched.push(String(url)); return new Response(PNG_BYTES, { status: 200, headers: { 'content-type': 'image/jpeg' } }); },
+    });
+    assert.equal(fetched.length, 0, '非白名单地址一律不取');
+    assert.equal(result.referencesSent, 2, '没有姿势图时退回两张');
+});

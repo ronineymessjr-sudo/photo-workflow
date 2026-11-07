@@ -79,7 +79,17 @@ export function compileCloudCandidateRequest(input, referenceContext) {
 export async function generateCloudCandidate(input, { ai, referenceContext, fetchImpl = fetch } = {}) {
     if (!ai || typeof ai.run !== 'function') throw new Error('IMAGE_PROVIDER_NOT_CONFIGURED');
     const compiled = compileCloudCandidateRequest(input, referenceContext);
-    const references = ['portrait', 'costume', 'pose'].map(kind => referenceContext?.templates.find(template => template.kind === kind));
+    // The pose reference must be the one the operator actually selected for THIS
+    // shot. Taking "the first pose in the list" here made the image disagree with
+    // the prose, because compileCloudCandidateRequest picks the pose by
+    // referenceIds while this picked by position.
+    const selectedPoseId = (input.shot_contract?.referenceIds || input.reference_ids || []);
+    const references = [
+        referenceContext?.templates.find(template => template.kind === 'portrait'),
+        referenceContext?.templates.find(template => template.kind === 'costume'),
+        referenceContext?.templates.find(template => template.kind === 'pose' && selectedPoseId.includes(template.id))
+            || referenceContext?.templates.find(template => template.kind === 'pose'),
+    ];
     if (references.some(reference => !reference?.referenceImageUrl)) throw new Error('REFERENCE_IMAGES_REQUIRED');
     const images = await Promise.all(references.map(reference => fetchReferenceImage(reference.referenceImageUrl, fetchImpl)));
     let prompt = [

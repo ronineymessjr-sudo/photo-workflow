@@ -162,6 +162,15 @@ export function normalizeShots(shots = []) {
         aspect: text(shot.aspect, '2:3'),
         props: text(shot.shot_props || shot.props),
         file: text(shot.file, `${text(shot.shotId, `shot-${String(index + 1).padStart(2, '0')}`)}.png`),
+        // The pose template the operator selected for THIS frame. Without it the
+        // model only gets prose about the pose, which is how every frame ended
+        // up a straight-on standing figure.
+        poseRef: shot.poseRef && typeof shot.poseRef === 'object' ? {
+            id: text(shot.poseRef.id),
+            title: text(shot.poseRef.title),
+            imageUrl: text(shot.poseRef.imageUrl),
+            angle: text(shot.poseRef.angle),
+        } : null,
     }));
 }
 
@@ -177,13 +186,16 @@ function requireGroup(group) {
     return { group, lockedHash: current };
 }
 
-export function setReference(group, { role, assetId, status = 'confirmed', path = '' } = {}) {
+export function setReference(group, { role, assetId, status = 'confirmed', path = '', referenceImageUrl = '', sourceItemId = '' } = {}) {
     const { group: checked } = requireGroup(group);
     if (!CONTINUITY_ROLES.includes(role)) throw new ContinuityError('CONTINUITY_ROLE_INVALID', `参考角色只能是 ${CONTINUITY_ROLES.join('/')}`, 400);
     if (!text(assetId)) throw new ContinuityError('CONTINUITY_ASSET_REQUIRED', '需要资产 ID', 400);
     if (!['pending', 'confirmed', 'missing'].includes(status)) throw new ContinuityError('CONTINUITY_STATUS_INVALID', '状态只能是 pending/confirmed/missing', 400);
+    // referenceImageUrl / sourceItemId record WHICH library entry the operator
+    // picked in AI Studio, so the generated frame can be traced back to the
+    // template it was supposed to follow instead of an anonymous photo.
     checked.references = checked.references.map(reference => reference.role === role
-        ? { ...reference, assetId, status, path: text(path) }
+        ? { ...reference, assetId, status, path: text(path), referenceImageUrl: text(referenceImageUrl), sourceItemId: text(sourceItemId) }
         : reference);
     return checked;
 }

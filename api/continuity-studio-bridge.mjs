@@ -32,6 +32,10 @@ function toReferenceEntry(template, role) {
         path: '',
         note: `来自图库：${template.title || template.id}；仅参考（${template.rightsStatus || 'external_reference'}），需补一张自有授权图`,
         sourceUrl: template.sourceUrl || '',
+        // The library's own image, so generation can use what the operator
+        // selected instead of a stand-in photo.
+        referenceImageUrl: template.referenceImageUrl || '',
+        sourceItemId: template.id,
         upstreamId: upstream,
         kind: template.kind,
     };
@@ -107,6 +111,14 @@ export function groupFromStudio({ templates = [], input = {}, planId = '', selec
         group,
         mapping,
         poses: group.poseConstraints,
+        // Ready to drop onto shots: {id, title, imageUrl, angle}. One per frame is
+        // what stops every frame from defaulting to the same straight-on stance.
+        poseRefs: poses.slice(0, 6).map(template => ({
+            id: template.id,
+            title: template.title || '',
+            imageUrl: template.referenceImageUrl || '',
+            angle: (template.angles || [])[0] || '',
+        })),
         missing,
         // Nothing here can be generated yet: two roles are pending by design.
         ready: false,
