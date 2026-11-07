@@ -93,6 +93,7 @@ test('template plan aligns selected poses, close crops, and backlight instructio
     assert.equal(clothingDetail.shotSize, '特写');
     assert.match(clothingDetail.directorContract.generator_prompt, /Tight garment-detail close-up of the clothing item named by the user/);
     assert.match(clothingDetail.directorContract.crop_boundary, /用户指定的服装面料与纹理/);
+    assert.match(clothingDetail.directorContract.model_pose, /衣料为唯一主体，不安排手部动作或全身摆姿/);
     assert.doesNotMatch(clothingDetail.description, /双脚|站稳|前后错开|腿/);
 
     const lookBack = plan.shotList.find(shot => shot.title === '单人回眸构图');

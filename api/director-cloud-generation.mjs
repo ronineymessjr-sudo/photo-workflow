@@ -105,7 +105,10 @@ export async function generateCloudCandidate(input, { ai, referenceContext, fetc
     const selectedPose = referenceContext?.templates.find(template => template.kind === 'pose' && selectedPoseId.includes(template.id))
         || referenceContext?.templates.find(template => template.kind === 'pose');
     const upperBodyCrop = /^(?:中景|近景|特写|局部特写|MS|MCU|CU|ECU)$/.test(input.shot_contract.shot_size || '');
-    const poseDirection = upperBodyCrop
+    const clothingDetail = /服装细节|衣料细节/.test(input.shot_contract.shot_language || '');
+    const poseDirection = clothingDetail
+        ? input.shot_contract.model_pose
+        : upperBodyCrop
         ? input.shot_contract.model_pose
         : referenceContext?.guidance?.suggestions.find(item => item.kind === 'pose' && item.sourceItemId === selectedPose?.id)?.direction
         || selectedPose?.description || '';
@@ -117,7 +120,7 @@ export async function generateCloudCandidate(input, { ai, referenceContext, fetc
     const images = await Promise.all(references.map(reference => fetchReferenceImage(reference.referenceImageUrl, fetchImpl)));
     let prompt = [
         `Shot contract: ${clean(input.shot_contract.generator_prompt, 1200)}`,
-        selectedPose ? `Selected pose library entry: ${clean(selectedPose.title, 120)}. Pose direction: ${clean(poseDirection, 260)}` : '',
+        selectedPose && !clothingDetail ? `Selected pose library entry: ${clean(selectedPose.title, 120)}. Pose direction: ${clean(poseDirection, 260)}` : '',
         `Written wardrobe contract: ${clean(input.shot_contract.wardrobe_styling || input.reference_brief?.modelDesc, 420) || 'Preserve the user specified garments exactly.'}`,
         `Scene: ${clean(input.scene_brief || input.reference_brief?.scene, 250)}`,
         `Style: ${clean(input.style_direction || input.reference_brief?.style, 150)}`,
@@ -137,14 +140,15 @@ export async function generateCloudCandidate(input, { ai, referenceContext, fetc
             prompt = translated.response.trim().slice(0, MAX_PROMPT_CHARS);
         }
         const form = new FormData();
-        const poseTitle = upperBodyCrop ? 'Upper-body pose adapted from the selected PoseAtlas reference' : clean(selectedPose?.englishTitle || selectedPose?.title, 120);
-        const poseDetail = upperBodyCrop
+        const poseTitle = clothingDetail ? 'Garment-detail crop; no pose reference' : upperBodyCrop ? 'Upper-body pose adapted from the selected PoseAtlas reference' : clean(selectedPose?.englishTitle || selectedPose?.title, 120);
+        const poseDetail = clothingDetail
+            ? 'Keep the named garment unobstructed and in sharp focus; do not add hands, face, or a full-body pose.'
+            : upperBodyCrop
             ? 'Follow only the visible head, shoulder and arm action from the shot contract. Do not force unseen hands, hips, legs or feet into the crop.'
             : /\b(?:both|two)\s+hands?\b/i.test(poseTitle)
             ? 'Both hands rest lightly at the waist or hips, elbows relaxed outward; do not join the hands in front of the abdomen.'
             : /\bhand on (?:hip|waist)\b/i.test(poseTitle)
                 ? 'Exactly one hand rests on the hip; the opposite arm hangs relaxed by the side.' : '';
-        const clothingDetail = /服装细节|衣料细节/.test(input.shot_contract.shot_language || '');
         const framing = clothingDetail
             ? 'Tight close-up of the user specified garment fabric and texture only; preserve its exact color, exclude the face and full-body pose.'
             : [

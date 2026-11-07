@@ -133,7 +133,9 @@ export function createTemplatePlan(input, referenceContext) {
             'atlas-pose-full_single_p018': '肩膀略转，双手只在画框内自然落于腰侧；手或髋部不入画时不强求扶腰。',
             'atlas-pose-full_single_p021': '靠镜头一侧的手轻触颈侧，另一只手在画框外自然放松。',
         };
-        const action = upperBodyCrop
+        const action = clothingDetail
+            ? '服装细节构图：以用户指定的衣料为唯一主体，不安排手部动作或全身摆姿。'
+            : upperBodyCrop
             ? `上半身摆姿参考（${template.title}）：${croppedPoseDirections[template.id] || fullPoseDirection} 不要求画框外的手脚动作。`
             : `摆姿参考：${template.title}。${fullPoseDirection}`;
         const lens = fixedLens || shot.focalLength;

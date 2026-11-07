@@ -183,7 +183,9 @@ test('clothing detail image prompt keeps the specified garment in a tight crop',
     } } });
     assert.match(imagePrompt, /Tight close-up of the user specified garment fabric and texture only/);
     assert.match(imagePrompt, /preserve its exact color/i);
-    assert.match(imagePrompt, /Upper-body pose adapted from the selected PoseAtlas reference/);
+    assert.match(imagePrompt, /Garment-detail crop; no pose reference/);
+    assert.match(imagePrompt, /do not add hands, face, or a full-body pose/i);
+    assert.doesNotMatch(imagePrompt, /Selected pose library entry|Upper-body pose adapted from the selected PoseAtlas reference/);
     assert.doesNotMatch(imagePrompt, /head-to-toe|both shoes|Exactly one hand rests on the hip/);
 });
 
