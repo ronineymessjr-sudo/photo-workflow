@@ -84,16 +84,19 @@ export async function generateCloudCandidate(input, { ai, referenceContext, fetc
     // the prose, because compileCloudCandidateRequest picks the pose by
     // referenceIds while this picked by position.
     const selectedPoseId = (input.shot_contract?.referenceIds || input.reference_ids || []);
+    const selectedPose = referenceContext?.templates.find(template => template.kind === 'pose' && selectedPoseId.includes(template.id))
+        || referenceContext?.templates.find(template => template.kind === 'pose');
+    const poseDirection = referenceContext?.guidance?.suggestions.find(item => item.kind === 'pose' && item.sourceItemId === selectedPose?.id)?.direction
+        || selectedPose?.description || '';
     const references = [
         referenceContext?.templates.find(template => template.kind === 'portrait'),
         referenceContext?.templates.find(template => template.kind === 'costume'),
-        referenceContext?.templates.find(template => template.kind === 'pose' && selectedPoseId.includes(template.id))
-            || referenceContext?.templates.find(template => template.kind === 'pose'),
     ];
     if (references.some(reference => !reference?.referenceImageUrl)) throw new Error('REFERENCE_IMAGES_REQUIRED');
     const images = await Promise.all(references.map(reference => fetchReferenceImage(reference.referenceImageUrl, fetchImpl)));
     let prompt = [
         `Shot contract: ${clean(input.shot_contract.generator_prompt, 1200)}`,
+        selectedPose ? `Selected pose library entry: ${clean(selectedPose.title, 120)}. Pose direction: ${clean(poseDirection, 260)}` : '',
         `Scene: ${clean(input.scene_brief || input.reference_brief?.scene, 250)}`,
         `Style: ${clean(input.style_direction || input.reference_brief?.style, 150)}`,
         `User requirements: ${clean(input.brief, 250)}`,
@@ -112,8 +115,11 @@ export async function generateCloudCandidate(input, { ai, referenceContext, fetc
             prompt = translated.response.trim().slice(0, MAX_PROMPT_CHARS);
         }
         const form = new FormData();
-        const poseTitle = clean(references[2].englishTitle, 120);
-        const poseDetail = /\bhand on (?:hip|waist)\b/i.test(poseTitle) ? 'Exactly one hand rests on the hip; the opposite arm hangs down by the side.' : '';
+        const poseTitle = clean(selectedPose?.englishTitle || selectedPose?.title, 120);
+        const poseDetail = /\b(?:both|two)\s+hands?\b/i.test(poseTitle)
+            ? 'Both hands rest lightly at the waist or hips, elbows relaxed outward; do not join the hands in front of the abdomen.'
+            : /\bhand on (?:hip|waist)\b/i.test(poseTitle)
+                ? 'Exactly one hand rests on the hip; the opposite arm hangs relaxed by the side.' : '';
         const framing = [
             [/环境全景|环境远景|^(?:E?WS)$/i, 'Environmental long shot. Person occupies at most 40 percent of the image height. Show the surrounding location clearly. Keep the camera far enough away.'],
             [/中全景|^MFS$/i, 'Knee-up portrait. Crop above the knees, showing head, torso and hands.'],
@@ -122,7 +128,7 @@ export async function generateCloudCandidate(input, { ai, referenceContext, fetc
             [/特写|^E?CU$/i, 'Tight close-up of the face or the detail specified by the shot contract.'],
             [/中景|^MS$/i, 'Waist-up portrait. Crop below the waist and preserve the hands when visible.'],
         ].find(([pattern]) => pattern.test(input.shot_contract.shot_size || ''))?.[1] || '';
-        generationPrompt = `Create one photorealistic DSLR photograph of ONE person, with realistic skin texture and a fully rendered real location. Reference image 1, the face photograph, controls facial identity, apparent age, hair and photographic realism. Reference image 2, the outfit, controls every visible garment, layer, color, material, accessory and shoe. Copy those garments faithfully without adding or replacing layers. Reference image 3, the black-and-white artist drawing, contributes only body geometry and limb placement. Required pose: ${poseTitle}. ${poseDetail} ${prompt} Required camera framing: ${framing || 'Follow the shot contract.'} Render the requested scene as a real photographic environment with natural light and material detail.`;
+        generationPrompt = `Create one photorealistic DSLR photograph of ONE person, with realistic skin texture and a fully rendered real location. Reference image 1, the face photograph, controls facial identity, apparent age, hair and photographic realism. Reference image 2, the outfit, controls every visible garment, layer, color, material, accessory and shoe. Copy those garments faithfully without adding or replacing layers. Follow the selected PoseAtlas action described in the shot contract as text; do not copy a drawing style. Required pose: ${poseTitle}. ${poseDetail} ${prompt} Required camera framing: ${framing || 'Follow the shot contract.'} Render the requested scene as a real photographic environment with natural light and material detail.`;
         form.append('prompt', generationPrompt);
         form.append('width', String(compiled.width));
         form.append('height', String(compiled.height));
@@ -130,7 +136,11 @@ export async function generateCloudCandidate(input, { ai, referenceContext, fetc
         const serialized = new Response(form);
         result = await ai.run(CLOUDFLARE_MODEL, { multipart: { body: serialized.body, contentType: serialized.headers.get('content-type') } });
     } catch (error) {
-        console.error('reference_image_generation_failed', String(error?.message || error).slice(0, 400));
+        const message = String(error?.message || error);
+        console.error('reference_image_generation_failed', message.slice(0, 400));
+        if (/4006\s*:?\s*you have used up your daily free allocation/i.test(message)) {
+            throw new Error('IMAGE_PROVIDER_FREE_QUOTA_EXHAUSTED');
+        }
         throw new Error('IMAGE_PROVIDER_GENERATION_FAILED');
     }
     if (typeof result?.image !== 'string' || result.image.length > Math.ceil(MAX_IMAGE_BYTES * 4 / 3) + 8) {

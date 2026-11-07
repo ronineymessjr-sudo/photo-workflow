@@ -48,15 +48,49 @@ test('candidate uses the existing Cloudflare AI binding and validates its JPEG o
     const form = await new Response(calls[1].input.multipart.body, { headers: { 'Content-Type': calls[1].input.multipart.contentType } }).formData();
     assert.match(form.get('prompt'), /35mm eye-level environmental portrait/);
     assert.match(form.get('prompt'), /Exactly one hand rests on the hip/);
+    assert.match(form.get('prompt'), /Follow the selected PoseAtlas action described in the shot contract as text/);
+    assert.doesNotMatch(form.get('prompt'), /black-and-white artist drawing/);
     assert.match(form.get('prompt'), /without adding or replacing layers/);
     assert.equal(result.prompt, form.get('prompt'));
-    for (let index = 0; index < 3; index++) assert.equal(form.get(`input_image_${index}`).size, jpeg.length);
+    for (let index = 0; index < 2; index++) assert.equal(form.get(`input_image_${index}`).size, jpeg.length);
+    assert.equal(form.has('input_image_2'), false);
     assert.equal(form.get('width'), '768');
     assert.equal(form.get('height'), '1024');
-    assert.equal(result.referenceImages.length, 3);
+    assert.deepEqual(result.referenceImages.map(reference => reference.kind), ['portrait', 'costume']);
     assert.equal(result.model, '@cf/black-forest-labs/flux-2-klein-9b');
     assert.equal(result.mime, 'image/jpeg');
     assert.deepEqual(result.bytes, jpeg);
+});
+
+test('double-hand pose is explicit while the pose drawing stays out of the image payload', async () => {
+    let imagePrompt;
+    const doubleHandContext = {
+        ...referenceContext,
+        guidance: { suggestions: [{ kind: 'pose', sourceItemId: 'pose-1', direction: '双手轻放腰侧，肘部自然向外不过度撑开。' }] },
+        templates: referenceContext.templates.map(template => template.kind === 'pose'
+            ? { ...template, title: '站立・双手扶腰', englishTitle: 'Standing, both hands on waist' }
+            : template),
+    };
+    const input = { ...request, shot_contract: { ...contract, referenceIds: ['pose-1'], model_pose: '双手轻放腰侧，肘部自然向外不过度撑开。' } };
+    const calls = [];
+    await generateCloudCandidate(input, { referenceContext: doubleHandContext, fetchImpl, ai: { run: async (model, payload) => {
+        calls.push({ model, payload });
+        if (model.includes('llama')) return { response: 'A natural waist-up pose with both hands resting at the waist.' };
+        const form = await new Response(payload.multipart.body, { headers: { 'Content-Type': payload.multipart.contentType } }).formData();
+        imagePrompt = form.get('prompt');
+        return { image: Buffer.from(jpeg).toString('base64') };
+    } } });
+    assert.match(calls[0].payload.messages[1].content, /站立・双手扶腰/);
+    assert.match(calls[0].payload.messages[1].content, /双手轻放腰侧/);
+    assert.match(imagePrompt, /Required pose: Standing, both hands on waist/);
+    assert.match(imagePrompt, /Both hands rest lightly at the waist or hips/);
+});
+
+test('free neuron exhaustion returns a distinct non-paid retry code', async () => {
+    await assert.rejects(generateCloudCandidate(request, { referenceContext, fetchImpl, ai: { run: async model => {
+        if (model.includes('llama')) return { response: 'A natural portrait in an autumn park.' };
+        throw new Error('4006: you have used up your daily free allocation of 10,000 neurons');
+    } } }), error => error.message === 'IMAGE_PROVIDER_FREE_QUOTA_EXHAUSTED');
 });
 
 test('cloud generation rejects missing bindings, unapproved providers, references, and bad output', async () => {
@@ -68,7 +102,7 @@ test('cloud generation rejects missing bindings, unapproved providers, reference
     await assert.rejects(generateCloudCandidate({ ...request, reference_image_path: 'C:\\private\\ref.png' }, { ai }), /CLOUD_REFERENCE_IMAGE_NOT_CONFIGURED/);
     await assert.rejects(generateCloudCandidate(request, { ai }), /REFERENCE_IMAGES_REQUIRED/);
     await assert.rejects(generateCloudCandidate(request, { referenceContext, fetchImpl, ai: { run: async model => model.includes('llama') ? { response: 'One environmental portrait in an autumn park.' } : { image: 'not-base64' } } }), /IMAGE_PROVIDER_INVALID_RESPONSE|IMAGE_PROVIDER_GENERATION_FAILED/);
-    await assert.rejects(generateCloudCandidate(request, { referenceContext: { ...referenceContext, templates: [{ ...referenceContext.templates[0], referenceImageUrl: 'https://evil.example/a.jpg' }, ...referenceContext.templates.slice(1)] }, fetchImpl, ai }), /UNTRUSTED_REFERENCE_IMAGE/);
+    await assert.rejects(generateCloudCandidate(request, { referenceContext: { ...referenceContext, templates: referenceContext.templates.map(template => template.kind === 'portrait' ? { ...template, referenceImageUrl: 'https://evil.example/a.jpg' } : template) }, fetchImpl, ai }), /UNTRUSTED_REFERENCE_IMAGE/);
     assert.equal(calls, 0);
 });
 

@@ -6416,6 +6416,7 @@ function formatDirectorGenerationError(error) {
     if (/DIRECTOR_GENERATION_UPSTREAM_503:provider_request_failed/.test(message)) {
         return '外部生图模型当前超时或暂不可用；方案和分镜契约已保留，稍后可重试当前分镜。';
     }
+    if (/IMAGE_PROVIDER_FREE_QUOTA_EXHAUSTED/.test(message)) return 'Cloudflare Workers AI 的当日免费 neurons 配额已耗尽；不会自动切换到付费模型，方案和分镜契约已保留。';
     if (/GLOBAL_IMAGE_DAILY_LIMIT_REACHED/.test(message)) return '今天平台的免费候选图额度已用完，明天会恢复；文字方案仍已保存。';
     if (/IMAGE_DAILY_LIMIT_REACHED/.test(message)) return '你已达到今天的候选生图上限（5 张），明天可继续。';
     if (/IMAGE_PROVIDER_NOT_CONFIGURED/.test(message)) return '平台生图暂不可用；文字方案仍已保存。';
