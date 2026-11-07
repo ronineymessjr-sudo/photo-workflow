@@ -404,3 +404,51 @@ test('framing follows the size code, not the machine label', async () => {
         assert.match(result.sentPrompt, new RegExp(expected), `${size} 必须落到正确的取景描述`);
     }
 });
+
+test('modelscope adapter: submits, polls the task, and carries references', async () => {
+    const { generateShot } = await import('../api/continuity-generation.mjs');
+    let group = createGroup({
+        input: { theme: '楼梯', scene: '美术馆' },
+        shots: [{ shotId: 'shot-01', size: 'MCU', camera_angle: 'low_angle', generator_prompt: '低机位近景' }],
+    });
+    for (const role of ['identity', 'scene', 'style']) {
+        group = setReference(group, { role, assetId: `asset-${role}`, status: 'confirmed', path: `/api/continuity/asset/asset-${role}` });
+    }
+    group = confirmMaster(group, { assetId: 'asset-identity', actor: 'human' });
+    const store = { async put() {}, async get() { return { buffer: PNG_BYTES, meta: { mime: 'image/png' } }; } };
+
+    // Missing token must fail closed and name the variable.
+    await assert.rejects(
+        () => generateShot({ group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit', env: {}, store }),
+        error => error.status === 503 && /MODELSCOPE_TOKEN/.test(JSON.stringify(error.details || error.message)),
+    );
+
+    const calls = [];
+    let submitted = null;
+    const result = await generateShot({
+        group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit',
+        env: { MODELSCOPE_TOKEN: 'ms-test' }, store,
+        fetchImpl: async (url, init) => {
+            calls.push(String(url));
+            if (String(url).includes('/images/generations')) {
+                submitted = JSON.parse(init.body);
+                return new Response(JSON.stringify({ task_id: 'task-1' }), { status: 200, headers: { 'content-type': 'application/json' } });
+            }
+            if (String(url).includes('/v1/tasks/')) {
+                return new Response(JSON.stringify({ task_status: 'SUCCEEDED', output_images: ['https://cdn.example/out.png'] }), { status: 200, headers: { 'content-type': 'application/json' } });
+            }
+            return new Response(PNG_BYTES, { status: 200, headers: { 'content-type': 'image/png' } });
+        },
+    });
+
+    assert.equal(submitted.model, 'Qwen/Qwen-Image-Edit-2511');
+    assert.ok(Array.isArray(submitted.image_url) && submitted.image_url.length >= 2, '参考图必须以数组传入');
+    assert.ok(submitted.image_url[0].startsWith('data:image/'), '参考图是 data URL');
+    // Chinese native: the direction should not have been translated.
+    assert.match(submitted.prompt, /[\u4e00-\u9fa5]/);
+    assert.match(submitted.prompt, /取景：/, '景别指令必须进提示词');
+    // Submit then poll.
+    assert.ok(calls.some(url => url.includes('/v1/tasks/')), '必须轮询任务');
+    assert.equal(result.provider, 'modelscope-qwen-edit');
+    assert.equal(result.referencesSent, 2);
+});

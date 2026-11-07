@@ -34,6 +34,7 @@ export const PROVIDER_ADAPTERS = {
     'sdxl-ipadapter': 'reference-json',
     'cloudflare-flux-klein': 'cloudflare-workers-ai',
     'volcengine-seedream': 'volcengine-seedream',
+    'modelscope-qwen-edit': 'modelscope-qwen-edit',
 };
 
 function dataUrlFor(buffer, mime) {
@@ -261,11 +262,105 @@ async function callSeedream({ env, prompt, size, seed, references, variant, pose
     return { contentType: mime, base64: Buffer.from(bytes).toString('base64'), prompt: direction, referencesSent: images.length, anchored: Boolean(anchor?.assetId) };
 }
 
+
+// ModelScope (魔搭) · Qwen-Image-Edit adapter.
+//
+// The only option found that satisfies all four requirements at once:
+//   1. cheap enough to test at volume - 2000 free calls/day after real-name
+//      verification, i.e. zero marginal cost for our whole test cycle
+//   2. takes reference images - Qwen-Image-Edit accepts an image_url ARRAY, so
+//      face + outfit + pose can all be supplied
+//   3. reachable from mainland China without a proxy
+//   4. OpenAI-compatible shape, so it drops into this adapter layer
+//
+// It is asynchronous: the POST returns a task id and the result has to be polled.
+const MODELSCOPE_ENDPOINT = 'https://api-inference.modelscope.cn/v1/images/generations';
+const MODELSCOPE_TASK = 'https://api-inference.modelscope.cn/v1/tasks/';
+const MODELSCOPE_MODEL = 'Qwen/Qwen-Image-Edit-2511';
+
+async function callModelScope({ env, prompt, size, seed, references, variant, poseRef, anchor, locked, store = null, fetchImpl = fetch }) {
+    const token = env?.MODELSCOPE_TOKEN;
+    if (!token) {
+        throw new GenerationError('GENERATION_NOT_CONFIGURED', '缺少魔搭 MODELSCOPE_TOKEN（实名后每日 2000 次免费）', 503, { missing: ['MODELSCOPE_TOKEN'] });
+    }
+    const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
+
+    // Reference images, anchor first: this model conditions on them directly,
+    // which is why it can hold a face where the Cloudflare brush cannot.
+    const images = [];
+    if (anchor?.assetId) {
+        const stored = await readAsset(`/api/continuity/asset/${anchor.assetId}`, { env, store });
+        if (!stored?.buffer?.length) throw new GenerationError('GENERATION_ANCHOR_MISSING', '已锁定的母图读不到；停止生成，不能退回无母图请求', 409);
+        images.push(dataUrlFor(stored.buffer, stored.mime));
+    }
+    for (const reference of references) {
+        images.push(reference.dataUrl);
+    }
+
+    const fields = directionFields({ prompt, locked, variant, poseRef, framing: framingZh(variant) });
+    const direction = fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`).join('\n');
+
+    const submit = await fetchImpl(MODELSCOPE_ENDPOINT, {
+        method: 'POST',
+        headers: { ...headers, 'X-ModelScope-Async-Mode': 'true' },
+        body: JSON.stringify({
+            model: MODELSCOPE_MODEL,
+            prompt: direction,
+            ...(images.length ? { image_url: images } : {}),
+            ...(Number.isSafeInteger(seed) ? { seed } : {}),
+        }),
+        signal: AbortSignal.timeout(60000),
+    }).catch(error => {
+        throw new GenerationError('GENERATION_UPSTREAM_FAILED', `魔搭提交失败：${String(error?.message || error).slice(0, 160)}`, 502);
+    });
+
+    if (!submit.ok) {
+        const detail = await submit.text().catch(() => '');
+        throw new GenerationError('GENERATION_UPSTREAM_FAILED', `魔搭返回 ${submit.status}：${detail.slice(0, 200)}`, submit.status === 429 ? 429 : 502);
+    }
+    const submitted = await submit.json().catch(() => null);
+    const taskId = submitted?.task_id || submitted?.data?.task_id;
+    if (!taskId) throw new GenerationError('GENERATION_INVALID_RESPONSE', '魔搭没有返回 task_id', 502);
+
+    // Poll. The image model takes 10-25s; the loop is bounded so the request
+    // cannot hang past the Pages Function 30s ceiling.
+    const deadline = Date.now() + 75000;
+    while (Date.now() < deadline) {
+        await new Promise(resolve => setTimeout(resolve, 2500));
+        const poll = await fetchImpl(MODELSCOPE_TASK + taskId, {
+            headers: { ...headers, 'X-ModelScope-Task-Type': 'image_generation' },
+            signal: AbortSignal.timeout(20000),
+        }).catch(() => null);
+        if (!poll?.ok) continue;
+        const state = await poll.json().catch(() => null);
+        const status = state?.task_status;
+        if (status === 'SUCCEEDED') {
+            const url = state?.output_images?.[0] || state?.data?.[0]?.url;
+            if (!url) throw new GenerationError('GENERATION_INVALID_RESPONSE', '魔搭任务成功但没有图片地址', 502);
+            const imageResponse = await fetchImpl(url, { signal: AbortSignal.timeout(60000) });
+            if (!imageResponse.ok) throw new GenerationError('GENERATION_INVALID_RESPONSE', '下载魔搭结果失败', 502);
+            const bytes = new Uint8Array(await imageResponse.arrayBuffer());
+            return {
+                contentType: imageResponse.headers.get('content-type')?.split(';')[0] || 'image/png',
+                base64: Buffer.from(bytes).toString('base64'),
+                prompt: direction,
+                referencesSent: images.length,
+                anchored: Boolean(anchor?.assetId),
+            };
+        }
+        if (status === 'FAILED') {
+            throw new GenerationError('GENERATION_UPSTREAM_FAILED', `魔搭任务失败：${String(state?.errors?.message || state?.message || '').slice(0, 200)}`, 502);
+        }
+    }
+    throw new GenerationError('GENERATION_UPSTREAM_FAILED', '魔搭任务超时未完成', 504);
+}
+
 const ADAPTERS = {
     'openai-images-edits': callOpenAiEdits,
     'reference-json': callReferenceJson,
     'cloudflare-workers-ai': callCloudflareWorkersAi,
     'volcengine-seedream': callSeedream,
+    'modelscope-qwen-edit': callModelScope,
 };
 
 // Cloudflare Workers AI: no API key, the Worker carries the `[ai]` binding. It

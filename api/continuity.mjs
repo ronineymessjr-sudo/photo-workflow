@@ -15,6 +15,17 @@ import { createHash } from 'node:crypto';
 export const CONTINUITY_ROLES = ['identity', 'scene', 'style'];
 
 export const CONTINUITY_PROVIDERS = {
+    'modelscope-qwen-edit': {
+        // Free at our volume: 2000 calls/day after real-name verification, takes
+        // reference images, native Chinese, reachable without a proxy.
+        label: '魔搭 · Qwen-Image-Edit 2511（实名后 2000 次/天免费）',
+        supportsReferences: true,
+        roles: CONTINUITY_ROLES,
+        maxReferences: 6,
+        supportsSeed: true,
+        canGenerate: true,
+        imageSlots: ['identity', 'style', 'pose'],
+    },
     'volcengine-seedream': {
         // The strongest option for one shoot with one face: 14 references, native
         // Chinese, and a batch mode that returns related frames in one request.

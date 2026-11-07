@@ -14,6 +14,23 @@ export const PRICE_LABELS = { low: '便宜', medium: '中等', high: '偏贵' };
 
 export const IMAGE_PROVIDERS = [
     {
+        id: 'modelscope-qwen-edit',
+        label: '魔搭 · Qwen-Image-Edit 2511',
+        adapter: 'modelscope-qwen-edit',
+        priceTier: 'low',
+        supportsReferences: true,
+        maxReferences: 6,
+        aspectControl: true,
+        watermark: false,
+        env: ['MODELSCOPE_TOKEN'],
+        supportsSeed: true,
+        // 2000 free calls per day after real-name verification: at our test
+        // volume the marginal cost is zero.
+        pricingNote: '实名后每日 2000 次免费；支持多图参考，中文原生',
+        console: 'https://www.modelscope.cn/my/myaccesstoken',
+        bestFor: '大批量测试与同脸组图：免费额度 + 参考图条件，唯一四项全满足的通道',
+    },
+    {
         id: 'cloudflare-flux-klein',
         label: 'Cloudflare Workers AI · FLUX.2 Klein',
         adapter: 'cloudflare-workers-ai',
