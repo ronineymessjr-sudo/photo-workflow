@@ -104,7 +104,10 @@ export async function generateCloudCandidate(input, { ai, referenceContext, fetc
     const selectedPoseId = (input.shot_contract?.referenceIds || input.reference_ids || []);
     const selectedPose = referenceContext?.templates.find(template => template.kind === 'pose' && selectedPoseId.includes(template.id))
         || referenceContext?.templates.find(template => template.kind === 'pose');
-    const poseDirection = referenceContext?.guidance?.suggestions.find(item => item.kind === 'pose' && item.sourceItemId === selectedPose?.id)?.direction
+    const upperBodyCrop = /^(?:中景|近景|特写|局部特写|MS|MCU|CU|ECU)$/.test(input.shot_contract.shot_size || '');
+    const poseDirection = upperBodyCrop
+        ? input.shot_contract.model_pose
+        : referenceContext?.guidance?.suggestions.find(item => item.kind === 'pose' && item.sourceItemId === selectedPose?.id)?.direction
         || selectedPose?.description || '';
     const references = [
         referenceContext?.templates.find(template => template.kind === 'portrait'),
@@ -134,12 +137,17 @@ export async function generateCloudCandidate(input, { ai, referenceContext, fetc
             prompt = translated.response.trim().slice(0, MAX_PROMPT_CHARS);
         }
         const form = new FormData();
-        const poseTitle = clean(selectedPose?.englishTitle || selectedPose?.title, 120);
-        const poseDetail = /\b(?:both|two)\s+hands?\b/i.test(poseTitle)
+        const poseTitle = upperBodyCrop ? 'Upper-body pose adapted from the selected PoseAtlas reference' : clean(selectedPose?.englishTitle || selectedPose?.title, 120);
+        const poseDetail = upperBodyCrop
+            ? 'Follow only the visible head, shoulder and arm action from the shot contract. Do not force unseen hands, hips, legs or feet into the crop.'
+            : /\b(?:both|two)\s+hands?\b/i.test(poseTitle)
             ? 'Both hands rest lightly at the waist or hips, elbows relaxed outward; do not join the hands in front of the abdomen.'
             : /\bhand on (?:hip|waist)\b/i.test(poseTitle)
                 ? 'Exactly one hand rests on the hip; the opposite arm hangs relaxed by the side.' : '';
-        const framing = [
+        const clothingDetail = /服装细节|衣料细节/.test(input.shot_contract.shot_language || '');
+        const framing = clothingDetail
+            ? 'Tight close-up of the user specified garment fabric and texture only; preserve its exact color, exclude the face and full-body pose.'
+            : [
             [/环境全景|环境远景|^(?:E?WS)$/i, 'Environmental long shot. Person occupies at most 40 percent of the image height. Show the surrounding location clearly. Keep the camera far enough away.'],
             [/中全景|^MFS$/i, 'Knee-up portrait. Crop above the knees, showing head, torso and hands.'],
             [/全身|^FS$/i, 'Head-to-toe portrait. Show both shoes and ground beneath them, with margins above the head and below the feet.'],

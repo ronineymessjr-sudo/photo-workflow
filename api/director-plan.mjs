@@ -113,33 +113,59 @@ export function createTemplatePlan(input, referenceContext) {
     const scenePoseCounts = new Map();
     plan.shotList = plan.shotList.map((shot, index) => {
         const scene = locations[Math.floor(index * locations.length / plan.shotList.length)] || shot.scene;
-        const scenePoseIndex = scenePoseCounts.get(scene) || 0;
-        scenePoseCounts.set(scene, scenePoseIndex + 1);
-        const template = poses[scenePoseIndex % poses.length];
+        const title = titleDirections[shot.title] || shot.title;
+        const poseState = scenePoseCounts.get(scene) || { count: 0, used: new Set() };
+        const preferredPosePattern = /回眸/.test(title) ? /回眸|回头|look back/i
+            : ['近景', '特写', '局部特写'].includes(shot.shotSize) && /表情|眼神|服装细节/.test(title) ? /抚颈|neck/i : null;
+        const preferredPose = preferredPosePattern && poses.find(template => !poseState.used.has(template.id)
+            && preferredPosePattern.test(`${template.title} ${template.englishTitle || ''}`));
+        const template = preferredPose || poses.find(candidate => !poseState.used.has(candidate.id)) || poses[poseState.count % poses.length];
+        poseState.used.add(template.id);
+        poseState.count++;
+        scenePoseCounts.set(scene, poseState);
         const guidance = referenceContext.guidance.suggestions.find(item => item.sourceItemId === template.id)?.direction || '';
-        const action = `摆姿参考：${template.title}。${poseDirections[template.id] || guidance}`;
+        const upperBodyCrop = ['中景', '近景', '特写', '局部特写'].includes(shot.shotSize);
+        const clothingDetail = /人物与服装细节|服装细节/.test(title);
+        const fullPoseDirection = poseDirections[template.id] || guidance;
+        const croppedPoseDirections = {
+            'atlas-pose-full_single_p015': '肩线轻转，靠近镜头一侧的手自然停在画框内；髋部不入画时不强求扶腰。',
+            'atlas-pose-full_single_p017': '上身转离镜头约四十五度，再回头看向镜头附近，肩颈放松。',
+            'atlas-pose-full_single_p018': '肩膀略转，双手只在画框内自然落于腰侧；手或髋部不入画时不强求扶腰。',
+            'atlas-pose-full_single_p021': '靠镜头一侧的手轻触颈侧，另一只手在画框外自然放松。',
+        };
+        const action = upperBodyCrop
+            ? `上半身摆姿参考（${template.title}）：${croppedPoseDirections[template.id] || fullPoseDirection} 不要求画框外的手脚动作。`
+            : `摆姿参考：${template.title}。${fullPoseDirection}`;
         const lens = fixedLens || shot.focalLength;
         const angle = /肩后|over[- ]the[- ]shoulder/i.test(shot.angle) ? '平视' : shot.angle;
+        const cameraAngle = angle.replace(/机位$/, '');
         const wide = ['环境全景', '环境远景', '全身'].includes(shot.shotSize);
         const detail = ['近景', '特写', '局部特写'].includes(shot.shotSize);
-        const framing = framingDirections[shot.shotSize] || {
+        const framing = clothingDetail ? {
+            prompt: 'Tight garment-detail close-up of the clothing item named by the user. Preserve its exact color and fabric texture; exclude the face and full-body pose.',
+            crop: '服装细节紧凑特写，只拍用户指定的服装面料与纹理，不拍全身；不复制库图中的未指定配饰。',
+            required: '用户指定服装的真实颜色、面料纹理和清晰细节',
+        } : framingDirections[shot.shotSize] || {
             prompt: `Photographic framing ${shot.shotSize}.`, crop: `按${shot.shotSize}取景，保持人物主体完整。`,
             required: `${shot.shotSize}构图与清晰人物主体`,
         };
         const method = wide
-            ? `摄影师后退至人物和场景完整入画，采用${angle}机位，并留意背景线条不要穿过头部。`
-            : `摄影师站在人物侧前方，采用${angle}机位，先确认${framing.crop}再引导动作。`;
+            ? `摄影师后退至人物和场景完整入画，采用${cameraAngle}机位，并留意背景线条不要穿过头部。`
+            : `摄影师站在人物侧前方，采用${cameraAngle}机位，先确认${framing.crop}再引导动作。`;
         const composition = wide
             ? '人物放在画面一侧三分线，视线方向留白，检查头顶、手指和鞋底边界，避开穿头的背景线条。'
-            : detail ? '围绕服装纹理、手部或表情选一个重点，裁切避开关节，背景保持简洁。'
+            : clothingDetail ? '以用户指定服装的纹理为焦点，保留一段完整衣料边缘，背景简洁，不带入未指定配饰。'
+                : detail ? '眼睛落在上三分线，完整保留本镜指定的面部或细节主体，背景保持简洁。'
                 : '以眼睛为焦点，肩线略转向画面内部，视线方向留白，裁切避开肘部和膝盖。';
-        const lighting = /窗|window/i.test(scene)
+        const backlit = /逆光/.test(angle) || /轮廓光/.test(title);
+        const lighting = backlit
+            ? '人物背后约45度侧后方来光勾勒发丝与肩部轮廓；脸朝向开阔天空或明亮环境，用自然环境光补足眼睛和肤色，避免轮廓与背景过曝。'
+            : /窗|window/i.test(scene)
             ? '人物距窗约一米，身体与窗面呈约45度，利用窗光侧向塑形，先关掉造成混色的室内灯，再按脸部曝光。'
             : '先在开阔阴影中找柔和侧光，避开脸上的斑驳直射光，按脸部曝光并保留背景亮部层次。';
         const stance = /(?:不|禁止)交叉双?腿/.test(input.extra || '')
             ? 'Both feet parallel and hip-width apart on the ground. Legs straight and separated, weight evenly on both feet.' : '';
         const wardrobe = `${wardrobeRequirement ? `人物与服装硬性要求：${wardrobeRequirement}。` : ''}用户文字是单品、颜色、裙长、鞋型和层次的唯一硬约束；服装库图片只辅助参考材质与色系。只保留文字指定的服装，不复制未指定的包袋、首饰、帽子或其他配饰，不替换、不增添。`;
-        const title = titleDirections[shot.title] || shot.title;
         const contract = {
             source: 'template-library-plan', referenceIds: [template.id],
             shot_language: `${title} · ${template.title}`, model_pose: action,

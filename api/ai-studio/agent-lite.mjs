@@ -34,7 +34,8 @@ function chooseQuery(kind, prompt) {
     if (/(?:霓虹|太空人|宇航员|火星)/.test(prompt))
       return { query: "霓虹色太空人" };
     if (/靠墙|倚靠|墙边|leaning/.test(prompt)) return { query: "靠墙" };
-    if (/走路|行走|回眸|抓拍|街拍|walk/.test(prompt)) return { query: "行走" };
+    if (/回眸|回头|look back/i.test(prompt)) return { query: "回眸" };
+    if (/走路|行走|抓拍|街拍|walk/i.test(prompt)) return { query: "行走" };
     if (/坐姿|坐着|坐下|sitting/.test(prompt)) return { query: "坐姿" };
     if (/站姿|站着|站立|standing/.test(prompt)) return { query: "站姿" };
     return { query: "" };
@@ -71,7 +72,8 @@ function chooseQuery(kind, prompt) {
 function poseQueries(prompt) {
   const choices = [
     [/站姿|站立|standing/i, "站姿"],
-    [/走路|行走|回眸|抓拍|街拍|walk/i, "行走"],
+    [/回眸|回头|look back/i, "回眸"],
+    [/走路|行走|抓拍|街拍|walk/i, "行走"],
     [/坐姿|坐着|坐下|sitting/i, "坐姿"],
     [/靠栏杆|栏杆/i, "栏杆"],
     [/靠墙|轻靠|倚靠|leaning/i, "靠墙"],

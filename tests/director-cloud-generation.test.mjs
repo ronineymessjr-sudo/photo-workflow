@@ -160,7 +160,31 @@ test('actual image payload preserves a close-up contract without forcing full-bo
     assert.match(imagePrompt, /soft window side light/);
     assert.match(imagePrompt, /Head-and-shoulders portrait/);
     assert.match(imagePrompt, /face photograph/);
+    assert.match(imagePrompt, /Upper-body pose adapted from the selected PoseAtlas reference/);
+    assert.match(imagePrompt, /Do not force unseen hands, hips, legs or feet into the crop/);
+    assert.doesNotMatch(imagePrompt, /Exactly one hand rests on the hip/);
     assert.doesNotMatch(imagePrompt, /single full-body|Keep the figure asymmetrical|same bent and lowered arms/);
+});
+
+test('clothing detail image prompt keeps the specified garment in a tight crop', async () => {
+    let imagePrompt;
+    const wardrobe = '米白色针织上衣、卡其色半身裙、棕色短靴';
+    const input = { ...request, brief: '米白针织上衣的面料细节', reference_brief: { modelDesc: wardrobe }, shot_contract: {
+        shot_language: '人物与服装细节', shot_size: '特写', referenceIds: ['pose-1'],
+        generator_prompt: 'Tight garment-detail close-up of the user specified knit fabric and texture; exclude the face and full-body pose.',
+        model_pose: '上半身摆姿参考，只保留衣料纹理需要的肩部姿态，不要求腿部动作。',
+        wardrobe_styling: wardrobe,
+    } };
+    await generateCloudCandidate(input, { referenceContext, fetchImpl, ai: { run: async (_model, payload) => {
+        if (_model.includes('llama')) return { response: 'Tight garment-detail close-up, ivory knit fabric texture, no face or full-body pose.' };
+        const form = await new Response(payload.multipart.body, { headers: { 'Content-Type': payload.multipart.contentType } }).formData();
+        imagePrompt = String(form.get('prompt'));
+        return { image: Buffer.from(jpeg).toString('base64') };
+    } } });
+    assert.match(imagePrompt, /Tight close-up of the user specified garment fabric and texture only/);
+    assert.match(imagePrompt, /preserve its exact color/i);
+    assert.match(imagePrompt, /Upper-body pose adapted from the selected PoseAtlas reference/);
+    assert.doesNotMatch(imagePrompt, /head-to-toe|both shoes|Exactly one hand rests on the hip/);
 });
 
 test('compiled shot includes only its selected pose from a multi-pose plan', () => {

@@ -13,7 +13,7 @@ function sourceFixture() {
         calls.push(String(url));
         if (String(url).endsWith('poses.json')) return Response.json({ poses: [
             { id: 'full_single_P019', no: 'P019', category: '坐姿', names: { zh: '长椅安静坐姿测试' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P019_front.jpg' }, { angle: 'side' }] },
-            { id: 'full_single_P015', no: 'P015', category: '行走', names: { zh: '自然行走回眸', en: 'Easy walking look back' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P015_front.jpg' }] },
+            { id: 'full_single_P015', no: 'P015', category: '站姿', names: { zh: '站立对立式平衡手扶腰', en: 'Standing contrapposto, hand on hip' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P015_front.jpg' }] },
             { id: 'full_single_P016', no: 'P016', category: '站姿', names: { zh: '双手撩发的放松站姿', en: 'Relaxed standing pose' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P016_front.jpg' }] },
             { id: 'full_single_P017', no: 'P017', category: '站姿', names: { zh: '站立自然回眸', en: 'Relaxed standing look back' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P017_front.jpg' }] },
             { id: 'full_single_P018', no: 'P018', category: '站姿', names: { zh: '双手轻扶腰侧', en: 'Relaxed hands at waist' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P018_front.jpg' }] },
@@ -71,6 +71,42 @@ test('automatic references choose varied natural poses and match the requested o
     assert.doesNotMatch(plan.shotList.map(shot => `${shot.title} ${shot.description} ${shot.props}`).join('\n'), /同行人物|橱窗|推门|拿取饮品|无人物环境/);
 });
 
+test('template plan aligns selected poses, close crops, and backlight instructions with each shot', async () => {
+    const source = sourceFixture();
+    const input = {
+        theme: '秋日公园人像', style: '自然、克制、电影感',
+        modelDesc: '成年女性模特，米白色针织上衣、卡其色半身裙、棕色短靴；自然妆发',
+        scene: '公园竹林小径；湖边木栈道；木亭长椅', mood: '安静松弛', duration: '2小时', people: '1',
+        extra: '自然轻松，双脚着地；禁止跪姿、躺姿、趴姿、双手举过头；不出现额外道具、同行人物，不拍无人物环境镜头；全组固定35mm',
+        useReferenceLibrary: true,
+    };
+    const context = await prepareReferenceContext({ ...input, requireImageReferences: true }, { fetchImpl: source.fetchImpl });
+    const plan = createTemplatePlan(input, context);
+    assert.equal(plan.shotList.length, 12);
+    for (const scene of [...new Set(plan.shotList.map(shot => shot.scene))]) {
+        const sceneShots = plan.shotList.filter(shot => shot.scene === scene);
+        const scenePoseIds = [...new Set(sceneShots.map(shot => shot.directorContract.referenceIds[0]))];
+        assert.equal(scenePoseIds.length, 4, `${scene}: ${sceneShots.map(shot => `${shot.title}=${shot.directorContract.referenceIds[0]}`).join('; ')}`);
+    }
+
+    const clothingDetail = plan.shotList.find(shot => shot.title === '人物与服装细节');
+    assert.equal(clothingDetail.shotSize, '特写');
+    assert.match(clothingDetail.directorContract.generator_prompt, /Tight garment-detail close-up of the clothing item named by the user/);
+    assert.match(clothingDetail.directorContract.crop_boundary, /用户指定的服装面料与纹理/);
+    assert.doesNotMatch(clothingDetail.description, /双脚|站稳|前后错开|腿/);
+
+    const lookBack = plan.shotList.find(shot => shot.title === '单人回眸构图');
+    assert.equal(lookBack.directorContract.referenceIds[0], 'atlas-pose-full_single_p017');
+    assert.match(lookBack.description, /回头/);
+    assert.doesNotMatch(lookBack.description, /双手轻放腰侧/);
+
+    const rimLight = plan.shotList.find(shot => shot.title === '轮廓光人像');
+    assert.match(rimLight.angle, /逆光/);
+    assert.match(rimLight.lighting, /人物背后.*勾勒.*轮廓/);
+    assert.doesNotMatch(rimLight.lighting, /开阔阴影/);
+    assert.ok(plan.shotList.every(shot => !/机位机位/.test(shot.method)));
+});
+
 test('reference selection rejects a pose that directly violates a user ban', async () => {
     const source = sourceFixture();
     const naturalLighting = await prepareReferenceContext({
@@ -121,7 +157,7 @@ test('template plan and candidate compilation retain retrieved pose, processing 
     assert.ok(plan.sections[0].c.includes('拍摄场景：公园长椅'));
     assert.ok(plan.sections[0].c.some(line => line.startsWith('摄影师机位：')));
     assert.ok(plan.sections[0].c.some(line => line.startsWith('光线安排：')));
-    assert.match(plan.shotList[1].directorContract.model_pose, /自然行走回眸/);
+    assert.match(plan.shotList[1].directorContract.model_pose, /手轻搭髋部/);
     assert.equal(plan.shotList[2].scene, '公园长椅');
     assert.equal(plan.shotList[5].scene, '公园长椅');
     assert.equal(plan.shotList[6].scene, '咖啡馆窗边');
@@ -215,7 +251,7 @@ test('natural multi-pose search balances four pose variants with one clothing an
     const source = sourceFixture();
     const result = await searchStudio({ prompt: '自然普通站姿、缓步行走、轻松坐姿、轻靠栏杆；短发妆发参考；棕色针织裙、黑色连裤袜、棕色短靴；避免后仰、跪姿、趴地', uid: 'user-1', env: { JWT_SECRET: 'test-signing-secret-at-least-32-characters' }, fetchImpl: source.fetchImpl });
     const poses = result.selectedTemplates.filter(template => template.kind === 'pose');
-    assert.deepEqual(poses.map(template => template.upstreamId), ['full_single_P017', 'full_single_P015', 'full_single_P018', 'full_single_P021']);
+    assert.deepEqual(poses.map(template => template.upstreamId), ['full_single_P015', 'full_single_P017', 'full_single_P018', 'full_single_P021']);
     assert.equal(result.selectedTemplates.filter(template => template.kind === 'costume').length, 1);
     assert.equal(result.selectedTemplates.find(template => template.kind === 'costume').upstreamId, 'AUT-0006');
     assert.equal(result.selectedTemplates.filter(template => template.kind === 'portrait' && template.section === 'face').length, 1);
@@ -227,7 +263,7 @@ test('natural multi-pose search balances four pose variants with one clothing an
 test('live reference search offers only image-backed natural poses and face-section portraits', async () => {
     const source = sourceFixture();
     const result = await searchStudio({ prompt: '自然行走回眸、秋日棕色针织、短发人脸参考；避免后仰和跪姿', uid: 'user-1', env: { JWT_SECRET: 'test-signing-secret-at-least-32-characters' }, fetchImpl: source.fetchImpl });
-    assert.ok(result.selectedTemplates.some(template => template.kind === 'pose' && template.upstreamId === 'full_single_P015'));
+    assert.ok(result.selectedTemplates.some(template => template.kind === 'pose' && template.upstreamId === 'full_single_P017'));
     assert.ok(result.selectedTemplates.some(template => template.kind === 'costume'));
     assert.ok(result.selectedTemplates.some(template => template.kind === 'portrait' && template.section === 'face' && template.hair === 'short'));
     assert.equal(result.selectedTemplates.some(template => template.id === 'pa-pose-walk'), false);
