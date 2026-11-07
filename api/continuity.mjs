@@ -15,6 +15,16 @@ import { createHash } from 'node:crypto';
 export const CONTINUITY_ROLES = ['identity', 'scene', 'style'];
 
 export const CONTINUITY_PROVIDERS = {
+    'cloudflare-flux-klein': {
+        label: 'Cloudflare Workers AI · FLUX.2 Klein（已绑定 [ai]，免密钥）',
+        supportsReferences: true,
+        roles: CONTINUITY_ROLES,
+        maxReferences: 3,
+        supportsSeed: true,
+        canGenerate: true,
+        // Only identity and style get an image slot; scene is prompt-only.
+        imageSlots: ['identity', 'style'],
+    },
     'gpt-image-2': {
         label: 'GPT Image 2 / 2.5',
         supportsReferences: true,

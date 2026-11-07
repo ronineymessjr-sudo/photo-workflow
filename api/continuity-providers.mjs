@@ -14,6 +14,24 @@ export const PRICE_LABELS = { low: '便宜', medium: '中等', high: '偏贵' };
 
 export const IMAGE_PROVIDERS = [
     {
+        id: 'cloudflare-flux-klein',
+        label: 'Cloudflare Workers AI · FLUX.2 Klein',
+        adapter: 'cloudflare-workers-ai',
+        priceTier: 'low',
+        supportsReferences: true,
+        maxReferences: 3,
+        aspectControl: true,
+        watermark: false,
+        // No API key: the Worker already binds [ai] in wrangler.toml, so this is
+        // the one provider that is live the moment the deployment exists.
+        env: [],
+        requiresBinding: 'AI',
+        supportsSeed: true,
+        pricingNote: '走 Workers AI 免费额度优先，超出后按神经元计费；已绑 [ai] 即免密钥',
+        console: 'https://dash.cloudflare.com/?to=/:account/ai/workers-ai',
+        bestFor: '开箱即用、一次一张、能吃三张参考图（人脸/服装/姿势）',
+    },
+    {
         id: 'siliconflow-flux-kontext',
         label: 'SiliconFlow · FLUX.1 Kontext',
         adapter: 'reference-json',
@@ -128,9 +146,16 @@ export function listProviders({ needReferences = false, maxPriceTier = '' } = {}
 // actually have, and that has credentials configured. The manual chat channel
 // needs no credentials, so "nothing configured" is not an error - it just means
 // only the manual route is available.
-export function recommendProvider({ needReferences = true, configuredEnv = {}, maxPriceTier = '' } = {}) {
+//
+// Providers with requiresBinding (Workers AI) need no key but do need the host
+// binding to exist, so callers pass `bindings` and we check it here instead of
+// pretending a bare deployment can generate.
+export function recommendProvider({ needReferences = true, configuredEnv = {}, bindings = {}, maxPriceTier = '' } = {}) {
     const candidates = listProviders({ needReferences, maxPriceTier });
-    const isConfigured = provider => provider.env.length === 0 || provider.env.every(key => Boolean(configuredEnv[key]));
+    const isConfigured = provider => {
+        if (provider.requiresBinding && !bindings[provider.requiresBinding]) return false;
+        return provider.env.length === 0 || provider.env.every(key => Boolean(configuredEnv[key]));
+    };
     const configured = candidates.filter(isConfigured);
     const apiReady = configured.filter(provider => provider.adapter !== 'handoff');
     return {
@@ -146,7 +171,10 @@ export function recommendProvider({ needReferences = true, configuredEnv = {}, m
 }
 
 export function resolveProvider(providerId) {
-    return IMAGE_PROVIDERS.find(provider => provider.id === providerId) || null;
+    const provider = IMAGE_PROVIDERS.find(item => item.id === providerId) || null;
+    // Most reference-capable APIs accept a seed; treat it as on unless a vendor
+    // is known not to support it, so the contract never emits an undefined flag.
+    return provider ? { ...provider, supportsSeed: provider.supportsSeed !== false } : null;
 }
 
 export function assertGroupProvider(group, providerId) {

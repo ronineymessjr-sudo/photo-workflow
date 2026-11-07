@@ -27,6 +27,7 @@ export const PROVIDER_ADAPTERS = {
     'gpt-image-2': 'openai-images-edits',
     'flux-kontext': 'reference-json',
     'sdxl-ipadapter': 'reference-json',
+    'cloudflare-flux-klein': 'cloudflare-workers-ai',
 };
 
 function dataUrlFor(buffer, mime) {
@@ -101,7 +102,50 @@ async function callReferenceJson({ env, fetchImpl, prompt, size, aspect, seed, r
 const ADAPTERS = {
     'openai-images-edits': callOpenAiEdits,
     'reference-json': callReferenceJson,
+    'cloudflare-workers-ai': callCloudflareWorkersAi,
 };
+
+// Cloudflare Workers AI: no API key, the Worker carries the `[ai]` binding. It
+// exposes two reference-image slots only, so `scene` is described in the prompt
+// instead of being uploaded - the caller is told about that gap separately.
+async function callCloudflareWorkersAi({ env, prompt, size, seed, references }) {
+    const ai = env?.AI;
+    if (!ai || typeof ai.run !== 'function') {
+        throw new GenerationError('GENERATION_NOT_CONFIGURED', '这个部署没有绑定 Workers AI（wrangler.toml 里的 [ai]），无法用 Cloudflare 出图', 503, { missing: ['AI binding'] });
+    }
+    const slots = ['identity', 'style'];
+    const chosen = slots.map(role => references.find(reference => reference.role === role)).filter(Boolean);
+    if (chosen.length < 2) {
+        throw new GenerationError('GENERATION_REFERENCE_MISSING', `Cloudflare 需要人物与风格两张参考图，当前只有 ${chosen.length} 张`, 409);
+    }
+    const portrait = String(size || '').startsWith('1024x1536') || !String(size || '').includes('x');
+    const width = portrait ? 768 : 1024;
+    const height = portrait ? 1024 : 768;
+    const form = new FormData();
+    form.append('prompt', prompt);
+    form.append('width', String(width));
+    form.append('height', String(height));
+    chosen.forEach((reference, index) => {
+        const bytes = reference.buffer instanceof Uint8Array ? reference.buffer : new Uint8Array(reference.buffer || []);
+        form.append(`input_image_${index}`, new Blob([bytes], { type: reference.mime || 'image/png' }), `reference-${index}`);
+    });
+    const serialized = new Response(form);
+    let result;
+    try {
+        result = await ai.run('@cf/black-forest-labs/flux-2-klein-9b', {
+            multipart: { body: serialized.body, contentType: serialized.headers.get('content-type') },
+        });
+    } catch (error) {
+        throw new GenerationError('GENERATION_UPSTREAM_FAILED', `Cloudflare 出图失败：${String(error?.message || error).slice(0, 200)}`, 502);
+    }
+    if (typeof result?.image !== 'string' || !result.image.length) {
+        throw new GenerationError('GENERATION_INVALID_RESPONSE', 'Cloudflare 返回里没有图片数据', 502);
+    }
+    const binary = atob(result.image);
+    const head = binary.charCodeAt(0);
+    const contentType = head === 137 ? 'image/png' : head === 255 ? 'image/jpeg' : 'image/webp';
+    return { contentType, base64: result.image };
+}
 
 /**
  * Generates exactly one shot. Never loops, never fans out: the caller decides
