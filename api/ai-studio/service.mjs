@@ -94,9 +94,14 @@ export async function consumeStudioSearchQuota({ uid, ip, env = {} }) {
 
 export async function consumeStudioImageQuota({ uid, env = {} }) {
     if (!uid) return false;
-    const userAllowed = await consumeQuota(env, `user:${uid}`, 'image', 5);
+    // Limits are configurable: at 5/6 per day the whole test cycle dead-ends
+    // after a handful of frames. Defaults stay conservative; deployments that
+    // mean to test at volume raise them through env.
+    const userLimit = Number(env.STUDIO_IMAGE_USER_LIMIT) > 0 ? Number(env.STUDIO_IMAGE_USER_LIMIT) : 5;
+    const globalLimit = Number(env.STUDIO_IMAGE_GLOBAL_LIMIT) > 0 ? Number(env.STUDIO_IMAGE_GLOBAL_LIMIT) : 6;
+    const userAllowed = await consumeQuota(env, `user:${uid}`, 'image', userLimit);
     if (userAllowed !== true) return userAllowed;
-    const globalAllowed = await consumeQuota(env, 'global:cloud-image', 'image-global', 6);
+    const globalAllowed = await consumeQuota(env, 'global:cloud-image', 'image-global', globalLimit);
     return globalAllowed === true ? true : globalAllowed === null ? null : 'global-limit';
 }
 

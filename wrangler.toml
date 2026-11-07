@@ -8,6 +8,11 @@ account_id = "eaab0ca2aac12cd19b8a697a508da342"
 [vars]
 ENVIRONMENT = "production"
 RESEND_AUTH_ENABLED = "true"
+# Test-period image quota. Defaults in code are 5 per user / 6 global per day,
+# which ends a test cycle after a handful of frames. Lower these before
+# opening the site to real users.
+STUDIO_IMAGE_USER_LIMIT = "120"
+STUDIO_IMAGE_GLOBAL_LIMIT = "400"
 AI_STUDIO_ALLOWED_ORIGINS = "https://photo-workflow.pages.dev,https://photo.ronineymessjrstudio.cn,https://fix-multi-pose-library-gener.photo-workflow.pages.dev,https://ronineymessjr-sudo.github.io"
 
 # 密钥（通过 wrangler secret 设置，不要在这里写真实值）

@@ -263,6 +263,74 @@ async function callSeedream({ env, prompt, size, seed, references, variant, pose
 }
 
 
+
+// Two-phase ModelScope helpers.
+//
+// The model takes 20-40s. A synchronous handler behind the Pages proxy dies at
+// 30s, so the work is split: submit() returns a task id immediately, and a
+// separate poll() call collects the result. Each HTTP request then finishes in
+// a couple of seconds.
+export async function submitModelScope({ env, prompt, size, seed, references, variant, poseRef, anchor, locked, store = null, fetchImpl = fetch }) {
+    const token = env?.MODELSCOPE_TOKEN;
+    if (!token) throw new GenerationError('GENERATION_NOT_CONFIGURED', '缺少魔搭 MODELSCOPE_TOKEN', 503, { missing: ['MODELSCOPE_TOKEN'] });
+    const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
+    const images = [];
+    if (anchor?.assetId) {
+        const stored = await readAsset(`/api/continuity/asset/${anchor.assetId}`, { env, store });
+        if (!stored?.buffer?.length) throw new GenerationError('GENERATION_ANCHOR_MISSING', '已锁定的母图读不到', 409);
+        images.push(dataUrlFor(stored.buffer, stored.mime));
+    }
+    for (const reference of references) images.push(reference.dataUrl);
+    const fields = directionFields({ prompt, locked, variant, poseRef, framing: framingZh(variant) });
+    const direction = fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`).join('\n');
+
+    const response = await fetchImpl(MODELSCOPE_ENDPOINT, {
+        method: 'POST',
+        headers: { ...headers, 'X-ModelScope-Async-Mode': 'true' },
+        body: JSON.stringify({
+            model: MODELSCOPE_MODEL,
+            prompt: direction,
+            ...(images.length ? { image_url: images } : {}),
+            ...(Number.isSafeInteger(seed) ? { seed } : {}),
+        }),
+        signal: AbortSignal.timeout(25000),
+    });
+    if (!response.ok) {
+        const detail = await response.text().catch(() => '');
+        throw new GenerationError('GENERATION_UPSTREAM_FAILED', `魔搭提交返回 ${response.status}：${detail.slice(0, 200)}`, response.status === 429 ? 429 : 502);
+    }
+    const payload = await response.json().catch(() => null);
+    const taskId = payload?.task_id || payload?.data?.task_id;
+    if (!taskId) throw new GenerationError('GENERATION_INVALID_RESPONSE', '魔搭没有返回 task_id', 502);
+    return { taskId, prompt: direction, referencesSent: images.length };
+}
+
+export async function pollModelScope({ env, taskId, fetchImpl = fetch }) {
+    const token = env?.MODELSCOPE_TOKEN;
+    if (!token) throw new GenerationError('GENERATION_NOT_CONFIGURED', '缺少魔搭 MODELSCOPE_TOKEN', 503, { missing: ['MODELSCOPE_TOKEN'] });
+    const response = await fetchImpl(MODELSCOPE_TASK + taskId, {
+        headers: { Authorization: `Bearer ${token}`, 'X-ModelScope-Task-Type': 'image_generation' },
+        signal: AbortSignal.timeout(20000),
+    });
+    if (!response.ok) throw new GenerationError('GENERATION_UPSTREAM_FAILED', `魔搭查询返回 ${response.status}`, 502);
+    const state = await response.json().catch(() => null);
+    const status = state?.task_status;
+    if (status === 'FAILED') {
+        throw new GenerationError('GENERATION_UPSTREAM_FAILED', `魔搭任务失败：${String(state?.errors?.message || '').slice(0, 200)}`, 502);
+    }
+    if (status !== 'SUCCEEDED') return { status: 'pending', upstream: status || 'PENDING' };
+    const url = state?.output_images?.[0] || state?.data?.[0]?.url;
+    if (!url) throw new GenerationError('GENERATION_INVALID_RESPONSE', '魔搭任务成功但没有图片地址', 502);
+    const image = await fetchImpl(url, { signal: AbortSignal.timeout(30000) });
+    if (!image.ok) throw new GenerationError('GENERATION_INVALID_RESPONSE', '下载魔搭结果失败', 502);
+    const bytes = new Uint8Array(await image.arrayBuffer());
+    return {
+        status: 'succeeded',
+        contentType: image.headers.get('content-type')?.split(';')[0] || 'image/png',
+        base64: Buffer.from(bytes).toString('base64'),
+    };
+}
+
 // ModelScope (魔搭) · Qwen-Image-Edit adapter.
 //
 // The only option found that satisfies all four requirements at once:
@@ -490,7 +558,7 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
  * Generates exactly one shot. Never loops, never fans out: the caller decides
  * which shot to (re)make, which is what keeps retry scoped to a single frame.
  */
-export async function generateShot({ group, shotId, providerId = '', env = {}, fetchImpl = fetch, store = null } = {}) {
+export async function generateShot({ group, shotId, providerId = '', env = {}, fetchImpl = fetch, store = null, submitOnly = false } = {}) {
     // Fall back to the provider pinned on the contract, so the shoot keeps using
     // the brush it was approved with.
     providerId = providerId || group?.imageProvider || '';
@@ -536,6 +604,22 @@ export async function generateShot({ group, shotId, providerId = '', env = {}, f
             continue;
         }
         references.push({ role: reference.role, assetId: reference.assetId, mime: asset.mime, buffer: asset.buffer, dataUrl: dataUrlFor(asset.buffer, asset.mime) });
+    }
+
+    // Async provider: hand the work off and return immediately. A 20-40s
+    // generation cannot be held open behind the Pages proxy (30s ceiling).
+    if (submitOnly && providerId === 'modelscope-qwen-edit') {
+        const submitted = await submitModelScope({
+            env, prompt: request.prompt, references,
+            variant: request.variant,
+            poseRef: (group.shots || []).find(shot => shot.shotId === shotId)?.poseRef || null,
+            anchor: request.anchor, locked: request.locked, store, fetchImpl,
+        });
+        return {
+            shotId, provider: providerId, status: 'pending', taskId: submitted.taskId,
+            referencesSent: submitted.referencesSent, sentPrompt: submitted.prompt,
+            lockedHash: request.lockedHash, qc: { verdict: 'pending' },
+        };
     }
 
     const wide = String(request.aspect || '').startsWith('3:2');

@@ -15,7 +15,7 @@ import { workspaceEntryKey } from '../assets/workspace-sync-protocol.mjs';
 export { AiStudioQuota } from './ai-studio/quota.mjs';
 import { createGroup, setReference, confirmMaster, buildShotRequests, recordQc, continuitySummary, continuitySchema, attachResult, handoffFor, setImageProvider, setAnchor, ContinuityError } from './continuity.mjs';
 import { storeAsset, readAsset } from './continuity-assets.mjs';
-import { generateShot } from './continuity-generation.mjs';
+import { generateShot, submitModelScope, pollModelScope } from './continuity-generation.mjs';
 import { listProviders, recommendProvider, assertGroupProvider } from './continuity-providers.mjs';
 import { groupFromStudio } from './continuity-studio-bridge.mjs';
 import { prescreen, mergeScores, summariseVision } from './continuity-vision.mjs';
@@ -535,7 +535,10 @@ export default {
                 const needReferences = url.searchParams.get('needReferences') !== 'false';
                 const maxPriceTier = url.searchParams.get('maxPriceTier') || '';
                 const configuredEnv = { OPENAI_API_KEY: env.OPENAI_API_KEY, CONTINUITY_IMAGE_ENDPOINT: env.CONTINUITY_IMAGE_ENDPOINT,
-                    CONTINUITY_IMAGE_KEY: env.CONTINUITY_IMAGE_KEY, ARK_API_KEY: env.ARK_API_KEY };
+                    CONTINUITY_IMAGE_KEY: env.CONTINUITY_IMAGE_KEY, ARK_API_KEY: env.ARK_API_KEY,
+                    // Added so the recommender can see providers whose whole
+                    // credential is a single bearer token.
+                    MODELSCOPE_TOKEN: env.MODELSCOPE_TOKEN };
                 // Workers AI needs no key but does need the binding, so pass it in:
                 // without this the catalogue can never recommend the free brush
                 // even on a deployment that has it.
@@ -587,10 +590,51 @@ export default {
                     else if (allowed === 'global-limit') result = { status: 429, body: { error: 'GLOBAL_IMAGE_DAILY_LIMIT_REACHED' } };
                     else if (!allowed) result = { status: 429, body: { error: 'IMAGE_DAILY_LIMIT_REACHED' } };
                     else {
-                        const generated = await generateShot({
-                            group: body?.group, shotId: body?.shotId, providerId: body?.providerId, env,
+                        // The ModelScope brush needs 20-40s, which the Pages
+                        // proxy cuts at 30s. For that provider we only submit and
+                        // return a task id; the client then polls
+                        // /api/continuity/collect until the frame is ready.
+                        const isAsync = body?.providerId === 'modelscope-qwen-edit';
+                        try {
+                            const generated = await generateShot({
+                                group: body?.group, shotId: body?.shotId, providerId: body?.providerId, env,
+                                submitOnly: isAsync,
+                            });
+                            result = { status: isAsync ? 202 : 200, body: generated };
+                        } catch (generateError) {
+                            // Surface the real cause instead of a bare Cloudflare
+                            // error page; this branch failed silently once.
+                            result = { status: generateError.status || 500, body: {
+                                error: String(generateError?.message || generateError).slice(0, 300),
+                                code: generateError?.code || 'GENERATE_FAILED',
+                                ...(generateError?.details ? { details: generateError.details } : {}),
+                            } };
+                        }
+                    }
+                }
+            }
+            else if (path === '/api/continuity/collect' && method === 'POST') {
+                // Second half of the async flow: poll the provider and store the
+                // finished frame. Returns {status:'pending'} while it is still
+                // running, so the client just calls again.
+                if (!uid) result = { status: 401, body: { error: 'SIGN_IN_REQUIRED' } };
+                else {
+                    const polled = await pollModelScope({ env, taskId: body?.taskId });
+                    if (polled.status !== 'succeeded') {
+                        result = { status: 200, body: { status: 'pending', shotId: body?.shotId } };
+                    } else {
+                        const stored = await storeAsset({
+                            dataUrl: `data:${polled.contentType};base64,${polled.base64}`,
+                            role: 'misc', env,
                         });
-                        result = { status: 200, body: generated };
+                        result = { status: 200, body: {
+                            status: 'succeeded',
+                            shotId: body?.shotId,
+                            provider: 'modelscope-qwen-edit',
+                            seed: body?.seed,
+                            image: { assetId: stored.assetId, path: stored.path, bytes: stored.bytes, durable: stored.durable },
+                            qc: { verdict: 'pending' },
+                        } };
                     }
                 }
             }
