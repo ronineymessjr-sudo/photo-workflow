@@ -347,13 +347,22 @@ async function openHandoff(shotId) {
         },
     });
 
-    const safeReferencePaths = card.referencePaths.map(safeThumbUrl).filter(Boolean);
-    const refs = el('div', { class: 'refs' }, safeReferencePaths.map((path, index) => el('div', { class: 'ref-card' }, [
+    const referenceItems = Array.isArray(card.referenceImages)
+        ? card.referenceImages
+        : card.referencePaths.map((url, index) => ({ role: ['identity', 'scene', 'style'][index] || '', url }));
+    const safeReferences = referenceItems.map(reference => ({
+        ...reference,
+        url: safeThumbUrl(reference.url),
+    })).filter(reference => reference.url);
+    const referenceLabels = { identity: '人物参考', scene: '场景参考', style: '衣装参考', pose: '姿势参考' };
+    const refs = el('div', { class: 'refs' }, safeReferences.map((reference, index) => el('div', { class: 'ref-card' }, [
         el('div', { class: 'ref-head' }, [
-            el('strong', { text: ['人物参考', '场景参考', '风格参考'][index] || `参考 ${index + 1}` }),
+            el('strong', { text: reference.role === 'pose' && reference.title
+                ? `${referenceLabels.pose} · ${reference.title}`
+                : referenceLabels[reference.role] || `参考 ${index + 1}` }),
         ]),
-        el('img', { src: path, class: 'thumb', alt: '参考图' }),
-        el('a', { href: path, download: `ref-${index + 1}.png`, class: 'muted small', text: '下载参考图' }),
+        el('img', { src: reference.url, class: 'thumb', alt: referenceLabels[reference.role] || '参考图' }),
+        el('a', { href: reference.url, download: `ref-${index + 1}.png`, class: 'muted small', text: '打开/下载参考图', target: '_blank', rel: 'noopener' }),
     ])));
 
     const uploader = el('input', {
@@ -385,7 +394,7 @@ async function openHandoff(shotId) {
             copyButton,
             el('span', { class: 'muted small', text: `目标文件名：${card.file}` }),
         ]),
-        el('h3', { text: '参考图（三张都要给）', style: 'margin-top:18px' }),
+        el('h3', { text: `图片参考（${safeReferences.length} 张；场景可按方案文字）`, style: 'margin-top:18px' }),
         refs,
         el('h3', { text: '出图后回传', style: 'margin-top:18px' }),
         uploader,

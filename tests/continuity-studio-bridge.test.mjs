@@ -64,10 +64,10 @@ test('the converter reports import blockers when a shot list is missing', () => 
     assert.match(result.missing.join('／'), /方案中没有镜头列表/);
     assert.match(result.missing.join('／'), /人工确认/);
 
-    // And the downstream gate agrees: no hand-off card while references are pending.
+    // The downstream gate keeps the absent shot list as an explicit blocker.
     const blocked = handoffFor(result.group);
     assert.equal(blocked.ready, false);
-    assert.match(blocked.blockedReason, /参考图未就绪/);
+    assert.match(blocked.blockedReason, /还没有镜头/);
 });
 
 test('a real Studio plan keeps per-shot scenes and pose selections in the continuity group', () => {
@@ -99,6 +99,32 @@ test('a real Studio plan keeps per-shot scenes and pose selections in the contin
     assert.equal(ready.master.confirmedBy, 'human');
     const requests = buildShotRequests(ready, { providerId: 'cloudflare-flux-klein' });
     assert.deepEqual(requests.map(request => request.variant.scene), ['枫树公园', '窗边咖啡馆']);
+
+    const handoff = handoffFor(ready, { shotId: 'plan-shot-1' });
+    assert.equal(handoff.ready, true, '图库人脸/衣装引用加方案文字场景应能用于人工出图');
+    assert.deepEqual(handoff.cards[0].referenceImages, [
+        { role: 'identity', url: portrait.referenceImageUrl },
+        { role: 'style', url: costume.referenceImageUrl },
+        { role: 'pose', title: '坐姿 001', url: pose.referenceImageUrl },
+    ]);
+    assert.match(handoff.cards[0].instruction, /3 张图片参考图/);
+    assert.match(handoff.cards[0].instruction, /所选摆姿参考图/);
+    assert.match(handoff.cards[0].instruction, /场景按方案文字/);
+});
+
+test('handoff does not treat an untrusted external URL as a ready library reference', () => {
+    const result = groupFromStudio({
+        templates: [portrait, costume],
+        input: { theme: '拒绝不可信引用' },
+        shots: [{ shotId: 'shot-01', generator_prompt: 'portrait' }],
+    });
+    const group = result.group;
+    group.references = group.references.map(reference => reference.role === 'identity'
+        ? { ...reference, referenceImageUrl: 'https://evil.example/image.webp' }
+        : reference);
+    const handoff = handoffFor(group, { shotId: 'shot-01' });
+    assert.equal(handoff.ready, false);
+    assert.equal(handoff.cards[0].referenceImages.some(reference => reference.role === 'identity'), false);
 });
 
 test('a portrait is never reused as a costume reference', () => {
