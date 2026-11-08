@@ -26,13 +26,15 @@ const argOf = name => {
     const index = args.indexOf(`--${name}`);
     return index >= 0 ? args[index + 1] : '';
 };
-const PICK = (argOf('shots') || '').split(',').map(Number).filter(Number.isFinite);
+const PICK = (argOf('shots') || '').split(',').map(item => item.trim()).filter(Boolean).map(Number).filter(Number.isFinite);
 const BRIEF = argOf('brief') || 'scene-spiral-stairs';
 const OUT = argOf('out') || `runtime/twostage/${BRIEF}`;
 const IDENTITY = argOf('identity') || 'runtime/deploy-test/identity.png';
 const STYLE = argOf('style') || '';
 const TOKEN = process.env.MODELSCOPE_TOKEN || '';
 const PACK = 'experiments/plan-quality-lab/prompt-packs/2026-10-27-deepseek/06-prompts-all.json';
+// Sizes where the face is large enough that swapping it is worth the wait.
+const SWAP_SIZES = new Set(['ECU', 'CU', 'MCU', 'MS', 'MFS']);
 
 if (!TOKEN) {
     console.log('缺少 MODELSCOPE_TOKEN');
@@ -138,7 +140,17 @@ for (const row of rows) {
     }
     const composePath = path.join(OUT, `${shotId}-1-compose.png`);
     await writeFile(composePath, composed);
-    process.stdout.write(`ok ${Math.round(composed.length / 1024)}KB | 换脸... `);
+    process.stdout.write(`ok ${Math.round(composed.length / 1024)}KB | `);
+
+    // Only swap where the face is actually legible. In a wide or full-body frame
+    // the face occupies a few dozen pixels, so a 10-minute edit changes nothing
+    // that survives viewing - and identity drift is invisible at that scale anyway.
+    if (!SWAP_SIZES.has(String(size).toUpperCase())) {
+        console.log('跳过换脸（脸太小，换了也看不出来）');
+        report.push({ shotId, size, angle: spec.camera_angle, ok: true, composed: true, swapped: false, compose: composePath, final: composePath });
+        continue;
+    }
+    process.stdout.write('换脸... ');
 
     // Transfer: keep everything about the composed frame, replace only the face.
     const swapPrompt = [

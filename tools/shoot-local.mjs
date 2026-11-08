@@ -22,7 +22,7 @@ const argOf = name => {
     return index >= 0 ? args[index + 1] : '';
 };
 const BRIEF = argOf('brief') || 'scene-spiral-stairs';
-const PICK = (argOf('shots') || '').split(',').map(Number).filter(Number.isFinite);
+const PICK = (argOf('shots') || '').split(',').map(item => item.trim()).filter(Boolean).map(Number).filter(Number.isFinite);
 const OUT = argOf('out') || `runtime/local-${BRIEF}`;
 const PACK = 'experiments/plan-quality-lab/prompt-packs/2026-10-27-deepseek/06-prompts-all.json';
 const TOKEN = process.env.MODELSCOPE_TOKEN || '';
