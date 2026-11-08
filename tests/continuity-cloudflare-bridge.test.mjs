@@ -546,3 +546,19 @@ test('a wide frame keeps the whole pose', async () => {
     assert.match(text, /单脚踩在台阶上/, '全身景别不该裁掉姿势');
     assert.match(text, /从头到脚完整入画/);
 });
+
+test('the assembled direction always requires exactly one person', async () => {
+    const { directionText } = await import('../api/continuity-generation.mjs');
+    const text = directionText({
+        prompt: '美术馆螺旋楼梯',
+        locked: { location: '美术馆螺旋楼梯' },
+        variant: { size: 'FS' },
+        size: 'FS',
+    });
+    // Written as "only one person is allowed", the model returned an empty
+    // staircase; written as "there must be one person, and only one", it returned
+    // the subject. Both halves have to be present.
+    assert.match(text, /必须有一个人/, '必须先要求有人，否则约束会被读成可以没有人');
+    assert.match(text, /只有一个人/);
+    assert.match(text, /不要出现第二个人/);
+});

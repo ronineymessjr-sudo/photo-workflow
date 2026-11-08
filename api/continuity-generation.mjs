@@ -116,10 +116,22 @@ async function callReferenceJson({ env, fetchImpl, prompt, size, aspect, seed, r
 // The assembled direction text, exported so tools can compose a frame with the
 // text-to-image model using exactly the same wording the edit models receive.
 // Two implementations of this used to drift apart; there is only one now.
+// One person, stated once and reused by every prompt builder. A plan line like
+// "人物停在下一层内侧踏步" was read as two positions and produced the same person
+// twice in one frame: a valid photograph that fails the shoot.
+// Phrased as a requirement first, an exclusion second. Written as "only one
+// person is allowed", the model dropped the subject entirely and returned an empty
+// staircase - a constraint about absence invites absence.
+const RULE_ONE_PERSON = '画面中必须有一个人，而且只有一个人：人物清楚可见、是画面主体；不要出现第二个人，不要复制、镜像或添加倒影。';
+
 export function directionText({ prompt, locked, variant, poseRef, size }) {
     const framed = { ...variant, size: size || variant?.size };
     const fields = directionFields({ prompt, locked, variant: framed, poseRef, framing: framingZh(framed) });
-    return fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`).join('\n');
+    const body = fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`).join('\n');
+    // Stated as a rule rather than left implicit. Without it, a plan line like
+    // "人物停在下一层内侧踏步" was read as two positions and produced the same
+    // person twice in one frame - a real photograph that fails the shoot.
+    return `${body}\n${RULE_ONE_PERSON}`;
 }
 
 // One field list shared by every adapter.
@@ -345,7 +357,7 @@ export async function submitModelScope({ env, prompt, size, seed, references, va
     }
     for (const reference of references) images.push(reference.dataUrl);
     const fields = directionFields({ prompt, locked, variant, poseRef, framing: framingZh(variant) });
-    const direction = fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`).join('\n');
+    const direction = `${fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`).join('\n')}\n${RULE_ONE_PERSON}`;
 
     const response = await fetchImpl(MODELSCOPE_ENDPOINT, {
         method: 'POST',
@@ -445,7 +457,7 @@ async function callModelScope({ env, prompt, size, seed, references, variant, po
     }
 
     const fields = directionFields({ prompt, locked, variant, poseRef, framing: framingZh(variant) });
-    const direction = fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`).join('\n');
+    const direction = `${fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`).join('\n')}\n${RULE_ONE_PERSON}`;
 
     const submit = await fetchImpl(MODELSCOPE_ENDPOINT, {
         method: 'POST',

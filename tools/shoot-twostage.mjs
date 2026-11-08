@@ -208,6 +208,7 @@ for (const row of rows) {
         '以第一张图为底图，保持它的构图、机位、取景范围、场景、光线、姿势、身体比例和服装完全不变。',
         '只把人物的脸替换成第二张参考图里的人：五官、脸型、发型、发色与参考图一致，肤色按现场光线自然匹配。',
         '不要改变画框边界，不要改变人物在画面中的大小，不要新增或删除任何物体。',
+        '画面中只能有一个人：不要因为换脸而复制出第二个人，不要添加倒影或镜像。',
     ].join('');
     const images = [ `data:image/png;base64,${composed.toString('base64')}`, identityData ];
     if (styleData) images.push(styleData);
