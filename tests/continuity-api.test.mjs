@@ -1,16 +1,23 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHmac } from 'node:crypto';
 import worker from '../api/index.js';
 
 const BASE = 'https://photoatelier.test';
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
+const JWT_SECRET = 'continuity-api-test-secret';
+const tokenPayload = JSON.stringify({ uid: 'continuity-api-test-user', t: Date.now() });
+const AUTH_TOKEN = Buffer.from(JSON.stringify({
+    p: tokenPayload,
+    s: createHmac('sha256', JWT_SECRET).update(tokenPayload).digest('hex'),
+})).toString('base64url');
 
 async function call(path, body, method = 'POST', env = {}) {
     const response = await worker.fetch(new Request(`${BASE}${path}`, {
         method,
-        headers: JSON_HEADERS,
+        headers: { ...JSON_HEADERS, Authorization: `Bearer ${AUTH_TOKEN}` },
         body: method === 'GET' ? undefined : JSON.stringify(body || {}),
-    }), env, {});
+    }), { JWT_SECRET, ...env }, {});
     return { status: response.status, body: await response.json() };
 }
 

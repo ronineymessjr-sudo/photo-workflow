@@ -166,6 +166,44 @@ test('actual image payload preserves a close-up contract without forcing full-bo
     assert.doesNotMatch(imagePrompt, /single full-body|Keep the figure asymmetrical|same bent and lowered arms/);
 });
 
+test('MS waist-up framing stays at the waist when the wardrobe lists a full skirt and shoes', async () => {
+    const wardrobe = '象牙白衬衫、藏青色及踝长裙、黑色皮鞋';
+    const input = { ...request, brief: '自然公园肖像，人物坐在长椅上', scene_brief: '秋日公园，自然光',
+        reference_brief: { modelDesc: wardrobe },
+        shot_contract: {
+            shot_language: '公园中景人像', shot_size: '中景', referenceIds: ['pose-1'],
+            generator_prompt: 'Waist-up portrait, frame from the top of the head through the natural waist; lower edge cuts at the waistline.',
+            model_pose: '自然坐姿，肩颈放松', wardrobe_styling: wardrobe,
+        } };
+    let translationSystem;
+    let translationInput;
+    let imagePrompt;
+    await generateCloudCandidate(input, { referenceContext, fetchImpl, ai: { run: async (model, payload) => {
+        if (model.includes('llama')) {
+            translationSystem = payload.messages[0].content;
+            translationInput = payload.messages[1].content;
+            return { response: 'Waist-up portrait from the top of the head through the natural waistline; natural seated pose, ivory blouse, soft park light.' };
+        }
+        const form = await new Response(payload.multipart.body, { headers: { 'Content-Type': payload.multipart.contentType } }).formData();
+        imagePrompt = String(form.get('prompt'));
+        return { image: Buffer.from(jpeg).toString('base64') };
+    } } });
+
+    assert.match(translationSystem, /For this MS\/中景 shot, frame from the top of the head through the natural waistline/);
+    assert.match(translationSystem, /wardrobe contract applies only to clothing visible inside this crop/);
+    assert.match(translationSystem, /never widen or lower the framing to display the complete outfit/);
+    assert.match(translationInput, /Required waist-up crop: frame from the top of the head through the natural waistline/);
+    assert.match(translationInput, /Exclude the hips and everything below, including skirt below the waist, legs and shoes/);
+    assert.match(translationInput, /Written wardrobe contract: 象牙白衬衫、藏青色及踝长裙、黑色皮鞋/);
+    assert.match(imagePrompt, /Required camera framing: Waist-up portrait from the top of the head through the natural waistline/);
+    assert.match(imagePrompt, /The written wardrobe contract identifies the outfit, but only clothing visible inside this waist-up crop should appear/);
+    assert.match(imagePrompt, /do not widen or lower framing to show the full skirt, legs or shoes/);
+    assert.match(imagePrompt, /象牙白衬衫、藏青色及踝长裙、黑色皮鞋/);
+    assert.match(imagePrompt, /Reference image 1, the face photograph, controls facial identity/);
+    assert.match(imagePrompt, /Reference image 2 is secondary guidance for material and palette only/);
+    assert.doesNotMatch(imagePrompt, /Head-to-toe portrait|show both shoes and ground beneath them/i);
+});
+
 test('clothing detail image prompt keeps the specified garment in a tight crop', async () => {
     let imagePrompt;
     const wardrobe = '米白色针织上衣、卡其色半身裙、棕色短靴';

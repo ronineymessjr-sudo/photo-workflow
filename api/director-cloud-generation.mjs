@@ -104,7 +104,9 @@ export async function generateCloudCandidate(input, { ai, referenceContext, fetc
     const selectedPoseId = (input.shot_contract?.referenceIds || input.reference_ids || []);
     const selectedPose = referenceContext?.templates.find(template => template.kind === 'pose' && selectedPoseId.includes(template.id))
         || referenceContext?.templates.find(template => template.kind === 'pose');
-    const upperBodyCrop = /^(?:中景|近景|特写|局部特写|MS|MCU|CU|ECU)$/.test(input.shot_contract.shot_size || '');
+    const shotSize = input.shot_contract.shot_size || '';
+    const upperBodyCrop = /^(?:中景|近景|特写|局部特写|MS|MCU|CU|ECU)$/.test(shotSize);
+    const waistUpCrop = /^(?:中景|MS)$/.test(shotSize);
     const clothingDetail = /服装细节|衣料细节/.test(input.shot_contract.shot_language || '');
     const poseDirection = clothingDetail
         ? input.shot_contract.model_pose
@@ -120,6 +122,7 @@ export async function generateCloudCandidate(input, { ai, referenceContext, fetc
     const images = await Promise.all(references.map(reference => fetchReferenceImage(reference.referenceImageUrl, fetchImpl)));
     let prompt = [
         `Shot contract: ${clean(input.shot_contract.generator_prompt, 1200)}`,
+        waistUpCrop ? 'Required waist-up crop: frame from the top of the head through the natural waistline; the lower edge cuts at the waistline. Exclude the hips and everything below, including skirt below the waist, legs and shoes.' : '',
         selectedPose && !clothingDetail ? `Selected pose library entry: ${clean(selectedPose.title, 120)}. Pose direction: ${clean(poseDirection, 260)}` : '',
         `Written wardrobe contract: ${clean(input.shot_contract.wardrobe_styling || input.reference_brief?.modelDesc, 420) || 'Preserve the user specified garments exactly.'}`,
         `Scene: ${clean(input.scene_brief || input.reference_brief?.scene, 250)}`,
@@ -130,9 +133,15 @@ export async function generateCloudCandidate(input, { ai, referenceContext, fetc
     let result;
     try {
         if (referenceContext && /[\u3400-\u9fff]/u.test(prompt)) {
+            const cropTranslationRule = waistUpCrop
+                ? 'For this MS/中景 shot, frame from the top of the head through the natural waistline, with the lower edge at the waistline. Exclude hips and everything below, including the skirt below the waist, legs and shoes. The wardrobe contract applies only to clothing visible inside this crop; never widen or lower the framing to display the complete outfit.'
+                : 'Preserve cropping instructions exactly; omit body parts outside the requested crop.';
+            const wardrobeTranslationRule = waistUpCrop
+                ? 'The written wardrobe contract identifies the outfit, but it must not change the requested waist-up crop or pull the camera back to show the skirt, legs or shoes.'
+                : 'The written wardrobe contract controls garment types, colors, layers, skirt length and shoes.';
             const translated = await ai.run('@cf/meta/llama-3.1-8b-instruct-fp8-fast', {
                 messages: [
-                    { role: 'system', content: 'Translate this photography contract into concise English camera, pose, wardrobe, lighting and environment instructions. Preserve exact subject count, location, action and framing. The written wardrobe contract controls garment types, colors, layers, skirt length and shoes. The outfit reference image is secondary material and palette guidance only; omit any unrequested accessories or props visible in it. The face reference controls identity, apparent age and hair. Do not change standing to sitting. Preserve cropping instructions exactly; omit body parts outside the requested crop. Return only the English prompt under 1400 characters, no commentary or text to render.' },
+                    { role: 'system', content: `Translate this photography contract into concise English camera, pose, wardrobe, lighting and environment instructions. Preserve exact subject count, location, action and framing. ${wardrobeTranslationRule} The outfit reference image is secondary material and palette guidance only; omit any unrequested accessories or props visible in it. The face reference controls identity, apparent age and hair. Do not change standing to sitting. ${cropTranslationRule} Return only the English prompt under 1400 characters, no commentary or text to render.` },
                     { role: 'user', content: prompt },
                 ], max_tokens: 600, temperature: 0,
             });
@@ -151,6 +160,8 @@ export async function generateCloudCandidate(input, { ai, referenceContext, fetc
                 ? 'Exactly one hand rests on the hip; the opposite arm hangs relaxed by the side.' : '';
         const framing = clothingDetail
             ? 'Tight close-up of the user specified garment fabric and texture only; preserve its exact color, exclude the face and full-body pose.'
+            : waistUpCrop
+            ? 'Waist-up portrait from the top of the head through the natural waistline. The lower edge cuts at the waistline; exclude hips and everything below, including skirt below the waist, legs and shoes.'
             : [
             [/环境全景|环境远景|^(?:E?WS)$/i, 'Environmental long shot. Person occupies at most 40 percent of the image height. Show the surrounding location clearly. Keep the camera far enough away.'],
             [/中全景|^MFS$/i, 'Knee-up portrait. Crop above the knees, showing head, torso and hands.'],
@@ -160,7 +171,10 @@ export async function generateCloudCandidate(input, { ai, referenceContext, fetc
             [/中景|^MS$/i, 'Waist-up portrait. Crop below the waist and preserve the hands when visible.'],
         ].find(([pattern]) => pattern.test(input.shot_contract.shot_size || ''))?.[1] || '';
         const wardrobeContract = clean(input.shot_contract.wardrobe_styling || input.reference_brief?.modelDesc, 420) || 'Preserve the user specified garments exactly.';
-        generationPrompt = `Create one photorealistic DSLR photograph of ONE person, with realistic skin texture and a fully rendered real location. Reference image 1, the face photograph, controls facial identity, apparent age, hair and photographic realism. The written wardrobe contract is authoritative for exact garments, colors, layers, skirt length and shoes: ${wardrobeContract}. Reference image 2 is secondary guidance for material and palette only. Do not copy unrequested bags, jewelry, hats or other accessories/props from it. Do not replace or add garments. Follow the selected PoseAtlas action described in the shot contract as text; do not copy a drawing style. Required pose: ${poseTitle}. ${poseDetail} ${prompt} Required camera framing: ${framing || 'Follow the shot contract.'} Render the requested scene as a real photographic environment with natural light and material detail.`;
+        const wardrobeInstruction = waistUpCrop
+            ? `The written wardrobe contract identifies the outfit, but only clothing visible inside this waist-up crop should appear; do not widen or lower framing to show the full skirt, legs or shoes: ${wardrobeContract}.`
+            : `The written wardrobe contract is authoritative for exact garments, colors, layers, skirt length and shoes: ${wardrobeContract}.`;
+        generationPrompt = `Create one photorealistic DSLR photograph of ONE person, with realistic skin texture and a fully rendered real location. ${waistUpCrop ? `Required camera framing: ${framing} ` : ''}Reference image 1, the face photograph, controls facial identity, apparent age, hair and photographic realism. ${wardrobeInstruction} Reference image 2 is secondary guidance for material and palette only. Do not copy unrequested bags, jewelry, hats or other accessories/props from it. Do not replace or add garments. Follow the selected PoseAtlas action described in the shot contract as text; do not copy a drawing style. Required pose: ${poseTitle}. ${poseDetail} ${prompt} Required camera framing: ${framing || 'Follow the shot contract.'} Render the requested scene as a real photographic environment with natural light and material detail.`;
         form.append('prompt', generationPrompt);
         form.append('width', String(compiled.width));
         form.append('height', String(compiled.height));

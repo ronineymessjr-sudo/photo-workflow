@@ -5,6 +5,12 @@ import { readFile } from 'node:fs/promises';
 import { createGuestPlanDraft } from '../api/director-plan.mjs';
 import worker from '../api/index.js';
 
+test('production image generation has per-account and site-wide daily limits', async () => {
+    const config = await readFile(new URL('../wrangler.toml', import.meta.url), 'utf8');
+    assert.match(config, /STUDIO_IMAGE_USER_LIMIT\s*=\s*"10"/);
+    assert.match(config, /STUDIO_IMAGE_GLOBAL_LIMIT\s*=\s*"50"/);
+});
+
 test('template fallback is visibly distinct from a real Director result', async () => {
     const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
     assert.match(html, /source === 'guest-rule-draft'/);
@@ -263,7 +269,7 @@ test('site plan and multi-scene candidate generation keep face, outfit, and per-
         assert.ok(shots.every((shot, index) => requestPrompts[index].includes(shot.scene)));
         assert.ok(imagePrompts.every(prompt => prompt.hasFace && prompt.hasOutfit));
         assert.ok(imagePrompts.every(prompt => /Required pose:/.test(prompt.prompt)));
-        assert.ok(imagePrompts.every(prompt => /written wardrobe contract is authoritative/.test(prompt.prompt)));
+        assert.ok(imagePrompts.every(prompt => /written wardrobe contract (?:is authoritative for exact garments|identifies the outfit)/.test(prompt.prompt)));
         assert.ok(imagePrompts.every(prompt => /Do not copy unrequested bags, jewelry, hats/.test(prompt.prompt)));
     } finally {
         globalThis.fetch = originalFetch;
