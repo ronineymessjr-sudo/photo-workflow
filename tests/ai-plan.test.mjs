@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { runInNewContext } from 'node:vm';
+import { createHmac } from 'node:crypto';
 import { aiPlanProviders, handleAiPlan, extractHardConstraints, validateHardConstraints, validatePhotographerFeasibility } from '../api/ai-plan.mjs';
 import worker from '../api/index.js';
 
@@ -17,6 +18,12 @@ function output(count = 9) {
         execution_note: '不可达时换安全台阶', generator_prompt: 'high angle full body, lower left',
         shot_size: 'FS', camera_angle: 'high_angle',
     })) };
+}
+
+function token(uid, secret) {
+    const p = JSON.stringify({ uid, t: Date.now() });
+    const s = createHmac('sha256', secret).update(p).digest('hex');
+    return Buffer.from(JSON.stringify({ p, s })).toString('base64url');
 }
 const response = result => Response.json({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify(result) } }] });
 
@@ -102,12 +109,16 @@ test('provider errors never leak credentials and wrong provider key cannot log o
     assert.doesNotMatch(JSON.stringify(r), new RegExp(key));
 });
 
-test('public BYOK API needs a caller key, restricts body size and discloses no server secrets', async () => {
+test('authenticated BYOK API needs a caller key, restricts body size and discloses no server secrets', async () => {
     const catalog = await worker.fetch(new Request('https://unit.test/api/ai/providers'), { MINIMAX_API_KEY: key });
     assert.doesNotMatch(await catalog.text(), new RegExp(key));
-    const bad = await worker.fetch(new Request('https://unit.test/api/ai/plan', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }), {});
+    const secret = 'ai-plan-auth-test';
+    const anonymous = await worker.fetch(new Request('https://unit.test/api/ai/plan', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }), { JWT_SECRET: secret });
+    assert.equal(anonymous.status, 401);
+    const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token('user-1', secret)}` };
+    const bad = await worker.fetch(new Request('https://unit.test/api/ai/plan', { method: 'POST', headers, body: '{}' }), { JWT_SECRET: secret });
     assert.equal(bad.status, 400);
-    const large = await worker.fetch(new Request('https://unit.test/api/ai/plan', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: 'x'.repeat(17000) }) }), {});
+    const large = await worker.fetch(new Request('https://unit.test/api/ai/plan', { method: 'POST', headers, body: JSON.stringify({ data: 'x'.repeat(17000) }) }), { JWT_SECRET: secret });
     assert.equal(large.status, 413);
 });
 

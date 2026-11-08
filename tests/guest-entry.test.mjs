@@ -2,62 +2,71 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { runInNewContext } from 'node:vm';
+import worker from '../api/index.js';
 
 const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
-const entry = html.match(/window\.continueAsGuest = async function\(\) \{[\s\S]*?\n    \};/)[0];
 
-async function startGuest(initial = {}, fail = false) {
-    const data = new Map(Object.entries(initial)), owners = [], notices = [];
-    let reloads = 0;
+test('the login screen does not offer or reactivate guest mode', async () => {
+    assert.doesNotMatch(html, /onclick="continueAsGuest\(\)"/);
+    assert.match(html, /let USE_GUEST_MODE = false/);
+    assert.match(html, /pa_guest_mode'\) === 'true'\) localStorage\.setItem\('pa_guest_mode', 'false'\)/);
+
+    const entry = html.match(/window\.continueAsGuest = function\(\) \{[\s\S]*?\n    \};/)[0];
+    let activations = 0;
+    const notices = [];
+    const window = { PhotoAtelierAccountStorage: { activate: async () => { activations++; } } };
     await runInNewContext(`${entry}; window.continueAsGuest()`, {
-        TOKEN_KEY: 'pw_token', USER_KEY: 'pw_user',
-        window: { PhotoAtelierAccountStorage: { activate: async owner => {
-            if (fail) throw new Error('Storage unavailable');
-            owners.push(owner);
-        } } },
-        localStorage: { getItem: key => data.get(key), setItem: (k, v) => data.set(k, v), removeItem: key => data.delete(key) },
-        location: { reload: () => reloads++ }, toast: message => notices.push(message),
+        window, toast: message => notices.push(message),
     });
-    return { data, owners, notices, reloads };
-}
-
-test('guest entry selects an isolated browser archive without creating a session or account', async () => {
-    const result = await startGuest();
-    assert.deepEqual(result.owners, ['__guest__']);
-    assert.equal(result.data.get('pa_guest_mode'), 'true');
-    assert.equal(result.data.has('pw_token'), false);
-    assert.equal(result.data.has('pw_user'), false);
-    assert.equal(result.reloads, 1);
+    assert.equal(activations, 0);
+    assert.deepEqual(notices, ['请先登录后使用摄影系统']);
 });
 
-test('guest entry cannot replace a signed-in account or continue after cache failure', async () => {
-    const signed = await startGuest({ pw_token: 'existing-session', pw_user: 'private-user' });
-    assert.deepEqual(signed.owners, []);
-    assert.equal(signed.data.get('pw_token'), 'existing-session');
-    assert.equal(signed.reloads, 0);
-    const failed = await startGuest({}, true);
-    assert.equal(failed.data.has('pa_guest_mode'), false);
-    assert.equal(failed.reloads, 0);
-});
+test('anonymous requests cannot create plans, search references, or enter continuity', async () => {
+    const origin = 'https://photo.ronineymessjrstudio.cn';
+    const env = { JWT_SECRET: 'guest-disabled-test-secret', AI_STUDIO_ALLOWED_ORIGINS: origin };
+    const methods = await worker.fetch(new Request(`${origin}/api/auth/methods`), env);
+    assert.deepEqual(await methods.json(), { emailOtp: false, password: true, guest: false });
 
-test('guest remote requests only allow public plan generation and explicit account login', async () => {
-    const request = html.match(/request: async function\(path, method, body, timeout = 10000\) \{[\s\S]*?\n        \},/)[0].replace(/,$/, '');
-    const calls = [];
-    const api = runInNewContext(`({${request}})`, {
-        USE_GUEST_MODE: true, API_BASE: 'https://api.example', TOKEN_KEY: 'pw_token',
-        localStorage: { getItem: () => null }, AbortController,
-        setTimeout: () => 1, clearTimeout: () => {},
-        fetch: async (url, options) => { calls.push({ url, options }); return { ok: true, status: 200, text: async () => '{}' }; },
-        lockSession: () => assert.fail('guest must not become a verified session'),
-    });
-    for (const path of ['/api/workspace/state', '/api/plans', '/api/messages', '/api/feishu/sync-calendar']) {
-        await assert.rejects(api.request(path), /请登录/);
+    const paths = [
+        '/api/director/plan', '/api/ai/plan-lite', '/api/ai/plan', '/api/ai/brief',
+        '/api/continuity/from-studio', '/api/continuity/generate',
+    ];
+    for (const path of paths) {
+        const response = await worker.fetch(new Request(`${origin}${path}`, {
+            method: 'POST', headers: { Origin: origin, 'Content-Type': 'application/json' }, body: '{}',
+        }), env);
+        assert.equal(response.status, 401, `${path} should require a signed-in user`);
+        assert.equal((await response.json()).error, 'SIGN_IN_REQUIRED');
     }
-    assert.equal(calls.length, 0);
-    await api.request('/api/director/plan', 'POST', { theme: 'portrait' });
+});
+
+test('unknown password login cannot create an unverified account', async t => {
+    const calls = [];
+    t.mock.method(globalThis, 'fetch', async (url, options) => {
+        calls.push({ url: String(url), method: options?.method || 'GET' });
+        return Response.json([]);
+    });
+    const origin = 'https://photo.ronineymessjrstudio.cn';
+    const response = await worker.fetch(new Request(`${origin}/api/auth/login`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'new-user@example.test', password: 'test-password-123' }),
+    }), {
+        JWT_SECRET: 'guest-disabled-test-secret',
+        SUPABASE_URL: 'https://auth.example.test',
+        SUPABASE_ANON_KEY: 'test-anon',
+        SUPABASE_SERVICE_KEY: 'test-service',
+    });
+    assert.equal(response.status, 401);
+    assert.deepEqual(await response.json(), { error: '邮箱或密码错误' });
     assert.equal(calls.length, 1);
-    assert.equal(calls[0].options.headers.Authorization, undefined);
-    assert.match(html, /if \(!SESSION_VERIFIED && !USE_GUEST_MODE\) return/);
-    assert.match(html, /let SESSION_VERIFIED = USE_LOCAL_MODE/);
-    assert.match(html, /await window\.PhotoAtelierAccountStorage\.activate\(res\.user\.id\)/);
+    assert.equal(calls[0].method, 'GET');
+});
+
+test('legacy nine-grid generation cannot bypass plan and reference contracts', () => {
+    assert.doesNotMatch(html, /image\.pollinations\.ai\/prompt/);
+    assert.doesNotMatch(html, /批量生成9张/);
+    assert.doesNotMatch(html, /id="img-prompt-/);
+    assert.match(html, /function generateDirectorCandidateForPlan\(planId\)/);
+    assert.match(html, /旧版方案没有逐镜拍摄合同/);
 });

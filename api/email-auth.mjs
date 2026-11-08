@@ -5,7 +5,7 @@ export const emailLoginEnabled = env => env.RESEND_AUTH_ENABLED === 'true'
 
 export async function handleEmailAuth(env, body, action, { query, sign }) {
     if (!emailLoginEnabled(env) || !env.SUPABASE_URL || !env.SUPABASE_ANON_KEY || !env.SUPABASE_SERVICE_KEY || !env.JWT_SECRET) {
-        return { status: 503, body: { error: '邮箱验证码登录尚未配置，请使用密码登录或游客体验' } };
+        return { status: 503, body: { error: '邮箱验证码登录尚未配置，请使用密码登录' } };
     }
     const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 255) {

@@ -1020,21 +1020,6 @@
         .img-card img { width: 100%; height: 160px; object-fit: cover; display: block; cursor: pointer; transition: opacity .15s; }
         .img-card img:hover { opacity: .85; }
         .img-card-info { padding: .45rem .65rem; font-size: .7rem; color: var(--t3); }
-        .img-gen-form { margin-top: .8rem; display: flex; gap: .5rem; }
-        .img-gen-form input { flex: 1; }
-        .img-loading { display: flex; align-items: center; justify-content: center; height: 160px; color: var(--t3); font-size: .82rem; }
-        
-        /* 9宫格样式 */
-        .img-batch { margin-bottom: 1.5rem; }
-        .img-batch-title { font-size: .8rem; color: var(--t2); margin-bottom: .8rem; padding-bottom: .4rem; border-bottom: 1px solid var(--bd); }
-        .img-grid-9 { display: grid; grid-template-columns: repeat(3, 1fr); gap: .6rem; }
-        .img-card-9 { border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--bd); background: var(--bg); transition: transform .15s, box-shadow .15s; aspect-ratio: 1; }
-        .img-card-9:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); border-color: var(--ac); }
-        .img-card-9 img { width: 100%; height: 100%; object-fit: cover; display: block; cursor: pointer; }
-        .img-card-info-9 { padding: .35rem .5rem; font-size: .65rem; display: flex; flex-direction: column; gap: .1rem; }
-        .img-pose { color: var(--t1); font-weight: 500; }
-        .img-angle { color: var(--t3); font-size: .6rem; }
-        
         /* Calendar Styles */
         .calendar-grid {
             display: grid;
@@ -2856,10 +2841,8 @@
             </div>
             <button id="loginMethodToggle" type="button" class="btn btn-s" hidden style="display:none;margin-bottom:12px;">使用邮箱验证码</button>
             <button onclick="handleLogin()" class="btn btn-p" style="width:100%;padding:12px;border-radius:8px;font-size:.95rem;font-weight:500;margin-top:.5rem;" data-i18n="login.button">登录</button>
-            <button onclick="continueAsGuest()" class="btn btn-s" style="width:100%;margin-top:.75rem;" data-i18n="login.guest">游客体验</button>
             <button id="clearExpiredLogin" onclick="logout()" class="btn btn-s" type="button" style="display:none;width:100%;margin-top:.75rem;">退出失效登录，保留本机资料</button>
-            <p style="margin-top:.75rem;font-size:.8rem;color:var(--t2);text-align:center;" data-i18n="login.guestHint">游客方案仅保存在当前浏览器</p>
-            <p style="margin-top:1.5rem;font-size:.8rem;color:var(--t3);text-align:center;" data-i18n="login.hint">首次登录将自动创建账号</p>
+            <p style="margin-top:1.5rem;font-size:.8rem;color:var(--t3);text-align:center;" data-i18n="login.hint">新用户使用邮箱验证码验证后创建账号</p>
         </div>
         <div id="loginLoading" style="display:none;margin-top:1.5rem;">
             <div style="width:24px;height:24px;border:2px solid var(--bd);border-top-color:var(--ac);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto;"></div>
@@ -2967,10 +2950,6 @@
                 <button id="userAvatar" onclick="PhotoAtelierProfile.open()" title="个人资料" aria-label="个人资料" style="width:32px;height:32px;border-radius:50%;background:var(--ac);border:0;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:600;color:#121212;cursor:pointer;">摄</button>
             </div>
         <!-- Quick Actions Bar -->
-        <div id="guestModeNotice" hidden style="padding:.6rem 1rem;border-bottom:1px solid var(--bd);color:var(--t2);font-size:.8rem;">
-            <span data-i18n="login.guestHint">游客方案仅保存在当前浏览器</span>
-            <button class="btn btn-s btn-sm" onclick="logout()" data-i18n="login.button">登录</button>
-        </div>
         <div class="quick-actions" style="display:flex;gap:.5rem;margin:1rem 1.5rem 0 1.5rem;padding:.75rem 1rem;background:var(--bg3);border-radius:12px;border:1px solid var(--bd);">
             <button class="btn btn-s btn-sm" data-role="photographer,assistant" onclick="PhotoAtelierStudio.syncCurrentPlan()" style="display:flex;align-items:center;gap:.4rem;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -3936,9 +3915,7 @@ const i18n = {
         'login.email': '邮箱地址',
         'login.password': '密码',
         'login.button': '登录',
-        'login.hint': '首次登录将自动创建账号',
-        'login.guest': '游客体验',
-        'login.guestHint': '游客方案仅保存在当前浏览器',
+        'login.hint': '新用户使用邮箱验证码验证后创建账号',
         'gen.title': '创意需求',
         'gen.theme': '拍摄主题（选填）',
         'gen.style': '风格偏好（选填）',
@@ -3969,9 +3946,7 @@ const i18n = {
         'login.email': 'Email',
         'login.password': 'Password',
         'login.button': 'Sign In',
-        'login.hint': 'First login will auto-create account',
-        'login.guest': 'Try as guest',
-        'login.guestHint': 'Guest plans are saved only in this browser',
+        'login.hint': 'New accounts are created after email-code verification',
         'gen.title': 'Generate Plan',
         'gen.theme': 'Theme (optional)',
         'gen.style': 'Style preference (optional)',
@@ -4125,9 +4100,9 @@ if (document.getElementById('loginOverlay')) {
         localStorage.removeItem(USER_KEY);
     }
     const USE_LOCAL_MODE = IS_LOCAL_HOST && new URLSearchParams(location.search).get('offline') === '1';
-    let USE_GUEST_MODE = !USE_LOCAL_MODE && localStorage.getItem('pa_guest_mode') === 'true'
-        && !localStorage.getItem(TOKEN_KEY) && !localStorage.getItem(USER_KEY);
-    let USE_BROWSER_STORAGE = USE_LOCAL_MODE || USE_GUEST_MODE;
+    if (!USE_LOCAL_MODE && localStorage.getItem('pa_guest_mode') === 'true') localStorage.setItem('pa_guest_mode', 'false');
+    let USE_GUEST_MODE = false;
+    let USE_BROWSER_STORAGE = USE_LOCAL_MODE;
     let SESSION_VERIFIED = USE_LOCAL_MODE;
     window.__PHOTOATELIER_SESSION_VERIFIED__ = SESSION_VERIFIED;
     window.__PHOTOATELIER_LOCAL_MODE__ = USE_LOCAL_MODE;
@@ -4206,9 +4181,6 @@ if (document.getElementById('loginOverlay')) {
     window.api = {
         base: API_BASE,
         request: async function(path, method, body, timeout = 10000) {
-            if (USE_GUEST_MODE && !['/api/director/plan', '/api/ai/providers', '/api/ai/plan', '/api/ai/brief', '/api/ai/plan-lite', '/api/auth/login', '/api/auth/methods', '/api/auth/email/send', '/api/auth/email/verify'].includes(path)) {
-                throw new Error('请登录后使用云端保存或团队协作');
-            }
             method = method || 'GET';
             body = body || null;
             const opts = { method: method, headers: { 'Content-Type': 'application/json' } };
@@ -4249,15 +4221,7 @@ if (document.getElementById('loginOverlay')) {
         deleteMessage(id) { return USE_BROWSER_STORAGE ? localApi.deleteMessage(id) : this.request(`/api/messages/${encodeURIComponent(id)}`, 'DELETE'); }
     };
 
-    window.continueAsGuest = async function() {
-        if (localStorage.getItem(TOKEN_KEY)) { toast('请先退出当前账号再使用游客体验', 'er'); return; }
-        try {
-            await window.PhotoAtelierAccountStorage.activate('__guest__');
-            localStorage.removeItem(USER_KEY);
-            localStorage.setItem('pa_guest_mode', 'true');
-            location.reload();
-        } catch (e) { toast('游客资料读取失败：' + e.message, 'er'); }
-    };
+    window.continueAsGuest = function() { toast('请先登录后使用摄影系统', 'er'); };
 
     // Login handler
     window.handleLogin = async function() {
@@ -4594,16 +4558,6 @@ function closeShortcutsModal(e) {
         role = localStorage.getItem(ROLE_KEY);
     } catch (e) {
         /* localStorage not available, using session mode */
-    }
-
-    if (USE_GUEST_MODE) {
-        window.PhotoAtelierAccountStorage.activate('__guest__').then(function() {
-            if (window.__PHOTOATELIER_BOOT_OWNER__ !== '__guest__') { location.reload(); return; }
-            document.getElementById('loginOverlay').style.display = 'none';
-            document.getElementById('guestModeNotice').hidden = false;
-            window.enterApp('photographer');
-        }).catch(e => toast('游客资料读取失败：' + e.message, 'er'));
-        return;
     }
 
     if (USE_LOCAL_MODE) {
@@ -5176,9 +5130,6 @@ window.analyzeReference = async function() {
 目标风格：${style}
 
 请用中文回答，格式清晰，每个部分都要有**具体数值或型号**，不能只说"需要灯光"。`;
-    
-    const encodedPrompt = encodeURIComponent(prompt);
-    const imgUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&seed=${Date.now()}&nologo=true`;
     
     try {
         // Since we can't do real AI vision analysis in pure JS, we'll use the image URL to generate a reference
@@ -6125,108 +6076,13 @@ function buildEqSection(style, scene) {
     return { ti: '📷 器材推荐', ic: '📷', c: lines };
 }
 
-// ===== Image Generation (Pollinations - 免费无需API Key) =====
-// 9种不同的拍摄角度/姿势/场景变体
-const POSE_VARIANTS = [
-    { angle: '正面半身', pose: '自然站立', desc: '面对镜头，肩膀微侧' },
-    { angle: '侧面全身', pose: '侧身回眸', desc: '身体侧对，转头看镜头' },
-    { angle: '45度角', pose: '优雅坐姿', desc: '斜侧角度，坐于场景' },
-    { angle: '仰拍', pose: '抬头仰望', desc: '低角度拍摄，显腿长' },
-    { angle: '俯拍', pose: '低头沉思', desc: '高角度拍摄，显脸小' },
-    { angle: '背影', pose: '背影杀', desc: '背对镜头，营造神秘感' },
-    { angle: '特写', pose: '面部特写', desc: '聚焦面部表情' },
-    { angle: '环境人像', pose: '融入场景', desc: '人物与环境互动' },
-    { angle: '动态抓拍', pose: '自然走动', desc: '行走中抓拍，自然感' }
-];
-
-async function generateImagesBatch(planId) {
-    const plans = sg(SK.P) || [];
-    const plan = plans.find(p => p.id === planId);
-    if (!plan) { toast('方案不存在', 'er'); return []; }
-    if (plan.director) { toast('此版只接通方案生成，未连接预期成片；不会调用旧九宫格模板。', 'i'); return []; }
-
-    const inp = plan.input;
-    const basePrompt = buildImagePrompt(plan);
-    const results = [];
-
-    toast('开始批量生成9张参考图...', 'i');
-
-    for (let i = 0; i < 9; i++) {
-        const variant = POSE_VARIANTS[i];
-        const prompt = `${basePrompt}，${variant.angle}，${variant.pose}，${variant.desc}`;
-        
-        try {
-            const encodedPrompt = encodeURIComponent(prompt);
-            const seed = Math.floor(Math.random() * 1000000) + i * 1000;
-            const imgUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&seed=${seed}&nologo=true`;
-
-            // 预加载
-            await new Promise(function(resolve, reject) {
-                var settled = false;
-                var img = new Image();
-                img.crossOrigin = 'anonymous';
-                var timer = setTimeout(function() { if (!settled) { settled = true; img.onload = img.onerror = null; reject(new Error('图片加载超时')); } }, 30000);
-                img.onload = function() { if (!settled) { settled = true; clearTimeout(timer); resolve(img.src); } };
-                img.onerror = function() { if (!settled) { settled = true; clearTimeout(timer); reject(new Error('图片加载失败')); } };
-                img.src = imgUrl;
-            });
-
-            results.push({ 
-                url: imgUrl, 
-                prompt, 
-                variant: variant,
-                at: new Date().toISOString() 
-            });
-            
-            toast(`已生成 ${i + 1}/9 张`, 'i');
-        } catch (e) {
-            console.error(`第${i+1}张生成失败:`, e);
-        }
-    }
-
-    // 保存到方案
-    if (results.length > 0) {
-        const plans = sg(SK.P) || [];
-        const idx = plans.findIndex(p => p.id === planId);
-        if (idx > -1) {
-            plans[idx].images = plans[idx].images || [];
-            plans[idx].images.push(...results);
-            ss(SK.P, plans);
-        }
-        toast(`成功生成 ${results.length}/9 张参考图!`, 'ok');
-    } else {
-        toast('生成失败，请重试', 'er');
-    }
-
-    return results;
-}
-
-// 保留单张生成用于兼容
-async function generateImage(prompt, planId) {
-    return generateImagesBatch(planId);
-}
-
-function buildImagePrompt(plan) {
-    const inp = plan.input;
-    const theme = inp.theme || '';
-    const style = inp.style || '摄影';
-    const model = inp.modelDesc || '';
-    const scene = inp.scene || '';
-    const mood = inp.mood || '';
-
-    return `专业摄影，${theme}，${style}风格，${model ? '模特：'+model+'，' : ''}${scene ? '场景：'+scene+'，' : ''}情绪：${mood}，电影感构图，暖色调，复古胶片质感，高细节，8K`;
-}
-
 function renderImageGallery(plan) {
     const images = plan.images || [];
     const galleryId = `img-gallery-${plan.id}`;
 
     let html = `<div class="img-gallery" id="${galleryId}">
-        <h4>🖼️ 例图生成</h4>
-        <div class="img-gen-form">
-            <input type="text" id="img-prompt-${plan.id}" value="${buildImagePrompt(plan)}" placeholder="输入生图提示词">
-            <button class="btn btn-i" onclick="genImgForPlan('${plan.id}')" id="gen-img-btn-${plan.id}">🎨 批量生成9张</button>
-        </div>
+        <h4>🖼️ 方案图片</h4>
+        <p class="reference-rights">旧版方案没有逐镜拍摄合同。请按当前模板与参考库重新生成方案，再从分镜面板生成候选图。</p>
         <div class="img-grid" id="img-grid-${plan.id}">`;
 
     if (images.length > 0) {
@@ -6677,82 +6533,6 @@ async function generateDirectorCandidateForPlan(planId) {
         const currentBtn = $('candidate-gen-btn-' + planId);
         if (currentBtn) { currentBtn.disabled = false; currentBtn.textContent = '生成当前分镜的图'; }
     }
-}
-
-async function genImgForPlan(planId) {
-    const plans = sg(SK.P) || [];
-    const plan = plans.find(p => p.id === planId);
-    if (!plan) { toast('方案不存在','er'); return; }
-
-    const prompt = $(`img-prompt-${planId}`);
-    const promptText = prompt ? prompt.value.trim() : '';
-    if (!promptText) { toast('请输入生图提示词','er'); return; }
-
-    const btn = $(`gen-img-btn-${planId}`);
-    const grid = $(`img-grid-${planId}`);
-
-    if (btn) { btn.disabled = true; btn.textContent = '⏳ 批量生成中...'; }
-
-    // Show loading
-    if (grid) {
-        grid.innerHTML += `<div class="img-loading" id="img-loading-${planId}">正在生成图片，请稍候...</div>`;
-    }
-
-    const imgUrl = await generateImage(promptText, planId);
-
-    // Remove loading
-    const loading = $(`img-loading-${planId}`);
-    if (loading) loading.remove();
-
-    if (btn) { btn.disabled = false; btn.textContent = '🎨 批量生成9张'; }
-
-    if (imgUrl) {
-        // Refresh gallery
-        const newPlan = (sg(SK.P)||[]).find(p=>p.id===planId);
-        if (newPlan) {
-            const galleryId = `img-gallery-${planId}`;
-            const g = $(galleryId);
-            if (g) g.replaceWith(renderImageGalleryDiv(newPlan));
-        }
-        toast('图片已生成','ok');
-    }
-}
-
-function renderImageGalleryDiv(plan) {
-    const images = plan.images || [];
-    const galleryId = `img-gallery-${plan.id}`;
-    const div = document.createElement('div');
-    div.className = 'img-gallery';
-    div.id = galleryId;
-    
-    // 按批次分组显示（每批9张）
-    const batches = [];
-    for (let i = 0; i < images.length; i += 9) {
-        batches.push(images.slice(i, i + 9));
-    }
-    
-    div.innerHTML = `
-        <h4>🖼️ 例图生成 (${images.length}张)</h4>
-        <div class="img-gen-form">
-            <input type="text" id="img-prompt-${plan.id}" value="${buildImagePrompt(plan)}" placeholder="输入生图提示词">
-            <button class="btn btn-i" onclick="genImgForPlan('${plan.id}')" id="gen-img-btn-${plan.id}">🎨 批量生成9张</button>
-        </div>
-        ${batches.map((batch, batchIdx) => `
-            <div class="img-batch">
-                <div class="img-batch-title">第${batchIdx + 1}组 (${batch.length}张)</div>
-                <div class="img-grid-9">
-                    ${batch.map((img, idx) => `
-                        <div class="img-card-9">
-                            <img src="${img.url}" alt="${img.variant ? img.variant.pose : '参考图'}" onclick="previewImg('${img.url}')">
-                            <div class="img-card-info-9">
-                                <span class="img-pose">${img.variant ? img.variant.pose : '参考图'}</span>
-                                <span class="img-angle">${img.variant ? img.variant.angle : ''}</span>
-                            </div>
-                        </div>`).join('')}
-                </div>
-            </div>
-        `).join('')}`;
-    return div;
 }
 
 function previewImg(url) {

@@ -136,7 +136,7 @@ function directionFields({ prompt, locked, variant, poseRef, framing }) {
         // widening the frame. Putting the crop ahead of the prose is the only
         // ordering that moved the result upward.
         ['framing', framing],
-        ['prompt', prompt],
+        ['prompt', poseInFrame(prompt, variant?.size)],
         ['subject', locked?.subject],
         ['wardrobeGroup', directive(locked?.wardrobe)],
         ['style', locked?.styleProfile],
@@ -190,9 +190,9 @@ const FRAMING_ZH = {
 // model resolves that conflict by widening the frame - which is exactly how every
 // tight shot became a full-body shot. Those clauses are dropped, not summarised.
 const OFF_FRAME = {
-    ECU: /手|臂|肩|胸|腰|腹|腿|膝|脚|踝|站立|行走|行走|下行|上行|踏步|扶|踩/,
-    CU: /手|臂|胸|腰|腹|腿|膝|脚|踝|踏步|地面|踩|站立/,
-    MCU: /腰|腹|腿|膝|脚|踝|踏步|地面|踩|下行|上行/,
+    ECU: /手|臂|肩|胸|腰|腹|腿|膝|脚|踝|站立|行走|下行|上行|踏步|扶|踩|full[- ]body|hands?|arms?|shoulders?|chest|waist|abdomen|legs?|knees?|feet|shoes?|standing|walking|stairs?|ground|stepping/i,
+    CU: /手|臂|胸|腰|腹|腿|膝|脚|踝|踏步|地面|踩|站立|hands?|arms?|chest|waist|abdomen|legs?|knees?|feet|shoes?|stairs?|ground|stepping|full[- ]body/i,
+    MCU: /腰|腹|腿|膝|脚|踝|踏步|地面|踩|下行|上行|waist|abdomen|legs?|knees?|feet|shoes?|stairs?|ground|full[- ]body/i,
     MS: /腿|膝|脚|踝|踏步|地面|踩/,
     MFS: /地面|踏步|踩/,
 };
@@ -207,15 +207,26 @@ function poseInFrame(pose, size) {
     if (!raw) return '';
     const pattern = OFF_FRAME[visibleFrame(size)];
     if (!pattern) return raw;
-    const kept = raw.split(/[，,；;]/).map(part => part.trim()).filter(Boolean)
+    const kept = raw.split(/[，,；;。.!?]+/).map(part => part.trim()).filter(Boolean)
         .filter(part => !pattern.test(part));
     // If nothing survives the crop, say so rather than falling back to the whole
     // pose: a pose that only exists below the frame has no bearing on the picture.
     return kept.join('，');
 }
 
+function detailFrameTarget(variant = {}) {
+    const text = [variant.prompt, variant.action, variant.crop, variant.mustShow, variant.wardrobe]
+        .filter(value => typeof value === 'string').join(' ');
+    if (/服装细节|衣物细节|衣料|织物|面料|服饰纹理|garment detail|fabric detail|textile detail|fabric texture/i.test(text)) return '指定服装或面料细节';
+    if (/手部细节|手指细节|hand detail|hands close[- ]?up|finger detail/i.test(text)) return '指定手部细节';
+    if (/配饰细节|首饰细节|accessory detail|jewelry detail|jewellery detail/i.test(text)) return '指定配饰细节';
+    return '';
+}
+
 function framingZh(variant) {
     const code = String(variant?.size || '').trim().toUpperCase();
+    const detailTarget = detailFrameTarget(variant);
+    if (detailTarget && ['ECU', 'CU'].includes(code)) return `细节特写：画框集中在${detailTarget}，保留真实材质和局部形态，不强行让脸占满画面`;
     if (FRAMING_ZH[code]) return FRAMING_ZH[code];
     const raw = String(variant?.shotType || '');
     if (/特写|close/i.test(raw) && /中|medium/i.test(raw)) return FRAMING_ZH.MCU;
@@ -520,7 +531,8 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
         return text.length > max ? `${text.slice(0, max)}…` : text;
     };
     const directionZh = [
-        clamp(prompt, 220),
+        clamp(poseInFrame(prompt, variant?.size), 220),
+        locked?.subject ? `人物范围：${clamp(locked.subject, 80)}` : '',
         poseRef ? `摆姿库约束：${[
             poseRef.title ? `指定姿势${clamp(poseRef.title, 36)}` : '',
             poseRef.angle ? `参考方向${clamp(poseRef.angle, 20)}` : '',
@@ -532,6 +544,7 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
         locked?.weather ? `天气：${clamp(locked.weather, 24)}` : '',
         locked?.timeOfDay ? `时间：${clamp(locked.timeOfDay, 24)}` : '',
         variant?.action ? `姿势与动作：${clamp(variant.action, 70)}` : '',
+        directive(variant?.wardrobe) ? `本镜服装：${clamp(directive(variant.wardrobe), 70)}` : '',
         variant?.camera ? `机位：${clamp(variant.camera, 26)}` : '',
         variant?.lens ? `焦段：${clamp(variant.lens, 18)}` : '',
         variant?.subjectPlacement ? `人物在画面中的位置：${clamp(variant.subjectPlacement, 40)}` : '',
@@ -569,27 +582,23 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
     const width = portrait ? 768 : 1024;
     const height = portrait ? 1024 : 768;
     // Pose handling: the library's pose images are black-and-white anatomical
-    // line drawings. Black Forest Labs states that mixing drawing registers with
-    // photographic references confuses the editor, and a nude body diagram also
-    // leaks into the generated body and clothing. So the pose is carried as TEXT
-    // (which the plan already describes in detail), not as a third image.
-    const poseNote = poseRef?.title ? `Required pose: ${poseRef.title}.` : '';
+    // line drawings. The selected pose is already included in the translated
+    // direction above, so don't append its untranslated title afterward.
     const poseBytes = null;
     // The prompt budget matters: FLUX.2 klein states a ~512 token cap and that
     // longer prompts degrade rather than truncate cleanly. The version below runs
     // ~400 tokens so nothing important falls off the end.
     const composed = [
-        'One photorealistic DSLR photograph of exactly one person.',
+        'Photorealistic photograph. Follow the subject brief for who appears in the frame; do not add people.',
         anchorBuffer
-            ? 'Image 1 is an earlier frame from this same shoot: keep that exact person - face, hair, skin tone, outfit - and change only the camera position and framing described below. Image 2 supplies the outfit exactly.'
-            : 'Image 1 supplies the face, age and hair. Image 2 supplies the outfit exactly.',
-        poseNote,
+            ? 'Image 1 is the accepted frame from this shoot. Preserve established identity and group-wide wardrobe continuity except where the current shot contract specifies a change. Follow that contract for pose, action, scene, lighting, camera and framing. Image 2 is the approved visual-style reference.'
+            : 'Image 1 supplies the identity reference; Image 2 is the approved visual-style reference.',
         direction ? `Shot: ${direction}.` : '',
         directive(variant?.mustShow) ? `Must contain: ${shortList(variant.mustShow)}.` : '',
         directive(variant?.rejectIf) ? `Redo if: ${shortList(variant.rejectIf)}.` : '',
         framingLine(variant),
         depthOfField(variant?.cameraSettings),
-        'Photographic skin texture with visible pores and fine facial hair; realistic light falloff and subtle, scene-consistent exposure variation.',
+        'Natural skin texture and camera-like tonal transitions; preserve the face from the identity reference without beauty-filter smoothing.',
         'Avoid excessive smoothing, waxy skin, over-sharpening, HDR glow, text, watermark, collage, extra limbs and malformed hands.',
     ].filter(Boolean).join(' ');
     const form = new FormData();
@@ -796,8 +805,8 @@ function depthOfField(cameraSettings) {
     if (!raw) return '';
     const aperture = Number((raw.match(/f\/?(\d+(?:\.\d+)?)/) || [])[1]);
     if (!aperture) return '';
-    if (aperture >= 8) return 'Deep focus: the whole scene is sharp from foreground to background.';
-    if (aperture <= 2) return 'Very shallow focus: only the face is sharp, background falls into soft blur.';
+    if (aperture >= 8) return 'Deeper depth of field: keep the subject and intended environmental details legible.';
+    if (aperture <= 2) return "Shallow depth of field: keep the shot's specified focus detail sharp and let the background soften naturally.";
     return 'Moderate depth of field: subject sharp, background gently softened.';
 }
 
@@ -808,16 +817,21 @@ function framingLine(variant) {
     // label like "medium-close-up", which none of the patterns below match, so
     // every frame silently fell through to the generic fallback line.
     const raw = String(variant?.size || variant?.shotType || variant?.shotSize || '');
+    const detailTarget = detailFrameTarget(variant);
+    if (detailTarget && /特写|close|ECU|CU/i.test(raw)) {
+        const target = detailTarget.includes('服装') ? 'garment or fabric detail'
+            : detailTarget.includes('手部') ? 'hand detail' : 'accessory detail';
+        return `Tight detail framing on the specified ${target}; retain its natural material and shape without forcing the face to fill the frame.`;
+    }
     const rules = [
-        [/环境全景|环境远景|^(?:E?WS)$/i, 'Wide environmental framing: the person is small but unmistakably present, walking or standing in the middle distance, with the surrounding street clearly readable around them.'],
+        [/环境全景|环境远景|^(?:E?WS)$/i, "Wide environmental framing: keep the subject small but clearly visible within the surrounding environment; preserve the shot's specified pose and action."],
         [/中全景|^MFS$/i, 'Knee-up framing: crop above the knees, showing head, torso and hands.'],
         [/全身|^FS$/i, 'Head-to-toe framing: both shoes and the ground under them are visible, with margin above the head.'],
         [/近景|^MCU$/i, 'Head-and-shoulders framing: crop below the shoulders, face fully in frame.'],
         [/特写|^E?CU$/i, 'Tight close-up: face fills most of the frame. Do not invent hands or props.'],
         [/中景|^MS$/i, 'Waist-up framing: crop below the waist, hands visible when they are in frame.'],
     ];
-    const line = rules.find(([pattern]) => pattern.test(raw))?.[1] || 'Frame the person according to the shot contract, with the face clearly visible.';
-    return `${line} Exactly one person appears in the frame.`;
+    return rules.find(([pattern]) => pattern.test(raw))?.[1] || 'Frame the subject according to the shot contract, with the face clearly visible.';
 }
 
 // The shot contract already carries the pose, camera angle, distance and where

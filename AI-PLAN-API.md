@@ -42,9 +42,10 @@ not a client-side secret vault. Use a restricted, low-budget provider key.
 }
 ```
 
-No app login required; callers supply their own provider key. No server-owned
-paid key is used. Calls return existing `title/input/sections/shotList/director`
-plan format, with `director.source=byok-ai-plan` and provider/model provenance.
+An authenticated PhotoAtelier session is required; callers supply their own
+provider key. No server-owned paid key is used. Calls return the existing
+`title/input/sections/shotList/director` plan format, with
+`director.source=byok-ai-plan` and provider/model provenance.
 Only the eight brief fields used by the existing compiler are sent upstream;
 no entire photo library, account data or local files are sent.
 

@@ -102,13 +102,14 @@ test('continuity image generation blocks guests and applies the user and shared 
 
 test('cloud plans stay text-only when the Cloudflare AI binding is unavailable', async () => {
     const originalFetch = globalThis.fetch;
+    const secret = 'unit-test-secret';
     globalThis.fetch = async () => Response.json({ shot_plans: [{ shot_language: 'wide', model_pose: 'Walk together', framing: 'Environment wide' }] });
     try {
         const response = await worker.fetch(new Request('https://unit.test/api/director/plan', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token('user-1', secret)}` },
             body: JSON.stringify({ theme: 'walk', modelDesc: 'two adults', people: '2' }),
-        }), { DIRECTOR_API_BASE: 'https://director.example.test' });
+        }), { JWT_SECRET: secret, DIRECTOR_API_BASE: 'https://director.example.test' });
         const plan = await response.json();
         assert.equal(response.status, 200);
         assert.equal(plan.director.imageGenerationConnected, false);
@@ -139,13 +140,14 @@ test('the deployed site honors reference-library planning even when Director is 
         throw new Error('Director must not replace a requested reference plan');
     };
     try {
+        const secret = 'unit-test-secret';
         const response = await worker.fetch(new Request('https://unit.test/api/director/plan', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+            method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token('user-1', secret)}` }, body: JSON.stringify({
                 theme: '秋日人像', scene: '公园小径；木亭长椅', modelDesc: '棕色针织上衣',
                 duration: '1小时', people: '1', useReferenceLibrary: true,
                 referenceIds: ['atlas-pose-full_single_p015', 'atlas-pose-full_single_p016', 'atlas-pose-full_single_p017', 'atlas-pose-full_single_p018', 'atlas-costume-aut-0006', 'atlas-portrait-test-face'],
             }),
-        }), { DIRECTOR_API_BASE: 'https://director.example.test' });
+        }), { JWT_SECRET: secret, DIRECTOR_API_BASE: 'https://director.example.test' });
         const plan = await response.json();
         assert.equal(response.status, 200);
         assert.equal(plan.director.source, 'template-library-plan');

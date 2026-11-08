@@ -196,7 +196,15 @@ test('the selected pose reaches the model as text, never as a line drawing', asy
     group = confirmMaster(group, { assetId: 'asset-identity', actor: 'human' });
 
     const aiCalls = [];
-    const envAI = { async run(model, payload) { aiCalls.push(model); return { image: Buffer.from(PNG_BYTES).toString('base64') }; } };
+    let translatedDirection = '';
+    const envAI = { async run(model, payload) {
+        aiCalls.push(model);
+        if (model.includes('llama')) {
+            translatedDirection = payload.messages[1].content;
+            return { response: 'PoseAtlas instruction: a relaxed hip-shift pose looking back over one shoulder.' };
+        }
+        return { image: Buffer.from(PNG_BYTES).toString('base64') };
+    } };
     const store = { async put() {}, async get() { return { buffer: PNG_BYTES, meta: { mime: 'image/png' } }; } };
 
     // The library fetch must be the only outbound request, and it must be the
@@ -216,9 +224,12 @@ test('the selected pose reaches the model as text, never as a line drawing', asy
     // one alongside two photographs mixes visual registers, which Black Forest
     // Labs documents as confusing the editor, so the pose must travel as text.
     assert.equal(fetched.length, 0, '黑白线稿不该作为参考图上传');
-    assert.equal(result.referencesSent, 2, '只有脸 + 服装两张写实参考图');
-    // The selected pose still has to reach the model, as words.
-    assert.match(result.sentPrompt, /Required pose: 顶胯回眸/);
+    assert.equal(result.referencesSent, 2, '只有身份 + 风格两张写实参考图');
+    // The selected pose reaches translation in Chinese and the image model in
+    // translated direction text, without appending its untranslated title.
+    assert.match(translatedDirection, /指定姿势顶胯回眸/);
+    assert.match(result.sentPrompt, /PoseAtlas instruction: a relaxed hip-shift pose looking back over one shoulder/);
+    assert.doesNotMatch(result.sentPrompt, /Required pose: 顶胯回眸|顶胯回眸/);
     assert.equal(aiCalls.filter(m => m.includes('flux')).length, 1);
 });
 
@@ -281,7 +292,7 @@ test('lighting, must-show, reject-if and camera settings reach the prompt', asyn
     assert.match(result.sentPrompt, /Must contain: 螺旋楼梯的几何弧线/, '必须出现项要进提示词');
     assert.match(result.sentPrompt, /Redo if: .*闪光灯硬阴影/, '禁止项要进提示词');
     assert.match(result.sentPrompt, /美术馆顶光与侧窗自然光/, '光线要进提示词');
-    assert.match(result.sentPrompt, /Deep focus/, 'f/8 应转译成景深描述，纯参数模型不认');
+    assert.match(result.sentPrompt, /Deeper depth of field: keep the subject and intended environmental details legible\./, 'f/8 只提示环境细节保持可辨，不保证全场都锐利');
     assert.match(result.sentPrompt, /画面不额外添加道具/, '道具为“无”时要明说，否则模型会自己加');
     // Placeholder text must not be forwarded: it only invites invention.
     assert.ok(!/待确认/.test(result.sentPrompt), '“待确认”这类占位不该发给模型');
@@ -320,7 +331,7 @@ test('an accepted frame becomes the anchor: later shots are edits of it, not fre
         env: { AI: { async run() { return { image: Buffer.from(PNG_BYTES).toString('base64') }; } } }, store,
     });
     assert.equal(first.anchored, false, '第一张还不是编辑');
-    assert.match(first.sentPrompt, /Image 1 supplies the face/, '第一张用证件照式参考');
+    assert.match(first.sentPrompt, /Image 1 supplies the identity reference/, '第一张明确使用身份参考');
 
     // Pin it, then shoot the second frame.
     group = setAnchor(group, { assetId: 'anchor01', path: '/api/continuity/asset/anchor01', shotId: 'shot-01' });
@@ -330,8 +341,10 @@ test('an accepted frame becomes the anchor: later shots are edits of it, not fre
     });
 
     assert.equal(second.anchored, true, '第二张必须从锚点编辑');
-    assert.match(second.sentPrompt, /an earlier frame from this same shoot/, '提示词要说明这是同一拍摄的上一帧');
-    assert.match(second.sentPrompt, /keep that exact person/, '明确要求保持同一个人，只改机位');
+    assert.match(second.sentPrompt, /Image 1 is the accepted frame from this shoot/, '提示词说明从已确认的本组母图继续拍摄');
+    assert.match(second.sentPrompt, /Preserve established identity and group-wide wardrobe continuity/, '保持人物身份和全组服装连续');
+    assert.match(second.sentPrompt, /Follow that contract for pose, action, scene, lighting, camera and framing/, '母图编辑仍按当前镜头合同变化');
+    assert.doesNotMatch(second.sentPrompt, /only the camera position and framing/i, '当前镜头合同不被限制为只改机位和裁切');
 });
 
 test('seedream adapter: no key is 503, and the request carries references as base64', async () => {
@@ -512,6 +525,7 @@ test('framing states where the frame cuts, and the pose is trimmed to what fits'
     // The cut is stated, and it appears before the body description.
     assert.match(text, /画框下沿切在胸部/);
     assert.match(text, /胸部以下完全不在画面内/);
+    assert.ok(text.indexOf('取景：') < text.indexOf('画面：'), '取景要先于画面描述，避免身体动作把画框撑大');
     assert.ok(text.indexOf('取景：') < text.indexOf('动作：'), '取景要排在动作前面，否则姿势会把画框撑大');
     // Clauses naming off-frame body parts are dropped rather than sent.
     assert.ok(!/踏步/.test(text), 'MCU 不该出现踏步');

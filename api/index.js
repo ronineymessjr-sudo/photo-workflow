@@ -70,6 +70,16 @@ const CORS = {
 
 const STUDIO_PATHS = new Set(['/api/ai/plan-lite', '/api/ai/studio/proposals', '/api/ai/studio/confirm',
     '/api/ai/studio/feishu/status', '/api/ai/studio/feishu/sync']);
+const AUTH_REQUIRED_POST_PATHS = new Set([
+    '/api/ai/plan-lite', '/api/ai/plan', '/api/ai/brief', '/api/ai/studio/proposals',
+    '/api/ai/studio/confirm', '/api/ai/studio/feishu/sync',
+    '/api/continuity/asset', '/api/continuity/init', '/api/continuity/reference', '/api/continuity/master',
+    '/api/continuity/requests', '/api/continuity/provider', '/api/continuity/from-studio',
+    '/api/continuity/anchor', '/api/continuity/handoff', '/api/continuity/attach',
+    '/api/continuity/generate', '/api/continuity/collect', '/api/continuity/prescreen',
+    '/api/continuity/qc', '/api/continuity/summary',
+    '/api/director/plan', '/api/director/generate-candidate', '/api/director/identity-lock-workflow',
+]);
 const STUDIO_CORS = {
     'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type,Authorization',
@@ -191,14 +201,10 @@ async function handleLogin(env, body) {
         const users = await sbQuery(env, `users?email=eq.${encodeURIComponent(sanitizedEmail)}&select=id,email,password_hash&limit=1`);
         if (users.error) return { status: 503, body: { error: '登录服务暂时不可用，请稍后重试' } };
         
-        if (users && users.length > 0) {
-            if (users[0].password_hash !== hashPassword(password, env)) return { status: 401, body: { error: '密码错误' } };
-            return { status: 200, body: { success: true, user: { id: users[0].id, email: users[0].email }, token: genToken(users[0].id, env) } };
+        if (!users || users.length === 0 || users[0].password_hash !== hashPassword(password, env)) {
+            return { status: 401, body: { error: '邮箱或密码错误' } };
         }
-
-        const newUser = await sbQuery(env, 'users', 'POST', { email: sanitizedEmail, password_hash: hashPassword(password, env) });
-        if (newUser.error) return { status: 503, body: { error: '注册服务暂时不可用，请稍后重试' } };
-        return { status: 201, body: { success: true, user: { id: newUser[0].id, email: newUser[0].email }, token: genToken(newUser[0].id, env) } };
+        return { status: 200, body: { success: true, user: { id: users[0].id, email: users[0].email }, token: genToken(users[0].id, env) } };
     } catch (err) {
         return { status: 500, body: { error: '登录服务发生错误，请稍后重试' } };
     }
@@ -409,10 +415,14 @@ export default {
 
         try {
             const uid = verifyToken(request.headers.get('authorization'), env);
+            const privateRead = method === 'GET' && path.startsWith('/api/continuity/asset/');
 
+            if (!uid && ((method === 'POST' && AUTH_REQUIRED_POST_PATHS.has(path)) || privateRead)) {
+                result = { status: 401, body: { error: 'SIGN_IN_REQUIRED' } };
+            }
             // BYOK is stateless: keys are used for one provider request, never saved.
-            if (path === '/api/ai/plan-lite' && method === 'POST') {
-                const allowed = await consumeStudioSearchQuota({ uid, ip: request.headers.get('CF-Connecting-IP'), env });
+            else if (path === '/api/ai/plan-lite' && method === 'POST') {
+                const allowed = await consumeStudioSearchQuota({ uid, env });
                 if (allowed === null) result = { status: 503, body: { error: 'AI_STUDIO_QUOTA_NOT_CONFIGURED' } };
                 else if (!allowed) result = { status: 429, body: { error: 'RATE_LIMITED' } };
                 else result = { status: 200, body: await searchStudio({
@@ -764,7 +774,7 @@ export default {
                 else result = { status: 200, body: await buildDirectorIdentityWorkflow(body, { baseUrl: env.DIRECTOR_API_BASE }) };
             }
             else if (path === '/api/auth/methods' && method === 'GET') {
-                result = { status: 200, body: { emailOtp: emailLoginEnabled(env), password: true, guest: true } };
+                result = { status: 200, body: { emailOtp: emailLoginEnabled(env), password: true, guest: false } };
             }
             else if (['/api/auth/email/send', '/api/auth/email/verify'].includes(path) && method === 'POST') {
                 result = await handleEmailAuth(env, body, path.endsWith('/send') ? 'send' : 'verify', { query: sbQuery, sign: genToken });

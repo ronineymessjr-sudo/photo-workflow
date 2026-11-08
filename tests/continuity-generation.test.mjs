@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { generateShot, GenerationError } from '../api/continuity-generation.mjs';
+import { generateShot, GenerationError, directionText } from '../api/continuity-generation.mjs';
 import { prescreen, mergeScores, summariseVision, PRE_SCREEN_ITEMS } from '../api/continuity-vision.mjs';
 import { createGroup, setReference, confirmMaster, setAnchor } from '../api/continuity.mjs';
 import { storeAsset, createMemoryStore } from '../api/continuity-assets.mjs';
@@ -8,9 +8,10 @@ import { groupFromStudio } from '../api/continuity-studio-bridge.mjs';
 
 const PNG_1PX = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
 
-async function readyGroup(store) {
+async function readyGroup(store, { modelDesc = '一名成年人', lockedSubject = '' } = {}) {
     let group = createGroup({
-        input: { theme: '雨夜旧车站', scene: '旧车站月台', style: '纪实', modelDesc: '一名成年人', wardrobeNote: '炭灰大衣' },
+        input: { theme: '雨夜旧车站', scene: '旧车站月台', style: '纪实', modelDesc, wardrobeNote: '炭灰大衣' },
+        lockedHints: lockedSubject ? { subject: lockedSubject } : {},
         shots: [{ shotId: 'shot-01', size: 'WS', camera_angle: 'eye_level', lens: '35mm', model_pose: '沿月台行走', model_position: '画面右侧', generator_prompt: 'wide shot of a figure walking along a wet platform' }],
     });
     for (const role of ['identity', 'scene', 'style']) {
@@ -62,6 +63,90 @@ test('Cloudflare prompt translation carries the selected PoseAtlas pose and dire
     assert.match(translated, /双脚错开站稳，肩颈放松/);
 });
 
+test('Cloudflare anchor prompt preserves identity while following the current shot contract', async () => {
+    const store = createMemoryStore();
+    const group = await readyGroup(store, { modelDesc: '两位成年伴侣', lockedSubject: '两位成年伴侣' });
+    Object.assign(group.shots[0], {
+        size: 'EWS', prompt: '两位成年人并排坐在河边长椅上', action: '两人并排坐在长椅上交谈',
+        scene: '河边公园', lighting: '树荫下柔和的自然散射光', wardrobe: '棕色针织和深色长裤', cameraSettings: '50mm f/2',
+    });
+    group.shots[0].poseRef = { id: 'pose-seated', title: '自然并坐交谈', direction: '坐姿放松，身体微微转向彼此。' };
+    setAnchor(group, { assetId: group.references.find(reference => reference.role === 'identity').assetId });
+
+    let translated;
+    let composed;
+    await generateShot({
+        group, shotId: 'shot-01', providerId: 'cloudflare-flux-klein', store,
+        env: { AI: { run: async (model, input) => {
+            if (model === '@cf/meta/llama-3.1-8b-instruct-fp8-fast') {
+                translated = input.messages[1].content;
+                return { response: 'Two adults seated together on a bench in a riverside park, wearing brown knit clothing.' };
+            }
+            const form = await new Response(input.multipart.body, {
+                headers: { 'content-type': input.multipart.contentType },
+            }).formData();
+            composed = String(form.get('prompt'));
+            return { image: PNG_1PX.split(',')[1] };
+        } } },
+        fetchImpl: async () => assert.fail('fixture refs must come from the in-memory asset store'),
+    });
+
+    assert.match(translated, /人物范围：两位成年伴侣/);
+    assert.match(translated, /两人并排坐在长椅上交谈/);
+    assert.match(translated, /本镜场景：河边公园/);
+    assert.match(translated, /树荫下柔和的自然散射光/);
+    assert.match(translated, /本镜服装：棕色针织和深色长裤/);
+    assert.match(composed, /Preserve established identity and group-wide wardrobe continuity/);
+    assert.match(composed, /Follow that contract for pose, action, scene, lighting, camera and framing/);
+    assert.match(composed, /Two adults seated together on a bench in a riverside park/);
+    assert.match(composed, /preserve the shot's specified pose and action/i);
+    assert.doesNotMatch(composed, /exactly one person|change only the camera position|only the camera position and framing/i);
+    assert.doesNotMatch(composed, /visible pores|fine facial hair|exposure variation/i);
+    assert.match(composed, /shot's specified focus detail/i);
+    assert.doesNotMatch(composed, /only the face is sharp|whole scene is sharp from foreground to background/i);
+});
+
+test('detail close-ups honor the named target and remove incompatible wide-shot clauses', async () => {
+    const store = createMemoryStore();
+    const group = await readyGroup(store);
+    Object.assign(group.shots[0], {
+        size: 'ECU',
+        prompt: '棕色针织面料细节特写, full body portrait, shoes visible, walking down stairs',
+        action: '镜头靠近针织衣料纹理', wardrobe: '棕色针织衫', mustShow: '针织面料纹理',
+    });
+
+    let translated;
+    let composed;
+    await generateShot({
+        group, shotId: 'shot-01', providerId: 'cloudflare-flux-klein', store,
+        env: { AI: { run: async (model, input) => {
+            if (model === '@cf/meta/llama-3.1-8b-instruct-fp8-fast') {
+                translated = input.messages[1].content;
+                return { response: 'Close detail photograph of brown knit fabric.' };
+            }
+            const form = await new Response(input.multipart.body, {
+                headers: { 'content-type': input.multipart.contentType },
+            }).formData();
+            composed = String(form.get('prompt'));
+            return { image: PNG_1PX.split(',')[1] };
+        } } },
+        fetchImpl: async () => assert.fail('fixture refs must come from the in-memory asset store'),
+    });
+
+    assert.match(translated, /棕色针织面料细节特写/);
+    assert.doesNotMatch(translated, /full body|shoes visible|walking down stairs/i);
+    assert.match(directionText({
+        prompt: 'full body portrait, shoes visible, seated on a bench', locked: { subject: '成年人' },
+        variant: { size: 'MCU', action: '坐在长椅上' }, size: 'MCU',
+    }), /坐在长椅上/);
+    assert.doesNotMatch(directionText({
+        prompt: 'full body portrait, shoes visible, seated on a bench', locked: { subject: '成年人' },
+        variant: { size: 'MCU', action: '坐在长椅上' }, size: 'MCU',
+    }), /full body|shoes visible/i);
+    assert.match(composed, /Tight detail framing on the specified garment or fabric detail/);
+    assert.doesNotMatch(composed, /face fills most of the frame|exactly one person/i);
+});
+
 test('a Studio plan fetches only selected PoseAtlas face and costume refs and compiles its per-shot direction', async () => {
     const store = createMemoryStore();
     const portrait = {
@@ -85,6 +170,7 @@ test('a Studio plan fetches only selected PoseAtlas face and costume refs and co
             directorContract: {
                 scene: '河边公园', referenceIds: [pose.id], shot_size: '全身', camera_angle: '侧前方平视',
                 model_pose: '双脚自然错开，右手轻扶衣襟', model_position: '人物位于画面左侧',
+                wardrobe_styling: '秋季棕色针织按用户文字执行，不增加未指定配饰。',
                 generator_prompt: '秋日河边公园全身人像，人物轻扶衣襟。',
             },
         }],

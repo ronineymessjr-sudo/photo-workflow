@@ -92,7 +92,14 @@ function toContinuityShot(shot, index, poseTemplates, guidance = {}) {
  * @returns {{ group: object, mapping: object[], poses: object[], missing: string[], ready: boolean }}
  */
 export function groupFromStudio({ templates = [], input = {}, planId = '', planRevision = 0, selectedIds = [], shots = [], guidance = {} } = {}) {
-    const valid = (Array.isArray(templates) ? templates : []).filter(template => template && typeof template === 'object' && template.kind);
+    const valid = (Array.isArray(templates) ? templates : [])
+        .filter(template => template && typeof template === 'object' && template.kind)
+        .map(template => ({
+            ...template,
+            id: String(template.id || template.sourceItemId || '').trim(),
+            sourceUrl: String(template.sourceUrl || template.externalUrl || '').trim(),
+        }))
+        .filter(template => template.id);
     if (!valid.length) {
         const error = new Error('没有可转换的图库条目');
         error.status = 400;
@@ -111,21 +118,20 @@ export function groupFromStudio({ templates = [], input = {}, planId = '', planR
         || String(valid[0].title || '').trim()
         || '图库选品拍摄';
     const wardrobeTemplate = styleTemplate;
-    const wardrobeFromLibrary = wardrobeTemplate
-        ? [wardrobeTemplate.title, ...(wardrobeTemplate.tags || [])].filter(Boolean).join('，')
-        : '';
     const shotList = (Array.isArray(shots) ? shots : []).slice(0, 16);
+    const planWardrobe = shotList.map(shot => shot?.directorContract?.wardrobe_styling).find(value => typeof value === 'string' && value.trim()) || '';
+    const wardrobeLock = String(input.wardrobeNote || planWardrobe || input.modelDesc || wardrobeTemplate?.title || '').trim();
     const scenes = [...new Set(shotList.map(shot => String(shot?.directorContract?.scene || shot?.scene || '').trim()).filter(Boolean))];
     const multipleScenes = scenes.length > 1;
     const group = createGroup({
         input: {
             ...input, theme,
-            wardrobeNote: input.wardrobeNote || wardrobeFromLibrary,
+            wardrobeNote: wardrobeLock,
             style: input.style || guidance.style || '',
             scene: scenes.length ? scenes.join('；') : input.scene,
         },
         lockedHints: {
-            wardrobe: input.wardrobeNote || wardrobeFromLibrary || undefined,
+            wardrobe: wardrobeLock || undefined,
             styleProfile: input.style || guidance.style || undefined,
             location: multipleScenes ? '多场景方案；每镜头按方案标注场景执行' : undefined,
             mustKeep: multipleScenes

@@ -129,13 +129,12 @@ test('database outage fails closed and cannot fall through into signup', async (
     assert.ok(!JSON.stringify(result).includes('private backend detail'));
 });
 
-test('explicit synthetic registration is kept separate from genuine users', async () => {
+test('password login cannot create an account without verified email OTP', async () => {
     let calls = 0;
     const result = await loginWith(async () => Response.json(++calls === 1 ? [] : [{ id, email: 'qa@example.invalid' }]), { email: 'qa@example.invalid', password });
-    assert.equal(result.response.status, 201);
-    assert.equal(result.logs[0].event, 'web_auth_success');
-    assert.equal(result.logs[0].action, 'signup');
-    assert.equal(result.logs[0].traffic_class, 'synthetic');
+    assert.equal(calls, 1);
+    assert.equal(result.response.status, 401);
+    assert.equal(result.logs[0].event, 'web_auth_failure');
 });
 
 test('health probes and arbitrary request queries cannot pollute user or sensitive logs', async () => {
@@ -224,14 +223,14 @@ test('cloud login failure stays on the login form without writing a fake session
     }
 });
 
-test('successful cloud login switches guest storage to authenticated server storage', async () => {
+test('successful cloud login stays on authenticated server storage with guests disabled', async () => {
     const r = await browserLogin(async () => ({ success: true, token: 'test-session', user: { id, email } }));
     assert.equal(r.values.get('pw_token'), 'test-session');
     assert.equal(r.values.get('pa_guest_mode'), 'false');
     assert.equal(r.result.guest, false);
     assert.equal(r.result.browserStorage, false);
     assert.match(r.html, /const USE_LOCAL_MODE = IS_LOCAL_HOST && new URLSearchParams/);
-    assert.match(r.html, /onclick="continueAsGuest\(\)"/);
+    assert.doesNotMatch(r.html, /onclick="continueAsGuest\(\)"/);
     assert.match(r.html, /!IS_LOCAL_HOST && localStorage\.getItem\(TOKEN_KEY\) === 'local-token'/);
 });
 

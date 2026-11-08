@@ -6,25 +6,28 @@ import { createDirectorPlan, createTemplatePlan } from '../api/director-plan.mjs
 import { prepareReferenceContext } from '../api/ai-studio/reference-brief.mjs';
 import { prepareCloudCandidateReferences, compileCloudCandidateRequest } from '../api/director-cloud-generation.mjs';
 import { searchStudio, createStudioProposal, confirmStudioProposal } from '../api/ai-studio/service.mjs';
+import { classifyPose } from '../api/ai-studio/pose-suitability.mjs';
 
 function sourceFixture() {
     const calls = [];
     const fetchImpl = async url => {
         calls.push(String(url));
         if (String(url).endsWith('poses.json')) return Response.json({ poses: [
-            { id: 'full_single_P019', no: 'P019', category: '坐姿', names: { zh: '长椅安静坐姿测试' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P019_front.jpg' }, { angle: 'side' }] },
-            { id: 'full_single_P015', no: 'P015', category: '站姿', names: { zh: '站立对立式平衡手扶腰', en: 'Standing contrapposto, hand on hip' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P015_front.jpg' }] },
-            { id: 'full_single_P016', no: 'P016', category: '站姿', names: { zh: '双手撩发的放松站姿', en: 'Relaxed standing pose' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P016_front.jpg' }] },
-            { id: 'full_single_P017', no: 'P017', category: '站姿', names: { zh: '站立自然回眸', en: 'Relaxed standing look back' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P017_front.jpg' }] },
-            { id: 'full_single_P018', no: 'P018', category: '站姿', names: { zh: '双手轻扶腰侧', en: 'Relaxed hands at waist' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P018_front.jpg' }] },
-            { id: 'full_single_P021', no: 'P021', category: '站姿', names: { zh: '一手抚颈一手扶腿', en: 'One hand at neck, one on thigh' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P021_front.jpg' }] },
-            { id: 'full_single_P023', no: 'P023', category: '站姿', names: { zh: '自然侧身回望', en: 'Relaxed side glance' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P023_front.jpg' }] },
-            { id: 'full_single_P024', no: 'P024', category: '站姿', names: { zh: '单腿后抬', en: 'One foot lifted behind' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P024_front.jpg' }] },
-            { id: 'full_duo_P001', no: 'P001', series: 'duo', category: '双人站姿', names: { zh: '双人自然站姿', en: 'Natural standing pose for two' }, variants: [{ angle: 'front', thumb: 'thumbs/full_duo_P001_front.jpg' }] },
-            { id: 'full_single_P020', no: 'P020', category: '靠栏杆', names: { zh: '轻靠栏杆自然站姿', en: 'Casual rail lean' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P020_front.jpg' }] },
-            { id: 'full_single_P001', no: 'P001', category: '后仰坐姿', names: { zh: '后仰坐单膝立起' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P001_front.jpg' }] },
-            { id: 'full_single_P002', no: 'P002', category: '坐姿', names: { zh: '单手支撑・双腿斜向前伸' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P002_front.jpg' }] },
-            { id: 'full_single_P027', no: 'P027', category: '站姿', names: { zh: '双手举过头伸展' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P027_front.jpg' }] },
+            { id: 'full_single_P019', no: 'P019', category: '站姿', names: { zh: '站立・双臂上举伸展', en: 'Standing, arms reaching overhead' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P019_front.jpg' }, { angle: 'side' }] },
+            { id: 'full_single_P015', no: 'P015', category: '站姿', names: { zh: '站立・对立式平衡・手扶腰', en: 'Standing contrapposto, hand on hip' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P015_front.jpg' }] },
+            { id: 'full_single_P016', no: 'P016', category: '站姿', names: { zh: '站立・双手撩发' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P016_front.jpg' }] },
+            { id: 'full_single_P017', no: 'P017', category: '站姿', names: { zh: '站立・回眸顾盼' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P017_front.jpg' }] },
+            { id: 'full_single_P018', no: 'P018', category: '站姿', names: { zh: '站立・双手扶腰' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P018_front.jpg' }] },
+            { id: 'full_single_P021', no: 'P021', category: '站姿', names: { zh: '站立・一手抚颈一手扶腿' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P021_front.jpg' }] },
+            { id: 'full_single_P024', no: 'P024', category: '站姿', names: { zh: '站立・单腿后抬' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P024_front.jpg' }] },
+            { id: 'full_single_P025', no: 'P025', category: '站姿', names: { zh: '站立・分腿双手扶腰' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P025_front.jpg' }] },
+            { id: 'full_single_P026', no: 'P026', category: '站姿', names: { zh: '站立・单臂上举顶胯' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P026_front.jpg' }] },
+            { id: 'full_single_P005', no: 'P005', category: '坐姿', names: { zh: '单膝立起・手抚发', en: 'One knee up, hand in hair' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P005_front.jpg' }] },
+            { id: 'full_single_P009', no: 'P009', category: '坐姿', names: { zh: '向右倾・肘部支撑', en: 'Tilted right, elbow support' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P009_front.jpg' }] },
+            { id: 'full_single_P010', no: 'P010', category: '坐姿', names: { zh: '手抚脚踝', en: 'Hand to ankle' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P010_front.jpg' }] },
+            { id: 'full_single_P041', no: 'P041', category: '坐姿', names: { zh: '女孩坐・双手扶腿', en: 'W-sit, hands on thighs' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P041_front.jpg' }] },
+            { id: 'full_single_P061', no: 'P061', category: '蹲姿', names: { zh: '蹲姿・手扶膝' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P061_front.jpg' }] },
+            { id: 'pair60_P003', no: 'P003', series: 'pair60', category: '正常位（传教士）', names: { zh: '抬起脚踝・V字打开' }, variants: [{ angle: 'front', thumb: 'thumbs/pair60_P003_front.jpg' }] },
         ] });
         if (String(url).endsWith('costumes.json')) return Response.json({ costumes: [
             { id: 'AUT-0001', thumb: 'costume/thumbs/AUT-0001.webp', cat: 'autumn', group: 'accessory', color: 'brown', main: 'ribbon', tags: ['brown', 'knit', 'dress'] },
@@ -137,7 +140,7 @@ test('reference selection rejects a pose that directly violates a user ban', asy
     assert.ok(naturalLighting.templates.some(template => template.upstreamId === 'full_single_P019'));
     await assert.rejects(prepareReferenceContext({
         theme: '人像拍摄', extra: '禁止双手举过头', useReferenceLibrary: true,
-        referenceIds: ['atlas-pose-full_single_p027'],
+        referenceIds: ['atlas-pose-full_single_p019'],
     }, { fetchImpl: source.fetchImpl }), /POSE_REFERENCE_CONFLICTS_WITH_USER_CONSTRAINTS/);
     await assert.rejects(prepareReferenceContext({
         theme: '人像拍摄', extra: '自然轻松；禁止双手举过头', useReferenceLibrary: true,
@@ -157,7 +160,7 @@ test('ordinary portrait reference selection rejects excluded poses and labels ex
     }, { fetchImpl: source.fetchImpl }), /POSE_REFERENCE_CONFLICTS_WITH_USER_CONSTRAINTS/);
     await assert.rejects(prepareReferenceContext({
         theme: '单人街头人像', people: '1', useReferenceLibrary: true,
-        referenceIds: ['atlas-pose-full_duo_p001'],
+        referenceIds: ['atlas-pose-pair60_p003'],
     }, { fetchImpl: source.fetchImpl }), /POSE_REFERENCE_CONFLICTS_WITH_USER_CONSTRAINTS/);
 
     const reviewed = await prepareReferenceContext(ordinaryReferenceInput({ referenceIds: ['atlas-pose-full_single_p016'] }), { fetchImpl: source.fetchImpl });
@@ -166,20 +169,20 @@ test('ordinary portrait reference selection rejects excluded poses and labels ex
     assert.match(reviewed.guidance.brief, /需人工复核/);
     assert.match(reviewed.guidance.brief, /摄影师/);
 
-    const couple = await prepareReferenceContext(ordinaryReferenceInput({
-        theme: '人像写真', people: '双人', referenceIds: ['atlas-pose-full_duo_p001', 'atlas-costume-aut-0118', 'atlas-portrait-shortface'],
-    }), { fetchImpl: source.fetchImpl });
-    const duoPose = couple.templates.find(template => template.upstreamId === 'full_duo_P001');
-    assert.equal(duoPose.poseSuitability, 'review');
-    assert.ok(duoPose.poseReasonTags.includes('multi_person_context'));
-    assert.match(couple.guidance.brief, /仅用于明确的双人拍摄/);
+    await assert.rejects(prepareReferenceContext(ordinaryReferenceInput({
+        referenceIds: ['atlas-pose-full_single_p018', 'atlas-pose-full_single_p025'],
+    }), { fetchImpl: source.fetchImpl }), /DUPLICATE_POSE_FAMILY/);
+
+    await assert.rejects(prepareReferenceContext(ordinaryReferenceInput({
+        theme: '人像写真', people: '双人', referenceIds: ['atlas-pose-pair60_p003', 'atlas-costume-aut-0118', 'atlas-portrait-shortface'],
+    }), { fetchImpl: source.fetchImpl }), /POSE_REFERENCE_CONFLICTS_WITH_USER_CONSTRAINTS/);
 });
 
 test('ordinary portrait automatic references always filter excluded poses, even without natural wording', async () => {
     const source = sourceFixture();
     const context = await prepareReferenceContext(ordinaryReferenceInput(), { fetchImpl: source.fetchImpl });
     assert.equal(context.templates.some(template => template.upstreamId === 'full_single_P024'), false);
-    assert.equal(context.templates.some(template => template.upstreamId === 'full_duo_P001'), false);
+    assert.equal(context.templates.some(template => template.upstreamId === 'pair60_P003'), false);
     assert.ok(context.templates.filter(template => template.kind === 'pose').every(template => template.poseSuitability === 'safe'));
 });
 
@@ -188,6 +191,8 @@ test('template plan and candidate compilation retain retrieved pose, processing 
     const input = { theme: '秋日人像', scene: '公园长椅；咖啡馆窗边', modelDesc: '棕色针织上衣、黑色长裤', extra: '35mm固定焦段。双脚着地，不交叉双腿', useReferenceLibrary: true, referenceIds: ['atlas-pose-full_single_p018', 'atlas-pose-full_single_p015', 'atlas-pose-full_single_p017', 'atlas-pose-full_single_p021'] };
     const context = await prepareReferenceContext({ ...input, requireImageReferences: true }, { fetchImpl: source.fetchImpl });
     const plan = createTemplatePlan(input, context);
+    const planPoses = plan.aiStudio.references.filter(reference => reference.kind === 'pose');
+    assert.equal(new Set(planPoses.map(reference => reference.poseFamily)).size, planPoses.length);
     const request = { provider: 'cloudflare', model: '@cf/black-forest-labs/flux-1-schnell', candidate_count: 1,
         billing_mode: 'free-credit-first', brief: plan.shotList[0].description, reference_brief: input,
         reference_ids: plan.aiStudio.references.map(reference => reference.sourceItemId), shot_contract: plan.shotList[0].directorContract };
@@ -199,7 +204,7 @@ test('template plan and candidate compilation retain retrieved pose, processing 
     assert.equal(plan.director.source, 'template-library-plan');
     assert.match(compiled.prompt, /atlas-pose-full_single_p018/);
     assert.doesNotMatch(compiled.prompt, /atlas-pose-full_single_p015|atlas-pose-full_single_p017|atlas-pose-full_single_p021/);
-    assert.match(compiled.prompt, /双手轻扶腰侧/);
+    assert.match(compiled.prompt, /双手轻放腰侧/);
     assert.match(compiled.prompt, /双脚稳定着地/);
     assert.match(compiled.prompt, /黑色长裤/);
     assert.match(compiled.prompt, /不交叉双腿/);
@@ -256,7 +261,7 @@ test('normal Director entry compiles selected live references into style and exe
     } });
     assert.equal(source.calls.length, 3);
     assert.match(submitted.brief, /atlas-pose-full_single_p019/);
-    assert.match(submitted.brief, /双脚有支撑/);
+    assert.match(submitted.brief, /双脚站稳/);
     assert.match(submitted.brief, /电影感/);
     assert.doesNotMatch(submitted.brief, /never-download/);
     assert.equal(plan.aiStudio.references[0].poseNumber, 'P019');
@@ -290,7 +295,7 @@ test('real source IDs survive signed search, explicit proposal, and confirmation
     const env = { JWT_SECRET: 'test-signing-secret-at-least-32-characters' };
     const search = await searchStudio({ prompt: '自然站姿、秋日棕色针织、中长发', planId: 'plan-1', expectedRevision: 1, uid: 'user-1', env, fetchImpl: source.fetchImpl });
     assert.equal(search.modelCalls, 0);
-    assert.equal(search.library.count, 20);
+    assert.equal(search.library.count, 22);
     const id = 'atlas-pose-full_single_p021';
     assert.ok(search.selectedIds.includes(id));
     const proposal = await createStudioProposal({ searchReceipt: search.searchReceipt, selectedIds: [id], uid: 'user-1', env, fetchImpl: source.fetchImpl });
@@ -302,29 +307,30 @@ test('real source IDs survive signed search, explicit proposal, and confirmation
     assert.equal(source.calls.length, 3);
 });
 
-test('natural multi-pose search balances four pose variants with one clothing and one face reference', async () => {
+test('natural multi-pose search balances four distinct pose families with one clothing and one face reference', async () => {
     const source = sourceFixture();
     const result = await searchStudio({ prompt: '自然普通站姿、缓步行走、轻松坐姿、轻靠栏杆；短发妆发参考；棕色针织裙、黑色连裤袜、棕色短靴；避免后仰、跪姿、趴地', uid: 'user-1', env: { JWT_SECRET: 'test-signing-secret-at-least-32-characters' }, fetchImpl: source.fetchImpl });
     const poses = result.selectedTemplates.filter(template => template.kind === 'pose');
-    assert.deepEqual(poses.map(template => template.upstreamId), ['full_single_P015', 'full_single_P018', 'full_single_P021', 'full_single_P023']);
+    assert.deepEqual(poses.map(template => template.upstreamId).sort(), ['full_single_P015', 'full_single_P017', 'full_single_P018', 'full_single_P021']);
+    assert.equal(new Set(poses.map(template => classifyPose(template).poseFamily)).size, poses.length);
     assert.equal(result.selectedTemplates.filter(template => template.kind === 'costume').length, 1);
     assert.equal(result.selectedTemplates.find(template => template.kind === 'costume').upstreamId, 'AUT-0006');
     assert.equal(result.selectedTemplates.filter(template => template.kind === 'portrait' && template.section === 'face').length, 1);
-    assert.equal(result.selectedTemplates.some(template => template.upstreamId === 'full_single_P001'), false);
-    assert.equal(result.selectedTemplates.some(template => template.upstreamId === 'full_single_P002'), false);
+    assert.equal(result.selectedTemplates.some(template => template.upstreamId === 'full_single_P005'), false);
+    assert.equal(result.selectedTemplates.some(template => template.upstreamId === 'full_single_P009'), false);
     assert.equal(result.selectedTemplates.length, 6);
 });
 
-test('live reference search offers only image-backed natural poses and face-section portraits', async () => {
+test('live reference search only offers image-backed whitelist poses and face-section portraits', async () => {
     const source = sourceFixture();
     const result = await searchStudio({ prompt: '站立回眸动作、秋日棕色针织、短发人脸参考；避免后仰和跪姿', uid: 'user-1', env: { JWT_SECRET: 'test-signing-secret-at-least-32-characters' }, fetchImpl: source.fetchImpl });
-    const reviewedLookBack = result.selectedTemplates.find(template => template.kind === 'pose' && template.upstreamId === 'full_single_P017');
-    assert.equal(reviewedLookBack.poseSuitability, 'review');
-    assert.ok(reviewedLookBack.poseReasonTags.includes('source_metadata_review'));
+    const lookBack = result.selectedTemplates.find(template => template.kind === 'pose' && template.upstreamId === 'full_single_P017');
+    assert.equal(lookBack.poseSuitability, 'safe');
+    assert.equal(classifyPose(lookBack).poseFamily, 'standing_look_back');
     assert.ok(result.selectedTemplates.some(template => template.kind === 'costume'));
     assert.ok(result.selectedTemplates.some(template => template.kind === 'portrait' && template.section === 'face' && template.hair === 'short'));
     assert.equal(result.selectedTemplates.some(template => template.id === 'pa-pose-walk'), false);
-    assert.equal(result.selectedTemplates.some(template => template.upstreamId === 'full_single_P001'), false);
+    assert.equal(result.selectedTemplates.some(template => template.upstreamId === 'full_single_P016'), false);
     assert.equal(result.selectedTemplates.some(template => template.upstreamId === 'shortstyle'), false);
     assert.equal(result.modelCalls, 0);
 });

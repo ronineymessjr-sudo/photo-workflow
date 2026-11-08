@@ -48,10 +48,10 @@ function matchesOutfit(template, constraints) {
     return constraints.garments.every(garment => (garmentTerms[garment] || [garment]).some(value => corpus.includes(value)));
 }
 
-function poseConflicts(template, prompt, poseContext) {
+function poseConflicts(template, prompt, poseContext, { allowReview = false } = {}) {
     const terms = `${template.title} ${template.description} ${template.category}`;
     const classification = classifyPose(template);
-    if (!isPoseAllowed(template, { poseContext })) return true;
+    if (!isPoseAllowed(template, { poseContext, allowReview })) return true;
     const bans = [
         [/(?:禁止|不要|避免|不能|不希望)[^。；;]{0,16}跪/, /跪|kneel/i],
         [/(?:禁止|不要|避免|不能|不希望)[^。；;]{0,16}(?:躺|卧|趴)/, /躺|卧|趴|reclin|supine|prone/i],
@@ -148,11 +148,20 @@ export async function prepareReferenceContext(input, options = {}) {
     const usable = (template, kind) => template?.kind === kind && (!requireImages || template.referenceImageUrl) && (kind !== 'portrait' || template.section === 'face');
     const selectedPoseIds = new Set(input.referenceIds || []);
     const explicitPoses = templates.filter(template => usable(template, 'pose'));
-    if (explicitPoses.some(template => selectedPoseIds.has(template.id) && poseConflicts(template, prompt, poseContext))) {
+    if (explicitPoses.some(template => selectedPoseIds.has(template.id) && poseConflicts(template, prompt, poseContext, { allowReview: true }))) {
         throw new Error('POSE_REFERENCE_CONFLICTS_WITH_USER_CONSTRAINTS');
     }
+    const explicitFamilies = explicitPoses.map(template => classifyPose(template)?.poseFamily || 'unclassified');
+    if (new Set(explicitFamilies).size !== explicitFamilies.length) throw new Error('DUPLICATE_POSE_FAMILY');
+    const seenPoseFamilies = new Set(explicitFamilies);
     const poses = [...explicitPoses, ...automatic.filter(template => usable(template, 'pose') && !explicitPoses.some(item => item.id === template.id)
-        && !poseConflicts(template, prompt, poseContext))].slice(0, 4);
+        && !poseConflicts(template, prompt, poseContext))
+        .filter(template => {
+            const family = classifyPose(template)?.poseFamily || 'unclassified';
+            if (seenPoseFamilies.has(family)) return false;
+            seenPoseFamilies.add(family);
+            return true;
+        })].slice(0, 4);
     const constraints = outfitConstraints(input);
     const costume = searchMatchingCostume(registry, input, [...templates, ...automatic], constraints, requireImages);
     const portrait = templates.find(template => usable(template, 'portrait')) || automatic.find(template => usable(template, 'portrait'));
@@ -169,6 +178,7 @@ export function referencePlanFields(context) {
             sourceItemId: template.id, upstreamId: template.upstreamId, poseNumber: template.poseNumber,
             title: template.title, kind: template.kind, angles: template.angles || [],
             poseSuitability: template.poseSuitability, poseReasonTags: template.poseReasonTags || [],
+            ...(template.kind === 'pose' ? { poseFamily: classifyPose(template)?.poseFamily || 'unclassified' } : {}),
             section: template.section || '',
             tags: template.tags || [],
             externalUrl: template.sourceUrl, rightsStatus: template.rightsStatus,

@@ -126,13 +126,14 @@ test('Worker Studio routes enforce exact origins, bounded JSON, authentication a
     assert.equal(preflight.status, 204);
     assert.equal(preflight.headers.get('Access-Control-Allow-Origin'), origin);
     assert.equal((await call(env, '/api/ai/plan-lite', { prompt: 'x'.repeat(9000) }, null)).status, 413);
-    assert.equal((await call(env, '/api/ai/plan-lite', { prompt: '坐姿' + '人'.repeat(1798) }, null)).status, 200);
+    assert.equal((await call(env, '/api/ai/plan-lite', { prompt: '坐姿' + '人'.repeat(1798) }, null)).status, 401);
+    assert.equal((await call(env, '/api/ai/plan-lite', { prompt: '自然坐姿' })).status, 200);
     assert.equal((await call(env, '/api/ai/plan-lite', { prompt: '自然坐姿' }, null, { 'Content-Type': 'text/plain' })).status, 415);
     assert.equal((await call(env, '/api/ai/studio/proposals', {}, null)).status, 401);
-    assert.equal((await call({ ...env, AI_STUDIO_QUOTA: undefined }, '/api/ai/plan-lite', { prompt: '自然坐姿' }, null)).status, 503);
-    const guest = await (await call(env, '/api/ai/plan-lite', { prompt: '自然坐姿', uid: 'spoofed' }, null)).json();
-    assert.equal(guest.searchReceipt, undefined);
-    assert.equal(guest.modelCalls, 0);
+    assert.equal((await call({ ...env, AI_STUDIO_QUOTA: undefined }, '/api/ai/plan-lite', { prompt: '自然坐姿' })).status, 503);
+    const guest = await call(env, '/api/ai/plan-lite', { prompt: '自然坐姿', uid: 'spoofed' }, null);
+    assert.equal(guest.status, 401);
+    assert.equal((await guest.json()).error, 'SIGN_IN_REQUIRED');
 });
 
 test('candidate quota is five per user plus a shared daily free-tier safety cap', async () => {

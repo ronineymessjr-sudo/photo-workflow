@@ -55,6 +55,34 @@ test('portrait becomes identity, costume becomes style, pose becomes a constrain
     assert.equal(result.group.references.some(reference => reference.role === 'pose'), false);
 });
 
+test('real Studio referencePlanFields shape maps sourceItemId into identity, style and pose', () => {
+    const planCostume = { ...costume, tags: ['棕色', '针织', '包袋', '金饰', '缎带', 'choker'] };
+    const planReferences = [portrait, planCostume, pose].map(({ id, sourceUrl, ...template }) => ({
+        ...template, sourceItemId: id, externalUrl: sourceUrl,
+    }));
+    const wardrobe = '人物与服装硬性要求：棕色针织上衣、深色半身裙、靴子。未指定配饰不添加。';
+    const result = groupFromStudio({
+        templates: planReferences,
+        input: { theme: '来源字段映射测试', modelDesc: '棕色针织上衣' },
+        shots: [{ id: 'plan-shot-1', directorContract: {
+            referenceIds: [pose.id], model_pose: '自然站姿', scene: '公园', wardrobe_styling: wardrobe,
+        } }],
+    });
+
+    assert.deepEqual(result.mapping.map(item => item.role), ['identity', 'style']);
+    assert.equal(result.group.references.find(reference => reference.role === 'identity').sourceItemId, portrait.id);
+    assert.equal(result.group.references.find(reference => reference.role === 'style').sourceItemId, costume.id);
+    assert.equal(result.group.references.find(reference => reference.role === 'style').status, 'confirmed');
+    assert.equal(result.group.references.find(reference => reference.role === 'style').sourceUrl, costume.sourceUrl);
+    assert.equal(result.group.locked.wardrobe, wardrobe);
+    assert.doesNotMatch(result.group.locked.wardrobe, /包袋|金饰|缎带|choker/);
+    assert.deepEqual(result.poses.map(item => item.templateId), [pose.id]);
+    assert.equal(result.group.poseConstraints[0].templateId, pose.id);
+    assert.equal(result.group.poseConstraints[0].sourceUrl, pose.sourceUrl);
+    assert.equal(result.group.shots[0].poseRef.id, pose.id);
+    assert.match(result.group.locked.wardrobe, /针织/);
+});
+
 test('the converter reports import blockers when a shot list is missing', () => {
     const result = groupFromStudio({
         templates: [portrait, costume],
