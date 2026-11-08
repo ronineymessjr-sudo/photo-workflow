@@ -3,8 +3,8 @@
 // AI Studio selects entries from a template library (PoseAtlas): they carry an
 // id, a kind and a source URL, but no bytes, because the library is licensed for
 // reference only. The continuity contract needs three roles backed by stored
-// assets. Selected PoseAtlas images remain remote references and are fetched
-// transiently; user uploads continue to use the owned asset path.
+// assets. Selected face and costume images remain remote references and are
+// fetched transiently; poses stay as text constraints so sketches cannot affect image style.
 //
 // Role mapping:
 //   portrait / styling -> identity   (who)

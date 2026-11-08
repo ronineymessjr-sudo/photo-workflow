@@ -2,10 +2,11 @@ import Ajv from 'ajv';
 import { createJsonTranslator } from 'typechat';
 import { handleAiPlan } from '../../api/ai-plan.mjs';
 
-const fields = ['shot_language', 'model_pose', 'photographer_position', 'lens', 'model_position', 'lighting_setup', 'crop_boundary', 'must_show', 'reject_if', 'execution_note', 'generator_prompt'];
+const fields = ['shot_language', 'model_pose', 'photographer_position', 'lens', 'model_position', 'wardrobe_styling', 'lighting_setup', 'shot_props', 'crop_boundary', 'must_show', 'reject_if', 'execution_note', 'generator_prompt'];
 const shot = {
-  shot_language: '环境与人物', model_pose: '向前迈一步后停住', photographer_position: '安全台阶上俯拍',
-  lens: '35mm', model_position: '画面左下角', lighting_setup: '路灯侧光', crop_boundary: '完整全身',
+  shot_language: '环境与人物', model_pose: '向前迈一步后停住', photographer_position: '安全台阶上俯拍，距主体约4米',
+  lens: '35mm', model_position: '画面左下角', wardrobe_styling: '沿用用户确认的服装，不额外添加配饰',
+  lighting_setup: '利用路灯侧光', shot_props: '无', crop_boundary: '完整全身',
   must_show: '头部、双脚和路面', reject_if: '人物截脚', execution_note: '台阶不可用则更换安全位置',
   generator_prompt: 'full body high angle subject lower left', shot_size: 'FS', camera_angle: 'high_angle',
 };

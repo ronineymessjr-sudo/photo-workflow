@@ -8,6 +8,15 @@
     const current = () => typeof currentPlanData === 'object' ? currentPlanData : null;
     const selected = () => [...$('studioReferenceResults').querySelectorAll('input:checked')].map(input => input.value);
     const status = message => { $('studioReferenceStatus').textContent = message; };
+    const poseReasonLabels = {
+        sexualized: '性化表达，普通人像不使用', balance_risk: '需确认平衡与动作安全',
+        floor_pose: '需确认地面姿势与服装适配', unstable_support: '单手或地面支撑，普通人像不使用', extreme_extension: '大幅度伸展或后弯',
+        overhead_action: '需确认抬手动作自然度', source_metadata_review: '原库动作需人工核对',
+        multi_person_context: '仅适用于明确的双人拍摄',
+    };
+    const poseReviewText = template => template.poseSuitability === 'review'
+        ? `需摄影师人工复核：${(template.poseReasonTags || []).map(tag => poseReasonLabels[tag] || '姿势适配需核对').join('；')}`
+        : '';
 
     async function request(path, method = 'POST', body) {
         if (!local) return window.api.request(path, method, body, 45000);
@@ -67,7 +76,7 @@
                 label.append(checkbox, text);
                 const detail = document.createElement('p');
                 const rightsLabel = template.rightsStatus === 'external_reference' ? '外部来源参考' : template.rightsStatus;
-                detail.textContent = [template.description, ...(template.angles || []), rightsLabel].filter(Boolean).join(' · ');
+                detail.textContent = [template.description, ...(template.angles || []), rightsLabel, poseReviewText(template)].filter(Boolean).join(' · ');
                 card.append(label, detail);
                 const url = sourceLink(template.sourceUrl);
                 if (url) {
@@ -186,7 +195,8 @@
                 const image = sourceLink(item.referenceImageUrl);
                 const preview = /\.(?:jpg|webp)$/.test(image) ? `<img src="${escape(image)}" alt="${escape(item.title)}" loading="lazy">` : '';
                 const kind = { pose: '摆姿', costume: '服装', portrait: '人脸' }[item.kind] || '参考';
-                return `<li>${preview}<strong>${kind} · ${escape(item.title)}</strong><span>${escape(item.poseNumber || item.upstreamId || item.sourceItemId)} · ${escape((item.angles || []).join(' / '))}</span>${url ? ` <a href="${escape(url)}" target="_blank" rel="noopener noreferrer">原站参考</a>` : ''}</li>`;
+                const review = poseReviewText(item);
+                return `<li>${preview}<strong>${kind} · ${escape(item.title)}</strong>${review ? `<strong class="pose-review-label">${escape(review)}</strong>` : ''}<span>${escape(item.poseNumber || item.upstreamId || item.sourceItemId)} · ${escape((item.angles || []).join(' / '))}</span>${url ? ` <a href="${escape(url)}" target="_blank" rel="noopener noreferrer">原站参考</a>` : ''}</li>`;
             }).join('')}</ul><p>${escape(plan.aiStudio.guidance?.style || '')}</p><ul>${(plan.aiStudio.guidance?.suggestions || []).map(item => `<li>${escape(item.direction)}</li>`).join('')}</ul><p>飞书${plan.aiStudio.sync?.status === 'synced' ? '已核对同步' : '待同步'}</p><button type="button" class="btn btn-s btn-sm" data-continuity-plan="${escape(plan.id)}">按此方案逐镜连续生成</button> <button type="button" class="btn btn-s btn-sm" data-studio-sync="${escape(plan.id)}">同步方案和参考到飞书</button></section>`;
         },
         syncPlan,

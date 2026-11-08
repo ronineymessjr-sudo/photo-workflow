@@ -195,7 +195,7 @@ function buildPrompt(group, shot, compiled, input) {
         `Camera: ${[shot.camera, shot.lens, shot.distance, shot.subjectPlacement].filter(Boolean).join(', ') || 'per shot contract'}.`,
         `Style: ${locked.styleProfile || 'documentary, low saturation'}.`,
         framing,
-        'Natural light with real falloff, visible skin pores and peach fuzz, slightly under-exposed, mixed colour temperature, worn location details. Avoid: text, watermark, collage, extra limbs, duplicate feet, malformed anatomy.',
+        'Natural light with realistic falloff and subtle exposure variation; preserve visible skin pores and fine facial hair. Avoid plastic skin, heavy smoothing, HDR glow, text, watermark, collage, extra limbs, duplicate feet and malformed anatomy.',
     ].filter(Boolean).join(' ');
 }
 

@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadPoseAtlasCatalog, normalizePoseAtlasDataset, searchPoseAtlasTemplates, POSEATLAS_DATASETS } from '../api/ai-studio/poseatlas.mjs';
-import { validateTemplate } from '../api/ai-studio/core.mjs';
+import { createRegistry, validateTemplate } from '../api/ai-studio/core.mjs';
+import { classifyPose, isPoseAllowed } from '../api/ai-studio/pose-suitability.mjs';
 
 function fixtures() {
     return {
@@ -63,6 +64,48 @@ test('Chinese aliases search real costume tags, hair and pose metadata', () => {
     assert.equal(searchPoseAtlasTemplates(templates, { kind: 'pose', query: '自然坐姿', angle: 'side' }).results[0].upstreamId, 'full_single_P019');
     assert.equal(searchPoseAtlasTemplates(templates, { kind: 'pose', query: '坐姿', angle: 'high' }).total, 0);
     assert.equal(searchPoseAtlasTemplates(templates, { query: 'unknown-999999' }).total, 0);
+});
+
+test('pose suitability labels risky, review-only, sexualized and duo references without changing source rows', () => {
+    const p024 = { kind: 'pose', upstreamId: 'full_single_P024', title: '单腿后抬', category: '站姿', series: 'full_std' };
+    const p016 = { kind: 'pose', upstreamId: 'full_single_P016', title: '双手撩发的放松站姿', category: '站姿', series: 'full_std' };
+    const p017 = { kind: 'pose', upstreamId: 'full_single_P017', title: '站立回眸', category: '站姿', series: 'full_std' };
+    const sexy = { kind: 'pose', upstreamId: 'full_single_S001', title: '性感姿势', category: '站姿', series: 'full_sexy' };
+    const duo = { kind: 'pose', upstreamId: 'full_duo_P001', title: '双人自然站姿', category: '站姿', series: 'duo' };
+    assert.equal(classifyPose(p024).suitability, 'exclude');
+    assert.ok(classifyPose(p024).reasonTags.includes('balance_risk'));
+    assert.equal(classifyPose(p016).suitability, 'review');
+    assert.ok(classifyPose(p016).reasonTags.includes('overhead_action'));
+    assert.equal(classifyPose(p017).suitability, 'review');
+    assert.ok(classifyPose(p017).reasonTags.includes('source_metadata_review'));
+    assert.equal(classifyPose(sexy).suitability, 'exclude');
+    assert.ok(classifyPose(sexy).reasonTags.includes('sexualized'));
+    assert.equal(classifyPose(duo).suitability, 'review');
+    assert.equal(isPoseAllowed(duo), false);
+    assert.equal(isPoseAllowed(duo, { poseContext: 'multi' }), true);
+    assert.equal(isPoseAllowed(p016, { naturalPoseOnly: true }), false);
+    assert.equal(p024.title, '单腿后抬', 'classification is local and does not mutate upstream rows');
+});
+
+test('registry search filters excluded poses, scopes duo poses and labels review candidates', () => {
+    const templates = normalizePoseAtlasDataset('pose', { poses: [
+        { id: 'full_single_P015', series: 'full_std', category: '站姿', names: { zh: '自然站姿' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P015_front.jpg' }] },
+        { id: 'full_single_P016', series: 'full_std', category: '站姿', names: { zh: '双手撩发的放松站姿' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P016_front.jpg' }] },
+        { id: 'full_single_P017', series: 'full_std', category: '站姿', names: { zh: '站立回眸' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P017_front.jpg' }] },
+        { id: 'full_single_P024', series: 'full_std', category: '站姿', names: { zh: '单腿后抬' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P024_front.jpg' }] },
+        { id: 'full_single_S001', series: 'full_sexy', category: '站姿', names: { zh: '性感姿势' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_S001_front.jpg' }] },
+        { id: 'full_duo_P001', series: 'duo', category: '双人', names: { zh: '双人自然站姿' }, variants: [{ angle: 'front', thumb: 'thumbs/full_duo_P001_front.jpg' }] },
+    ] });
+    const registry = createRegistry({ schemaVersion: 1, templates });
+    const ordinary = registry.search({ kind: 'pose', limit: 20 }).results;
+    assert.deepEqual(ordinary.map(item => item.upstreamId).sort(), ['full_single_P015', 'full_single_P016', 'full_single_P017']);
+    assert.equal(ordinary.find(item => item.upstreamId === 'full_single_P016').poseSuitability, 'review');
+    assert.ok(ordinary.find(item => item.upstreamId === 'full_single_P016').poseReasonTags.includes('overhead_action'));
+    assert.equal(ordinary.find(item => item.upstreamId === 'full_single_P017').poseSuitability, 'review');
+    const natural = registry.search({ kind: 'pose', naturalPoseOnly: true, limit: 20 }).results;
+    assert.deepEqual(natural.map(item => item.upstreamId), ['full_single_P015']);
+    const duo = registry.search({ kind: 'pose', poseContext: 'multi', limit: 20 }).results;
+    assert.ok(duo.some(item => item.upstreamId === 'full_duo_P001' && item.poseSuitability === 'review'));
 });
 
 test('search returns at most six summaries and omits the server search corpus', () => {

@@ -1,4 +1,5 @@
 /** Pure, offline TemplateRegistry engine. Never fetches upstream content. */
+import { classifyPose, isPoseAllowed } from './pose-suitability.mjs';
 export const KINDS = ["pose", "costume", "portrait"];
 export const RIGHTS = [
   "owned",
@@ -7,15 +8,6 @@ export const RIGHTS = [
   "link_only",
   "blocked",
 ];
-const VISUALLY_UNSUITABLE_NATURAL_POSE_IDS = new Set([
-  "full_single_p016",
-  "full_single_p019",
-  "full_single_p020",
-  "full_single_p022",
-  "full_single_p024",
-  "full_single_p027",
-  "full_single_p029",
-]);
 const SEARCH_ALIASES = [
   ["坐姿", ["坐姿", "坐着", "坐下", "坐"]],
   ["站姿", ["站姿", "站着", "站立"]],
@@ -148,7 +140,10 @@ export function safeCard(t) {
     source,
     upstreamId,
     poseNumber,
+    poseSuitability,
+    poseReasonTags,
   } = t;
+  const poseClassification = t.kind === 'pose' ? classifyPose(t) : null;
   return {
     id,
     kind,
@@ -165,6 +160,8 @@ export function safeCard(t) {
     hair,
     upstreamId,
     poseNumber,
+    poseSuitability: poseClassification?.suitability || poseSuitability || null,
+    poseReasonTags: poseClassification?.reasonTags || poseReasonTags || [],
     assetUrl: canDisplay(t) && asset ? `/${asset}` : null,
     sourceUrl: source?.type === "poseatlas" ? source.url : null,
     referenceImageUrl: source?.type === "poseatlas" ? source.referenceImageUrl || null : null,
@@ -207,8 +204,7 @@ export function createRegistry(catalog) {
     for (const t of items) {
       if (!canAgent(t) || (kind && t.kind !== kind)) continue;
       if (raw.requireImageReferences && (!t.source?.referenceImageUrl || (t.kind === "portrait" && t.section !== "face"))) continue;
-      if (raw.naturalPoseOnly && t.kind === "pose" && (VISUALLY_UNSUITABLE_NATURAL_POSE_IDS.has(String(t.upstreamId || "").toLowerCase()) || /跪|后仰|躺|趴|劈叉|倒立|双手后撑|双腿斜|双腿悬空|挺胸|单腿.*肩高|单腿.*高抬|单腿.*后抬|踮脚|脚离地|抬腿|M字开腿|举过头|手臂上举|双臂上举|抱头|手扶后脑|kneel|reclin|supine|prone|split|inversion|overhead|on tiptoe/i.test(`${t.title} ${t.description} ${t.category}`))) continue;
-      if (raw.naturalPoseOnly && t.kind === "pose" && /sexy/i.test(t.series || '')) continue;
+      if (t.kind === 'pose' && !isPoseAllowed(t, { poseContext: raw.poseContext, naturalPoseOnly: Boolean(raw.naturalPoseOnly) })) continue;
       if (
         filterKeys.some(
           (k) =>
@@ -324,6 +320,7 @@ export function executeTool(registry, name, args) {
     "section",
     "requireImageReferences",
     "naturalPoseOnly",
+    "poseContext",
   ]);
   if (Object.keys(args).some((k) => !allow.has(k)))
     throw Error("UNKNOWN_ARGUMENT");

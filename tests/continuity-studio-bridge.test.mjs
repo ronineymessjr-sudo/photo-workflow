@@ -105,10 +105,10 @@ test('a real Studio plan keeps per-shot scenes and pose selections in the contin
     assert.deepEqual(handoff.cards[0].referenceImages, [
         { role: 'identity', url: portrait.referenceImageUrl },
         { role: 'style', url: costume.referenceImageUrl },
-        { role: 'pose', title: '坐姿 001', url: pose.referenceImageUrl },
     ]);
-    assert.match(handoff.cards[0].instruction, /3 张图片参考图/);
-    assert.match(handoff.cards[0].instruction, /所选摆姿参考图/);
+    assert.match(handoff.cards[0].instruction, /2 张图片参考图/);
+    assert.match(handoff.cards[0].instruction, /姿势按 PoseAtlas 条目文字指导/);
+    assert.doesNotMatch(handoff.cards[0].instruction, /所选摆姿参考图/);
     assert.match(handoff.cards[0].instruction, /场景按方案文字/);
 });
 

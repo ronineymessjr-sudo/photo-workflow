@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { runInNewContext } from 'node:vm';
-import { aiPlanProviders, handleAiPlan, extractHardConstraints, validateHardConstraints } from '../api/ai-plan.mjs';
+import { aiPlanProviders, handleAiPlan, extractHardConstraints, validateHardConstraints, validatePhotographerFeasibility } from '../api/ai-plan.mjs';
 import worker from '../api/index.js';
 
 const key = 'test-private-key-never-log';
@@ -276,6 +276,10 @@ test('ordinary creative preferences stay flexible and an allowed reflector is no
     const flexible = output();
     flexible.shot_plans[0].shot_size = 'MS';
     flexible.shot_plans[0].camera_angle = 'eye_level';
+    flexible.shot_plans[0].photographer_position = '正面平视，距主体约3米';
+    flexible.shot_plans[0].crop_boundary = '腰部以上取景';
+    flexible.shot_plans[0].must_show = '人物表情与上半身';
+    flexible.shot_plans[0].generator_prompt = 'eye-level medium portrait, 35mm lens';
     const result = await handleAiPlan({ ...request, input: { theme: '城市自由人像', duration: '1小时', extra: '无助手，但可以使用反光板拍摄近景' } }, {}, {
         fetchImpl: async () => response(flexible),
     });
@@ -356,8 +360,141 @@ test('english negations in generator prompts are not counted as positive resourc
 test('english substrings and time-window idioms are not physical resources', () => {
     // storybook ≠ book, microphone ≠ phone, cupped ≠ cup, 蓝调窗口(中文) ≠ 窗户
     const input = { theme: '古镇黄昏', duration: '1小时', extra: '无闪光灯' };
-    const shots = [{ shot_language: '回望', model_pose: '回望镜头，等待蓝调窗口', photographer_position: '街角平视，距主体约3米', lens: '50mm', model_position: '中央', wardrobe_styling: '素色长衫', lighting_setup: '黄昏自然光', shot_props: '无', crop_boundary: '半身', must_show: '石板街', reject_if: '模糊', execution_note: '等游客间隙', generator_prompt: 'storybook twilight, singer gripping microphone, hands cupped around a candle', shot_size: 'MS', camera_angle: 'eye_level' }];
+    const shots = [{ shot_language: '回望', model_pose: '回望镜头，等待蓝调窗口', photographer_position: '街角平视，距主体约3米', lens: '50mm', model_position: '中央', wardrobe_styling: '素色长衫', lighting_setup: '黄昏自然光', shot_props: '无', crop_boundary: '半身', must_show: '石板街', reject_if: '模糊', execution_note: '等游客间隙', generator_prompt: 'storybook twilight portrait, subject glancing over their shoulder, hands cupped near the face', shot_size: 'MS', camera_angle: 'eye_level' }];
     assert.deepEqual(validateHardConstraints(shots, input), []);
+});
+
+test('photographer feasibility rejects extreme poses and conflicting shot directions', () => {
+    const natural = {
+        shot_language: '公园自然站姿', model_pose: '双脚站稳，肩线轻转，一手自然扶腰',
+        photographer_position: '正面平视，距主体约3米', lens: '50mm',
+        crop_boundary: '从头到脚完整入画', must_show: '人物全身与长椅环境',
+        generator_prompt: 'eye-level full-body portrait, 50mm lens, relaxed standing pose',
+        shot_size: 'FS', camera_angle: 'eye_level',
+    };
+    assert.deepEqual(validatePhotographerFeasibility([natural]), []);
+
+    const extreme = [
+        { ...natural, model_pose: '大幅后仰至接近水平，双臂绕到背后交叉举过头顶' },
+        { ...natural, model_pose: '双手反向扭转贴背，躯干深度扭曲' },
+        { ...natural, model_pose: '一人单手把另一人举过头顶，双方保持悬空，没有支撑点' },
+    ];
+    assert.equal(validatePhotographerFeasibility(extreme).length, 3);
+
+    const conflict = [{
+        ...natural, crop_boundary: '腰部以上取景', photographer_position: '高机位俯拍，距主体约3米',
+        generator_prompt: 'eye-level half-body portrait, 35mm lens',
+    }];
+    const violations = validatePhotographerFeasibility(conflict);
+    assert.ok(violations.some(item => /景别与裁切/.test(item)));
+    assert.ok(violations.some(item => /站位文字与机位代号/.test(item)));
+    assert.ok(violations.some(item => /英文生图提示中的焦段/.test(item)));
+
+    assert.ok(validatePhotographerFeasibility([{
+        ...natural, camera_angle: 'high_angle', photographer_position: '摄影师站在前方约3米，机位与眼睛齐平',
+    }]).some(item => /站位文字与机位代号/.test(item)));
+
+    assert.deepEqual(validatePhotographerFeasibility([{
+        ...natural, camera_angle: 'low_angle', photographer_position: '低机位仰拍，人物平视镜头，距主体约3米',
+        generator_prompt: 'low-angle medium portrait, 50mm lens, subject looking toward camera',
+    }]), []);
+
+    const promptConflict = validatePhotographerFeasibility([{
+        ...natural, model_pose: '坐在长椅上，双手自然放在膝上', shot_size: 'MS', crop_boundary: '腰部以上取景',
+        generator_prompt: 'standing full-body portrait, 85mm lens', lens: '50mm',
+    }]);
+    assert.ok(promptConflict.some(item => /中文动作与英文生图提示冲突/.test(item)));
+    assert.ok(promptConflict.some(item => /英文生图提示中的构图与景别冲突/.test(item)));
+    assert.ok(promptConflict.some(item => /英文生图提示中的焦段/.test(item)));
+
+    assert.deepEqual(validatePhotographerFeasibility([{
+        ...natural, shot_size: 'MFS', crop_boundary: '膝上取景', must_show: '人物头部、躯干与双手',
+        generator_prompt: 'knee-up portrait, 50mm lens',
+    }]), []);
+});
+
+test('photographer feasibility distinguishes negated prompts, gaze, lighting, and camera angles', () => {
+    const natural = {
+        shot_language: '自然站姿', model_pose: '坐在长椅上，双手自然放在膝上',
+        photographer_position: '低机位仰拍，人物平视镜头，距主体约3米', lens: '50mm',
+        crop_boundary: '膝上取景', must_show: '人物与环境', shot_size: 'MFS', camera_angle: 'low_angle',
+    };
+
+    assert.deepEqual(validatePhotographerFeasibility([{
+        ...natural, generator_prompt: 'low-angle knee-up portrait, seated, not standing, subject at eye level, 50mm lens',
+    }]), []);
+    assert.deepEqual(validatePhotographerFeasibility([{
+        ...natural, camera_angle: 'eye_level', photographer_position: '正面平视，距主体约3米',
+        shot_size: 'FS', crop_boundary: '全身入画', must_show: '人物全身与环境',
+        generator_prompt: 'eye-level full-body portrait, soft overhead light, 50mm lens',
+    }]), []);
+    assert.deepEqual(validatePhotographerFeasibility([{
+        ...natural, camera_angle: 'eye_level', photographer_position: '正面平视，距主体约3米',
+        shot_size: 'FS', crop_boundary: '全身入画', must_show: '人物全身与环境',
+        generator_prompt: 'eye-level full-body portrait, not an overhead camera, 50mm lens',
+    }]), []);
+    assert.deepEqual(validatePhotographerFeasibility([{
+        ...natural, camera_angle: 'eye_level', photographer_position: '正面平视，距主体约3米',
+        generator_prompt: 'eye-level knee-up portrait, seated, 50mm lens, avoid 85mm camera look',
+    }]), []);
+
+    assert.ok(validatePhotographerFeasibility([{
+        ...natural, camera_angle: 'ground_level', photographer_position: '贴地低机位，距主体约3米',
+        generator_prompt: 'eye-level full-body portrait, 50mm lens',
+    }]).some(item => /站位文字与机位代号/.test(item)));
+    assert.ok(validatePhotographerFeasibility([{
+        ...natural, camera_angle: 'low_angle', generator_prompt: 'eye-level portrait, seated, 50mm lens',
+    }]).some(item => /站位文字与机位代号/.test(item)));
+    assert.ok(validatePhotographerFeasibility([{
+        ...natural, generator_prompt: 'low-angle full-body portrait, standing, 50mm lens',
+    }]).some(item => /中文动作与英文生图提示冲突/.test(item)));
+});
+
+test('photographer feasibility enforces framing boundaries, distinct pose types, and zoom ranges', () => {
+    const base = {
+        shot_language: '自然人像', model_pose: '站立，双脚站稳',
+        photographer_position: '平视，距主体约3米', lens: '50mm',
+        model_position: '画面中央', wardrobe_styling: '按参考服装', lighting_setup: '自然光',
+        shot_props: '无', crop_boundary: '腰部以上取景', must_show: '人物与背景',
+        reject_if: '动作僵硬', execution_note: '改拍正面站姿',
+        generator_prompt: 'waist-up portrait, standing, 50mm lens', shot_size: 'MS', camera_angle: 'eye_level',
+    };
+    const hasFramingConflict = shot => validatePhotographerFeasibility([shot]).some(item => /景别与裁切|英文生图提示中的构图与景别/.test(item));
+
+    assert.equal(hasFramingConflict({ ...base, shot_size: 'MS', crop_boundary: '膝上取景' }), true);
+    assert.equal(hasFramingConflict({ ...base, shot_size: 'MS', crop_boundary: '腰部以上取景', must_show: '人物从头到脚完整入画' }), true);
+    assert.equal(hasFramingConflict({ ...base, shot_size: 'MFS', crop_boundary: '从头到脚完整全身入画', generator_prompt: 'medium-full portrait, 50mm lens' }), true);
+    assert.equal(hasFramingConflict({ ...base, shot_size: 'MS', generator_prompt: 'close-up portrait, standing, 50mm lens' }), true);
+    assert.equal(hasFramingConflict({ ...base, shot_size: 'MCU', crop_boundary: '头肩以上', generator_prompt: 'waist-up portrait, standing, 50mm lens' }), true);
+    assert.deepEqual(validatePhotographerFeasibility([{
+        ...base, shot_size: 'MS', crop_boundary: '不拍全身，仅腰部以上取景',
+        must_show: '人物与背景', generator_prompt: 'waist-up portrait, not full-body, 50mm lens',
+    }]), []);
+
+    assert.ok(validatePhotographerFeasibility([{
+        ...base, model_pose: '侧躺在草地上', generator_prompt: 'standing portrait, 50mm lens',
+    }]).some(item => /中文动作与英文生图提示冲突/.test(item)));
+    assert.ok(validatePhotographerFeasibility([{
+        ...base, model_pose: '半跪但不站立', generator_prompt: 'standing portrait, 50mm lens',
+    }]).some(item => /中文动作与英文生图提示冲突/.test(item)));
+    assert.deepEqual(validatePhotographerFeasibility([{
+        ...base, model_pose: '站稳后不坐', generator_prompt: 'standing portrait, not seated, 50mm lens',
+    }]), []);
+
+    assert.deepEqual(validatePhotographerFeasibility([{
+        ...base, lens: '24-70mm', generator_prompt: 'waist-up portrait, 50mm lens',
+    }]), []);
+    assert.ok(validatePhotographerFeasibility([{
+        ...base, lens: '24-70mm', generator_prompt: 'waist-up portrait, 85mm lens',
+    }]).some(item => /焦段与方案字段冲突/.test(item)));
+});
+
+test('AI plan output with a physiologically extreme portrait pose is rejected', async () => {
+    const bad = output();
+    bad.shot_plans[0].model_pose = '大幅后仰至接近水平，双臂绕到背后交叉举过头顶';
+    const result = await handleAiPlan(request, {}, { fetchImpl: async () => response(bad) });
+    assert.equal(result.status, 422);
+    assert.match(result.body.error, /动作或镜头字段不适合真实拍摄/);
 });
 
 test('禁用闪光灯 is a refusal, not a violation', () => {

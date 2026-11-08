@@ -1,5 +1,6 @@
 /** V5: model-independent server orchestration. The LLM never executes tools or chooses authoritative IDs. */
 import { executeTool, buildReferenceProposal } from "./core.mjs";
+import { isMultiPersonRequested } from "./pose-suitability.mjs";
 
 const KINDS = ["pose", "costume", "portrait"];
 const intentWord = {
@@ -162,7 +163,8 @@ function selectTop(results, allowIds) {
   const firstFor = tool => results.find(row => row.tool === tool)?.results.find(entry => entry && allowIds.has(entry.id))?.id;
   return [...poses, firstFor("search_costume"), firstFor("search_portrait")].filter(Boolean).slice(0, 6);
 }
-export function runServerFirst({ registry, prompt, modelHints = null, requireImageReferences = false, naturalPoseOnly = false } = {}) {
+export function runServerFirst({ registry, prompt, modelHints = null, requireImageReferences = false, naturalPoseOnly = false, poseContext = null } = {}) {
+  const resolvedPoseContext = poseContext || (isMultiPersonRequested(prompt) ? "multi" : "single");
   const intent = parseServerIntent(prompt);
   // Never reinterpret an explicit, unknown catalog ID as a vague visual intent.
   const explicitIds = [
@@ -194,7 +196,7 @@ export function runServerFirst({ registry, prompt, modelHints = null, requireIma
       costume: "search_costume",
       portrait: "search_portrait",
     }[kind];
-    const output = executeTool(registry, name, { ...args, ...(requireImageReferences ? { requireImageReferences: true } : {}), ...(naturalPoseOnly && kind === "pose" ? { naturalPoseOnly: true } : {}) });
+    const output = executeTool(registry, name, { ...args, ...(requireImageReferences ? { requireImageReferences: true } : {}), ...(kind === "pose" ? { poseContext: resolvedPoseContext, ...(naturalPoseOnly ? { naturalPoseOnly: true } : {}) } : {}) });
     const results = output.results.map((t) => ({ ...t }));
     results.forEach((t) => authorized.add(t.id));
     toolTrace.push({ tool: name, args, resultCount: output.total, results });
@@ -255,6 +257,7 @@ export async function runWeakModelAssisted({
   provider = null,
   requireImageReferences = false,
   naturalPoseOnly = false,
+  poseContext = null,
 } = {}) {
   const deterministic = parseServerIntent(prompt);
   if (
@@ -263,7 +266,7 @@ export async function runWeakModelAssisted({
     !provider
   ) {
     return {
-      ...runServerFirst({ registry, prompt, requireImageReferences, naturalPoseOnly }),
+      ...runServerFirst({ registry, prompt, requireImageReferences, naturalPoseOnly, poseContext }),
       modelCalls: 0,
       modelStatus: provider ? "not-needed" : "not-configured",
     };
@@ -290,7 +293,7 @@ export async function runWeakModelAssisted({
     modelStatus = "model-error";
   }
   return {
-    ...runServerFirst({ registry, prompt, modelHints: hints, requireImageReferences, naturalPoseOnly }),
+    ...runServerFirst({ registry, prompt, modelHints: hints, requireImageReferences, naturalPoseOnly, poseContext }),
     modelCalls: 1,
     modelStatus,
   };

@@ -111,15 +111,29 @@ export function createTemplatePlan(input, referenceContext) {
     };
     const wardrobeRequirement = String(input.modelDesc || '').trim();
     const scenePoseCounts = new Map();
+    const sceneForIndex = (shot, index) => locations[Math.floor(index * locations.length / plan.shotList.length)] || shot.scene;
+    const preferredPosePatternFor = shot => {
+        const title = titleDirections[shot.title] || shot.title;
+        return /回眸/.test(title) ? /回眸|回头|回望|look back/i
+            : ['近景', '特写', '局部特写'].includes(shot.shotSize) && /表情|眼神|服装细节/.test(title) ? /抚颈|neck/i : null;
+    };
+    const preferredTemplateFor = pattern => pattern && poses.find(template => pattern.test(`${template.title} ${template.englishTitle || ''}`));
     plan.shotList = plan.shotList.map((shot, index) => {
-        const scene = locations[Math.floor(index * locations.length / plan.shotList.length)] || shot.scene;
+        const scene = sceneForIndex(shot, index);
         const title = titleDirections[shot.title] || shot.title;
         const poseState = scenePoseCounts.get(scene) || { count: 0, used: new Set() };
-        const preferredPosePattern = /回眸/.test(title) ? /回眸|回头|look back/i
-            : ['近景', '特写', '局部特写'].includes(shot.shotSize) && /表情|眼神|服装细节/.test(title) ? /抚颈|neck/i : null;
+        const preferredPosePattern = preferredPosePatternFor(shot);
         const preferredPose = preferredPosePattern && poses.find(template => !poseState.used.has(template.id)
             && preferredPosePattern.test(`${template.title} ${template.englishTitle || ''}`));
-        const template = preferredPose || poses.find(candidate => !poseState.used.has(candidate.id)) || poses[poseState.count % poses.length];
+        const reservedPoseIds = new Set();
+        for (let futureIndex = index + 1; futureIndex < plan.shotList.length; futureIndex++) {
+            const futureShot = plan.shotList[futureIndex];
+            if (sceneForIndex(futureShot, futureIndex) !== scene) continue;
+            const futureTemplate = preferredTemplateFor(preferredPosePatternFor(futureShot));
+            if (futureTemplate && !poseState.used.has(futureTemplate.id)) reservedPoseIds.add(futureTemplate.id);
+        }
+        const template = preferredPose || poses.find(candidate => !poseState.used.has(candidate.id) && !reservedPoseIds.has(candidate.id))
+            || poses.find(candidate => !poseState.used.has(candidate.id)) || poses[poseState.count % poses.length];
         poseState.used.add(template.id);
         poseState.count++;
         scenePoseCounts.set(scene, poseState);

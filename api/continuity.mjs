@@ -421,6 +421,7 @@ function compileHandoffPrompt(shot) {
         ['不得出现', shot.rejectIf],
         ['PoseAtlas 摆姿', shot.poseRef?.title],
         ['PoseAtlas 摆姿指导', shot.poseRef?.direction],
+        ['照片质感', '保留自然皮肤纹理、细小毛孔和真实光线衰减，可有轻微环境色偏与曝光差异；避免过度磨皮、蜡像皮肤、过度锐化、完美对称和均匀棚拍光'],
     ].filter(([, value]) => typeof value === 'string' && value.trim())
         .map(([label, value]) => `${label}：${value.trim()}`);
     if (!constraints.length) return shot.prompt;
@@ -479,11 +480,7 @@ export function handoffFor(group, { shotId = '' } = {}) {
             ? `参考图未就绪：${missing.map(reference => reference.role).join('、')}`
             : checked.master?.confirmedBy === 'human' ? '' : '主参考图未人工确认',
         cards: shots.map(shot => {
-            const poseImageUrl = safeReferenceImageUrl(shot.poseRef?.imageUrl);
-            const shotReferenceImages = [
-                ...referenceImages,
-                ...(poseImageUrl ? [{ role: 'pose', title: text(shot.poseRef?.title), url: poseImageUrl }] : []),
-            ];
+            const shotReferenceImages = referenceImages;
             return {
                 shotId: shot.shotId,
                 file: shot.file || `${shot.shotId}.png`,
@@ -494,7 +491,7 @@ export function handoffFor(group, { shotId = '' } = {}) {
                 prompt: compileHandoffPrompt(shot),
                 referencePaths: shotReferenceImages.map(reference => reference.url),
                 referenceImages: shotReferenceImages,
-                instruction: `把 ${shotReferenceImages.length} 张图片参考图拖进对话框，姿势按${poseImageUrl ? '所选摆姿参考图和' : ''}方案文字执行，场景按方案文字执行，粘贴上面的提示词，出图后保存为 ${shot.file}，再回传到本面板。`,
+                instruction: `把 ${shotReferenceImages.length} 张图片参考图拖进对话框；只用人物、服装和场景图作图像参考，姿势按 PoseAtlas 条目文字指导和摄影方案动作执行，姿势缩略图只供选姿核对、不作为生图图像参考；场景按方案文字执行。粘贴上面的提示词，出图后保存为 ${shot.file}，再回传到本面板。`,
             };
         }),
     };

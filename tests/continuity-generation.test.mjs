@@ -58,6 +58,7 @@ test('Cloudflare prompt translation carries the selected PoseAtlas pose and dire
     });
     assert.match(translated, /自然错步站姿/);
     assert.match(translated, /diagonal/);
+    assert.match(translated, /35mm/);
     assert.match(translated, /双脚错开站稳，肩颈放松/);
 });
 

@@ -55,6 +55,26 @@ test('handoff gives the structured shot contract priority over conflicting raw p
     assert.match(prompt, /若原始创意描述与结构化约束冲突/);
 });
 
+test('handoff keeps PoseAtlas action as text and does not send its pose sketch to image generation', () => {
+    const group = createGroup({
+        input: { theme: '秋日人像' },
+        shots: [{
+            shotId: 'atlas-pose', size: 'FS', lens: '50mm', action: '双脚站稳，右手轻扶腰侧',
+            poseRef: {
+                title: '自然站姿', direction: '肩颈放松，右手停在腰侧',
+                imageUrl: 'https://hruiccc.github.io/RuiC-PoseAtlas/thumbs/full_single_P015_front.jpg',
+            },
+        }],
+    });
+    const card = handoffFor(group).cards[0];
+    assert.equal(card.referenceImages.some(reference => reference.role === 'pose'), false);
+    assert.equal(card.referencePaths.some(path => path.includes('RuiC-PoseAtlas')), false);
+    assert.match(card.instruction, /姿势缩略图只供选姿核对、不作为生图图像参考/);
+    assert.match(card.prompt, /PoseAtlas 摆姿指导：肩颈放松，右手停在腰侧/);
+    assert.match(card.prompt, /保留自然皮肤纹理、细小毛孔/);
+    assert.match(card.prompt, /避免过度磨皮、蜡像皮肤/);
+});
+
 test('handoff reports why it is blocked instead of handing over a half contract', async () => {
     let group = createGroup({ input: { theme: '雨夜', scene: '月台' }, shots: [{ shotId: 'shot-01', generator_prompt: 'x' }] });
     const blocked = handoffFor(group);

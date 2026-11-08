@@ -171,6 +171,7 @@ test('site plan and multi-scene candidate generation keep face, outfit, and per-
             { id: 'full_single_P017', no: 'P017', category: '站姿', names: { zh: '自然回眸站姿' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P017_front.jpg' }] },
             { id: 'full_single_P018', no: 'P018', category: '站姿', names: { zh: '双手轻扶腰侧' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P018_front.jpg' }] },
             { id: 'full_single_P021', no: 'P021', category: '站姿', names: { zh: '一手抚颈一手扶腿' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P021_front.jpg' }] },
+            { id: 'full_single_P023', no: 'P023', category: '站姿', names: { zh: '自然侧身回望' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P023_front.jpg' }] },
         ] });
         if (target.endsWith('/data/costumes.json')) return Response.json({ costumes: [
             { id: 'AUT-0118', thumb: 'costume/thumbs/AUT-0118.webp', cat: 'autumn', group: 'top', color: 'ivory', main: 'knit', tags: ['knit', 'ivory', 'khaki', 'skirt', 'brown', 'boots'] },

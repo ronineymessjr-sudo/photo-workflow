@@ -1,17 +1,8 @@
 import { loadStudioRegistry } from './registry.mjs';
 import { runServerFirst } from './agent-lite.mjs';
+import { classifyPose, isMultiPersonRequested, isPoseAllowed, poseReasonLabels } from './pose-suitability.mjs';
 
 const angleNames = { front: '正面', diagonal: '斜侧', side: '侧面', high: '俯视', top: '俯视', overhead: '俯视', low: '仰视', bottom: '仰视' };
-const naturalPoseExclusions = /跪|后仰|躺|趴|劈叉|倒立|双手后撑|双腿斜|双腿悬空|挺胸|单腿.*肩高|单腿.*高抬|M字开腿|举过头|手臂上举|双臂上举|双手抱头|手扶后脑|单手抚后脑|双手抚后颈|kneel|reclin|supine|prone|split|inversion|overhead/i;
-// PoseAtlas thumbnails expose several arm/leg actions that their short labels omit.
-// Keep the reviewed source IDs out of generic natural-portrait plans.
-const visuallyUnsuitableNaturalPoseIds = new Set([
-    'full_single_p016', 'full_single_p019', 'full_single_p020', 'full_single_p022',
-    'full_single_p027', 'full_single_p029',
-]);
-const raisedArmPoseIds = new Set([
-    'full_single_p016', 'full_single_p019', 'full_single_p020', 'full_single_p027', 'full_single_p029',
-]);
 
 export function isNaturalPoseRequested(value) {
     const prompt = String(value || '').replace(/自然(?:光线|光)|natural\s+(?:light|lighting)/gi, '');
@@ -57,10 +48,10 @@ function matchesOutfit(template, constraints) {
     return constraints.garments.every(garment => (garmentTerms[garment] || [garment]).some(value => corpus.includes(value)));
 }
 
-function poseConflicts(template, prompt, naturalPoseOnly) {
+function poseConflicts(template, prompt, poseContext) {
     const terms = `${template.title} ${template.description} ${template.category}`;
-    const upstreamId = String(template.upstreamId || '').toLowerCase();
-    if (naturalPoseOnly && (naturalPoseExclusions.test(terms) || visuallyUnsuitableNaturalPoseIds.has(upstreamId))) return true;
+    const classification = classifyPose(template);
+    if (!isPoseAllowed(template, { poseContext })) return true;
     const bans = [
         [/(?:禁止|不要|避免|不能|不希望)[^。；;]{0,16}跪/, /跪|kneel/i],
         [/(?:禁止|不要|避免|不能|不希望)[^。；;]{0,16}(?:躺|卧|趴)/, /躺|卧|趴|reclin|supine|prone/i],
@@ -68,7 +59,7 @@ function poseConflicts(template, prompt, naturalPoseOnly) {
         [/(?:禁止|不要|避免|不能|不希望)[^。；;]{0,16}交叉双?腿/, /交叉腿|双腿交叠|cross(?:ed|ing)? legs/i],
     ];
     const forbidsRaisedArms = /(?:禁止|不要|避免|不能|不希望)[^。；;]{0,20}(?:举过头|上举|高举|抱头|抬手过头)/i.test(prompt);
-    if (forbidsRaisedArms && raisedArmPoseIds.has(upstreamId)) return true;
+    if (forbidsRaisedArms && classification?.reasonTags.includes('overhead_action')) return true;
     const requiresGroundedFeet = /(?:双脚|两脚|双足).{0,8}(?:着地|站稳|踩地)|both feet.{0,24}(?:ground|floor)/i.test(prompt);
     if (requiresGroundedFeet && /单腿后抬|踮脚|脚离地|抬腿|one (?:foot|leg) lifted|on tiptoe/i.test(terms)) return true;
     return bans.some(([constraint, pose]) => constraint.test(prompt) && pose.test(terms));
@@ -107,6 +98,9 @@ export function deriveReferenceGuidance(templates, input = {}) {
                         : /靠|lean/i.test(terms)
                             ? '确认现场有稳定支撑后轻靠，重心留在双脚，调整肩线与视线。无支撑时改为错步站立。'
                             : '双脚稳定着地，先调整重心和肩线，再分别改变手部、视线与身体朝向，每次只改变一个动作。';
+            if (template.poseSuitability === 'review') {
+                direction += `人工复核：${poseReasonLabels(template.poseReasonTags).join('；')}。`;
+            }
             const angles = (template.angles || []).map(angle => angleNames[angle] || angle).join('、');
             if (angles) direction += `可参照原库的${angles}视角，实际机位服从用户限制。`;
         } else if (template.kind === 'costume') {
@@ -122,7 +116,7 @@ export function deriveReferenceGuidance(templates, input = {}) {
         suggestions,
         brief: [`风格方向沿用用户要求：${style}。`,
             '以下是检索参考与原创拍摄转译。条目元数据不构成现场已有服装、器材或人物特征，用户硬性限制优先。',
-            ...templates.map((template, index) => `[${template.id}] ${template.title}；${suggestions[index].direction}`),
+            ...templates.map((template, index) => `[${template.id}] ${template.title}${template.poseSuitability === 'review' ? '（需人工复核）' : ''}；${suggestions[index].direction}`),
         ].join('\n').slice(0, 2400),
     };
 }
@@ -138,26 +132,27 @@ export async function prepareReferenceContext(input, options = {}) {
     }
     const requireImages = input.requireImageReferences === true;
     const prompt = ['theme', 'style', 'scene', 'mood', 'extra', 'modelDesc'].map(key => String(input[key] || '')).join(' ').slice(0, 1400);
-    const naturalPoseOnly = isNaturalPoseRequested(prompt)
-        && !/(?:采用|选择|需要|想要|来个|拍摄|摆|use|want|choose)[^。\n;；]{0,12}(?:跪|后仰|躺|趴|劈叉|倒立|kneel|reclin|supine|prone|split)/i.test(prompt);
+    const poseContext = isMultiPersonRequested(prompt, input.people) ? 'multi' : 'single';
     let templates = (ids || []).map(id => registry.find(id));
     if (templates.some(template => !template)) throw new Error('UNAVAILABLE_REFERENCE');
     const searchPrompt = prompt.slice(0, 1700);
     const hasSpecificPose = /站姿|站立|坐姿|坐着|走路|行走|回眸|靠墙|倚靠|栏杆|walk|sitting|standing/i.test(searchPrompt);
     const poseQueryPrompt = `${searchPrompt} ${hasSpecificPose ? '' : '站姿'} 服装 人像造型`;
-    let automatic = runServerFirst({ registry, prompt: poseQueryPrompt, requireImageReferences: requireImages, naturalPoseOnly }).selectedTemplates;
+    // Automatic plans use only safe poses. A photographer can still choose a
+    // review-tagged pose explicitly, where its reason is shown in the brief.
+    let automatic = runServerFirst({ registry, prompt: poseQueryPrompt, requireImageReferences: requireImages, naturalPoseOnly: true, poseContext }).selectedTemplates;
     if (automatic.filter(template => template.kind === 'pose').length < 3) {
-        const fallback = runServerFirst({ registry, prompt: '站姿', requireImageReferences: requireImages, naturalPoseOnly }).selectedTemplates;
+        const fallback = runServerFirst({ registry, prompt: '站姿', requireImageReferences: requireImages, naturalPoseOnly: true, poseContext }).selectedTemplates;
         automatic = [...automatic, ...fallback.filter(template => !automatic.some(item => item.id === template.id))];
     }
     const usable = (template, kind) => template?.kind === kind && (!requireImages || template.referenceImageUrl) && (kind !== 'portrait' || template.section === 'face');
     const selectedPoseIds = new Set(input.referenceIds || []);
     const explicitPoses = templates.filter(template => usable(template, 'pose'));
-    if (explicitPoses.some(template => selectedPoseIds.has(template.id) && poseConflicts(template, prompt, naturalPoseOnly))) {
+    if (explicitPoses.some(template => selectedPoseIds.has(template.id) && poseConflicts(template, prompt, poseContext))) {
         throw new Error('POSE_REFERENCE_CONFLICTS_WITH_USER_CONSTRAINTS');
     }
     const poses = [...explicitPoses, ...automatic.filter(template => usable(template, 'pose') && !explicitPoses.some(item => item.id === template.id)
-        && !poseConflicts(template, prompt, naturalPoseOnly))].slice(0, 4);
+        && !poseConflicts(template, prompt, poseContext))].slice(0, 4);
     const constraints = outfitConstraints(input);
     const costume = searchMatchingCostume(registry, input, [...templates, ...automatic], constraints, requireImages);
     const portrait = templates.find(template => usable(template, 'portrait')) || automatic.find(template => usable(template, 'portrait'));
@@ -173,6 +168,7 @@ export function referencePlanFields(context) {
         references: context.templates.map(template => ({
             sourceItemId: template.id, upstreamId: template.upstreamId, poseNumber: template.poseNumber,
             title: template.title, kind: template.kind, angles: template.angles || [],
+            poseSuitability: template.poseSuitability, poseReasonTags: template.poseReasonTags || [],
             section: template.section || '',
             tags: template.tags || [],
             externalUrl: template.sourceUrl, rightsStatus: template.rightsStatus,
