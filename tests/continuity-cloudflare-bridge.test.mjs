@@ -120,6 +120,9 @@ test('one shot means one provider call carrying exactly two reference images', a
     assert.equal(result.seed, 428901);
     assert.equal(result.qc, 'pending', '生成层不许自己判通过');
     assert.equal(result.mime, 'image/png');
+    assert.match(result.prompt, /35mm/);
+    assert.match(result.prompt, /visible skin pores/);
+    assert.doesNotMatch(result.prompt, /worn location details|mixed colour temperature/);
     assert.equal(result.references.length, 2);
     assert.deepEqual(result.references.map(r => r.role), ['identity', 'style']);
     assert.equal(stored.length, 1, '结果必须落成资产才能进契约');
@@ -451,4 +454,39 @@ test('modelscope adapter: submits, polls the task, and carries references', asyn
     assert.ok(calls.some(url => url.includes('/v1/tasks/')), '必须轮询任务');
     assert.equal(result.provider, 'modelscope-qwen-edit');
     assert.equal(result.referencesSent, 2);
+});
+
+test('modelscope poll accepts the SUCCEED spelling and reads output_images', async () => {
+    const { pollModelScope } = await import('../api/continuity-generation.mjs');
+    // ModelScope returns task_status "SUCCEED", not "SUCCEEDED". Matching only the
+    // longer spelling left a finished task reading as pending forever, so callers
+    // timed out on an image that had already been generated and paid for.
+    const result = await pollModelScope({
+        env: { MODELSCOPE_TOKEN: 'ms-test' },
+        taskId: 'task-abc',
+        fetchImpl: async url => {
+            if (String(url).includes('/v1/tasks/')) {
+                return new Response(JSON.stringify({
+                    task_status: 'SUCCEED',
+                    output_images: ['https://cdn.example/out.png'],
+                }), { status: 200, headers: { 'content-type': 'application/json' } });
+            }
+            return new Response(PNG_BYTES, { status: 200, headers: { 'content-type': 'image/png' } });
+        },
+    });
+    assert.equal(result.status, 'succeeded');
+    assert.ok(result.base64.length > 0);
+});
+
+test('modelscope poll still reports a running task as pending', async () => {
+    const { pollModelScope } = await import('../api/continuity-generation.mjs');
+    const result = await pollModelScope({
+        env: { MODELSCOPE_TOKEN: 'ms-test' },
+        taskId: 'task-abc',
+        fetchImpl: async () => new Response(JSON.stringify({ task_status: 'RUNNING' }), {
+            status: 200, headers: { 'content-type': 'application/json' },
+        }),
+    });
+    assert.equal(result.status, 'pending');
+    assert.equal(result.upstream, 'RUNNING');
 });

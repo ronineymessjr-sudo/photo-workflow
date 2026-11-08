@@ -325,11 +325,16 @@ export async function pollModelScope({ env, taskId, fetchImpl = fetch }) {
     });
     if (!response.ok) throw new GenerationError('GENERATION_UPSTREAM_FAILED', `魔搭查询返回 ${response.status}`, 502);
     const state = await response.json().catch(() => null);
-    const status = state?.task_status;
-    if (status === 'FAILED') {
-        throw new GenerationError('GENERATION_UPSTREAM_FAILED', `魔搭任务失败：${String(state?.errors?.message || '').slice(0, 200)}`, 502);
+    // ModelScope answers with "SUCCEED", not "SUCCEEDED". Matching only the
+    // longer spelling meant a finished task read as pending forever, and the
+    // caller timed out while the image sat on the server.
+    const status = String(state?.task_status || '').toUpperCase();
+    if (status === 'FAILED' || status === 'CANCELED' || status === 'CANCELLED') {
+        throw new GenerationError('GENERATION_UPSTREAM_FAILED', `魔搭任务失败：${String(state?.errors?.message || state?.message || '').slice(0, 200)}`, 502);
     }
-    if (status !== 'SUCCEEDED') return { status: 'pending', upstream: status || 'PENDING' };
+    if (status !== 'SUCCEED' && status !== 'SUCCEEDED' && status !== 'SUCCESS') {
+        return { status: 'pending', upstream: status || 'PENDING' };
+    }
     const url = state?.output_images?.[0] || state?.data?.[0]?.url;
     if (!url) throw new GenerationError('GENERATION_INVALID_RESPONSE', '魔搭任务成功但没有图片地址', 502);
     const image = await fetchImpl(url, { signal: AbortSignal.timeout(30000) });
@@ -403,7 +408,8 @@ async function callModelScope({ env, prompt, size, seed, references, variant, po
 
     // Poll. The image model takes 10-25s; the loop is bounded so the request
     // cannot hang past the Pages Function 30s ceiling.
-    const deadline = Date.now() + 75000;
+    // Measured: one frame takes ~85s on this model.
+    const deadline = Date.now() + 240000;
     while (Date.now() < deadline) {
         await new Promise(resolve => setTimeout(resolve, 2500));
         const poll = await fetchImpl(MODELSCOPE_TASK + taskId, {
@@ -412,8 +418,8 @@ async function callModelScope({ env, prompt, size, seed, references, variant, po
         }).catch(() => null);
         if (!poll?.ok) continue;
         const state = await poll.json().catch(() => null);
-        const status = state?.task_status;
-        if (status === 'SUCCEEDED') {
+        const status = String(state?.task_status || '').toUpperCase();
+        if (status === 'SUCCEED' || status === 'SUCCEEDED' || status === 'SUCCESS') {
             const url = state?.output_images?.[0] || state?.data?.[0]?.url;
             if (!url) throw new GenerationError('GENERATION_INVALID_RESPONSE', '魔搭任务成功但没有图片地址', 502);
             const imageResponse = await fetchImpl(url, { signal: AbortSignal.timeout(60000) });
@@ -427,7 +433,7 @@ async function callModelScope({ env, prompt, size, seed, references, variant, po
                 anchored: Boolean(anchor?.assetId),
             };
         }
-        if (status === 'FAILED') {
+        if (status === 'FAILED' || status === 'CANCELED' || status === 'CANCELLED') {
             throw new GenerationError('GENERATION_UPSTREAM_FAILED', `魔搭任务失败：${String(state?.errors?.message || state?.message || '').slice(0, 200)}`, 502);
         }
     }
@@ -475,6 +481,7 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
         locked?.timeOfDay ? `时间：${clamp(locked.timeOfDay, 24)}` : '',
         variant?.action ? `姿势与动作：${clamp(variant.action, 70)}` : '',
         variant?.camera ? `机位：${clamp(variant.camera, 26)}` : '',
+        variant?.lens ? `焦段：${clamp(variant.lens, 18)}` : '',
         variant?.subjectPlacement ? `人物在画面中的位置：${clamp(variant.subjectPlacement, 40)}` : '',
         // The plan names the light. Not sending it is why frames came back with
         // generic studio lighting no matter what the shot called for.
@@ -530,8 +537,8 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
         directive(variant?.rejectIf) ? `Redo if: ${shortList(variant.rejectIf)}.` : '',
         framingLine(variant),
         depthOfField(variant?.cameraSettings),
-        'Real skin with visible pores, true light falloff, mixed colour temperature, worn surfaces, slight imperfect level.',
-        'No text, watermark, collage, extra limbs, deformed hands, plastic skin, HDR glow.',
+        'Photographic skin texture with visible pores and fine facial hair; realistic light falloff and subtle, scene-consistent exposure variation.',
+        'Avoid excessive smoothing, waxy skin, over-sharpening, HDR glow, text, watermark, collage, extra limbs and malformed hands.',
     ].filter(Boolean).join(' ');
     const form = new FormData();
     form.append('prompt', composed);

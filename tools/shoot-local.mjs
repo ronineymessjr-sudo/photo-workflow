@@ -26,6 +26,10 @@ const PICK = (argOf('shots') || '').split(',').map(Number).filter(Number.isFinit
 const OUT = argOf('out') || `runtime/local-${BRIEF}`;
 const PACK = 'experiments/plan-quality-lab/prompt-packs/2026-10-27-deepseek/06-prompts-all.json';
 const TOKEN = process.env.MODELSCOPE_TOKEN || '';
+// Composition tests must not be anchored: pinning the first frame would make
+// every later shot an edit of it, which hides whether the framing instruction
+// itself is working.
+const ANCHOR = !args.includes('--no-anchor');
 
 if (!TOKEN) {
     console.log('缺少 MODELSCOPE_TOKEN 环境变量');
@@ -127,11 +131,13 @@ for (const shot of shots) {
             locked: group.locked,
             store,
         });
-        process.stdout.write(`task ${String(submitted.taskId).slice(0, 8)} 等待... `);
+        process.stdout.write(`task ${submitted.taskId} 等待... `);
 
         let done = null;
-        for (let attempt = 0; attempt < 40; attempt += 1) {
-            await new Promise(resolve => setTimeout(resolve, 3000));
+        // Measured: 85s with two references, ~190s with three. Poll for 300s and
+        // print the full task id so a timeout is recoverable, not wasted.
+        for (let attempt = 0; attempt < 60; attempt += 1) {
+            await new Promise(resolve => setTimeout(resolve, 5000));
             const polled = await pollModelScope({ env, taskId: submitted.taskId });
             if (polled.status === 'succeeded') { done = polled; break; }
         }
@@ -146,7 +152,7 @@ for (const shot of shots) {
 
         // Feed the finished frame back as the in-memory anchor so later shots are
         // edited from it instead of re-sampling a face.
-        if (!group.anchor) {
+        if (ANCHOR && !group.anchor) {
             const anchorId = `anchor01frame`.slice(0, 16);
             memory.set(anchorId, bytes);
             group = setAnchor(group, { assetId: anchorId, path: `/api/continuity/asset/${anchorId}`, shotId: shot.shotId });
