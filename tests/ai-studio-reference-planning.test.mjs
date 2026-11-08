@@ -19,6 +19,7 @@ function sourceFixture() {
             { id: 'full_single_P017', no: 'P017', category: '站姿', names: { zh: '站立・回眸顾盼' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P017_front.jpg' }] },
             { id: 'full_single_P018', no: 'P018', category: '站姿', names: { zh: '站立・双手扶腰' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P018_front.jpg' }] },
             { id: 'full_single_P021', no: 'P021', category: '站姿', names: { zh: '站立・一手抚颈一手扶腿' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P021_front.jpg' }] },
+            { id: 'full_single_P022', no: 'P022', category: '站姿', names: { zh: '站立・双臂后展挺胸' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P022_front.jpg' }] },
             { id: 'full_single_P024', no: 'P024', category: '站姿', names: { zh: '站立・单腿后抬' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P024_front.jpg' }] },
             { id: 'full_single_P025', no: 'P025', category: '站姿', names: { zh: '站立・分腿双手扶腰' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P025_front.jpg' }] },
             { id: 'full_single_P026', no: 'P026', category: '站姿', names: { zh: '站立・单臂上举顶胯' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P026_front.jpg' }] },
@@ -71,6 +72,7 @@ test('automatic references choose varied natural poses and match the requested o
     assert.equal(poses.some(template => /跪|后仰|躺|趴|举过头|上举|抱头/.test(template.title)), false);
     assert.equal(poses.some(template => template.upstreamId === 'full_single_P016'), false);
     assert.ok(poses.some(template => template.upstreamId === 'full_single_P021'));
+    assert.equal(new Set(poses.map(template => classifyPose(template).poseFamily)).size, poses.length);
     assert.equal(context.templates.find(template => template.kind === 'costume')?.upstreamId, 'AUT-0118');
     assert.equal(context.templates.find(template => template.kind === 'portrait')?.section, 'face');
 
@@ -198,9 +200,25 @@ test('ordinary portrait reference selection rejects excluded poses and labels ex
     assert.match(reviewed.guidance.brief, /需人工复核/);
     assert.match(reviewed.guidance.brief, /摄影师/);
 
-    await assert.rejects(prepareReferenceContext(ordinaryReferenceInput({
+    const separatePoseFamilies = await prepareReferenceContext(ordinaryReferenceInput({
         referenceIds: ['atlas-pose-full_single_p018', 'atlas-pose-full_single_p025'],
-    }), { fetchImpl: source.fetchImpl }), /DUPLICATE_POSE_FAMILY/);
+    }), { fetchImpl: source.fetchImpl });
+    const selectedPoseFamilies = separatePoseFamilies.templates.filter(template => template.kind === 'pose');
+    assert.ok(selectedPoseFamilies.some(template => template.upstreamId === 'full_single_P018'));
+    assert.ok(selectedPoseFamilies.some(template => template.upstreamId === 'full_single_P025'));
+    assert.equal(new Set(selectedPoseFamilies.map(template => classifyPose(template).poseFamily)).size, selectedPoseFamilies.length);
+
+    const selectedPairOnly = async url => {
+        const response = await source.fetchImpl(url);
+        if (!String(url).endsWith('poses.json')) return response;
+        const { poses } = await response.json();
+        return Response.json({ poses: poses.filter(pose => ['full_single_P022', 'full_single_P025'].includes(pose.id)) });
+    };
+    const automaticNewPoses = await prepareReferenceContext(ordinaryReferenceInput(), { fetchImpl: selectedPairOnly });
+    const automaticNewPoseRows = automaticNewPoses.templates.filter(template => template.kind === 'pose');
+    assert.deepEqual(automaticNewPoseRows.map(template => template.upstreamId).sort(), ['full_single_P022', 'full_single_P025']);
+    assert.ok(automaticNewPoseRows.every(template => template.poseSuitability === 'safe'));
+    assert.equal(new Set(automaticNewPoseRows.map(template => classifyPose(template).poseFamily)).size, automaticNewPoseRows.length);
 
     await assert.rejects(prepareReferenceContext(ordinaryReferenceInput({
         theme: '人像写真', people: '双人', referenceIds: ['atlas-pose-pair60_p003', 'atlas-costume-aut-0118', 'atlas-portrait-shortface'],
@@ -280,6 +298,28 @@ test('template plan and candidate compilation retain retrieved pose, processing 
     await assert.rejects(prepareCloudCandidateReferences(request, { fetchImpl: async () => { throw new Error('offline'); } }), /UNAVAILABLE_REFERENCE|REFERENCE_LIBRARY_UNAVAILABLE/);
 });
 
+test('waist-up plan uses at most one hands-at-waist variant while retaining P025 for full-body shots', async () => {
+    const source = sourceFixture();
+    const input = ordinaryReferenceInput({
+        scene: '公园小径；湖边木栈道',
+        referenceIds: ['atlas-pose-full_single_p018', 'atlas-pose-full_single_p025', 'atlas-pose-full_single_p015', 'atlas-pose-full_single_p017'],
+    });
+    const context = await prepareReferenceContext(input, { fetchImpl: source.fetchImpl });
+    const selected = context.templates.filter(template => template.kind === 'pose');
+    assert.ok(selected.some(template => template.upstreamId === 'full_single_P018'));
+    assert.ok(selected.some(template => template.upstreamId === 'full_single_P025'));
+    assert.equal(new Set(selected.map(template => classifyPose(template).poseFamily)).size, selected.length);
+
+    const plan = createTemplatePlan(input, context);
+    const waistUpHandsAtWaist = plan.shotList.filter(shot =>
+        ['中景', '近景', '特写', '局部特写'].includes(shot.shotSize)
+        && ['atlas-pose-full_single_p018', 'atlas-pose-full_single_p025'].includes(shot.directorContract.referenceIds[0]));
+    assert.equal(waistUpHandsAtWaist.length, 1);
+    assert.equal(waistUpHandsAtWaist[0].directorContract.referenceIds[0], 'atlas-pose-full_single_p018');
+    assert.ok(plan.shotList.some(shot => shot.shotSize === '全身'
+        && shot.directorContract.referenceIds[0] === 'atlas-pose-full_single_p025'));
+});
+
 test('normal Director entry compiles selected live references into style and executable shot guidance', async () => {
     const source = sourceFixture();
     let submitted;
@@ -326,7 +366,7 @@ test('real source IDs survive signed search, explicit proposal, and confirmation
     const env = { JWT_SECRET: 'test-signing-secret-at-least-32-characters' };
     const search = await searchStudio({ prompt: '自然站姿、秋日棕色针织、中长发', planId: 'plan-1', expectedRevision: 1, uid: 'user-1', env, fetchImpl: source.fetchImpl });
     assert.equal(search.modelCalls, 0);
-    assert.equal(search.library.count, 22);
+    assert.equal(search.library.count, 23);
     const id = 'atlas-pose-full_single_p021';
     assert.ok(search.selectedIds.includes(id));
     const proposal = await createStudioProposal({ searchReceipt: search.searchReceipt, selectedIds: [id], uid: 'user-1', env, fetchImpl: source.fetchImpl });

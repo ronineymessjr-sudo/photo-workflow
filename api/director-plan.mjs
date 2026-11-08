@@ -119,6 +119,9 @@ export function createTemplatePlan(input, referenceContext) {
     const detailGarment = [costumeColorEnglish, costumeType, selectedCostume?.category === 'top' ? 'top' : selectedCostume?.category].filter(Boolean).join(' ') || 'specified garment';
     const detailGarmentChinese = [costumeColor, costumeTypeChinese, costumeCategory].filter(Boolean).join('') || '用户指定服装';
     const scenePoseCounts = new Map();
+    const isHandsAtWaistPose = candidate => ['full_single_p018', 'full_single_p025'].includes(String(candidate.upstreamId || '').toLowerCase());
+    const hasNarrowHandsAtWaistPose = poses.some(candidate => String(candidate.upstreamId || '').toLowerCase() === 'full_single_p018');
+    let croppedHandsAtWaistUsed = false;
     const sceneForIndex = (shot, index) => locations[Math.floor(index * locations.length / plan.shotList.length)] || shot.scene;
     const preferredPosePatternFor = shot => {
         const title = titleDirections[shot.title] || shot.title;
@@ -132,11 +135,15 @@ export function createTemplatePlan(input, referenceContext) {
         const title = titleDirections[shot.title] || shot.title;
         const clothingDetail = /人物与服装细节|服装细节/.test(title);
         const foregroundLayered = /前景层次/.test(title);
+        const upperBodyCrop = ['中景', '近景', '特写', '局部特写'].includes(shot.shotSize);
+        const availableForCrop = candidate => !upperBodyCrop || !isHandsAtWaistPose(candidate)
+            || (!croppedHandsAtWaistUsed && !(hasNarrowHandsAtWaistPose && String(candidate.upstreamId || '').toLowerCase() === 'full_single_p025'));
         const poseState = scenePoseCounts.get(scene) || { count: 0, used: new Set() };
         let template = null;
         if (!clothingDetail) {
             const preferredPosePattern = preferredPosePatternFor(shot);
             const preferredPose = preferredPosePattern && poses.find(candidate => !poseState.used.has(candidate.id)
+                && availableForCrop(candidate)
                 && preferredPosePattern.test(`${candidate.title} ${candidate.englishTitle || ''}`));
             const reservedPoseIds = new Set();
             for (let futureIndex = index + 1; futureIndex < plan.shotList.length; futureIndex++) {
@@ -145,14 +152,16 @@ export function createTemplatePlan(input, referenceContext) {
                 const futureTemplate = preferredTemplateFor(preferredPosePatternFor(futureShot));
                 if (futureTemplate && !poseState.used.has(futureTemplate.id)) reservedPoseIds.add(futureTemplate.id);
             }
-            template = preferredPose || poses.find(candidate => !poseState.used.has(candidate.id) && !reservedPoseIds.has(candidate.id))
+            template = preferredPose || poses.find(candidate => !poseState.used.has(candidate.id) && availableForCrop(candidate) && !reservedPoseIds.has(candidate.id))
+                || poses.find(candidate => !poseState.used.has(candidate.id) && availableForCrop(candidate))
+                || poses.find(availableForCrop)
                 || poses.find(candidate => !poseState.used.has(candidate.id)) || poses[poseState.count % poses.length];
             poseState.used.add(template.id);
             poseState.count++;
             scenePoseCounts.set(scene, poseState);
+            if (upperBodyCrop && isHandsAtWaistPose(template)) croppedHandsAtWaistUsed = true;
         }
         const guidance = template ? referenceContext.guidance.suggestions.find(item => item.sourceItemId === template.id)?.direction || '' : '';
-        const upperBodyCrop = ['中景', '近景', '特写', '局部特写'].includes(shot.shotSize);
         const fullPoseDirection = template ? poseDirections[template.id] || guidance : '';
         const croppedPoseDirections = {
             'atlas-pose-full_single_p015': '肩线轻转，靠近镜头一侧的手自然停在画框内；髋部不入画时不强求扶腰。',

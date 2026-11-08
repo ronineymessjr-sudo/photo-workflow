@@ -7,8 +7,12 @@ import worker from '../api/index.js';
 
 test('production image generation has per-account and site-wide daily limits', async () => {
     const config = await readFile(new URL('../wrangler.toml', import.meta.url), 'utf8');
+    const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
     assert.match(config, /STUDIO_IMAGE_USER_LIMIT\s*=\s*"10"/);
     assert.match(config, /STUDIO_IMAGE_GLOBAL_LIMIT\s*=\s*"50"/);
+    assert.match(html, /每个账号每天最多 10 张，全站每天最多 50 张/);
+    assert.match(html, /候选生图上限（每个账号 10 张）/);
+    assert.match(html, /候选图额度（全站 50 张）/);
 });
 
 test('template fallback is visibly distinct from a real Director result', async () => {
@@ -188,6 +192,7 @@ test('site plan and multi-scene candidate generation keep face, outfit, and per-
             { id: 'test-face', thumb: 'portrait/thumbs/test-face.webp', sec: 'face', hair: 'medium', style: '自然人像参考' },
         ] });
         if (target.endsWith('.webp')) return new Response(webp, { headers: { 'Content-Type': 'image/webp' } });
+        if (target.endsWith('.jpg')) return new Response(Buffer.from([255, 216, 255, 0]), { headers: { 'Content-Type': 'image/jpeg' } });
         throw new Error('UNEXPECTED_REFERENCE_FETCH');
     };
     const workspace = {
@@ -220,7 +225,7 @@ test('site plan and multi-scene candidate generation keep face, outfit, and per-
                 return { response: 'Photorealistic portrait of one adult woman. Preserve the exact outfit and selected natural pose. Keep the requested location and framing.' };
             }
             const form = await new Response(input.multipart.body, { headers: { 'Content-Type': input.multipart.contentType } }).formData();
-            imagePrompts.push({ prompt: String(form.get('prompt')), hasImage0: form.has('input_image_0'), hasImage1: form.has('input_image_1') });
+            imagePrompts.push({ prompt: String(form.get('prompt')), slots: [0, 1, 2].map(index => form.has(`input_image_${index}`)) });
             return { image: png.toString('base64') };
         } },
     };
@@ -260,15 +265,18 @@ test('site plan and multi-scene candidate generation keep face, outfit, and per-
             }), env);
             assert.equal(candidateResponse.status, 201);
             const candidate = await candidateResponse.json();
-            const waistUp = /^(?:中景|MS)$/.test(shot.directorContract.shot_size || '');
+            const upperBodyCrop = /^(?:中景|近景|特写|局部特写|MS|MCU|CU|ECU)$/.test(shot.directorContract.shot_size || '');
             const clothingDetail = /服装细节|衣料细节/.test(shot.directorContract.shot_language || '');
+            const selectedPose = shot.directorContract.referenceIds[0];
             const expectedRefs = clothingDetail ? fixedRefs.filter(id => id.includes('costume'))
-                : waistUp ? fixedRefs.filter(id => id.includes('portrait')) : fixedRefs;
+                : [...(upperBodyCrop ? fixedRefs.filter(id => id.includes('portrait')) : fixedRefs), selectedPose].sort();
             assert.deepEqual(candidate.candidateAsset.referenceImages.map(reference => reference.sourceItemId).sort(), expectedRefs);
-            assert.deepEqual(candidate.candidateAsset.referenceImages.map(reference => reference.kind), clothingDetail ? ['costume'] : waistUp ? ['portrait'] : ['portrait', 'costume']);
+            assert.deepEqual(candidate.candidateAsset.referenceImages.map(reference => reference.kind), clothingDetail
+                ? ['costume'] : upperBodyCrop ? ['portrait', 'pose'] : ['portrait', 'pose', 'costume']);
             if (shot.directorContract.referenceIds.length) {
                 assert.ok(candidate.candidateAsset.referenceIds.includes(shot.directorContract.referenceIds[0]));
             }
+            if (clothingDetail) assert.equal(candidate.candidateAsset.referenceIds.some(id => id.startsWith('atlas-pose-')), false);
             const imageResponse = await worker.fetch(new Request(new URL(candidate.candidateAsset.url, 'https://unit.test')), env);
             assert.equal(imageResponse.status, 200);
             assert.equal(imageResponse.headers.get('Content-Type'), 'image/png');
@@ -280,17 +288,21 @@ test('site plan and multi-scene candidate generation keep face, outfit, and per-
         assert.ok(shots.every((shot, index) => requestPrompts[index].includes(shot.scene)));
         assert.ok(imagePrompts.every((prompt, index) => {
             const shot = shots[index];
-            const waistUp = /^(?:中景|MS)$/.test(shot.directorContract.shot_size || '');
+            const upperBodyCrop = /^(?:中景|近景|特写|局部特写|MS|MCU|CU|ECU)$/.test(shot.directorContract.shot_size || '');
             const clothingDetail = /服装细节|衣料细节/.test(shot.directorContract.shot_language || '');
-            return prompt.hasImage0 && prompt.hasImage1 === !(waistUp || clothingDetail);
+            return JSON.stringify(prompt.slots) === JSON.stringify(clothingDetail ? [true, false, false] : upperBodyCrop ? [true, true, false] : [true, true, true]);
         }));
         assert.ok(shots.every((shot, index) => !/服装细节|衣料细节/.test(shot.directorContract.shot_language || '')
-            || (/Image 1 is the selected clothing-detail reference/.test(imagePrompts[index].prompt)
+            || (/input_image_0 is the selected clothing-detail reference/.test(imagePrompts[index].prompt)
                 && /worn on the model/i.test(imagePrompts[index].prompt)
                 && /visible shoulder or upper-torso segment/i.test(imagePrompts[index].prompt)
                 && /crop out the face and rest of the outfit/i.test(imagePrompts[index].prompt)
                 && /do not show a floating garment/i.test(imagePrompts[index].prompt)
-                && !/face photograph|face reference|portrait reference|identity reference/i.test(imagePrompts[index].prompt))));
+                && !/face photograph|face reference|portrait reference|identity reference|PoseAtlas action reference/i.test(imagePrompts[index].prompt))));
+        assert.ok(shots.every((shot, index) => /服装细节|衣料细节/.test(shot.directorContract.shot_language || '')
+            || (/input_image_1 is the selected PoseAtlas action reference/.test(imagePrompts[index].prompt)
+                && /Use only its torso and limb positions\/body orientation as pose geometry/.test(imagePrompts[index].prompt)
+                && /do not render its line drawing, white background, joint marks, mannequin, or nudity/i.test(imagePrompts[index].prompt))));
         assert.ok(imagePrompts.every((prompt, index) => /服装细节|衣料细节/.test(shots[index].directorContract.shot_language || '')
             ? !/Required pose:/.test(prompt.prompt)
             : /Required pose:/.test(prompt.prompt)));

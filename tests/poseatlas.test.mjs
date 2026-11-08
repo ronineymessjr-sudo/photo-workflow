@@ -80,6 +80,8 @@ test('pose suitability labels risky, review-only, sexualized and duo references 
     const p015 = { kind: 'pose', upstreamId: 'full_single_P015', title: '站立・对立式平衡・手扶腰', category: '站姿', series: 'full_std' };
     const p018 = { kind: 'pose', upstreamId: 'full_single_P018', title: '站立・双手扶腰', category: '站姿', series: 'full_std' };
     const p021 = { kind: 'pose', upstreamId: 'full_single_P021', title: '站立・一手抚颈一手扶腿', category: '站姿', series: 'full_std' };
+    const p022 = { kind: 'pose', upstreamId: 'full_single_P022', title: '站立・双臂后展挺胸', category: '站姿', series: 'full_std' };
+    const p025 = { kind: 'pose', upstreamId: 'full_single_P025', title: '站立・分腿双手扶腰', category: '站姿', series: 'full_std' };
     const sexy = { kind: 'pose', upstreamId: 'full_sexy_P001', title: 'S形站姿・胯部侧顶', category: '站姿', series: 'full_sexy' };
     const intimatePair = { kind: 'pose', upstreamId: 'pair60_P003', title: '抬起脚踝・V字打开', category: '正常位（传教士）', series: 'pair60' };
     const unannotated = [p005, p009, p010, p019, p026, p041, p061];
@@ -96,9 +98,14 @@ test('pose suitability labels risky, review-only, sexualized and duo references 
     assert.ok(classifyPose(p016).reasonTags.includes('overhead_action'));
     assert.equal(classifyPose(p017).suitability, 'safe');
     assert.equal(classifyPose(p017).poseFamily, 'standing_look_back');
-    assert.deepEqual([p015, p017, p018, p021].map(template => classifyPose(template).poseFamily), [
-        'standing_weight_shift', 'standing_look_back', 'hands_at_waist', 'standing_neck_touch',
+    assert.deepEqual([p015, p017, p018, p021, p022, p025].map(template => classifyPose(template).poseFamily), [
+        'standing_weight_shift', 'standing_look_back', 'hands_at_waist', 'standing_neck_touch', 'standing_open_chest', 'wide_stance_hands_at_waist',
     ]);
+    assert.equal(classifyPose(p022).suitability, 'safe');
+    assert.equal(classifyPose(p025).suitability, 'safe');
+    assert.equal(isPoseAllowed(p022, { naturalPoseOnly: true }), true);
+    assert.equal(isPoseAllowed(p025, { naturalPoseOnly: true }), true);
+    assert.notEqual(classifyPose(p025).poseFamily, classifyPose(p018).poseFamily);
     assert.equal(classifyPose(sexy).suitability, 'exclude');
     assert.ok(classifyPose(sexy).reasonTags.includes('sexualized'));
     assert.equal(classifyPose(intimatePair).suitability, 'exclude');
@@ -128,16 +135,18 @@ test('registry search only returns whitelisted natural solo poses and preserves 
         { id: 'full_single_P017', series: 'full_std', category: '站姿', names: { zh: '站立・回眸顾盼' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P017_front.jpg' }] },
         { id: 'full_single_P018', series: 'full_std', category: '站姿', names: { zh: '站立・双手扶腰' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P018_front.jpg' }] },
         { id: 'full_single_P021', series: 'full_std', category: '站姿', names: { zh: '站立・一手抚颈一手扶腿' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P021_front.jpg' }] },
+        { id: 'full_single_P022', series: 'full_std', category: '站姿', names: { zh: '站立・双臂后展挺胸' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P022_front.jpg' }] },
         { id: 'full_single_P024', series: 'full_std', category: '站姿', names: { zh: '站立・单腿后抬' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P024_front.jpg' }] },
+        { id: 'full_single_P025', series: 'full_std', category: '站姿', names: { zh: '站立・分腿双手扶腰' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P025_front.jpg' }] },
         { id: 'full_sexy_P001', series: 'full_sexy', category: '站姿', names: { zh: 'S形站姿・胯部侧顶' }, variants: [{ angle: 'front', thumb: 'thumbs/full_sexy_P001_front.jpg' }] },
         { id: 'pair60_P003', series: 'pair60', category: '正常位（传教士）', names: { zh: '抬起脚踝・V字打开' }, variants: [{ angle: 'front', thumb: 'thumbs/pair60_P003_front.jpg' }] },
     ] });
     const registry = createRegistry({ schemaVersion: 1, templates });
     const ordinary = registry.search({ kind: 'pose', limit: 20 }).results;
-    assert.deepEqual(ordinary.map(item => item.upstreamId).sort(), ['full_single_P015', 'full_single_P017', 'full_single_P018', 'full_single_P021']);
+    assert.deepEqual(ordinary.map(item => item.upstreamId).sort(), ['full_single_P015', 'full_single_P017', 'full_single_P018', 'full_single_P021', 'full_single_P022', 'full_single_P025']);
     assert.equal(ordinary.find(item => item.upstreamId === 'full_single_P016'), undefined);
     const natural = registry.search({ kind: 'pose', naturalPoseOnly: true, limit: 20 }).results;
-    assert.deepEqual(natural.map(item => item.upstreamId).sort(), ['full_single_P015', 'full_single_P017', 'full_single_P018', 'full_single_P021']);
+    assert.deepEqual(natural.map(item => item.upstreamId).sort(), ['full_single_P015', 'full_single_P017', 'full_single_P018', 'full_single_P021', 'full_single_P022', 'full_single_P025']);
     assert.equal(new Set(natural.map(item => classifyPose(item).poseFamily)).size, natural.length);
     const duo = registry.search({ kind: 'pose', poseContext: 'multi', limit: 20 }).results;
     assert.equal(duo.some(item => item.upstreamId === 'pair60_P003'), false);

@@ -12,11 +12,9 @@ export async function prepareCloudCandidateReferences(input, options = {}) {
     }
     const { registry, library } = await loadStudioRegistry(options);
     const requestedIds = [...new Set([...(input.shot_contract?.referenceIds || []), ...(input.reference_ids || [])])];
-    const selectedPoseIds = new Set((input.shot_contract?.referenceIds || []).filter(id => registry.find(id)?.kind === 'pose'));
-    if (!selectedPoseIds.size) {
-        const fallbackPose = requestedIds.find(id => registry.find(id)?.kind === 'pose');
-        if (fallbackPose) selectedPoseIds.add(fallbackPose);
-    }
+    const clothingDetail = /服装细节|衣料细节/.test(input.shot_contract?.shot_language || '');
+    const selectedPoseIds = new Set(clothingDetail ? []
+        : (input.shot_contract?.referenceIds || []).filter(id => registry.find(id)?.kind === 'pose'));
     const referenceIds = requestedIds.filter(id => {
         const template = registry.find(id);
         return !template || template.kind !== 'pose' || selectedPoseIds.has(id);
@@ -30,10 +28,8 @@ export async function prepareCloudCandidateReferences(input, options = {}) {
         referenceIds,
         requireImageReferences: true,
     }, { ...options, registry, library });
-    if (selectedPoseIds.size) {
-        context.templates = context.templates.filter(template => template.kind !== 'pose' || selectedPoseIds.has(template.id));
-        context.guidance.suggestions = context.guidance.suggestions.filter(item => item.kind !== 'pose' || selectedPoseIds.has(item.sourceItemId));
-    }
+    context.templates = context.templates.filter(template => template.kind !== 'pose' || selectedPoseIds.has(template.id));
+    context.guidance.suggestions = context.guidance.suggestions.filter(item => item.kind !== 'pose' || selectedPoseIds.has(item.sourceItemId));
     if (!context?.templates.length || !context.templates.some(template => template.sourceUrl)) {
         throw new Error('REFERENCE_LIBRARY_UNAVAILABLE');
     }
@@ -57,8 +53,10 @@ export function compileCloudCandidateRequest(input, referenceContext) {
     const mustShow = list(contract.master_must_show || contract.must_show);
     const rejectIf = list(contract.master_reject_if || contract.reject_if);
     const context = [clean(input.scene_brief, 200), clean(input.style_direction, 100), clean(brief, 200)].filter(Boolean);
-    const selectedPose = referenceContext?.templates.find(template => template.kind === 'pose' && contract.referenceIds?.includes(template.id))
-        || referenceContext?.templates.find(template => template.kind === 'pose');
+    const clothingDetail = /服装细节|衣料细节/.test(shotLanguage);
+    const selectedPose = !clothingDetail
+        ? referenceContext?.templates.find(template => template.kind === 'pose' && contract.referenceIds?.includes(template.id))
+        : undefined;
     const shotTemplates = referenceContext?.templates.filter(template => template.kind !== 'pose' || template.id === selectedPose?.id);
     const templateBrief = shotTemplates?.map(template => template.kind === 'costume'
         ? `${template.id}: secondary material and color reference only; the written wardrobe contract controls all requested garments and footwear.`
@@ -101,9 +99,11 @@ export async function generateCloudCandidate(input, { ai, referenceContext, fetc
     // shot. Taking "the first pose in the list" here made the image disagree with
     // the prose, because compileCloudCandidateRequest picks the pose by
     // referenceIds while this picked by position.
-    const selectedPoseId = (input.shot_contract?.referenceIds || input.reference_ids || []);
-    const selectedPose = referenceContext?.templates.find(template => template.kind === 'pose' && selectedPoseId.includes(template.id))
-        || referenceContext?.templates.find(template => template.kind === 'pose');
+    const clothingDetail = /服装细节|衣料细节/.test(input.shot_contract.shot_language || '');
+    const selectedPose = !clothingDetail
+        ? referenceContext?.templates.find(template => template.kind === 'pose'
+            && input.shot_contract.referenceIds?.includes(template.id))
+        : undefined;
     const shotSize = input.shot_contract.shot_size || '';
     const upperBodyCrop = /^(?:中景|近景|特写|局部特写|MS|MCU|CU|ECU)$/.test(shotSize);
     const waistUpCrop = /^(?:中景|MS)$/.test(shotSize);
@@ -111,7 +111,6 @@ export async function generateCloudCandidate(input, { ai, referenceContext, fetc
     const shotPrompt = waistUpCrop
         ? sourceShotPrompt.replace(/\bcrop below the waist\b/gi, 'Crop at the natural waistline')
         : sourceShotPrompt;
-    const clothingDetail = /服装细节|衣料细节/.test(input.shot_contract.shot_language || '');
     const poseDirection = clothingDetail
         ? input.shot_contract.model_pose
         : upperBodyCrop
@@ -122,11 +121,24 @@ export async function generateCloudCandidate(input, { ai, referenceContext, fetc
     const portraitReference = referenceContext?.templates.find(template => template.kind === 'portrait');
     const costumeReference = referenceContext?.templates.find(template => template.kind === 'costume' && requestedReferenceIds.has(template.id))
         || referenceContext?.templates.find(template => template.kind === 'costume');
+    const poseReference = !clothingDetail ? selectedPose : undefined;
     const references = clothingDetail
         ? [costumeReference]
-        : [portraitReference, ...(!waistUpCrop ? [costumeReference] : [])];
+        : [portraitReference, ...(poseReference ? [poseReference] : []), ...(!upperBodyCrop ? [costumeReference] : [])];
     if (references.some(reference => !reference?.referenceImageUrl)) throw new Error('REFERENCE_IMAGES_REQUIRED');
     const images = await Promise.all(references.map(reference => fetchReferenceImage(reference.referenceImageUrl, fetchImpl)));
+    const imageIndex = new Map(references.map((reference, index) => [reference.kind, index]));
+    const indexFor = kind => imageIndex.has(kind) ? `input_image_${imageIndex.get(kind)}` : '';
+    const portraitImage = indexFor('portrait');
+    const poseImage = indexFor('pose');
+    const costumeImage = indexFor('costume');
+    const imageRoleInstruction = clothingDetail
+        ? `${costumeImage} is the selected clothing-detail reference. It controls only the specified garment's material, color and texture.`
+        : [
+            portraitImage ? `${portraitImage} controls facial identity, apparent age and hair only.` : '',
+            poseImage ? `${poseImage} is the selected PoseAtlas action reference (${clean(selectedPose?.id, 80)}; ${clean(selectedPose?.englishTitle || selectedPose?.title, 120)}). Use only its torso and limb positions/body orientation as pose geometry; ignore its line art, white background, joint marks, mannequin appearance and nudity. The subject must be the clothed adult specified by the written wardrobe contract.` : '',
+            costumeImage ? `${costumeImage} is secondary guidance for outfit material and palette only; do not copy unrequested accessories or props.` : '',
+        ].filter(Boolean).join(' ');
     const wardrobeContract = clean(input.shot_contract.wardrobe_styling || input.reference_brief?.modelDesc, 420) || 'Preserve the user specified garments exactly.';
     let prompt = [
         `Shot contract: ${shotPrompt}`,
@@ -150,11 +162,13 @@ export async function generateCloudCandidate(input, { ai, referenceContext, fetc
                 ? 'The written wardrobe contract identifies the outfit, but it must not change the requested waist-up crop or pull the camera back to show the skirt, legs or shoes.'
                 : 'The written wardrobe contract controls garment types, colors, layers, skirt length and shoes.';
             const imageTranslationRule = clothingDetail
-                ? 'Image 1 is the selected clothing-detail reference. Show the named garment worn on the model, with a visible shoulder or upper-torso segment for context; crop out the face and rest of the outfit, and do not show a floating garment.'
-                : 'The face reference controls identity, apparent age and hair.';
+                ? `${costumeImage} is the selected clothing-detail reference. Show the named garment worn on the model, with a visible shoulder or upper-torso segment for context; crop out the face and rest of the outfit, and do not show a floating garment.`
+                : `${portraitImage} controls face identity. ${poseImage ? `${poseImage} controls pose geometry only; ignore its line-art/mannequin rendering.` : ''}`;
             const outfitTranslationRule = clothingDetail
-                ? 'Use the selected clothing-detail image only for garment appearance, not for body pose or framing.'
-                : 'The outfit reference image is secondary material and palette guidance only; omit any unrequested accessories or props visible in it.';
+                ? `Use ${costumeImage} only for garment appearance, not for body pose or framing.`
+                : costumeImage
+                    ? `Use ${costumeImage} as secondary material and palette guidance only; omit any unrequested accessories or props visible in it.`
+                    : 'No full-body outfit reference image is supplied; use the written wardrobe contract.';
             const translated = await ai.run('@cf/meta/llama-3.1-8b-instruct-fp8-fast', {
                 messages: [
                     { role: 'system', content: `Translate this photography contract into concise English camera, pose, wardrobe, lighting and environment instructions. Preserve exact subject count, location, action and framing. ${wardrobeTranslationRule} ${outfitTranslationRule} ${imageTranslationRule} Do not change standing to sitting. ${cropTranslationRule} Return only the English prompt under 1400 characters, no commentary or text to render.` },
@@ -165,7 +179,9 @@ export async function generateCloudCandidate(input, { ai, referenceContext, fetc
             prompt = translated.response.trim().slice(0, MAX_PROMPT_CHARS);
         }
         const form = new FormData();
-        const poseTitle = clothingDetail ? 'Garment-detail crop; no pose reference' : upperBodyCrop ? 'Upper-body pose adapted from the selected PoseAtlas reference' : clean(selectedPose?.englishTitle || selectedPose?.title, 120);
+        const poseTitle = clothingDetail ? 'Garment-detail crop; no pose reference'
+            : upperBodyCrop ? 'Upper-body pose adapted from the selected PoseAtlas reference'
+                : clean(selectedPose?.englishTitle || selectedPose?.title, 120) || clean(input.shot_contract.model_pose, 260);
         const poseDetail = clothingDetail
             ? 'Show the specified garment worn on the model with a visible shoulder or upper-torso segment; keep the named fabric detail dominant, crop out the face and rest of the outfit, and do not show a floating garment.'
             : upperBodyCrop
@@ -194,18 +210,13 @@ export async function generateCloudCandidate(input, { ai, referenceContext, fetc
         const subjectInstruction = clothingDetail
             ? 'Create a photorealistic close-up of the named garment worn on the model, with a visible shoulder or upper-torso segment for context.'
             : 'Create one photorealistic DSLR photograph of ONE person, with realistic skin texture and a fully rendered real location.';
-        const identityInstruction = clothingDetail
-            ? ''
-            : 'Reference image 1, the face photograph, controls facial identity, apparent age, hair and photographic realism.';
         const referenceInstruction = clothingDetail
-            ? 'Image 1 is the selected clothing-detail reference; it controls the named garment material, color and texture.'
-            : waistUpCrop
-                ? 'Only the face identity reference is supplied; the full-body costume reference is omitted so it cannot set the framing. Use the written wardrobe contract for clothing visible in this crop.'
-                : 'Reference image 2 is secondary guidance for material and palette only.';
+            ? imageRoleInstruction
+            : `${imageRoleInstruction} ${waistUpCrop ? 'No full-body costume image is supplied, so it cannot pull this waist-up frame wider; use the written wardrobe contract for visible clothing.' : ''}`;
         const poseInstruction = clothingDetail
             ? poseDetail
-            : `Do not copy unrequested bags, jewelry, hats or other accessories/props from the outfit reference. Do not replace or add garments. Follow the selected PoseAtlas action described in the shot contract as text; do not copy a drawing style. Required pose: ${poseTitle}. ${poseDetail}`;
-        generationPrompt = `${subjectInstruction} ${waistUpCrop ? `Required camera framing: ${framing} ` : ''}${identityInstruction} ${wardrobeInstruction} ${referenceInstruction} ${poseInstruction} ${prompt} Required camera framing: ${framing || 'Follow the shot contract.'} ${clothingDetail ? '' : 'Render the requested scene as a real photographic environment with natural light and material detail.'}`;
+            : `Do not copy unrequested bags, jewelry, hats or other accessories/props from the outfit reference. Do not replace or add garments. Follow the selected PoseAtlas action described in the shot contract as text; the written shot contract and user restrictions override any pose-image conflict. ${poseImage ? 'Use the selected pose image only for torso/limb geometry; do not render its line drawing, white background, joint marks, mannequin, or nudity.' : ''} Required pose: ${poseTitle}. ${poseDetail}`;
+        generationPrompt = `${subjectInstruction} ${waistUpCrop ? `Required camera framing: ${framing} ` : ''}${wardrobeInstruction} ${referenceInstruction} ${poseInstruction} ${prompt} Required camera framing: ${framing || 'Follow the shot contract.'} ${clothingDetail ? '' : 'Render the requested scene as a real photographic environment with natural light and material detail.'}`;
         form.append('prompt', generationPrompt);
         form.append('width', String(compiled.width));
         form.append('height', String(compiled.height));
@@ -238,7 +249,11 @@ export async function generateCloudCandidate(input, { ai, referenceContext, fetc
 async function fetchReferenceImage(rawUrl, fetchImpl) {
     const url = new URL(rawUrl);
     if (url.origin !== 'https://hruiccc.github.io' || !/^\/RuiC-PoseAtlas\/(?:thumbs\/[A-Za-z0-9_-]+\.jpg|(?:costume|portrait)\/thumbs\/[A-Za-z0-9_-]+\.webp)$/.test(url.pathname) || url.search || url.hash) throw new Error('UNTRUSTED_REFERENCE_IMAGE');
-    const response = await fetchImpl(url.href, { redirect: 'manual', signal: AbortSignal.timeout(15000) });
+    const options = { redirect: 'manual', signal: AbortSignal.timeout(15000) };
+    if (url.pathname.startsWith('/RuiC-PoseAtlas/costume/')) {
+        options.cf = { image: { width: 511, height: 511, fit: 'scale-down', format: 'jpeg' } };
+    }
+    const response = await fetchImpl(url.href, options);
     if (!response.ok || !/^image\/(jpeg|png|webp)(?:;|$)/i.test(response.headers.get('content-type') || '')) throw new Error('REFERENCE_IMAGE_UNAVAILABLE');
     const reader = response.body.getReader();
     const chunks = [];

@@ -5,6 +5,7 @@ import { compileCloudCandidateRequest, generateCloudCandidate } from '../api/dir
 const contract = {
     shot_language: 'Autumn park seated portrait',
     generator_prompt: '35mm eye-level environmental portrait, subject seated naturally on an existing park bench.',
+    referenceIds: ['pose-1'],
     must_show: ['full hands and feet', 'muted cinematic autumn colors'],
     reject_if: ['extra people', 'flash lighting', 'cropped feet'],
 };
@@ -21,7 +22,11 @@ const referenceContext = { guidance: { suggestions: [] }, templates: [
     { id: 'costume-1', kind: 'costume', tags: ['black', 'tights'], referenceImageUrl: 'https://hruiccc.github.io/RuiC-PoseAtlas/costume/thumbs/outfit.webp' },
     { id: 'face-1', kind: 'portrait', referenceImageUrl: 'https://hruiccc.github.io/RuiC-PoseAtlas/portrait/thumbs/face.webp' },
 ] };
-const fetchImpl = async () => new Response(jpeg, { headers: { 'Content-Type': 'image/jpeg' } });
+const referenceFetchOptions = [];
+const fetchImpl = async (_url, options) => {
+    referenceFetchOptions.push(options);
+    return new Response(jpeg, { headers: { 'Content-Type': 'image/jpeg' } });
+};
 
 test('cloud candidate compiler preserves shot contract, constraints, and framing guidance', () => {
     const compiled = compileCloudCandidateRequest(request);
@@ -77,6 +82,7 @@ test('image prompt follows explicit wardrobe text over extras in the outfit imag
 });
 
 test('candidate uses the existing Cloudflare AI binding and validates its JPEG output', async () => {
+    referenceFetchOptions.length = 0;
     const calls = [];
     const result = await generateCloudCandidate(request, { referenceContext, fetchImpl, ai: { run: async (model, input) => {
         calls.push({ model, input });
@@ -89,21 +95,29 @@ test('candidate uses the existing Cloudflare AI binding and validates its JPEG o
     const form = await new Response(calls[1].input.multipart.body, { headers: { 'Content-Type': calls[1].input.multipart.contentType } }).formData();
     assert.match(form.get('prompt'), /35mm eye-level environmental portrait/);
     assert.match(form.get('prompt'), /Exactly one hand rests on the hip/);
+    assert.match(form.get('prompt'), /input_image_0 controls facial identity, apparent age and hair only/);
+    assert.match(form.get('prompt'), /input_image_1 is the selected PoseAtlas action reference \(pose-1; Standing contrapposto, hand on hip\)/);
+    assert.match(form.get('prompt'), /Use only its torso and limb positions\/body orientation as pose geometry/);
+    assert.match(form.get('prompt'), /ignore its line art, white background, joint marks, mannequin appearance and nudity/);
+    assert.match(form.get('prompt'), /input_image_2 is secondary guidance for outfit material and palette only/);
     assert.match(form.get('prompt'), /Follow the selected PoseAtlas action described in the shot contract as text/);
-    assert.doesNotMatch(form.get('prompt'), /black-and-white artist drawing/);
+    assert.match(form.get('prompt'), /written shot contract and user restrictions override any pose-image conflict/);
     assert.match(form.get('prompt'), /Do not replace or add garments/);
     assert.equal(result.prompt, form.get('prompt'));
-    for (let index = 0; index < 2; index++) assert.equal(form.get(`input_image_${index}`).size, jpeg.length);
-    assert.equal(form.has('input_image_2'), false);
+    for (let index = 0; index < 3; index++) assert.equal(form.get(`input_image_${index}`).size, jpeg.length);
+    assert.equal(form.has('input_image_3'), false);
     assert.equal(form.get('width'), '768');
     assert.equal(form.get('height'), '1024');
-    assert.deepEqual(result.referenceImages.map(reference => reference.kind), ['portrait', 'costume']);
+    assert.deepEqual(result.referenceImages.map(reference => reference.kind), ['portrait', 'pose', 'costume']);
+    assert.deepEqual(referenceFetchOptions.map(options => options.cf?.image || null), [null, null, {
+        width: 511, height: 511, fit: 'scale-down', format: 'jpeg',
+    }]);
     assert.equal(result.model, '@cf/black-forest-labs/flux-2-klein-9b');
     assert.equal(result.mime, 'image/jpeg');
     assert.deepEqual(result.bytes, jpeg);
 });
 
-test('double-hand pose is explicit while the pose drawing stays out of the image payload', async () => {
+test('only the selected PoseAtlas drawing is supplied as pose geometry', async () => {
     let imagePrompt;
     const doubleHandContext = {
         ...referenceContext,
@@ -125,6 +139,8 @@ test('double-hand pose is explicit while the pose drawing stays out of the image
     assert.match(calls[0].payload.messages[1].content, /双手轻放腰侧/);
     assert.match(imagePrompt, /Required pose: Standing, both hands on waist/);
     assert.match(imagePrompt, /Both hands rest lightly at the waist or hips/);
+    assert.match(imagePrompt, /input_image_1 is the selected PoseAtlas action reference/);
+    assert.match(imagePrompt, /input_image_2 is secondary guidance for outfit material and palette only/);
 });
 
 test('free neuron exhaustion returns a distinct non-paid retry code', async () => {
@@ -159,7 +175,7 @@ test('actual image payload preserves a close-up contract without forcing full-bo
     assert.match(imagePrompt, /Close-up portrait, crop at shoulders/);
     assert.match(imagePrompt, /soft window side light/);
     assert.match(imagePrompt, /Head-and-shoulders portrait/);
-    assert.match(imagePrompt, /face photograph/);
+    assert.match(imagePrompt, /input_image_0 controls facial identity, apparent age and hair only/);
     assert.match(imagePrompt, /Upper-body pose adapted from the selected PoseAtlas reference/);
     assert.match(imagePrompt, /Do not force unseen hands, hips, legs or feet into the crop/);
     assert.doesNotMatch(imagePrompt, /Exactly one hand rests on the hip/);
@@ -191,7 +207,7 @@ test('MS waist-up framing stays at the waist when the wardrobe lists a full skir
         }
         const form = await new Response(payload.multipart.body, { headers: { 'Content-Type': payload.multipart.contentType } }).formData();
         imagePrompt = String(form.get('prompt'));
-        sentImageSlots = [form.has('input_image_0'), form.has('input_image_1')];
+        sentImageSlots = [form.has('input_image_0'), form.has('input_image_1'), form.has('input_image_2')];
         return { image: Buffer.from(jpeg).toString('base64') };
     } } });
 
@@ -207,15 +223,15 @@ test('MS waist-up framing stays at the waist when the wardrobe lists a full skir
     assert.match(imagePrompt, /The written wardrobe contract identifies the outfit, but only clothing visible inside this waist-up crop should appear/);
     assert.match(imagePrompt, /do not widen or lower framing to show the full skirt, legs or shoes/);
     assert.match(imagePrompt, /象牙白衬衫、藏青色及踝长裙、黑色皮鞋/);
-    assert.match(imagePrompt, /Reference image 1, the face photograph, controls facial identity/);
-    assert.match(imagePrompt, /Only the face identity reference is supplied; the full-body costume reference is omitted so it cannot set the framing/);
+    assert.match(imagePrompt, /input_image_0 controls facial identity, apparent age and hair only/);
+    assert.match(imagePrompt, /No full-body costume image is supplied, so it cannot pull this waist-up frame wider/);
     assert.doesNotMatch(imagePrompt, /Reference image 2 is secondary guidance for material and palette only/);
     assert.doesNotMatch(imagePrompt, /Head-to-toe portrait|show both shoes and ground beneath them/i);
-    assert.deepEqual(sentImageSlots, [true, false]);
-    assert.equal(result.referenceImages.length, 1);
-    assert.equal(result.referenceImages[0].kind, 'portrait');
-    assert.equal(fetchedReferenceUrls.length, 1);
+    assert.deepEqual(sentImageSlots, [true, true, false]);
+    assert.deepEqual(result.referenceImages.map(reference => reference.kind), ['portrait', 'pose']);
+    assert.equal(fetchedReferenceUrls.length, 2);
     assert.match(fetchedReferenceUrls[0], /portrait\/thumbs\/face\.webp$/);
+    assert.match(fetchedReferenceUrls[1], /thumbs\/pose\.jpg$/);
 });
 
 test('clothing detail image prompt keeps the specified garment in a tight crop', async () => {
@@ -228,7 +244,7 @@ test('clothing detail image prompt keeps the specified garment in a tight crop',
     const shotWardrobe = '米白色针织上衣，本镜只拍该上衣的面料细节。';
     const input = { ...request, brief: `全套服装：${wardrobe}。本镜只拍针织上衣面料细节。`,
         scene_brief: `湖边木栈道（原方案穿搭：${wardrobe}）`, reference_brief: { modelDesc: wardrobe }, shot_contract: {
-        shot_language: '人物与服装细节', shot_size: '特写', referenceIds: ['pose-1'],
+        shot_language: '人物与服装细节', shot_size: '特写', referenceIds: [],
         generator_prompt: 'Tight garment-detail close-up of the user specified knit fabric and texture; exclude the face and full-body pose.',
         model_pose: '上半身摆姿参考，只保留衣料纹理需要的肩部姿态，不要求腿部动作。',
         wardrobe_styling: shotWardrobe,
@@ -251,7 +267,7 @@ test('clothing detail image prompt keeps the specified garment in a tight crop',
     assert.match(imagePrompt, /Create a photorealistic close-up of the named garment worn on the model/);
     assert.match(imagePrompt, /visible shoulder or upper-torso segment as natural context/);
     assert.match(imagePrompt, /crop out the face and rest of the outfit, and do not show a floating garment/i);
-    assert.match(imagePrompt, /Image 1 is the selected clothing-detail reference; it controls the named garment material, color and texture/);
+    assert.match(imagePrompt, /input_image_0 is the selected clothing-detail reference\. It controls only the specified garment's material, color and texture/);
     assert.match(imagePrompt, /shot-specific wardrobe contract is authoritative and overrides any global full-outfit text/i);
     assert.match(imagePrompt, /米白色针织上衣，本镜只拍该上衣的面料细节/);
     assert.match(translationInput, /Shot-specific wardrobe contract: 米白色针织上衣，本镜只拍该上衣的面料细节/);
@@ -263,6 +279,7 @@ test('clothing detail image prompt keeps the specified garment in a tight crop',
     assert.match(result.referenceImages[0].referenceImageUrl, /costume\/thumbs\/outfit\.webp$/);
     assert.equal(fetchedReferenceUrls.length, 1);
     assert.match(fetchedReferenceUrls[0], /costume\/thumbs\/outfit\.webp$/);
+    assert.doesNotMatch(imagePrompt, /PoseAtlas action reference|Required pose:|input_image_1/);
 });
 
 test('compiled shot includes only its selected pose from a multi-pose plan', () => {
