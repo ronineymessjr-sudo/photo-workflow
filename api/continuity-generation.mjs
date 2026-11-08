@@ -13,6 +13,7 @@ const STEPS = 24;
 
 import { assertReadyToGenerate, buildShotRequests, ContinuityError, CONTINUITY_PROVIDERS } from './continuity.mjs';
 import { storeAsset, readAsset, AssetError } from './continuity-assets.mjs';
+import { pickLightKit } from './light-kit.mjs';
 // Workers on compatibility_date 2024-01-01 does not inject a global Buffer.
 // Import it explicitly instead of raising the compat date, which would change
 // unrelated fetch/crypto behaviour across the whole Worker.
@@ -191,7 +192,16 @@ function directionFields({ prompt, locked, variant, poseRef, framing, film }) {
         ['camera', variant?.camera],
         ['lens', variant?.lens],
         ['placement', variant?.subjectPlacement],
-        ['lighting', variant?.lighting],
+        // A plan that names its lighting keeps it; one that does not inherits a
+        // structured kit entry matched by time of day, location and weather -
+        // distilled from the lab briefs that were actually run. Without this,
+        // unlit plans came back flat and evenly bright.
+        ['lighting', directive(variant?.lighting) || pickLightKit({
+            timeOfDay: locked?.timeOfDay || variant?.timeOfDay,
+            location: locked?.location || variant?.location,
+            weather: locked?.weather || variant?.weather,
+            mood: locked?.mood,
+        }).light],
         ['wardrobeShot', directive(variant?.wardrobe)],
         ['props', directive(variant?.props)],
         // The plan's crop_boundary often describes a different framing than
@@ -593,7 +603,9 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
         variant?.subjectPlacement ? `人物在画面中的位置：${clamp(variant.subjectPlacement, 40)}` : '',
         // The plan names the light. Not sending it is why frames came back with
         // generic studio lighting no matter what the shot called for.
-        directive(variant?.lighting) ? `现场光线：${clamp(directive(variant.lighting), 80)}` : '',
+        directive(variant?.lighting) ? `现场光线：${clamp(directive(variant.lighting), 80)}` : (pickLightKit({
+            timeOfDay: locked?.timeOfDay, location: locked?.location, weather: locked?.weather,
+        }).light),
         directive(variant?.wardrobe) ? `服装与妆发：${directive(variant.wardrobe)}` : '',
         directive(variant?.props) ? `道具：${directive(variant.props)}` : '画面不额外添加道具',
         // Crop is already expressed by the framing line, and "16mm f/8 1/1000s"

@@ -592,3 +592,36 @@ test('the direction carries the lab realism lock, not banned adjectives', async 
         'portrait, soft',
     );
 });
+
+test('unlit plans inherit a structured light-kit entry', async () => {
+    const { pickLightKit } = await import('../api/light-kit.mjs');
+    const { directionText } = await import('../api/continuity-generation.mjs');
+    // Time-of-day match beats the default.
+    const golden = pickLightKit({ timeOfDay: '黄昏' });
+    assert.equal(golden.id, 'golden-hour');
+    assert.match(golden.light, /侧逆光/);
+    // Location-only match still hits.
+    const dappled = pickLightKit({ location: '大树下的斑驳光影' });
+    assert.equal(dappled.id, 'dappled');
+    // Nothing matches -> the honest default: one light direction, real falloff.
+    const fallback = pickLightKit({ timeOfDay: '不认识的时间' });
+    assert.equal(fallback.id, 'default');
+    assert.match(fallback.light, /背光一侧真正暗下去/);
+    // A plan with no lighting field gets a kit entry in its direction.
+    const direction = directionText({
+        prompt: '滨江步道夜跑',
+        locked: { location: '滨江跑步道', timeOfDay: '清晨' },
+        variant: { size: 'FS' },
+        size: 'FS',
+    });
+    assert.match(direction, /光线：.*低角度暖色侧逆光/);
+    // A plan that already names its lighting is never overridden.
+    const explicit = directionText({
+        prompt: '烛光餐桌',
+        locked: { location: '室内餐桌' },
+        variant: { size: 'MS', lighting: '两盏壁灯从背后打亮轮廓' },
+        size: 'MS',
+    });
+    assert.match(explicit, /两盏壁灯/);
+    assert.doesNotMatch(explicit, /烛光是唯一光源/);
+});
