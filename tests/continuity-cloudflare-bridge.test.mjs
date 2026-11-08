@@ -490,3 +490,45 @@ test('modelscope poll still reports a running task as pending', async () => {
     assert.equal(result.status, 'pending');
     assert.equal(result.upstream, 'RUNNING');
 });
+
+test('framing states where the frame cuts, and the pose is trimmed to what fits', async () => {
+    const { directionText } = await import('../api/continuity-generation.mjs');
+    // Two failures measured against the live model, both fixed here:
+    //   - "半身近景，不拍到手" produced full-body frames; stating the cut works
+    //   - the plan's pose often describes feet/stairs that a tight frame cannot
+    //     contain, and the model resolves that by widening the frame
+    const text = directionText({
+        prompt: '美术馆螺旋楼梯',
+        locked: { location: '美术馆螺旋楼梯', styleProfile: '纪实' },
+        variant: {
+            size: 'MCU',
+            action: '单脚踩在下一级踏步边缘，另一脚在后，右手扶内侧扶手，身体微侧',
+            crop: '人物从头顶到膝盖入画，前景保留内侧扶手',
+            lighting: '天窗顶光，禁用闪光灯',
+        },
+        size: 'MCU',
+    });
+
+    // The cut is stated, and it appears before the body description.
+    assert.match(text, /画框下沿切在胸部/);
+    assert.match(text, /胸部以下完全不在画面内/);
+    assert.ok(text.indexOf('取景：') < text.indexOf('动作：'), '取景要排在动作前面，否则姿势会把画框撑大');
+    // Clauses naming off-frame body parts are dropped rather than sent.
+    assert.ok(!/踏步/.test(text), 'MCU 不该出现踏步');
+    assert.ok(!/膝盖入画/.test(text), '与景别矛盾的裁切描述要丢掉');
+    assert.ok(!/另一脚在后/.test(text), '脚不入画时不该描述脚的站位');
+    // What does fit is kept.
+    assert.match(text, /右手扶内侧扶手/);
+});
+
+test('a wide frame keeps the whole pose', async () => {
+    const { directionText } = await import('../api/continuity-generation.mjs');
+    const text = directionText({
+        prompt: '远景街景',
+        locked: {},
+        variant: { size: 'FS', action: '站立，单脚踩在台阶上，双手插兜' },
+        size: 'FS',
+    });
+    assert.match(text, /单脚踩在台阶上/, '全身景别不该裁掉姿势');
+    assert.match(text, /从头到脚完整入画/);
+});

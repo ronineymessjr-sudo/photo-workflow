@@ -112,6 +112,16 @@ async function callReferenceJson({ env, fetchImpl, prompt, size, aspect, seed, r
 // model to invent the crop, which is why every frame came back filling the
 // height with a full standing figure. These say exactly where the frame edge
 // falls and how much space to leave.
+
+// The assembled direction text, exported so tools can compose a frame with the
+// text-to-image model using exactly the same wording the edit models receive.
+// Two implementations of this used to drift apart; there is only one now.
+export function directionText({ prompt, locked, variant, poseRef, size }) {
+    const framed = { ...variant, size: size || variant?.size };
+    const fields = directionFields({ prompt, locked, variant: framed, poseRef, framing: framingZh(framed) });
+    return fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`).join('\n');
+}
+
 // One field list shared by every adapter.
 //
 // This exists because the Cloudflare adapter and the Seedream adapter each built
@@ -121,23 +131,29 @@ async function callReferenceJson({ env, fetchImpl, prompt, size, aspect, seed, r
 function directionFields({ prompt, locked, variant, poseRef, framing }) {
     return [
         ['prompt', prompt],
+        // Immediately after the picture itself: the crop has to win over any pose
+        // detail that would push the frame wider.
+        ['framing', framing],
         ['subject', locked?.subject],
         ['wardrobeGroup', directive(locked?.wardrobe)],
         ['style', locked?.styleProfile],
         ['location', locked?.location],
         ['weather', locked?.weather],
         ['timeOfDay', locked?.timeOfDay],
-        ['framing', framing],
         ['pose', poseRef?.title ? `摆姿库姿势：${poseRef.title}${poseRef.angle ? `（参考角度 ${poseRef.angle}）` : ''}` : ''],
         ['poseDirection', poseRef?.direction],
-        ['action', variant?.action],
+        ['action', poseInFrame(variant?.action, variant?.size)],
         ['camera', variant?.camera],
         ['lens', variant?.lens],
         ['placement', variant?.subjectPlacement],
         ['lighting', variant?.lighting],
         ['wardrobeShot', directive(variant?.wardrobe)],
         ['props', directive(variant?.props)],
-        ['crop', directive(variant?.crop)],
+        // The plan's crop_boundary often describes a different framing than
+        // shot_size ("头顶到膝盖入画" on an MCU shot). Passing both hands the
+        // model two contradictory crops, and it resolves them by going wider, so
+        // the clauses that fall outside this frame are dropped the same way.
+        ['crop', poseInFrame(directive(variant?.crop), variant?.size)],
         ['mustShow', variant?.mustShow],
         ['rejectIf', variant?.rejectIf],
     ].filter(([, value]) => typeof value === 'string' && value.trim());
@@ -151,16 +167,49 @@ const FIELD_LABELS_ZH = {
     props: '道具', crop: '裁切', mustShow: '必须出现', rejectIf: '不得出现',
 };
 
+// Framing is stated as where the frame edge CUTS, because that is the part the
+// model obeys. "半身近景，不拍到手" produced full-body frames; "画框下沿切在腰部
+// 偏上，腰部以下完全不在画面内" produced the requested crop in testing. Naming
+// what is absent is weaker than stating the cut.
 const FRAMING_ZH = {
-    ECU: '极特写：只拍脸部局部（眼睛或嘴唇），脸占画面八成以上，其余全是皮肤与背景虚化',
-    CU: '特写：只拍脸和脖子，头顶留少许空间，画面下沿止于锁骨附近，不出现胸部与手',
-    MCU: '近景（半身特写）：头肩到胸线，画面下沿落在胸部，不拍到手，人物占画面高度约六成',
-    MS: '中景：腰部以上，能看到双手，人物占画面高度约七成',
-    MFS: '中全景：膝盖以上，人物占画面高度约八成',
-    FS: '全身：从头到脚完整入画，头顶留约十分之一空间，脚下地面必须露出，人物不要顶到画框上下边缘',
+    ECU: '极特写：画框只包含脸部局部（眼睛或嘴唇），额头与下巴被画框切掉，脸占画面八成以上',
+    CU: '特写：画框下沿切在锁骨下方，胸口以下完全不在画面内，画面里只有头部、颈部和肩，不出现手臂、不出现手',
+    MCU: '近景半身：画框下沿切在胸部，胸部以下完全不在画面内，画面里只有头部到胸前，不出现腰、腿、脚，人物占画面高度七成以上',
+    MS: '中景：画框下沿切在腰部，腰部以下完全不在画面内，双手可以入画，人物占画面高度约七成',
+    MFS: '中全景：画框下沿切在膝盖上方，膝盖以下完全不在画面内，人物占画面高度约八成',
+    FS: '全身：从头到脚完整入画，头顶留约十分之一空间，脚下地面露出，人物不要顶到画框上下边缘',
     WS: '全景：人物只占画面高度的三分之一到二分之一，环境与建筑是主体，人物明显小于画框',
     EWS: '远景：人物很小，占画面高度不足五分之一，以空间、建筑和光线为主',
 };
+
+// Body parts that cannot appear once the frame cuts higher up. The plan's pose
+// text often describes them anyway ("单脚踩在下一级踏步，另一脚在后"), and the
+// model resolves that conflict by widening the frame - which is exactly how every
+// tight shot became a full-body shot. Those clauses are dropped, not summarised.
+const OFF_FRAME = {
+    ECU: /手|臂|肩|胸|腰|腹|腿|膝|脚|踝|站立|行走|行走|下行|上行|踏步|扶|踩/,
+    CU: /手|臂|胸|腰|腹|腿|膝|脚|踝|踏步|地面|踩|站立/,
+    MCU: /腰|腹|腿|膝|脚|踝|踏步|地面|踩|下行|上行/,
+    MS: /腿|膝|脚|踝|踏步|地面|踩/,
+    MFS: /地面|踏步|踩/,
+};
+
+function visibleFrame(size) {
+    return String(size || '').trim().toUpperCase();
+}
+
+// Keep the clauses of the pose that still make sense inside the frame.
+function poseInFrame(pose, size) {
+    const raw = typeof pose === 'string' ? pose.trim() : '';
+    if (!raw) return '';
+    const pattern = OFF_FRAME[visibleFrame(size)];
+    if (!pattern) return raw;
+    const kept = raw.split(/[，,；;]/).map(part => part.trim()).filter(Boolean)
+        .filter(part => !pattern.test(part));
+    // If nothing survives the crop, say so rather than falling back to the whole
+    // pose: a pose that only exists below the frame has no bearing on the picture.
+    return kept.join('，');
+}
 
 function framingZh(variant) {
     const code = String(variant?.size || '').trim().toUpperCase();

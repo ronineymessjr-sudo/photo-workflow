@@ -73,6 +73,7 @@ const store = { async put() {}, async get() { return { buffer: PNG, meta: { mime
 let translateCalls = 0;
 const env = {
     ARK_API_KEY: 'preview-stub',
+    MODELSCOPE_TOKEN: 'preview-stub',
     AI: {
         async run(model, payload) {
             if (String(model).includes('llama')) {
@@ -91,6 +92,19 @@ for (const shot of shots) {
         env, store,
         // Stub whichever upstream the selected provider talks to.
         fetchImpl: async url => {
+            // ModelScope is two-phase: submit returns a task id, then the task is
+            // polled. Both shapes have to be stubbed or the preview cannot reach
+            // the assembled prompt.
+            if (String(url).includes('modelscope') && String(url).includes('/images/generations')) {
+                return new Response(JSON.stringify({ task_id: 'preview-task', task_status: 'PENDING' }), {
+                    status: 200, headers: { 'content-type': 'application/json' },
+                });
+            }
+            if (String(url).includes('modelscope') && String(url).includes('/v1/tasks/')) {
+                return new Response(JSON.stringify({ task_status: 'SUCCEED', output_images: ['https://cdn.example/out.png'] }), {
+                    status: 200, headers: { 'content-type': 'application/json' },
+                });
+            }
             if (String(url).includes('ark.cn-beijing.volces.com')) {
                 return new Response(JSON.stringify({ data: [{ b64_json: PNG.toString('base64') }] }), {
                     status: 200, headers: { 'content-type': 'application/json' },
