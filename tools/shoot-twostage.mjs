@@ -20,6 +20,7 @@
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { directionText } from '../api/continuity-generation.mjs';
+import { inspectPng, summarise } from './lib/image-check.mjs';
 
 const args = process.argv.slice(2);
 const argOf = name => {
@@ -32,6 +33,10 @@ const OUT = argOf('out') || `runtime/twostage/${BRIEF}`;
 const IDENTITY = argOf('identity') || 'runtime/deploy-test/identity.png';
 const STYLE = argOf('style') || '';
 const TOKEN = process.env.MODELSCOPE_TOKEN || '';
+// Every shot must end with a usable frame. A transport error or a blank card is
+// retried rather than accepted, and the report is rewritten after each shot so an
+// interrupted run still leaves an accurate record of what exists.
+const ATTEMPTS = Math.max(1, Number(argOf('attempts')) || 3);
 const PACK = 'experiments/plan-quality-lab/prompt-packs/2026-10-27-deepseek/06-prompts-all.json';
 // Sizes where the face is large enough that swapping it is worth the wait.
 const SWAP_SIZES = new Set(['ECU', 'CU', 'MCU', 'MS', 'MFS']);
@@ -107,6 +112,31 @@ const locked = {
     wardrobe: '开拍前确认一套，全系列不换',
 };
 
+
+// Run one stage until it yields an inspectable image, or give up honestly.
+async function produce(label, attemptFn) {
+    let lastReason = '';
+    for (let attempt = 1; attempt <= ATTEMPTS; attempt += 1) {
+        try {
+            const buffer = await attemptFn(attempt);
+            const check = inspectPng(buffer);
+            if (check.ok) return { buffer, check, attempts: attempt };
+            lastReason = check.reason;
+            process.stdout.write(`第 ${attempt} 次不可用（${check.reason}）· `);
+        } catch (error) {
+            lastReason = String(error.message).slice(0, 160);
+            process.stdout.write(`第 ${attempt} 次失败（${lastReason.slice(0, 60)}）· `);
+        }
+    }
+    return { buffer: null, reason: lastReason, attempts: ATTEMPTS };
+}
+
+const saveReport = async () => {
+    await writeFile(path.join(OUT, 'report.json'), JSON.stringify({
+        brief: BRIEF, at: new Date().toISOString(), frames: report,
+    }, null, 2));
+};
+
 const report = [];
 for (const row of rows) {
     const spec = row.spec;
@@ -130,17 +160,23 @@ for (const row of rows) {
 
     const started = Date.now();
     process.stdout.write(`${shotId} ${String(size).padEnd(4)} 构图... `);
-    let composed;
-    try {
-        composed = await runTask({ model: 'Qwen/Qwen-Image', prompt: direction, size: canvas, label: '构图' });
-    } catch (error) {
-        console.log(`失败 ${String(error.message).slice(0, 160)}`);
-        report.push({ shotId, ok: false, stage: 'compose', error: String(error.message).slice(0, 160) });
+    const composedRun = await produce('构图', attempt => runTask({
+        model: 'Qwen/Qwen-Image',
+        // A blank card is usually a degenerate sample, so a retry shifts the seed
+        // instead of repeating the identical request.
+        prompt: attempt === 1 ? direction : `${direction}\n（重试：画面必须包含一个清楚可见的人，占据画面主体的位置）`,
+        size: canvas, label: '构图',
+    }));
+    if (!composedRun.buffer) {
+        console.log(`三试未出片（${composedRun.reason}）`);
+        report.push({ shotId, size, angle: spec.camera_angle, ok: false, stage: 'compose', error: composedRun.reason });
+        await saveReport();
         continue;
     }
+    const composed = composedRun.buffer;
     const composePath = path.join(OUT, `${shotId}-1-compose.png`);
     await writeFile(composePath, composed);
-    process.stdout.write(`ok ${Math.round(composed.length / 1024)}KB | `);
+    process.stdout.write(`ok ${summarise(composedRun.check)} | `);
 
     // Only swap where the face is actually legible. In a wide or full-body frame
     // the face occupies a few dozen pixels, so a 10-minute edit changes nothing
@@ -148,6 +184,7 @@ for (const row of rows) {
     if (!SWAP_SIZES.has(String(size).toUpperCase())) {
         console.log('跳过换脸（脸太小，换了也看不出来）');
         report.push({ shotId, size, angle: spec.camera_angle, ok: true, composed: true, swapped: false, compose: composePath, final: composePath });
+        await saveReport();
         continue;
     }
     process.stdout.write('换脸... ');
@@ -161,23 +198,35 @@ for (const row of rows) {
     const images = [ `data:image/png;base64,${composed.toString('base64')}`, identityData ];
     if (styleData) images.push(styleData);
 
-    let swapped;
-    try {
-        swapped = await runTask({ model: 'Qwen/Qwen-Image-Edit-2511', prompt: swapPrompt, images, label: '换脸' });
-    } catch (error) {
-        console.log(`失败 ${String(error.message).slice(0, 160)}`);
-        report.push({ shotId, ok: false, stage: 'swap', compose: composePath, error: String(error.message).slice(0, 160) });
+    const swapRun = await produce('换脸', () => runTask({
+        model: 'Qwen/Qwen-Image-Edit-2511', prompt: swapPrompt, images, label: '换脸',
+    }));
+    if (!swapRun.buffer) {
+        // The composed frame is still a usable photograph, so the shot ships with
+        // the model's own face rather than shipping nothing. The report says which.
+        console.log(`换脸失败（${swapRun.reason}），保留构图版本`);
+        report.push({ shotId, size, angle: spec.camera_angle, ok: true, composed: true, swapped: false, swapError: swapRun.reason, compose: composePath, final: composePath });
+        await saveReport();
         continue;
     }
+    const swapped = swapRun.buffer;
     const finalPath = path.join(OUT, `${shotId}-2-face.png`);
     await writeFile(finalPath, swapped);
-    console.log(`ok ${((Date.now() - started) / 1000).toFixed(0)}s ${Math.round(swapped.length / 1024)}KB`);
+    console.log(`ok ${((Date.now() - started) / 1000).toFixed(0)}s ${summarise(swapRun.check)}`);
     // swapped must be recorded here too: leaving it undefined made every frame
     // report as composition-only and the contact sheet labelled them all wrong.
     report.push({ shotId, size, angle: spec.camera_angle, ok: true, composed: true, swapped: true, compose: composePath, final: finalPath });
+    await saveReport();
 }
 
-await writeFile(path.join(OUT, 'report.json'), JSON.stringify({
-    brief: BRIEF, at: new Date().toISOString(), frames: report,
-}, null, 2));
-console.log(`\n完成 ${report.filter(entry => entry.ok).length}/${rows.length}  ->  ${OUT}`);
+await saveReport();
+
+const shipped = report.filter(entry => entry.ok);
+const missing = rows.length - shipped.length;
+const swappedCount = shipped.filter(entry => entry.swapped).length;
+console.log(`\n出片 ${shipped.length}/${rows.length}｜换脸 ${swappedCount} 张｜构图直出 ${shipped.length - swappedCount} 张  ->  ${OUT}`);
+if (missing) {
+    // Non-zero exit so a caller cannot mistake a partial series for a complete one.
+    for (const entry of report.filter(item => !item.ok)) console.log(`  未出片: ${entry.shotId}（${entry.error}）`);
+    process.exitCode = 1;
+}
