@@ -214,10 +214,13 @@ test('site plan and multi-scene candidate generation keep face, outfit, and per-
                     reference_alignment: { score: 2, confidence: 0.9 },
                 } }) };
                 requestPrompts.push(input.messages[1].content);
+                if (/服装细节|衣料细节/.test(input.messages[1].content)) {
+                    return { response: 'Close-up of the specified ivory knit top worn on the model; visible shoulder and upper torso for context; crop out the face and rest of the outfit; no floating garment.' };
+                }
                 return { response: 'Photorealistic portrait of one adult woman. Preserve the exact outfit and selected natural pose. Keep the requested location and framing.' };
             }
             const form = await new Response(input.multipart.body, { headers: { 'Content-Type': input.multipart.contentType } }).formData();
-            imagePrompts.push({ prompt: String(form.get('prompt')), hasFace: form.has('input_image_0'), hasOutfit: form.has('input_image_1') });
+            imagePrompts.push({ prompt: String(form.get('prompt')), hasImage0: form.has('input_image_0'), hasImage1: form.has('input_image_1') });
             return { image: png.toString('base64') };
         } },
     };
@@ -242,7 +245,8 @@ test('site plan and multi-scene candidate generation keep face, outfit, and per-
         assert.equal(shots.length, 12);
         assert.equal(scenes.length, 3);
         for (const scene of scenes) {
-            assert.equal(new Set(shots.filter(shot => shot.scene === scene).map(shot => shot.directorContract.referenceIds[0])).size, 4);
+            const poseBearingShots = shots.filter(shot => shot.scene === scene && shot.directorContract.referenceIds.length);
+            assert.equal(new Set(poseBearingShots.map(shot => shot.directorContract.referenceIds[0])).size, poseBearingShots.length);
         }
         for (const shot of shots) {
             const candidateResponse = await worker.fetch(new Request('https://unit.test/api/director/generate-candidate', {
@@ -257,9 +261,14 @@ test('site plan and multi-scene candidate generation keep face, outfit, and per-
             assert.equal(candidateResponse.status, 201);
             const candidate = await candidateResponse.json();
             const waistUp = /^(?:中景|MS)$/.test(shot.directorContract.shot_size || '');
-            const expectedRefs = waistUp ? fixedRefs.filter(id => id.includes('portrait')) : fixedRefs;
+            const clothingDetail = /服装细节|衣料细节/.test(shot.directorContract.shot_language || '');
+            const expectedRefs = clothingDetail ? fixedRefs.filter(id => id.includes('costume'))
+                : waistUp ? fixedRefs.filter(id => id.includes('portrait')) : fixedRefs;
             assert.deepEqual(candidate.candidateAsset.referenceImages.map(reference => reference.sourceItemId).sort(), expectedRefs);
-            assert.ok(candidate.candidateAsset.referenceIds.includes(shot.directorContract.referenceIds[0]));
+            assert.deepEqual(candidate.candidateAsset.referenceImages.map(reference => reference.kind), clothingDetail ? ['costume'] : waistUp ? ['portrait'] : ['portrait', 'costume']);
+            if (shot.directorContract.referenceIds.length) {
+                assert.ok(candidate.candidateAsset.referenceIds.includes(shot.directorContract.referenceIds[0]));
+            }
             const imageResponse = await worker.fetch(new Request(new URL(candidate.candidateAsset.url, 'https://unit.test')), env);
             assert.equal(imageResponse.status, 200);
             assert.equal(imageResponse.headers.get('Content-Type'), 'image/png');
@@ -269,10 +278,27 @@ test('site plan and multi-scene candidate generation keep face, outfit, and per-
         assert.equal(imagePrompts.length, shots.length);
         assert.ok(requestPrompts.every(prompt => /米白色针织上衣、卡其色半身裙、棕色短靴/.test(prompt)));
         assert.ok(shots.every((shot, index) => requestPrompts[index].includes(shot.scene)));
-        assert.ok(imagePrompts.every((prompt, index) => prompt.hasFace && prompt.hasOutfit === !/^(?:中景|MS)$/.test(shots[index].directorContract.shot_size || '')));
-        assert.ok(imagePrompts.every(prompt => /Required pose:/.test(prompt.prompt)));
-        assert.ok(imagePrompts.every(prompt => /written wardrobe contract (?:is authoritative for exact garments|identifies the outfit)/.test(prompt.prompt)));
-        assert.ok(imagePrompts.every(prompt => /Do not copy unrequested bags, jewelry, hats/.test(prompt.prompt)));
+        assert.ok(imagePrompts.every((prompt, index) => {
+            const shot = shots[index];
+            const waistUp = /^(?:中景|MS)$/.test(shot.directorContract.shot_size || '');
+            const clothingDetail = /服装细节|衣料细节/.test(shot.directorContract.shot_language || '');
+            return prompt.hasImage0 && prompt.hasImage1 === !(waistUp || clothingDetail);
+        }));
+        assert.ok(shots.every((shot, index) => !/服装细节|衣料细节/.test(shot.directorContract.shot_language || '')
+            || (/Image 1 is the selected clothing-detail reference/.test(imagePrompts[index].prompt)
+                && /worn on the model/i.test(imagePrompts[index].prompt)
+                && /visible shoulder or upper-torso segment/i.test(imagePrompts[index].prompt)
+                && /crop out the face and rest of the outfit/i.test(imagePrompts[index].prompt)
+                && /do not show a floating garment/i.test(imagePrompts[index].prompt)
+                && !/face photograph|face reference|portrait reference|identity reference/i.test(imagePrompts[index].prompt))));
+        assert.ok(imagePrompts.every((prompt, index) => /服装细节|衣料细节/.test(shots[index].directorContract.shot_language || '')
+            ? !/Required pose:/.test(prompt.prompt)
+            : /Required pose:/.test(prompt.prompt)));
+        assert.ok(imagePrompts.every((prompt, index) => /服装细节|衣料细节/.test(shots[index].directorContract.shot_language || '')
+            ? /shot-specific wardrobe contract is authoritative/i.test(prompt.prompt)
+            : /written wardrobe contract (?:is authoritative for exact garments|identifies the outfit)/.test(prompt.prompt)));
+        assert.ok(imagePrompts.every((prompt, index) => /服装细节|衣料细节/.test(shots[index].directorContract.shot_language || '')
+            || /Do not copy unrequested bags, jewelry, hats/.test(prompt.prompt)));
     } finally {
         globalThis.fetch = originalFetch;
     }

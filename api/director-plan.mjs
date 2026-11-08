@@ -110,10 +110,19 @@ export function createTemplatePlan(input, referenceContext) {
         '环境切片镜头': '环境人像收束',
     };
     const wardrobeRequirement = String(input.modelDesc || '').trim();
+    const selectedCostume = referenceContext.templates.find(template => template.kind === 'costume');
+    const costumeColorEnglish = selectedCostume?.color || '';
+    const costumeColor = ({ ivory: '象牙白', white: '白色', brown: '棕色', black: '黑色', beige: '米色', khaki: '卡其色' })[selectedCostume?.color] || selectedCostume?.color || '';
+    const costumeType = selectedCostume?.tags?.find(tag => ['knit', 'shirt', 'coat', 'dress'].includes(tag)) || '';
+    const costumeTypeChinese = ({ knit: '针织', shirt: '衬衫', coat: '外套', dress: '连衣裙' })[costumeType] || '';
+    const costumeCategory = ({ top: '上衣', inner: '内搭', dress: '连衣裙', bottom: '下装' })[selectedCostume?.category] || '';
+    const detailGarment = [costumeColorEnglish, costumeType, selectedCostume?.category === 'top' ? 'top' : selectedCostume?.category].filter(Boolean).join(' ') || 'specified garment';
+    const detailGarmentChinese = [costumeColor, costumeTypeChinese, costumeCategory].filter(Boolean).join('') || '用户指定服装';
     const scenePoseCounts = new Map();
     const sceneForIndex = (shot, index) => locations[Math.floor(index * locations.length / plan.shotList.length)] || shot.scene;
     const preferredPosePatternFor = shot => {
         const title = titleDirections[shot.title] || shot.title;
+        if (/人物与服装细节|服装细节/.test(title)) return null;
         return /回眸/.test(title) ? /回眸|回头|回望|look back/i
             : ['近景', '特写', '局部特写'].includes(shot.shotSize) && /表情|眼神|服装细节/.test(title) ? /抚颈|neck/i : null;
     };
@@ -121,26 +130,30 @@ export function createTemplatePlan(input, referenceContext) {
     plan.shotList = plan.shotList.map((shot, index) => {
         const scene = sceneForIndex(shot, index);
         const title = titleDirections[shot.title] || shot.title;
-        const poseState = scenePoseCounts.get(scene) || { count: 0, used: new Set() };
-        const preferredPosePattern = preferredPosePatternFor(shot);
-        const preferredPose = preferredPosePattern && poses.find(template => !poseState.used.has(template.id)
-            && preferredPosePattern.test(`${template.title} ${template.englishTitle || ''}`));
-        const reservedPoseIds = new Set();
-        for (let futureIndex = index + 1; futureIndex < plan.shotList.length; futureIndex++) {
-            const futureShot = plan.shotList[futureIndex];
-            if (sceneForIndex(futureShot, futureIndex) !== scene) continue;
-            const futureTemplate = preferredTemplateFor(preferredPosePatternFor(futureShot));
-            if (futureTemplate && !poseState.used.has(futureTemplate.id)) reservedPoseIds.add(futureTemplate.id);
-        }
-        const template = preferredPose || poses.find(candidate => !poseState.used.has(candidate.id) && !reservedPoseIds.has(candidate.id))
-            || poses.find(candidate => !poseState.used.has(candidate.id)) || poses[poseState.count % poses.length];
-        poseState.used.add(template.id);
-        poseState.count++;
-        scenePoseCounts.set(scene, poseState);
-        const guidance = referenceContext.guidance.suggestions.find(item => item.sourceItemId === template.id)?.direction || '';
-        const upperBodyCrop = ['中景', '近景', '特写', '局部特写'].includes(shot.shotSize);
         const clothingDetail = /人物与服装细节|服装细节/.test(title);
-        const fullPoseDirection = poseDirections[template.id] || guidance;
+        const foregroundLayered = /前景层次/.test(title);
+        const poseState = scenePoseCounts.get(scene) || { count: 0, used: new Set() };
+        let template = null;
+        if (!clothingDetail) {
+            const preferredPosePattern = preferredPosePatternFor(shot);
+            const preferredPose = preferredPosePattern && poses.find(candidate => !poseState.used.has(candidate.id)
+                && preferredPosePattern.test(`${candidate.title} ${candidate.englishTitle || ''}`));
+            const reservedPoseIds = new Set();
+            for (let futureIndex = index + 1; futureIndex < plan.shotList.length; futureIndex++) {
+                const futureShot = plan.shotList[futureIndex];
+                if (sceneForIndex(futureShot, futureIndex) !== scene) continue;
+                const futureTemplate = preferredTemplateFor(preferredPosePatternFor(futureShot));
+                if (futureTemplate && !poseState.used.has(futureTemplate.id)) reservedPoseIds.add(futureTemplate.id);
+            }
+            template = preferredPose || poses.find(candidate => !poseState.used.has(candidate.id) && !reservedPoseIds.has(candidate.id))
+                || poses.find(candidate => !poseState.used.has(candidate.id)) || poses[poseState.count % poses.length];
+            poseState.used.add(template.id);
+            poseState.count++;
+            scenePoseCounts.set(scene, poseState);
+        }
+        const guidance = template ? referenceContext.guidance.suggestions.find(item => item.sourceItemId === template.id)?.direction || '' : '';
+        const upperBodyCrop = ['中景', '近景', '特写', '局部特写'].includes(shot.shotSize);
+        const fullPoseDirection = template ? poseDirections[template.id] || guidance : '';
         const croppedPoseDirections = {
             'atlas-pose-full_single_p015': '肩线轻转，靠近镜头一侧的手自然停在画框内；髋部不入画时不强求扶腰。',
             'atlas-pose-full_single_p017': '上身转离镜头约四十五度，再回头看向镜头附近，肩颈放松。',
@@ -151,19 +164,19 @@ export function createTemplatePlan(input, referenceContext) {
             'atlas-pose-full_single_p021': '站立・单手轻触颈侧（上半身裁切适配）',
         };
         const action = clothingDetail
-            ? '服装细节构图：以用户指定的衣料为唯一主体，不安排手部动作或全身摆姿。'
+            ? `模特自然穿着服装库 ${selectedCostume?.upstreamId || selectedCostume?.id || '所选单品'} 的${detailGarmentChinese}；镜头贴近肩部与上躯干，让面料纹理成为主体并保留真人穿着轮廓；面部可在画外，不安排手部动作或全身摆姿。`
             : upperBodyCrop
             ? `上半身摆姿参考（${croppedPoseLabels[template.id] || template.title}）：${croppedPoseDirections[template.id] || fullPoseDirection} 不要求画框外的手脚动作。`
             : `摆姿参考：${template.title}。${fullPoseDirection}`;
         const lens = fixedLens || shot.focalLength;
-        const angle = /肩后|over[- ]the[- ]shoulder/i.test(shot.angle) ? '平视' : shot.angle;
+        const angle = /肩后|over[- ]the[- ]shoulder/i.test(shot.angle) || /侧向构图人像/.test(title) ? '平视' : shot.angle;
         const cameraAngle = angle.replace(/机位$/, '');
         const wide = ['环境全景', '环境远景', '全身'].includes(shot.shotSize);
         const detail = ['近景', '特写', '局部特写'].includes(shot.shotSize);
         const framing = clothingDetail ? {
-            prompt: 'Tight garment-detail close-up of the clothing item named by the user. Preserve its exact color and fabric texture; exclude the face and full-body pose.',
-            crop: '服装细节紧凑特写，只拍用户指定的服装面料与纹理，不拍全身；不复制库图中的未指定配饰。',
-            required: '用户指定服装的真实颜色、面料纹理和清晰细节',
+            prompt: `Tight close-up of the specified ${detailGarment} worn naturally by the model. Show the model's shoulder and upper torso to establish a real wearer; the face may be outside the frame. Keep the fabric detail dominant; do not create an isolated product or floating garment.`,
+            crop: `紧凑服装细节特写，展示模特穿着的${detailGarmentChinese}肩部与上躯干，保留真人穿着轮廓；面部可在画外，让指定面料纹理成为主体，不拍孤立服装或全身搭配。`,
+            required: `模特穿着${detailGarmentChinese}的肩部与上躯干轮廓，以及清晰面料纹理`,
         } : framingDirections[shot.shotSize] || {
             prompt: `Photographic framing ${shot.shotSize}.`, crop: `按${shot.shotSize}取景，保持人物主体完整。`,
             required: `${shot.shotSize}构图与清晰人物主体`,
@@ -173,6 +186,9 @@ export function createTemplatePlan(input, referenceContext) {
             : `摄影师站在人物侧前方，采用${cameraAngle}机位，先确认${framing.crop}再引导动作。`;
         const composition = wide
             ? '人物放在画面一侧三分线，视线方向留白，检查头顶、手指和鞋底边界，避开穿头的背景线条。'
+            : foregroundLayered ? /竹/.test(scene)
+                ? '在画面边缘加入少量柔焦竹叶作为自然前景，不遮挡面部或眼睛；人物面部保持完整清晰，不增加任何道具。'
+                : '在画面边缘加入少量场地现有的柔焦自然植物作为前景，不遮挡面部或眼睛；人物面部保持完整清晰，不增加任何道具。'
             : clothingDetail ? '以用户指定服装的纹理为焦点，保留一段完整衣料边缘，背景简洁，不带入未指定配饰。'
                 : detail ? '眼睛落在上三分线，完整保留本镜指定的面部或细节主体，背景保持简洁。'
                 : '以眼睛为焦点，肩线略转向画面内部，视线方向留白，裁切避开肘部和膝盖。';
@@ -184,16 +200,22 @@ export function createTemplatePlan(input, referenceContext) {
             : '先在开阔阴影中找柔和侧光，避开脸上的斑驳直射光，按脸部曝光并保留背景亮部层次。';
         const stance = /(?:不|禁止)交叉双?腿/.test(input.extra || '')
             ? 'Both feet parallel and hip-width apart on the ground. Legs straight and separated, weight evenly on both feet.' : '';
-        const wardrobe = `${wardrobeRequirement ? `人物与服装硬性要求：${wardrobeRequirement}。` : ''}用户文字是单品、颜色、裙长、鞋型和层次的唯一硬约束；服装库图片只辅助参考材质与色系。只保留文字指定的服装，不复制未指定的包袋、首饰、帽子或其他配饰，不替换、不增添。`;
+        const wardrobe = clothingDetail
+            ? `本镜服装要求：服装库 ${selectedCostume?.upstreamId || selectedCostume?.id || '所选单品'} 的${detailGarmentChinese}，由模特自然穿着；仅展示肩部与上躯干的穿着状态及面料纹理，面部可在画外；不出现整套裙装、鞋履或未指定配饰。`
+            : `${wardrobeRequirement ? `人物与服装硬性要求：${wardrobeRequirement}。` : ''}用户文字是单品、颜色、裙长、鞋型和层次的唯一硬约束；服装库图片只辅助参考材质与色系。只保留文字指定的服装，不复制未指定的包袋、首饰、帽子或其他配饰，不替换、不增添。`;
+        const rejectIf = foregroundLayered
+            ? 'foreground covering the face or eyes, added props, wrong crop, added or replaced garments, extra limbs, malformed hands, text, watermark'
+            : 'wrong crop, added or replaced garments, extra limbs, malformed hands, text, watermark';
+        const mustShow = [framing.required, action, ...(foregroundLayered ? [composition] : [])].join('；');
         const contract = {
-            source: 'template-library-plan', referenceIds: [template.id],
-            shot_language: `${title} · ${template.title}`, model_pose: action,
+            source: 'template-library-plan', referenceIds: template ? [template.id] : [],
+            shot_language: template ? `${title} · ${template.title}` : title, model_pose: action,
             shot_size: shot.shotSize, lens, camera_angle: angle,
             scene, photographer_position: method, model_position: composition,
             lighting_setup: lighting, wardrobe_styling: wardrobe, shot_props: '不额外添加道具，只保留场地已有元素。',
-            crop_boundary: framing.crop, must_show: `${framing.required}；${action}`,
-            reject_if: 'wrong crop, added or replaced garments, extra limbs, malformed hands, text, watermark',
-            generator_prompt: `Editorial photograph. ${framing.prompt} ${stance} ${lens}, ${shot.angle}. Scene: ${scene}. Action: ${action}. Composition: ${composition}. Crop: ${framing.crop}. Lighting: ${lighting}. Subject and clothing: ${input.modelDesc || ''}. User constraints: ${input.extra || ''}. Style: ${input.style || ''}.`,
+            crop_boundary: framing.crop, must_show: mustShow,
+            reject_if: rejectIf,
+            generator_prompt: `Editorial photograph. ${framing.prompt} ${stance} ${lens}, ${angle}. Scene: ${scene}. Action: ${action}. Composition: ${composition}. Crop: ${framing.crop}. Lighting: ${lighting}. Subject and clothing: ${input.modelDesc || ''}. User constraints: ${input.extra || ''}. Style: ${input.style || ''}.`,
         };
         return { ...shot, title, scene, angle, description: action, focalLength: lens, method, composition, lighting, lightingSetup: lighting, wardrobe,
             props: '不额外添加道具，只保留场地已有元素。', directorContract: contract };

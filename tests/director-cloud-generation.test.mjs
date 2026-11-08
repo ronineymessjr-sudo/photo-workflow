@@ -220,25 +220,49 @@ test('MS waist-up framing stays at the waist when the wardrobe lists a full skir
 
 test('clothing detail image prompt keeps the specified garment in a tight crop', async () => {
     let imagePrompt;
+    let translationSystem;
+    let translationInput;
+    let imageSlots;
+    const fetchedReferenceUrls = [];
     const wardrobe = '米白色针织上衣、卡其色半身裙、棕色短靴';
-    const input = { ...request, brief: '米白针织上衣的面料细节', reference_brief: { modelDesc: wardrobe }, shot_contract: {
+    const shotWardrobe = '米白色针织上衣，本镜只拍该上衣的面料细节。';
+    const input = { ...request, brief: `全套服装：${wardrobe}。本镜只拍针织上衣面料细节。`,
+        scene_brief: `湖边木栈道（原方案穿搭：${wardrobe}）`, reference_brief: { modelDesc: wardrobe }, shot_contract: {
         shot_language: '人物与服装细节', shot_size: '特写', referenceIds: ['pose-1'],
         generator_prompt: 'Tight garment-detail close-up of the user specified knit fabric and texture; exclude the face and full-body pose.',
         model_pose: '上半身摆姿参考，只保留衣料纹理需要的肩部姿态，不要求腿部动作。',
-        wardrobe_styling: wardrobe,
+        wardrobe_styling: shotWardrobe,
     } };
-    await generateCloudCandidate(input, { referenceContext, fetchImpl, ai: { run: async (_model, payload) => {
-        if (_model.includes('llama')) return { response: 'Tight garment-detail close-up, ivory knit fabric texture, no face or full-body pose.' };
+    const result = await generateCloudCandidate(input, { referenceContext, fetchImpl: async url => {
+        fetchedReferenceUrls.push(String(url));
+        return fetchImpl(url);
+    }, ai: { run: async (_model, payload) => {
+        if (_model.includes('llama')) {
+            translationSystem = payload.messages[0].content;
+            translationInput = payload.messages[1].content;
+            return { response: 'Close-up of the ivory knit top worn by the model, with a visible shoulder and upper-torso segment for context; crop out the face and rest of the outfit, with no floating garment.' };
+        }
         const form = await new Response(payload.multipart.body, { headers: { 'Content-Type': payload.multipart.contentType } }).formData();
         imagePrompt = String(form.get('prompt'));
+        imageSlots = [form.has('input_image_0'), form.has('input_image_1')];
         return { image: Buffer.from(jpeg).toString('base64') };
     } } });
-    assert.match(imagePrompt, /Tight close-up of the user specified garment fabric and texture only/);
-    assert.match(imagePrompt, /preserve its exact color/i);
-    assert.match(imagePrompt, /Garment-detail crop; no pose reference/);
-    assert.match(imagePrompt, /do not add hands, face, or a full-body pose/i);
+    assert.match(translationSystem, /shot-specific wardrobe contract is authoritative and overrides any conflicting full-outfit wording in the global brief, scene context or reference description/i);
+    assert.match(imagePrompt, /Create a photorealistic close-up of the named garment worn on the model/);
+    assert.match(imagePrompt, /visible shoulder or upper-torso segment as natural context/);
+    assert.match(imagePrompt, /crop out the face and rest of the outfit, and do not show a floating garment/i);
+    assert.match(imagePrompt, /Image 1 is the selected clothing-detail reference; it controls the named garment material, color and texture/);
+    assert.match(imagePrompt, /shot-specific wardrobe contract is authoritative and overrides any global full-outfit text/i);
+    assert.match(imagePrompt, /米白色针织上衣，本镜只拍该上衣的面料细节/);
+    assert.match(translationInput, /Shot-specific wardrobe contract: 米白色针织上衣，本镜只拍该上衣的面料细节/);
+    assert.doesNotMatch(imagePrompt, /Required pose:|Garment-detail crop; no pose reference/);
     assert.doesNotMatch(imagePrompt, /Selected pose library entry|Upper-body pose adapted from the selected PoseAtlas reference/);
-    assert.doesNotMatch(imagePrompt, /head-to-toe|both shoes|Exactly one hand rests on the hip/);
+    assert.doesNotMatch(imagePrompt, /face photograph|face reference|identity reference|portrait reference|卡其色半身裙|棕色短靴|head-to-toe|both shoes|Exactly one hand rests on the hip/i);
+    assert.deepEqual(imageSlots, [true, false]);
+    assert.deepEqual(result.referenceImages.map(reference => reference.kind), ['costume']);
+    assert.match(result.referenceImages[0].referenceImageUrl, /costume\/thumbs\/outfit\.webp$/);
+    assert.equal(fetchedReferenceUrls.length, 1);
+    assert.match(fetchedReferenceUrls[0], /costume\/thumbs\/outfit\.webp$/);
 });
 
 test('compiled shot includes only its selected pose from a multi-pose plan', () => {

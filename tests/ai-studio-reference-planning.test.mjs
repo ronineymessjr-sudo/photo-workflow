@@ -76,14 +76,37 @@ test('automatic references choose varied natural poses and match the requested o
 
     const plan = createTemplatePlan(input, context);
     assert.deepEqual([...new Set(plan.shotList.map(shot => shot.scene))], ['公园竹林小径', '湖边木栈道', '木亭长椅']);
-    assert.equal(plan.shotList.every(shot => shot.directorContract.referenceIds.length === 1), true);
-    assert.ok(new Set(plan.shotList.map(shot => shot.directorContract.referenceIds[0])).size >= 3);
-    assert.ok(plan.shotList.every(shot => /米白色针织上衣、卡其色半身裙、棕色短靴/.test(shot.wardrobe)));
-    assert.ok(plan.shotList.every(shot => /用户文字是单品、颜色、裙长、鞋型和层次的唯一硬约束/.test(shot.wardrobe)));
-    assert.ok(plan.shotList.every(shot => /不复制未指定的包袋、首饰、帽子/.test(shot.wardrobe)));
+    const clothingDetail = plan.shotList.find(shot => shot.title === '人物与服装细节');
+    assert.deepEqual(clothingDetail.directorContract.referenceIds, []);
+    assert.equal(clothingDetail.directorContract.shot_language, '人物与服装细节');
+    assert.match(clothingDetail.directorContract.model_pose, /模特自然穿着服装库 AUT-0118 的象牙白针织上衣/);
+    assert.match(clothingDetail.directorContract.crop_boundary, /肩部与上躯干/);
+    assert.match(clothingDetail.directorContract.crop_boundary, /面部可在画外/);
+    assert.match(clothingDetail.directorContract.generator_prompt, /ivory knit top worn naturally by the model/i);
+    assert.match(clothingDetail.directorContract.wardrobe_styling, /AUT-0118.*象牙白针织上衣/);
+    assert.doesNotMatch(clothingDetail.directorContract.wardrobe_styling, /卡其色半身裙|棕色短靴/);
+    assert.equal(plan.input.modelDesc, input.modelDesc);
+    assert.ok(plan.shotList.filter(shot => shot !== clothingDetail).every(shot => /米白色针织上衣、卡其色半身裙、棕色短靴/.test(shot.wardrobe)));
+    assert.ok(plan.shotList.filter(shot => shot !== clothingDetail).every(shot => /用户文字是单品、颜色、裙长、鞋型和层次的唯一硬约束/.test(shot.wardrobe)));
+    assert.ok(plan.shotList.filter(shot => shot !== clothingDetail).every(shot => /不复制未指定的包袋、首饰、帽子/.test(shot.wardrobe)));
     assert.ok(plan.shotList.every(shot => /不额外添加道具/.test(shot.directorContract.shot_props)));
     assert.ok(plan.shotList.every(shot => shot.angle !== '肩后' && !/肩后情境/.test(shot.title)));
     assert.doesNotMatch(plan.shotList.map(shot => `${shot.title} ${shot.description} ${shot.props}`).join('\n'), /同行人物|橱窗|推门|拿取饮品|无人物环境/);
+
+    const foreground = plan.shotList[3];
+    assert.equal(foreground.title, '前景层次人像');
+    assert.match(foreground.directorContract.model_position, /画面边缘.*柔焦竹叶/);
+    assert.match(foreground.directorContract.model_position, /不遮挡面部或眼睛/);
+    assert.match(foreground.directorContract.must_show, /画面边缘.*柔焦竹叶.*不遮挡面部或眼睛/);
+    assert.match(foreground.directorContract.must_show, /不增加任何道具/);
+    assert.match(foreground.directorContract.reject_if, /foreground covering the face or eyes/);
+    assert.match(foreground.directorContract.shot_props, /不额外添加道具/);
+
+    const compositionChange = plan.shotList[6];
+    assert.equal(compositionChange.title, '侧向构图人像');
+    assert.equal(compositionChange.angle, '平视');
+    assert.equal(compositionChange.directorContract.camera_angle, '平视');
+    assert.match(compositionChange.directorContract.generator_prompt, /35mm, 平视/);
 });
 
 test('template plan aligns selected poses, close crops, and backlight instructions with each shot', async () => {
@@ -100,17 +123,23 @@ test('template plan aligns selected poses, close crops, and backlight instructio
     assert.ok(context.templates.some(template => template.id === 'atlas-pose-full_single_p017'), JSON.stringify(context.templates.filter(template => template.kind === 'pose').map(template => template.id)));
     const plan = createTemplatePlan(input, context);
     assert.equal(plan.shotList.length, 12);
+    assert.equal(plan.shotList.filter(shot => shot.directorContract.referenceIds.length).length, 11);
     for (const scene of [...new Set(plan.shotList.map(shot => shot.scene))]) {
         const sceneShots = plan.shotList.filter(shot => shot.scene === scene);
-        const scenePoseIds = [...new Set(sceneShots.map(shot => shot.directorContract.referenceIds[0]))];
-        assert.equal(scenePoseIds.length, 4, `${scene}: ${sceneShots.map(shot => `${shot.title}=${shot.directorContract.referenceIds[0]}`).join('; ')}`);
+        const poseBearingShots = sceneShots.filter(shot => shot.directorContract.referenceIds.length);
+        const scenePoseIds = [...new Set(poseBearingShots.map(shot => shot.directorContract.referenceIds[0]))];
+        assert.equal(sceneShots.length, 4, `${scene}: expected four shots to preserve the scene coverage`);
+        assert.equal(poseBearingShots.length, sceneShots.some(shot => shot.title === '人物与服装细节') ? 3 : 4);
+        assert.equal(scenePoseIds.length, poseBearingShots.length, `${scene}: ${sceneShots.map(shot => `${shot.title}=${shot.directorContract.referenceIds.join(',') || 'no pose'}`).join('; ')}`);
     }
 
     const clothingDetail = plan.shotList.find(shot => shot.title === '人物与服装细节');
     assert.equal(clothingDetail.shotSize, '特写');
-    assert.match(clothingDetail.directorContract.generator_prompt, /Tight garment-detail close-up of the clothing item named by the user/);
-    assert.match(clothingDetail.directorContract.crop_boundary, /用户指定的服装面料与纹理/);
-    assert.match(clothingDetail.directorContract.model_pose, /衣料为唯一主体，不安排手部动作或全身摆姿/);
+    assert.match(clothingDetail.directorContract.generator_prompt, /ivory knit top worn naturally by the model/i);
+    assert.match(clothingDetail.directorContract.crop_boundary, /模特穿着的象牙白针织上衣肩部与上躯干/);
+    assert.match(clothingDetail.directorContract.model_pose, /保留真人穿着轮廓/);
+    assert.deepEqual(clothingDetail.directorContract.referenceIds, []);
+    assert.equal(clothingDetail.directorContract.shot_language, '人物与服装细节');
     assert.doesNotMatch(clothingDetail.description, /双脚|站稳|前后错开|腿/);
 
     const lookBack = plan.shotList.find(shot => shot.title === '单人回眸构图');

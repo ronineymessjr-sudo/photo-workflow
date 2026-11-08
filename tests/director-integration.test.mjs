@@ -209,7 +209,8 @@ test('main PhotoAtelier plan route uses the selected reference-library workflow'
     assert.equal(plan.director.source, 'template-library-plan');
     assert.equal(directorCalls, 0);
     assert.deepEqual([...new Set(plan.shotList.map(shot => shot.scene))], ['公园小径', '木亭长椅']);
-    assert.equal(plan.shotList.every(shot => shot.directorContract.referenceIds[0].startsWith('atlas-pose-')), true);
+    assert.equal(plan.shotList.filter(shot => shot.directorContract.referenceIds.length).every(shot => shot.directorContract.referenceIds[0].startsWith('atlas-pose-')), true);
+    assert.deepEqual(plan.shotList.find(shot => /服装细节/.test(shot.directorContract.shot_language)).directorContract.referenceIds, []);
 });
 
 test('loopback bridge serves only generated PNG candidates', async t => {
