@@ -24,8 +24,31 @@ let report = { frames: [] };
 try {
     report = JSON.parse(await readFile(path.join(DIR, 'report.json'), 'utf8'));
 } catch {
-    console.log(`没有找到 ${path.join(DIR, 'report.json')}`);
-    process.exit(1);
+    // A shoot writes report.json only when it finishes. Falling back to the files
+    // on disk means a running series can still be reviewed instead of waiting.
+    const { readdir } = await import('node:fs/promises');
+    const files = (await readdir(DIR)).filter(name => /^shot-\d+-2-face\.png$/.test(name));
+    const composed = (await readdir(DIR)).filter(name => /^shot-\d+-1-compose\.png$/.test(name));
+    const finals = new Set(files.map(name => name.replace('-2-face', '')));
+    const picked = [
+        ...files.map(name => ({ name, swapped: true })),
+        ...composed.filter(name => !finals.has(name.replace('-1-compose', ''))).map(name => ({ name, swapped: false })),
+    ].sort((a, b) => a.name.localeCompare(b.name));
+    if (!picked.length) {
+        console.log(`${DIR} 里还没有图`);
+        process.exit(1);
+    }
+    report = {
+        at: new Date().toISOString(),
+        frames: picked.map(({ name, swapped }) => ({
+            shotId: name.slice(0, 7),
+            size: '',
+            angle: '',
+            swapped,
+            final: path.join(DIR, name),
+        })),
+    };
+    console.log('没有 report.json，按文件推断（系列可能还在跑）');
 }
 
 const SIZE_LABEL = {
