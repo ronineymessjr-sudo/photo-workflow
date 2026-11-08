@@ -2,7 +2,6 @@ const REVIEWED_SOURCE_IDS = new Set([
   'full_single_p016',
   'full_single_p019',
   'full_single_p020',
-  'full_single_p022',
   'full_single_p027',
   'full_single_p029',
 ]);
@@ -18,6 +17,8 @@ const NATURAL_SOLO_POSE_FAMILIES = Object.freeze({
   full_single_p017: 'standing_look_back',
   full_single_p018: 'hands_at_waist',
   full_single_p021: 'standing_neck_touch',
+  full_single_p022: 'standing_open_chest',
+  full_single_p025: 'wide_stance_hands_at_waist',
 });
 
 const REASON_LABELS = Object.freeze({

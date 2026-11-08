@@ -206,19 +206,20 @@ test('authenticated production candidates retrieve templates before Cloudflare A
         brief: '秋日公园坐姿人像，棕色针织衫。', scene_brief: '自然光，不使用闪光灯。', style_direction: '低饱和电影感',
         reference_asset_ids: [],
         reference_ids: ['atlas-pose-full_single_p019'],
-        shot_contract: { shot_language: 'park seated portrait', generator_prompt: '35mm eye-level seated portrait, full hands and feet', must_show: 'existing park bench', reject_if: 'flash or cropped feet' },
+        shot_contract: { shot_language: 'park seated portrait', generator_prompt: '35mm eye-level seated portrait, full hands and feet', referenceIds: ['atlas-pose-full_single_p019'], must_show: 'existing park bench', reject_if: 'flash or cropped feet' },
     });
     assert.equal(response.status, 201, await response.clone().text());
     const result = await response.json();
     assert.equal(aiCalls.length, 2);
-    assert.equal(sourceCalls.length, 5);
+    assert.equal(sourceCalls.length, 6);
     assert.match(aiCalls[0].input.messages[1].content, /自然光/);
-    assert.deepEqual(result.candidateAsset.referenceImages.map(image => image.kind), ['portrait', 'costume']);
+    assert.deepEqual(result.candidateAsset.referenceImages.map(image => image.kind), ['portrait', 'pose', 'costume']);
     assert.equal(aiCalls[1].model, '@cf/black-forest-labs/flux-2-klein-9b');
     const form = await new Response(aiCalls[1].input.multipart.body, { headers: { 'Content-Type': aiCalls[1].input.multipart.contentType } }).formData();
     assert.match(form.get('prompt'), /seated steadily on a park bench/);
     assert.ok(form.get('input_image_0') && form.get('input_image_1'));
-    assert.equal(form.has('input_image_2'), false);
+    assert.ok(form.get('input_image_2'));
+    assert.equal(form.has('input_image_3'), false);
     assert.match(form.get('prompt'), /Follow the selected PoseAtlas action described in the shot contract as text/);
     assert.doesNotMatch(form.get('prompt'), /black-and-white artist drawing/);
     assert.equal(result.selected_shot_contract.generator_prompt, form.get('prompt'));
