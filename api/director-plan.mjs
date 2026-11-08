@@ -96,7 +96,7 @@ export function createTemplatePlan(input, referenceContext) {
         '环境远景': { prompt: 'Environmental long shot. Keep the person small but clearly identifiable in the location.', crop: '人物完整入画并保留较多环境，不裁切头脚。', required: '人物完整轮廓、场地结构与人物所处位置' },
         '全身': { prompt: 'Full-body portrait. Show the person from head to toe, including both shoes and ground beneath them.', crop: '从头顶至双鞋完整入画，头顶与脚下留有边距。', required: '完整人物、双鞋与脚下地面' },
         '中全景': { prompt: 'Medium-full portrait. Crop above the knees, showing the head, torso and hands.', crop: '膝上取景，头部、躯干和正在摆姿的双手均完整入画。', required: '膝上构图、头部、躯干和动作手部' },
-        '中景': { prompt: 'Waist-up portrait. Crop below the waist and keep the face and visible hands in frame.', crop: '腰部以上取景，肩膀、脸和参与动作的手留在画面内。', required: '腰上构图、清晰面部和动作手部' },
+        '中景': { prompt: 'Waist-up portrait from the top of the head to the natural waistline. The lower edge cuts at the waistline; exclude hips, legs and shoes.', crop: '画面从头顶至自然腰线，下缘切在腰线；髋部以下、腿和鞋不入画。', required: '腰上构图与清晰面部，动作只在裁切内呈现' },
         '近景': { prompt: 'Head-and-shoulders portrait. Crop below the shoulders and keep the entire face in frame.', crop: '肩部以上近景，完整保留面部与发顶。', required: '清晰面部表情、发型和肩部姿态' },
         '特写': { prompt: 'Tight close-up of the face or the clothing detail specified by the shot.', crop: '紧凑特写，只保留本镜指定的面部或服装细节。', required: '本镜指定的面部表情或服装纹理细节' },
         '局部特写': { prompt: 'Tight detail close-up of the exact hand, fabric or accessory named in the shot.', crop: '局部取景，关节不被画框切断，背景保持简洁。', required: '指定的手部、衣料或配饰细节' },

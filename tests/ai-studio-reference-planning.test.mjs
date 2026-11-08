@@ -224,7 +224,9 @@ test('template plan and candidate compilation retain retrieved pose, processing 
     assert.equal(plan.shotList[4].scene, '公园长椅');
     assert.match(plan.shotList[2].directorContract.generator_prompt, /Medium-full portrait\. Crop above the knees/);
     assert.doesNotMatch(plan.shotList[2].directorContract.generator_prompt, /head-to-toe|both shoes/);
-    assert.match(plan.shotList[3].directorContract.generator_prompt, /Waist-up portrait/);
+    assert.match(plan.shotList[3].directorContract.generator_prompt, /Waist-up portrait from the top of the head to the natural waistline/);
+    assert.match(plan.shotList[3].directorContract.generator_prompt, /Crop: 画面从头顶至自然腰线，下缘切在腰线/);
+    assert.doesNotMatch(plan.shotList[3].directorContract.generator_prompt, /Crop below the waist/);
     assert.match(plan.shotList[4].directorContract.generator_prompt, /Head-and-shoulders portrait/);
     assert.equal(plan.shotList[2].directorContract.model_position, plan.shotList[2].composition);
     assert.equal(plan.shotList[2].directorContract.photographer_position, plan.shotList[2].method);

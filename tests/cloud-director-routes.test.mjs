@@ -256,7 +256,9 @@ test('site plan and multi-scene candidate generation keep face, outfit, and per-
             }), env);
             assert.equal(candidateResponse.status, 201);
             const candidate = await candidateResponse.json();
-            assert.deepEqual(candidate.candidateAsset.referenceImages.map(reference => reference.sourceItemId).sort(), fixedRefs);
+            const waistUp = /^(?:中景|MS)$/.test(shot.directorContract.shot_size || '');
+            const expectedRefs = waistUp ? fixedRefs.filter(id => id.includes('portrait')) : fixedRefs;
+            assert.deepEqual(candidate.candidateAsset.referenceImages.map(reference => reference.sourceItemId).sort(), expectedRefs);
             assert.ok(candidate.candidateAsset.referenceIds.includes(shot.directorContract.referenceIds[0]));
             const imageResponse = await worker.fetch(new Request(new URL(candidate.candidateAsset.url, 'https://unit.test')), env);
             assert.equal(imageResponse.status, 200);
@@ -267,7 +269,7 @@ test('site plan and multi-scene candidate generation keep face, outfit, and per-
         assert.equal(imagePrompts.length, shots.length);
         assert.ok(requestPrompts.every(prompt => /米白色针织上衣、卡其色半身裙、棕色短靴/.test(prompt)));
         assert.ok(shots.every((shot, index) => requestPrompts[index].includes(shot.scene)));
-        assert.ok(imagePrompts.every(prompt => prompt.hasFace && prompt.hasOutfit));
+        assert.ok(imagePrompts.every((prompt, index) => prompt.hasFace && prompt.hasOutfit === !/^(?:中景|MS)$/.test(shots[index].directorContract.shot_size || '')));
         assert.ok(imagePrompts.every(prompt => /Required pose:/.test(prompt.prompt)));
         assert.ok(imagePrompts.every(prompt => /written wardrobe contract (?:is authoritative for exact garments|identifies the outfit)/.test(prompt.prompt)));
         assert.ok(imagePrompts.every(prompt => /Do not copy unrequested bags, jewelry, hats/.test(prompt.prompt)));

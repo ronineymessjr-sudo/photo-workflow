@@ -172,13 +172,18 @@ test('MS waist-up framing stays at the waist when the wardrobe lists a full skir
         reference_brief: { modelDesc: wardrobe },
         shot_contract: {
             shot_language: '公园中景人像', shot_size: '中景', referenceIds: ['pose-1'],
-            generator_prompt: 'Waist-up portrait, frame from the top of the head through the natural waist; lower edge cuts at the waistline.',
+            generator_prompt: 'Waist-up portrait. Crop below the waist and keep the face visible.',
             model_pose: '自然坐姿，肩颈放松', wardrobe_styling: wardrobe,
         } };
     let translationSystem;
     let translationInput;
     let imagePrompt;
-    await generateCloudCandidate(input, { referenceContext, fetchImpl, ai: { run: async (model, payload) => {
+    const fetchedReferenceUrls = [];
+    let sentImageSlots;
+    const result = await generateCloudCandidate(input, { referenceContext, fetchImpl: async url => {
+        fetchedReferenceUrls.push(String(url));
+        return fetchImpl(url);
+    }, ai: { run: async (model, payload) => {
         if (model.includes('llama')) {
             translationSystem = payload.messages[0].content;
             translationInput = payload.messages[1].content;
@@ -186,6 +191,7 @@ test('MS waist-up framing stays at the waist when the wardrobe lists a full skir
         }
         const form = await new Response(payload.multipart.body, { headers: { 'Content-Type': payload.multipart.contentType } }).formData();
         imagePrompt = String(form.get('prompt'));
+        sentImageSlots = [form.has('input_image_0'), form.has('input_image_1')];
         return { image: Buffer.from(jpeg).toString('base64') };
     } } });
 
@@ -193,6 +199,8 @@ test('MS waist-up framing stays at the waist when the wardrobe lists a full skir
     assert.match(translationSystem, /wardrobe contract applies only to clothing visible inside this crop/);
     assert.match(translationSystem, /never widen or lower the framing to display the complete outfit/);
     assert.match(translationInput, /Required waist-up crop: frame from the top of the head through the natural waistline/);
+    assert.match(translationInput, /Shot contract: Waist-up portrait\. Crop at the natural waistline/);
+    assert.doesNotMatch(translationInput, /Crop below the waist/);
     assert.match(translationInput, /Exclude the hips and everything below, including skirt below the waist, legs and shoes/);
     assert.match(translationInput, /Written wardrobe contract: 象牙白衬衫、藏青色及踝长裙、黑色皮鞋/);
     assert.match(imagePrompt, /Required camera framing: Waist-up portrait from the top of the head through the natural waistline/);
@@ -200,8 +208,14 @@ test('MS waist-up framing stays at the waist when the wardrobe lists a full skir
     assert.match(imagePrompt, /do not widen or lower framing to show the full skirt, legs or shoes/);
     assert.match(imagePrompt, /象牙白衬衫、藏青色及踝长裙、黑色皮鞋/);
     assert.match(imagePrompt, /Reference image 1, the face photograph, controls facial identity/);
-    assert.match(imagePrompt, /Reference image 2 is secondary guidance for material and palette only/);
+    assert.match(imagePrompt, /Only the face identity reference is supplied; the full-body costume reference is omitted so it cannot set the framing/);
+    assert.doesNotMatch(imagePrompt, /Reference image 2 is secondary guidance for material and palette only/);
     assert.doesNotMatch(imagePrompt, /Head-to-toe portrait|show both shoes and ground beneath them/i);
+    assert.deepEqual(sentImageSlots, [true, false]);
+    assert.equal(result.referenceImages.length, 1);
+    assert.equal(result.referenceImages[0].kind, 'portrait');
+    assert.equal(fetchedReferenceUrls.length, 1);
+    assert.match(fetchedReferenceUrls[0], /portrait\/thumbs\/face\.webp$/);
 });
 
 test('clothing detail image prompt keeps the specified garment in a tight crop', async () => {
