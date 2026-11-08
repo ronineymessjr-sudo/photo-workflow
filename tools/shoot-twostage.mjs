@@ -172,7 +172,9 @@ for (const row of rows) {
     const finalPath = path.join(OUT, `${shotId}-2-face.png`);
     await writeFile(finalPath, swapped);
     console.log(`ok ${((Date.now() - started) / 1000).toFixed(0)}s ${Math.round(swapped.length / 1024)}KB`);
-    report.push({ shotId, size, angle: spec.camera_angle, ok: true, compose: composePath, final: finalPath });
+    // swapped must be recorded here too: leaving it undefined made every frame
+    // report as composition-only and the contact sheet labelled them all wrong.
+    report.push({ shotId, size, angle: spec.camera_angle, ok: true, composed: true, swapped: true, compose: composePath, final: finalPath });
 }
 
 await writeFile(path.join(OUT, 'report.json'), JSON.stringify({
