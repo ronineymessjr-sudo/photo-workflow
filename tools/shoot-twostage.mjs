@@ -31,15 +31,27 @@ const PICK = (argOf('shots') || '').split(',').map(item => item.trim()).filter(B
 const BRIEF = argOf('brief') || 'scene-spiral-stairs';
 const OUT = argOf('out') || `runtime/twostage/${BRIEF}`;
 const IDENTITY = argOf('identity') || 'runtime/deploy-test/identity.png';
+// Described in words as well as supplied as an image: the compose stage gets no
+// reference at all, so without this every wide frame invents its own person - the
+// nine-shot run produced a young woman in the swapped frames and a grey-haired
+// man in the full-body ones, which reads as two different shoots.
+const SUBJECT = argOf('subject') || '一名二十多岁的东亚女性，齐耳深色短发，身形偏瘦';
 const STYLE = argOf('style') || '';
 const TOKEN = process.env.MODELSCOPE_TOKEN || '';
 // Every shot must end with a usable frame. A transport error or a blank card is
 // retried rather than accepted, and the report is rewritten after each shot so an
 // interrupted run still leaves an accurate record of what exists.
 const ATTEMPTS = Math.max(1, Number(argOf('attempts')) || 3);
+// Skip the face transfer entirely: useful for checking composition and the
+// described subject without paying ten minutes per frame.
+const COMPOSE_ONLY = args.includes('--compose-only');
 const PACK = 'experiments/plan-quality-lab/prompt-packs/2026-10-27-deepseek/06-prompts-all.json';
 // Sizes where the face is large enough that swapping it is worth the wait.
-const SWAP_SIZES = new Set(['ECU', 'CU', 'MCU', 'MS', 'MFS']);
+// FS is included: at full body the face is small but the person's age, hair and
+// build are plainly readable, so a frame left on the model's own invention reads
+// as a different human being next to the swapped ones. WS/EWS are genuinely far
+// enough that the figure is anonymous.
+const SWAP_SIZES = new Set(['ECU', 'CU', 'MCU', 'MS', 'MFS', 'FS']);
 
 if (!TOKEN) {
     console.log('缺少 MODELSCOPE_TOKEN');
@@ -104,7 +116,7 @@ await mkdir(OUT, { recursive: true });
 
 const first = rows[0];
 const locked = {
-    subject: '一名成年人（同一人物，外观以身份参考图为准）',
+    subject: `${SUBJECT}（全组同一人物，外观以身份参考图为准）`,
     location: first.scene,
     weather: '室内，晴天侧窗光',
     timeOfDay: '白天',
@@ -181,8 +193,10 @@ for (const row of rows) {
     // Only swap where the face is actually legible. In a wide or full-body frame
     // the face occupies a few dozen pixels, so a 10-minute edit changes nothing
     // that survives viewing - and identity drift is invisible at that scale anyway.
-    if (!SWAP_SIZES.has(String(size).toUpperCase())) {
-        console.log('跳过换脸（脸太小，换了也看不出来）');
+    if (COMPOSE_ONLY || !SWAP_SIZES.has(String(size).toUpperCase())) {
+        // Two different reasons share this branch; saying "脸太小" when the caller
+        // asked for composition only is just wrong.
+        console.log(COMPOSE_ONLY ? '只构图（--compose-only）' : '跳过换脸（远景，人物不可辨识）');
         report.push({ shotId, size, angle: spec.camera_angle, ok: true, composed: true, swapped: false, compose: composePath, final: composePath });
         await saveReport();
         continue;
