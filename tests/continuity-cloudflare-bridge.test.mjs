@@ -562,3 +562,33 @@ test('the assembled direction always requires exactly one person', async () => {
     assert.match(text, /只有一个人/);
     assert.match(text, /不要出现第二个人/);
 });
+
+test('the direction carries the lab realism lock, not banned adjectives', async () => {
+    const { directionText, stripBannedWords } = await import('../api/continuity-generation.mjs');
+    const text = directionText({
+        prompt: '美术馆螺旋楼梯',
+        locked: { location: '美术馆螺旋楼梯' },
+        variant: { size: 'FS' },
+        size: 'FS',
+    });
+    // The whole nine-shot set came back flat-lit and AI-flavoured because the
+    // direction carried framing but no texture anchor. The lab pack's fix is a
+    // realism lock: film stock, true light falloff, venue wear.
+    assert.match(text, /真实感：/);
+    assert.match(text, /Kodak Portra 400/);
+    assert.match(text, /背光一侧真正暗下去/);
+    // A named film stock in the plan overrides the default.
+    const custom = directionText({
+        prompt: '黄昏天台',
+        locked: { location: '天台', filmStock: 'CineStill 800T' },
+        variant: { size: 'MS' },
+        size: 'MS',
+    });
+    assert.match(custom, /CineStill 800T/);
+    // Banned aesthetic words are stripped wherever translated or assembled text
+    // enters the prompt.
+    assert.equal(
+        stripBannedWords('photorealistic portrait, 8K, masterpiece, cinematic lighting, soft glow'),
+        'portrait, soft',
+    );
+});
