@@ -130,10 +130,13 @@ export function directionText({ prompt, locked, variant, poseRef, size }) {
 // field here now reaches both.
 function directionFields({ prompt, locked, variant, poseRef, framing }) {
     return [
-        ['prompt', prompt],
-        // Immediately after the picture itself: the crop has to win over any pose
-        // detail that would push the frame wider.
+        // Framing first, deliberately. Measured: when the picture description ran
+        // first, a shot asking for waist-up came back full body - the prose
+        // describes walking down stairs, and the model satisfies the action by
+        // widening the frame. Putting the crop ahead of the prose is the only
+        // ordering that moved the result upward.
         ['framing', framing],
+        ['prompt', prompt],
         ['subject', locked?.subject],
         ['wardrobeGroup', directive(locked?.wardrobe)],
         ['style', locked?.styleProfile],
