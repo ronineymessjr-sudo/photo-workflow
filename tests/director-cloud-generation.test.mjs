@@ -75,7 +75,9 @@ test('the final image-model prompt keeps only the active shot scene and camera c
     assert.doesNotMatch(translationInput, /公园竹林小径|湖边木栈道|整组在公园/);
     assert.match(imagePrompt, /wooden lakeside pavilion/);
     assert.match(imagePrompt, /35mm photorealistic full-body portrait/);
-    assert.match(imagePrompt, /Head-to-toe portrait/);
+    assert.match(imagePrompt, /Fit the complete figure within 80% of the image height/);
+    assert.match(imagePrompt, /Required visible shot details: full hands and feet/);
+    assert.match(imagePrompt, /Do not include: extra people; flash lighting; cropped feet/);
     assert.doesNotMatch(imagePrompt, /公园竹林小径|湖边木栈道/);
 });
 
