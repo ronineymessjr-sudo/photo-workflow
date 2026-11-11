@@ -198,7 +198,7 @@ function directionFields({ prompt, locked, variant, poseRef, framing, film }) {
         ['subject', locked?.subject],
         ['wardrobeGroup', directive(locked?.wardrobe)],
         ['style', locked?.styleProfile],
-        ['location', locked?.location],
+        ['location', variant?.scene || locked?.location],
         ['weather', locked?.weather],
         ['timeOfDay', locked?.timeOfDay],
         // The realism lock runs right after the scene fields so the film stock
@@ -216,7 +216,7 @@ function directionFields({ prompt, locked, variant, poseRef, framing, film }) {
         // unlit plans came back flat and evenly bright.
         ['lighting', directive(variant?.lighting) || pickLightKit({
             timeOfDay: locked?.timeOfDay || variant?.timeOfDay,
-            location: locked?.location || variant?.location,
+            location: variant?.scene || locked?.location || variant?.location,
             weather: locked?.weather || variant?.weather,
             mood: locked?.mood,
         }).light],
