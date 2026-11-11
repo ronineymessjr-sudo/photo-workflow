@@ -650,7 +650,10 @@ export default {
                     }
                     if (!result) {
                         if (polled.status !== 'succeeded') {
-                            result = { status: 200, body: { status: 'pending', shotId: body?.shotId, taskId: body?.taskId } };
+                            result = { status: 200, body: {
+                                status: 'pending', shotId: body?.shotId, taskId: body?.taskId,
+                                providerStatus: polled.upstream || 'PENDING',
+                            } };
                         } else {
                             try {
                                 const stored = await storeAsset({
