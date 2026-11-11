@@ -78,6 +78,22 @@ test('continuity collect returns a stored image for a succeeded async task', asy
     }
 });
 
+test('continuity collect preserves the upstream task status while it is pending', async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async () => Response.json({ task_status: 'RUNNING' });
+    try {
+        const { status, body } = await call('/api/continuity/collect', {
+            taskId: 'task-running', shotId: 'shot-01',
+        }, 'POST', { MODELSCOPE_TOKEN: 'test-only' });
+        assert.equal(status, 200);
+        assert.equal(body.status, 'pending');
+        assert.equal(body.taskId, 'task-running');
+        assert.equal(body.providerStatus, 'RUNNING');
+    } finally {
+        globalThis.fetch = originalFetch;
+    }
+});
+
 test('continuity collect marks failed provider tasks terminal and transient polling errors retryable', async () => {
     const originalFetch = globalThis.fetch;
     try {
