@@ -18,6 +18,8 @@ const QC_LABELS = {
 
 let state = load();
 let schema = null;
+const generatingShots = new Set();
+const collectingTasks = new Set();
 
 function safeThumbUrl(raw) {
     if (typeof raw !== 'string' || !raw) return '';
@@ -97,6 +99,7 @@ async function createNewGroup() {
     if (!ok) { toast(payload.error || '初始化失败', 'error'); return; }
     state.group = payload.group;
     state.qc = {};
+    state.generationErrors = {};
     save();
     render();
     toast('已建立连续性分组，三张参考图待确认', 'ok');
@@ -109,6 +112,7 @@ function importGroup(file) {
             const parsed = JSON.parse(String(reader.result));
             state.group = parsed.group || parsed;
             state.qc = parsed.qc || {};
+            state.generationErrors = {};
             save();
             render();
             toast('已导入分组契约', 'ok');
@@ -219,6 +223,9 @@ function renderShots() {
     ]);
     const body = el('tbody');
     for (const shot of shots) {
+        const pendingJob = state.pendingJobs?.[shot.shotId];
+        const generationInProgress = generatingShots.has(shot.shotId);
+        const collectionInProgress = pendingJob?.taskId && collectingTasks.has(pendingJob.taskId);
         const verdict = state.qc?.[shot.shotId];
         const result = state.results?.[shot.shotId];
         const resultThumb = safeThumbUrl(result?.image?.path);
@@ -236,7 +243,11 @@ function renderShots() {
             el('td', {}, [
                 el('button', { text: '交接卡', onclick: () => openHandoff(shot.shotId) }),
                 el('button', { class: 'ghost', text: '取请求', onclick: () => requestShot(shot.shotId) }),
-                el('button', { class: 'ghost', text: '生成这张', onclick: () => generateShot(shot.shotId) }),
+                el('button', { class: 'ghost', text: state.generationErrors?.[shot.shotId] ? '重新生成（上次失败）' : '生成这张', ...(pendingJob || generationInProgress ? { disabled: 'disabled' } : {}), onclick: () => generateShot(shot.shotId) }),
+                verdict?.verdict === 'retry' && (state.retryCounts?.[shot.shotId] || 0) < 2
+                    ? el('button', { class: 'ghost', text: `按原镜头模板重试（${state.retryCounts?.[shot.shotId] || 0}/2）`, ...(pendingJob || generationInProgress ? { disabled: 'disabled' } : {}), onclick: () => generateShot(shot.shotId, true) }) : null,
+                pendingJob
+                    ? el('button', { class: 'ghost', text: collectionInProgress ? '正在查询生成任务…' : '继续查询生成任务', ...(collectionInProgress ? { disabled: 'disabled' } : {}), onclick: () => collectShot(shot.shotId) }) : null,
                 el('button', { class: 'ghost', text: '质检', onclick: () => openQc(shot.shotId) }),
                 resultThumb ? el('div', { class: 'row' }, [
                     el('img', { src: resultThumb, class: 'shot-thumb', alt: `${shot.shotId} 生成结果` }),
@@ -268,22 +279,147 @@ async function requestShot(shotId) {
 // One click = one shot. If the service is not configured the server answers 503
 // with the exact missing env vars; we show that verbatim instead of inventing a
 // placeholder image.
-async function generateShot(shotId) {
+async function generateShot(shotId, retry = false) {
+    if (state.pendingJobs?.[shotId] || generatingShots.has(shotId)) return;
     const providerId = document.getElementById('f-provider').value;
     const output = document.getElementById('request-output');
-    output.textContent = `${shotId} 生成中…`;
-    const { ok, status, payload } = await api('/api/continuity/generate', { group: state.group, shotId, providerId });
-    if (!ok) {
-        const missing = payload?.details?.missing?.join('、') || '';
-        output.textContent = `${status} ${payload.code || ''}\n${payload.error || ''}${missing ? `\n缺少环境变量：${missing}` : ''}`;
-        toast(`${payload.code || status}${missing ? '：缺 ' + missing : ''}`, 'error');
-        return;
-    }
-    state.results = { ...(state.results || {}), [shotId]: payload };
-    output.textContent = JSON.stringify(payload, null, 2);
-    save();
+    const retryCount = state.retryCounts?.[shotId] || 0;
+    if (retry && retryCount >= 2) { toast('该镜头已达到两次重试上限。', 'error'); return; }
+    const attempt = retry ? retryCount + 1 : retryCount;
+    generatingShots.add(shotId);
     render();
-    toast(`${shotId} 已生成：${payload.image.assetId}`, 'ok');
+    output.textContent = `${shotId} 生成中…`;
+    try {
+        let seed;
+        if (providerId === 'modelscope-qwen-edit') {
+            const seedBase = 428193 + Math.max(0, Math.min(2, Number(attempt) || 0)) * 10000;
+            let prepared;
+            try {
+                prepared = await api('/api/continuity/requests', { group: state.group, providerId, shotIds: [shotId], seedBase });
+            } catch (error) {
+                output.textContent = `${shotId} 请求准备失败：${String(error?.message || error)}`;
+                toast('网络请求失败，重试次数未扣减。', 'error');
+                return;
+            }
+            if (!prepared.ok) {
+                output.textContent = `${prepared.status} ${prepared.payload.code || ''}\n${prepared.payload.error || '无法准备生成请求'}`;
+                toast(prepared.payload.error || '无法准备生成请求', 'error');
+                return;
+            }
+            seed = prepared.payload.requests?.find(item => item.shotId === shotId)?.seed;
+        }
+        let response;
+        try {
+            response = await api('/api/continuity/generate', { group: state.group, shotId, providerId, attempt });
+        } catch (error) {
+            output.textContent = `${shotId} 生成请求失败：${String(error?.message || error)}`;
+            toast('网络请求失败，重试次数未扣减。', 'error');
+            return;
+        }
+        const { ok, status, payload } = response;
+        if (!ok) {
+            const missing = payload?.details?.missing?.join('、') || '';
+            output.textContent = `${status} ${payload.code || ''}\n${payload.error || ''}${missing ? `\n缺少环境变量：${missing}` : ''}`;
+            toast(`${payload.code || status}${missing ? '：缺 ' + missing : ''}`, 'error');
+            return;
+        }
+        if (retry) {
+            state.retryCounts = { ...(state.retryCounts || {}), [shotId]: attempt };
+            save();
+        }
+        if (state.generationErrors?.[shotId]) {
+            const generationErrors = { ...(state.generationErrors || {}) };
+            delete generationErrors[shotId];
+            state.generationErrors = generationErrors;
+        }
+        let completed = payload;
+        if (status === 202 || payload?.status === 'pending') {
+            state.pendingJobs = { ...(state.pendingJobs || {}), [shotId]: {
+                taskId: payload.taskId, providerId, attempt,
+                ...(Number.isSafeInteger(payload.seed) || Number.isSafeInteger(seed) ? { seed: Number.isSafeInteger(payload.seed) ? payload.seed : seed } : {}),
+            } };
+            save();
+            render();
+            completed = await collectShot(shotId, { waitMs: 120000, quiet: true });
+            if (completed?.status === 'failed' && completed?.terminal === true) {
+                output.textContent = `${payload.taskId} 已失败：${completed.error || completed.code || '生成失败'}；可以重新生成。`;
+                toast(`${completed.error || '生成失败'}；任务已结束，可以重新生成。`, 'error');
+                return;
+            }
+            if (!completed?.image?.assetId) {
+                output.textContent = `仍在生成，可稍后恢复查询：${payload.taskId}`;
+                toast('任务仍在运行，没有把排队状态当作成图。', 'warn');
+                return;
+            }
+        }
+        if (!completed?.image?.assetId || completed.shotId !== shotId) {
+            toast('服务未返回与当前镜头对应的成图，已阻止标记成功。', 'error');
+            return;
+        }
+        state.results = { ...(state.results || {}), [shotId]: { ...completed, attempt } };
+        output.textContent = JSON.stringify(completed, null, 2);
+        save();
+        render();
+        toast(`${shotId} 已生成并待质检：${completed.image.assetId}`, 'ok');
+    } finally {
+        generatingShots.delete(shotId);
+        render();
+    }
+}
+
+async function collectShot(shotId, { waitMs = 0, quiet = false } = {}) {
+    const job = state.pendingJobs?.[shotId];
+    if (!job?.taskId) return null;
+    if (collectingTasks.has(job.taskId)) return null;
+    collectingTasks.add(job.taskId);
+    render();
+    const deadline = Date.now() + waitMs;
+    try {
+        do {
+            if (waitMs) await new Promise(resolve => setTimeout(resolve, 3000));
+            let response;
+            try {
+                response = await api('/api/continuity/collect', { taskId: job.taskId, shotId, ...(Number.isSafeInteger(job.seed) ? { seed: job.seed } : {}) });
+            } catch (error) {
+                if (!quiet) toast(`查询失败：${String(error?.message || error)}；任务仍保留，可稍后再查。`, 'error');
+                return null;
+            }
+            const { ok, payload } = response;
+            if (!ok) {
+                if (payload?.terminal === true) {
+                    const pendingJobs = { ...(state.pendingJobs || {}) };
+                    delete pendingJobs[shotId];
+                    state.pendingJobs = pendingJobs;
+                    state.generationErrors = { ...(state.generationErrors || {}), [shotId]: { code: payload.code, error: payload.error } };
+                    save();
+                    render();
+                    if (!quiet) toast(`${payload.error || '上游生成失败'}；任务已结束，可以重新生成。`, 'error');
+                    return { status: 'failed', terminal: true, error: payload.error, code: payload.code };
+                }
+                if (!quiet) toast(payload?.error || '查询失败，任务仍保留，可稍后再查。', 'error');
+                return null;
+            }
+            if (payload?.status === 'succeeded' && payload.image?.assetId && payload.shotId === shotId) {
+                const pendingJobs = { ...(state.pendingJobs || {}) };
+                delete pendingJobs[shotId];
+                state.pendingJobs = pendingJobs;
+                const completed = { ...payload, ...(Number.isSafeInteger(payload.seed) || !Number.isSafeInteger(job.seed) ? {} : { seed: job.seed }), attempt: job.attempt };
+                state.results = { ...(state.results || {}), [shotId]: completed };
+                save();
+                document.getElementById('request-output').textContent = JSON.stringify(completed, null, 2);
+                if (!quiet) toast(`${shotId} 已生成并待质检。`, 'ok');
+                return completed;
+            }
+            if (payload?.status !== 'pending') {
+                if (!quiet) toast('上游没有返回成功图片；任务未标记为完成。', 'error');
+                return null;
+            }
+        } while (Date.now() < deadline);
+        return null;
+    } finally {
+        collectingTasks.delete(job.taskId);
+        render();
+    }
 }
 
 async function setAnchor(shotId) {

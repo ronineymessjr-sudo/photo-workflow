@@ -56,6 +56,50 @@ test('continuity provider catalog reports Seedream readiness without exposing cr
     assert.equal(JSON.stringify(configured.body).includes('test-only-provider-key'), false);
 });
 
+test('continuity collect returns a stored image for a succeeded async task', async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async input => {
+        if (String(input).includes('/v1/tasks/')) return Response.json({
+            task_status: 'SUCCEED', output_images: ['https://cdn.example.test/result.png'],
+        });
+        return new Response(Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64'), {
+            headers: { 'Content-Type': 'image/png' },
+        });
+    };
+    try {
+        const { status, body } = await call('/api/continuity/collect', { taskId: 'task-success', shotId: 'shot-01' }, 'POST', { MODELSCOPE_TOKEN: 'test-only' });
+        assert.equal(status, 200);
+        assert.equal(body.status, 'succeeded');
+        assert.equal(body.shotId, 'shot-01');
+        assert.ok(body.image.assetId);
+        assert.equal(body.qc.verdict, 'pending');
+    } finally {
+        globalThis.fetch = originalFetch;
+    }
+});
+
+test('continuity collect marks provider failures and HTTP errors as terminal and retryable', async () => {
+    const originalFetch = globalThis.fetch;
+    try {
+        for (const [taskId, response] of [
+            ['task-failed', Response.json({ task_status: 'FAILED', errors: { message: 'provider rejected task' } })],
+            ['task-canceled', Response.json({ task_status: 'CANCELED' })],
+            ['task-http-error', new Response('upstream unavailable', { status: 503 })],
+        ]) {
+            globalThis.fetch = async () => response.clone();
+            const { status, body } = await call('/api/continuity/collect', { taskId, shotId: 'shot-02' }, 'POST', { MODELSCOPE_TOKEN: 'test-only' });
+            assert.equal(status, 502);
+            assert.equal(body.status, 'failed');
+            assert.equal(body.terminal, true);
+            assert.equal(body.retryable, true);
+            assert.equal(body.shotId, 'shot-02');
+            assert.match(body.code, /^GENERATION_UPSTREAM_FAILED$/);
+        }
+    } finally {
+        globalThis.fetch = originalFetch;
+    }
+});
+
 test('the Studio bridge imports plan shots and retains selected library references', async () => {
     const { status, body } = await call('/api/continuity/from-studio', {
         planId: 'plan-api-1', planRevision: 3,

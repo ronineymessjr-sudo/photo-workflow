@@ -13,6 +13,7 @@ const STEPS = 24;
 
 import { assertReadyToGenerate, buildShotRequests, ContinuityError, CONTINUITY_PROVIDERS } from './continuity.mjs';
 import { storeAsset, readAsset, AssetError } from './continuity-assets.mjs';
+import { pickLightKit } from './light-kit.mjs';
 // Workers on compatibility_date 2024-01-01 does not inject a global Buffer.
 // Import it explicitly instead of raising the compat date, which would change
 // unrelated fetch/crypto behaviour across the whole Worker.
@@ -116,10 +117,67 @@ async function callReferenceJson({ env, fetchImpl, prompt, size, aspect, seed, r
 // The assembled direction text, exported so tools can compose a frame with the
 // text-to-image model using exactly the same wording the edit models receive.
 // Two implementations of this used to drift apart; there is only one now.
+// One person, stated once and reused by every prompt builder. A plan line like
+// "人物停在下一层内侧踏步" was read as two positions and produced the same person
+// twice in one frame: a valid photograph that fails the shoot.
+// Phrased as a requirement first, an exclusion second. Written as "only one
+// person is allowed", the model dropped the subject entirely and returned an empty
+// staircase - a constraint about absence invites absence.
+const RULE_ONE_PERSON = '画面中必须有一个人，而且只有一个人：人物清楚可见、是画面主体；不要出现第二个人，不要复制、镜像或添加倒影。';
+function subjectCountHint(locked = {}, prompt = '') {
+    const brief = `${locked.people || ''} ${locked.subject || ''} ${prompt || ''}`;
+    const explicit = String(locked.people || '').trim().match(/^(\d{1,3}|[一二两三四五六七八九十]+)(?:位|名|个|人)?$/);
+    const chinese = { 一: 1, 二: 2, 两: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9, 十: 10 };
+    if (explicit) return /^\d+$/.test(explicit[1]) ? Number(explicit[1]) : (chinese[explicit[1]] || 1);
+    if (/双人|两人|二人|情侣|夫妻|伴侣|闺蜜|多人|couple|duo|two[- ]people|two[- ]person/i.test(brief)) return 2;
+    const count = brief.match(/(?:^|[^\d])([2-9]|[一二两三四五六七八九十])\s*(?:位|名|个|人)/);
+    if (!count) return 1;
+    return /^\d+$/.test(count[1]) ? Number(count[1]) : (chinese[count[1]] || 1);
+}
+
+function subjectRule(locked, prompt) {
+    const count = subjectCountHint(locked, prompt);
+    return count > 1
+        ? `画面中必须有${count}位人物，人数与人物关系严格按照拍摄需求；不要复制、镜像或添加倒影。`
+        : RULE_ONE_PERSON;
+}
+
+// Aesthetic-banned words, from the plan-quality-lab de-AI diagnosis
+// (prompt-packs/2026-10-27-deepseek/07-AI味诊断与去AI化方案.md). Each one
+// measurably pushes the model toward render-look output: flat light, polished
+// skin, staged sets. "Photorealistic photograph" used to open every FLUX prompt
+// here - it is the first entry on the lab's banned list.
+const BANNED_AESTHETIC_WORDS = [
+    'photorealistic', '8k', 'ultra detailed', 'masterpiece', 'award winning',
+    'hyperrealistic', 'perfect skin', 'cinematic lighting', 'dreamy', 'ethereal',
+    'studio backdrop', 'hdr', 'glow', 'flawless',
+];
+
+export function stripBannedWords(text) {
+    let out = String(text || '');
+    for (const word of BANNED_AESTHETIC_WORDS) {
+        const phrase = word.replace(/ /g, '\\s+');
+        out = out.replace(new RegExp(`(^|[^\\p{L}\\p{N}_])${phrase}(?=$|[^\\p{L}\\p{N}_])[,.;:]?`, 'giu'), '$1');
+    }
+    return out.replace(/,\s*,+/g, ',').replace(/\s{2,}/g, ' ').replace(/\s+([,.;:])/g, '$1').trim();
+}
+
+// The realism lock from the lab pack (PROMPTS-TEXTURE.md). Its three laws:
+// film stock beats any adjective, light must be uneven, the venue must be a
+// little dirty. Stated as physical constraints rather than adjectives.
+export function realismTextZh(film = 'Kodak Portra 400') {
+    return `真实感：这是一张真实拍摄的 ${film} 胶片照片，不是渲染图；胶片颗粒与高光过渡自然；光衰减真实，背光一侧真正暗下去，暗部不被提亮；场景有使用痕迹（磨损、水渍、灰尘），皮肤有毛孔与细小绒毛，不做磨皮、不像影棚布景。`;
+}
+
 export function directionText({ prompt, locked, variant, poseRef, size }) {
     const framed = { ...variant, size: size || variant?.size };
-    const fields = directionFields({ prompt, locked, variant: framed, poseRef, framing: framingZh(framed) });
-    return fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`).join('\n');
+    const film = directive(locked?.filmStock) || directive(variant?.filmStock) || 'Kodak Portra 400';
+    const fields = directionFields({ prompt, locked, variant: framed, poseRef, framing: framingZh(framed), film });
+    const body = fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`).join('\n');
+    // Stated as a rule rather than left implicit. Without it, a plan line like
+    // "人物停在下一层内侧踏步" was read as two positions and produced the same
+    // person twice in one frame - a real photograph that fails the shoot.
+    return `${body}\n${subjectRule(locked, prompt)}`;
 }
 
 // One field list shared by every adapter.
@@ -128,7 +186,7 @@ export function directionText({ prompt, locked, variant, poseRef, size }) {
 // their own prompt and drifted: Seedream silently lost the framing instruction,
 // so every frame came back as a full standing figure filling the frame. Adding a
 // field here now reaches both.
-function directionFields({ prompt, locked, variant, poseRef, framing }) {
+function directionFields({ prompt, locked, variant, poseRef, framing, film }) {
     return [
         // Framing first, deliberately. Measured: when the picture description ran
         // first, a shot asking for waist-up came back full body - the prose
@@ -143,13 +201,25 @@ function directionFields({ prompt, locked, variant, poseRef, framing }) {
         ['location', locked?.location],
         ['weather', locked?.weather],
         ['timeOfDay', locked?.timeOfDay],
+        // The realism lock runs right after the scene fields so the film stock
+        // anchors every concrete description that follows it.
+        ['realism', realismTextZh(film)],
         ['pose', poseRef?.title ? `摆姿库姿势：${poseRef.title}${poseRef.angle ? `（参考角度 ${poseRef.angle}）` : ''}` : ''],
         ['poseDirection', poseRef?.direction],
         ['action', poseInFrame(variant?.action, variant?.size)],
         ['camera', variant?.camera],
         ['lens', variant?.lens],
         ['placement', variant?.subjectPlacement],
-        ['lighting', variant?.lighting],
+        // A plan that names its lighting keeps it; one that does not inherits a
+        // structured kit entry matched by time of day, location and weather -
+        // distilled from the lab briefs that were actually run. Without this,
+        // unlit plans came back flat and evenly bright.
+        ['lighting', directive(variant?.lighting) || pickLightKit({
+            timeOfDay: locked?.timeOfDay || variant?.timeOfDay,
+            location: locked?.location || variant?.location,
+            weather: locked?.weather || variant?.weather,
+            mood: locked?.mood,
+        }).light],
         ['wardrobeShot', directive(variant?.wardrobe)],
         ['props', directive(variant?.props)],
         // The plan's crop_boundary often describes a different framing than
@@ -165,6 +235,7 @@ function directionFields({ prompt, locked, variant, poseRef, framing }) {
 const FIELD_LABELS_ZH = {
     prompt: '画面', subject: '人物', wardrobeGroup: '全组服装', style: '风格',
     location: '场景', weather: '天气', timeOfDay: '时间', framing: '取景',
+    realism: '真实感',
     pose: '姿势', poseDirection: '摆姿指导', action: '动作', camera: '机位',
     lens: '焦段', placement: '构图位置', lighting: '光线', wardrobeShot: '服装',
     props: '道具', crop: '裁切', mustShow: '必须出现', rejectIf: '不得出现',
@@ -345,7 +416,7 @@ export async function submitModelScope({ env, prompt, size, seed, references, va
     }
     for (const reference of references) images.push(reference.dataUrl);
     const fields = directionFields({ prompt, locked, variant, poseRef, framing: framingZh(variant) });
-    const direction = fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`).join('\n');
+    const direction = `${fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`).join('\n')}\n${subjectRule(locked, prompt)}`;
 
     const response = await fetchImpl(MODELSCOPE_ENDPOINT, {
         method: 'POST',
@@ -445,7 +516,7 @@ async function callModelScope({ env, prompt, size, seed, references, variant, po
     }
 
     const fields = directionFields({ prompt, locked, variant, poseRef, framing: framingZh(variant) });
-    const direction = fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`).join('\n');
+    const direction = `${fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`).join('\n')}\n${subjectRule(locked, prompt)}`;
 
     const submit = await fetchImpl(MODELSCOPE_ENDPOINT, {
         method: 'POST',
@@ -550,7 +621,9 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
         variant?.subjectPlacement ? `人物在画面中的位置：${clamp(variant.subjectPlacement, 40)}` : '',
         // The plan names the light. Not sending it is why frames came back with
         // generic studio lighting no matter what the shot called for.
-        directive(variant?.lighting) ? `现场光线：${clamp(directive(variant.lighting), 80)}` : '',
+        directive(variant?.lighting) ? `现场光线：${clamp(directive(variant.lighting), 80)}` : (pickLightKit({
+            timeOfDay: locked?.timeOfDay, location: locked?.location, weather: locked?.weather,
+        }).light),
         directive(variant?.wardrobe) ? `服装与妆发：${directive(variant.wardrobe)}` : '',
         directive(variant?.props) ? `道具：${directive(variant.props)}` : '画面不额外添加道具',
         // Crop is already expressed by the framing line, and "16mm f/8 1/1000s"
@@ -589,11 +662,14 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
     // longer prompts degrade rather than truncate cleanly. The version below runs
     // ~400 tokens so nothing important falls off the end.
     const composed = [
-        'Photorealistic photograph. Follow the subject brief for who appears in the frame; do not add people.',
+        // Opens with the realism lock, never with "photorealistic" - that word is
+        // the first entry on the lab pack's banned list and pushes toward the
+        // flat-lit render look this pipeline existed to escape.
+        'Real photograph, real optical light falloff, the unlit side genuinely dark, venue shows wear, visible skin pores, no retouching. Follow the subject brief for who appears in the frame; do not add people.',
         anchorBuffer
             ? 'Image 1 is the accepted frame from this shoot. Preserve established identity and group-wide wardrobe continuity except where the current shot contract specifies a change. Follow that contract for pose, action, scene, lighting, camera and framing. Image 2 is the approved visual-style reference.'
             : 'Image 1 supplies the identity reference; Image 2 is the approved visual-style reference.',
-        direction ? `Shot: ${direction}.` : '',
+        direction ? `Shot: ${stripBannedWords(direction)}.` : '',
         directive(variant?.mustShow) ? `Must contain: ${shortList(variant.mustShow)}.` : '',
         directive(variant?.rejectIf) ? `Redo if: ${shortList(variant.rejectIf)}.` : '',
         framingLine(variant),
@@ -637,7 +713,7 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
  * Generates exactly one shot. Never loops, never fans out: the caller decides
  * which shot to (re)make, which is what keeps retry scoped to a single frame.
  */
-export async function generateShot({ group, shotId, providerId = '', env = {}, fetchImpl = fetch, store = null, submitOnly = false } = {}) {
+export async function generateShot({ group, shotId, providerId = '', env = {}, fetchImpl = fetch, store = null, submitOnly = false, attempt = 0 } = {}) {
     // Fall back to the provider pinned on the contract, so the shoot keeps using
     // the brush it was approved with.
     providerId = providerId || group?.imageProvider || '';
@@ -646,7 +722,7 @@ export async function generateShot({ group, shotId, providerId = '', env = {}, f
         throw new ContinuityError('CONTINUITY_SHOT_UNKNOWN', `没有这个镜头：${shotId}`, 404);
     }
     // Gate first: references confirmed, master human-confirmed, provider capable.
-    const requests = buildShotRequests(group, { providerId, shotIds: [shotId] });
+    const requests = buildShotRequests(group, { providerId, shotIds: [shotId], seedBase: 428193 + Math.max(0, Math.min(2, Number(attempt) || 0)) * 10000 });
     const request = requests[0];
     if (!request) throw new ContinuityError('CONTINUITY_SHOT_UNKNOWN', `没有这个镜头：${shotId}`, 404);
 
@@ -689,7 +765,7 @@ export async function generateShot({ group, shotId, providerId = '', env = {}, f
     // generation cannot be held open behind the Pages proxy (30s ceiling).
     if (submitOnly && providerId === 'modelscope-qwen-edit') {
         const submitted = await submitModelScope({
-            env, prompt: request.prompt, references,
+            env, prompt: request.prompt, seed: request.seed, references,
             variant: request.variant,
             poseRef: (group.shots || []).find(shot => shot.shotId === shotId)?.poseRef || null,
             anchor: request.anchor, locked: request.locked, store, fetchImpl,
@@ -754,7 +830,7 @@ async function englishPrompt(ai, prompt) {
             messages: [
                 {
                     role: 'system',
-                    content: 'Translate the user text into concise English photography instructions, 90 words maximum. Keep every concrete constraint: how many people, framing and crop, camera height, subject position, pose and action, location and its details, time of day, weather, lighting direction and quality, colour grade. Compress repetition instead of expanding it. Do not add anything that is not stated. Do not describe faces or clothing beyond what is given, since reference images supply those. Return only the English text, no preamble.',
+                    content: 'Translate the user text into concise English photography instructions, 120 words maximum. Keep every concrete constraint: how many people, framing and crop, camera height, subject position, pose and action, location and its details, time of day, weather, lighting direction and quality, colour grade. Keep any film stock and camera name in the text verbatim. Never use these words: photorealistic, masterpiece, 8k, cinematic lighting, dreamy, ethereal, HDR, glow. Compress repetition instead of expanding it. Do not add anything that is not stated. Do not describe faces or clothing beyond what is given, since reference images supply those. Return only the English text, no preamble.',
                 },
                 { role: 'user', content: prompt },
             ],

@@ -546,3 +546,105 @@ test('a wide frame keeps the whole pose', async () => {
     assert.match(text, /单脚踩在台阶上/, '全身景别不该裁掉姿势');
     assert.match(text, /从头到脚完整入画/);
 });
+
+test('the assembled direction always requires exactly one person', async () => {
+    const { directionText } = await import('../api/continuity-generation.mjs');
+    const text = directionText({
+        prompt: '美术馆螺旋楼梯',
+        locked: { location: '美术馆螺旋楼梯' },
+        variant: { size: 'FS' },
+        size: 'FS',
+    });
+    // Written as "only one person is allowed", the model returned an empty
+    // staircase; written as "there must be one person, and only one", it returned
+    // the subject. Both halves have to be present.
+    assert.match(text, /必须有一个人/, '必须先要求有人，否则约束会被读成可以没有人');
+    assert.match(text, /只有一个人/);
+    assert.match(text, /不要出现第二个人/);
+});
+
+test('the direction carries the lab realism lock, not banned adjectives', async () => {
+    const { directionText, stripBannedWords } = await import('../api/continuity-generation.mjs');
+    const text = directionText({
+        prompt: '美术馆螺旋楼梯',
+        locked: { location: '美术馆螺旋楼梯' },
+        variant: { size: 'FS' },
+        size: 'FS',
+    });
+    // The whole nine-shot set came back flat-lit and AI-flavoured because the
+    // direction carried framing but no texture anchor. The lab pack's fix is a
+    // realism lock: film stock, true light falloff, venue wear.
+    assert.match(text, /真实感：/);
+    assert.match(text, /Kodak Portra 400/);
+    assert.match(text, /背光一侧真正暗下去/);
+    // A named film stock in the plan overrides the default.
+    const custom = directionText({
+        prompt: '黄昏天台',
+        locked: { location: '天台', filmStock: 'CineStill 800T' },
+        variant: { size: 'MS' },
+        size: 'MS',
+    });
+    assert.match(custom, /CineStill 800T/);
+    // Banned aesthetic words are stripped wherever translated or assembled text
+    // enters the prompt.
+    assert.equal(
+        stripBannedWords('photorealistic portrait, 8K, masterpiece, cinematic lighting, soft glow'),
+        'portrait, soft',
+    );
+    assert.equal(stripBannedWords('glowing window light; overglow; glow'), 'glowing window light; overglow;');
+});
+
+test('subject-count direction lock follows the requested people count', async () => {
+    const { directionText } = await import('../api/continuity-generation.mjs');
+    const { createGroup } = await import('../api/continuity.mjs');
+    const single = directionText({ prompt: '单人肖像', locked: { people: '1', subject: '一名成年人' }, variant: { size: 'MS' } });
+    assert.match(single, /必须有一个人/);
+    assert.match(single, /不要出现第二个人/);
+
+    const couple = directionText({ prompt: '情侣在公园并肩散步', locked: { people: '2', subject: '一对情侣' }, variant: { size: 'MS' } });
+    assert.match(couple, /必须有2位人物/);
+    assert.doesNotMatch(couple, /只有一个人|不要出现第二个人/);
+
+    const inferred = directionText({ prompt: '两位朋友在公园并肩散步', locked: { subject: '两位朋友' }, variant: { size: 'MS' } });
+    assert.match(inferred, /必须有2位人物/);
+
+    const group = directionText({ prompt: '三位家人在果园散步', locked: { people: '3' }, variant: { size: 'MS' } });
+    assert.match(group, /必须有3位人物/);
+
+    const plan = createGroup({ input: { theme: '家庭写真', scene: '果园', people: '2' }, shots: [] });
+    assert.match(plan.locked.subject, /2位成年人/);
+    assert.match(directionText({ prompt: '并肩散步', locked: plan.locked, variant: { size: 'MS' } }), /必须有2位人物/);
+});
+
+test('unlit plans inherit a structured light-kit entry', async () => {
+    const { pickLightKit } = await import('../api/light-kit.mjs');
+    const { directionText } = await import('../api/continuity-generation.mjs');
+    // Time-of-day match beats the default.
+    const golden = pickLightKit({ timeOfDay: '黄昏' });
+    assert.equal(golden.id, 'golden-hour');
+    assert.match(golden.light, /侧逆光/);
+    // Location-only match still hits.
+    const dappled = pickLightKit({ location: '大树下的斑驳光影' });
+    assert.equal(dappled.id, 'dappled');
+    // Nothing matches -> the honest default: one light direction, real falloff.
+    const fallback = pickLightKit({ timeOfDay: '不认识的时间' });
+    assert.equal(fallback.id, 'default');
+    assert.match(fallback.light, /背光一侧真正暗下去/);
+    // A plan with no lighting field gets a kit entry in its direction.
+    const direction = directionText({
+        prompt: '滨江步道夜跑',
+        locked: { location: '滨江跑步道', timeOfDay: '清晨' },
+        variant: { size: 'FS' },
+        size: 'FS',
+    });
+    assert.match(direction, /光线：.*低角度暖色侧逆光/);
+    // A plan that already names its lighting is never overridden.
+    const explicit = directionText({
+        prompt: '烛光餐桌',
+        locked: { location: '室内餐桌' },
+        variant: { size: 'MS', lighting: '两盏壁灯从背后打亮轮廓' },
+        size: 'MS',
+    });
+    assert.match(explicit, /两盏壁灯/);
+    assert.doesNotMatch(explicit, /烛光是唯一光源/);
+});

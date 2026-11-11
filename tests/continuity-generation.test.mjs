@@ -2,11 +2,17 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { generateShot, GenerationError, directionText } from '../api/continuity-generation.mjs';
 import { prescreen, mergeScores, summariseVision, PRE_SCREEN_ITEMS } from '../api/continuity-vision.mjs';
-import { createGroup, setReference, confirmMaster, setAnchor } from '../api/continuity.mjs';
+import { buildLocked, createGroup, setReference, confirmMaster, setAnchor } from '../api/continuity.mjs';
 import { storeAsset, createMemoryStore } from '../api/continuity-assets.mjs';
 import { groupFromStudio } from '../api/continuity-studio-bridge.mjs';
 
 const PNG_1PX = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+
+test('Chinese people counts keep the locked subject description consistent', () => {
+    const locked = buildLocked({ people: '两位', scene: '公园' });
+    assert.equal(locked.people, '两位');
+    assert.match(locked.subject, /2位成年人/);
+});
 
 async function readyGroup(store, { modelDesc = '一名成年人', lockedSubject = '' } = {}) {
     let group = createGroup({
@@ -208,6 +214,20 @@ test('Seedream cannot silently ignore an unreadable accepted anchor', async () =
     await assert.rejects(generateShot({ group, shotId: 'shot-01', providerId: 'volcengine-seedream', env: { ARK_API_KEY: 'test-only' }, store,
         fetchImpl: async () => assert.fail('missing anchor must stop before any provider request'),
     }), error => error.code === 'GENERATION_ANCHOR_MISSING');
+});
+
+test('same-shot retry changes only its deterministic seed', async () => {
+    const store = createMemoryStore();
+    const group = await readyGroup(store);
+    const seeds = [];
+    const fetchImpl = async (_url, options) => {
+        seeds.push(JSON.parse(options.body).seed);
+        return Response.json({ task_id: `task-${seeds.length}` });
+    };
+    await generateShot({ group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit', env: { MODELSCOPE_TOKEN: 'test-only' }, store, fetchImpl, submitOnly: true, attempt: 0 });
+    await generateShot({ group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit', env: { MODELSCOPE_TOKEN: 'test-only' }, store, fetchImpl, submitOnly: true, attempt: 1 });
+    assert.equal(seeds.length, 2);
+    assert.notEqual(seeds[0], seeds[1]);
 });
 
 test('generation without credentials fails closed and names the missing env vars', async () => {

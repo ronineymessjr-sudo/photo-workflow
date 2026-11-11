@@ -21,7 +21,7 @@ export async function prepareCloudCandidateReferences(input, options = {}) {
     });
     const context = await prepareReferenceContext({
         ...input.reference_brief,
-        scene: [input.reference_brief?.scene, input.scene_brief, input.brief].filter(Boolean).join('\n'),
+        scene: input.scene_brief || input.reference_brief?.scene || '',
         modelDesc: input.reference_brief?.modelDesc || input.brief,
         style: input.reference_brief?.style || input.style_direction,
         useReferenceLibrary: true,
@@ -52,7 +52,7 @@ export function compileCloudCandidateRequest(input, referenceContext) {
     if (!shotLanguage || generatorPrompt.length < 10) throw new Error('SHOT_CONTRACT_REQUIRED');
     const mustShow = list(contract.master_must_show || contract.must_show);
     const rejectIf = list(contract.master_reject_if || contract.reject_if);
-    const context = [clean(input.scene_brief, 200), clean(input.style_direction, 100), clean(brief, 200)].filter(Boolean);
+    const context = [clean(input.scene_brief, 250), clean(input.style_direction, 100)].filter(Boolean);
     const clothingDetail = /服装细节|衣料细节/.test(shotLanguage);
     const selectedPose = !clothingDetail
         ? referenceContext?.templates.find(template => template.kind === 'pose' && contract.referenceIds?.includes(template.id))
@@ -147,7 +147,6 @@ export async function generateCloudCandidate(input, { ai, referenceContext, fetc
         clothingDetail ? `Shot-specific wardrobe contract: ${wardrobeContract}` : `Written wardrobe contract: ${wardrobeContract}`,
         `Scene: ${clean(input.scene_brief || input.reference_brief?.scene, 250)}`,
         `Style: ${clean(input.style_direction || input.reference_brief?.style, 150)}`,
-        `User requirements: ${clean(input.brief, 250)}`,
     ].join('\n');
     let generationPrompt;
     let result;
