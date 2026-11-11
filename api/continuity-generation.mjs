@@ -415,8 +415,18 @@ export async function submitModelScope({ env, prompt, size, seed, references, va
         images.push(dataUrlFor(stored.buffer, stored.mime));
     }
     for (const reference of references) images.push(reference.dataUrl);
+    if (poseRef) {
+        if (!poseRef.imageUrl) throw new GenerationError('GENERATION_REFERENCE_MISSING', '已选择 PoseAtlas 姿势，但没有可用的姿势参考图', 409);
+        const poseImage = await fetchLibraryImage(poseRef.imageUrl, fetchImpl);
+        if (!poseImage) throw new GenerationError('GENERATION_REFERENCE_MISSING', 'PoseAtlas 姿势参考图无法读取；已停止生成，没有退化为纯文字姿势', 409);
+        images.push(dataUrlFor(poseImage.bytes, poseImage.mime));
+    }
     const fields = directionFields({ prompt, locked, variant, poseRef, framing: framingZh(variant) });
-    const direction = `${fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`).join('\n')}\n${subjectRule(locked, prompt)}`;
+    const direction = [
+        ...fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`),
+        ...(poseRef?.imageUrl ? ['最后一张参考图来自摆姿库，只参考身体动作、肢体关系和重心；不要复制线稿、参考图中的脸、服装、背景、文字或标记。'] : []),
+        subjectRule(locked, prompt),
+    ].join('\n');
 
     const response = await fetchImpl(MODELSCOPE_ENDPOINT, {
         method: 'POST',
@@ -453,11 +463,24 @@ export async function submitModelScope({ env, prompt, size, seed, references, va
 export async function pollModelScope({ env, taskId, fetchImpl = fetch }) {
     const token = env?.MODELSCOPE_TOKEN;
     if (!token) throw new GenerationError('GENERATION_NOT_CONFIGURED', '缺少魔搭 MODELSCOPE_TOKEN', 503, { missing: ['MODELSCOPE_TOKEN'] });
-    const response = await fetchImpl(MODELSCOPE_TASK + taskId, {
-        headers: { Authorization: `Bearer ${token}`, 'X-ModelScope-Task-Type': 'image_generation' },
-        signal: AbortSignal.timeout(20000),
-    });
-    if (!response.ok) throw new GenerationError('GENERATION_UPSTREAM_FAILED', `魔搭查询返回 ${response.status}`, 502);
+    if (typeof taskId !== 'string' || !/^[A-Za-z0-9_-]{1,128}$/.test(taskId)) {
+        throw new GenerationError('GENERATION_TASK_ID_INVALID', '魔搭任务编号无效', 400);
+    }
+    let response;
+    try {
+        response = await fetchImpl(MODELSCOPE_TASK + taskId, {
+            headers: { Authorization: `Bearer ${token}`, 'X-ModelScope-Task-Type': 'image_generation' },
+            signal: AbortSignal.timeout(20000),
+        });
+    } catch {
+        throw new GenerationError('GENERATION_POLL_RETRYABLE', '暂时无法查询魔搭任务，请稍后继续查询同一任务', 503);
+    }
+    if (!response.ok) {
+        if (response.status === 429 || response.status >= 500) {
+            throw new GenerationError('GENERATION_POLL_RETRYABLE', `魔搭暂时无法查询任务（HTTP ${response.status}），请稍后继续查询同一任务`, 503);
+        }
+        throw new GenerationError('GENERATION_UPSTREAM_FAILED', `魔搭查询返回 ${response.status}`, 502);
+    }
     const state = await response.json().catch(() => null);
     // ModelScope answers with "SUCCEED", not "SUCCEEDED". Matching only the
     // longer spelling meant a finished task read as pending forever, and the
@@ -471,7 +494,15 @@ export async function pollModelScope({ env, taskId, fetchImpl = fetch }) {
     }
     const url = state?.output_images?.[0] || state?.data?.[0]?.url;
     if (!url) throw new GenerationError('GENERATION_INVALID_RESPONSE', '魔搭任务成功但没有图片地址', 502);
-    const image = await fetchImpl(url, { signal: AbortSignal.timeout(30000) });
+    let image;
+    try {
+        image = await fetchImpl(url, { signal: AbortSignal.timeout(30000) });
+    } catch {
+        throw new GenerationError('GENERATION_POLL_RETRYABLE', '暂时无法下载魔搭结果，请稍后继续查询同一任务', 503);
+    }
+    if (image.status === 429 || image.status >= 500) {
+        throw new GenerationError('GENERATION_POLL_RETRYABLE', `暂时无法下载魔搭结果（HTTP ${image.status}），请稍后继续查询同一任务`, 503);
+    }
     if (!image.ok) throw new GenerationError('GENERATION_INVALID_RESPONSE', '下载魔搭结果失败', 502);
     const bytes = new Uint8Array(await image.arrayBuffer());
     return {
@@ -514,9 +545,19 @@ async function callModelScope({ env, prompt, size, seed, references, variant, po
     for (const reference of references) {
         images.push(reference.dataUrl);
     }
+    if (poseRef) {
+        if (!poseRef.imageUrl) throw new GenerationError('GENERATION_REFERENCE_MISSING', '已选择 PoseAtlas 姿势，但没有可用的姿势参考图', 409);
+        const poseImage = await fetchLibraryImage(poseRef.imageUrl, fetchImpl);
+        if (!poseImage) throw new GenerationError('GENERATION_REFERENCE_MISSING', 'PoseAtlas 姿势参考图无法读取；已停止生成，没有退化为纯文字姿势', 409);
+        images.push(dataUrlFor(poseImage.bytes, poseImage.mime));
+    }
 
     const fields = directionFields({ prompt, locked, variant, poseRef, framing: framingZh(variant) });
-    const direction = `${fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`).join('\n')}\n${subjectRule(locked, prompt)}`;
+    const direction = [
+        ...fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`),
+        ...(poseRef?.imageUrl ? ['最后一张参考图来自摆姿库，只参考身体动作、肢体关系和重心；不要复制线稿、参考图中的脸、服装、背景、文字或标记。'] : []),
+        subjectRule(locked, prompt),
+    ].join('\n');
 
     const submit = await fetchImpl(MODELSCOPE_ENDPOINT, {
         method: 'POST',

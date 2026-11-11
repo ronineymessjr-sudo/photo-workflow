@@ -89,6 +89,21 @@ test('a terminal collect failure clears the pending task and exposes a retry sta
     assert.equal(panel.state().generationErrors['shot-01'].code, 'GENERATION_UPSTREAM_FAILED');
 });
 
+test('a transient collect failure preserves the same task for another poll', async () => {
+    const panel = createPanel({
+        initialState: { pendingJobs: { 'shot-01': { taskId: 'task-retry', providerId: 'modelscope-qwen-edit', seed: 428501 } } },
+        fetchImpl: async () => jsonResponse(503, {
+            status: 'pending', terminal: false, retryable: true,
+            taskId: 'task-retry', shotId: 'shot-01', code: 'GENERATION_POLL_RETRYABLE',
+        }),
+    });
+
+    assert.equal(await panel.context.collectShot('shot-01'), null);
+    assert.equal(panel.state().pendingJobs['shot-01'].taskId, 'task-retry');
+    assert.equal(panel.state().pendingJobs['shot-01'].seed, 428501);
+    assert.equal(panel.state().generationErrors?.['shot-01'], undefined);
+});
+
 test('retry counts are unchanged for 401, 429, 503 and network failures', async t => {
     for (const failure of [
         async () => jsonResponse(401, { error: 'SIGN_IN_REQUIRED' }),
