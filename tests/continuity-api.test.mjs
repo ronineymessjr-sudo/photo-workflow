@@ -78,13 +78,12 @@ test('continuity collect returns a stored image for a succeeded async task', asy
     }
 });
 
-test('continuity collect marks provider failures and HTTP errors as terminal and retryable', async () => {
+test('continuity collect marks failed provider tasks terminal and transient polling errors retryable', async () => {
     const originalFetch = globalThis.fetch;
     try {
         for (const [taskId, response] of [
             ['task-failed', Response.json({ task_status: 'FAILED', errors: { message: 'provider rejected task' } })],
             ['task-canceled', Response.json({ task_status: 'CANCELED' })],
-            ['task-http-error', new Response('upstream unavailable', { status: 503 })],
         ]) {
             globalThis.fetch = async () => response.clone();
             const { status, body } = await call('/api/continuity/collect', { taskId, shotId: 'shot-02' }, 'POST', { MODELSCOPE_TOKEN: 'test-only' });
@@ -95,6 +94,48 @@ test('continuity collect marks provider failures and HTTP errors as terminal and
             assert.equal(body.shotId, 'shot-02');
             assert.match(body.code, /^GENERATION_UPSTREAM_FAILED$/);
         }
+        globalThis.fetch = async () => new Response('upstream unavailable', { status: 503 });
+        const transient = await call('/api/continuity/collect', { taskId: 'task-http-error', shotId: 'shot-02' }, 'POST', { MODELSCOPE_TOKEN: 'test-only' });
+        assert.equal(transient.status, 503);
+        assert.equal(transient.body.status, 'pending');
+        assert.equal(transient.body.terminal, false);
+        assert.equal(transient.body.taskId, 'task-http-error');
+        assert.equal(transient.body.code, 'GENERATION_POLL_RETRYABLE');
+
+        globalThis.fetch = async () => { throw new Error('temporary network failure'); };
+        const network = await call('/api/continuity/collect', { taskId: 'task-network-error', shotId: 'shot-02' }, 'POST', { MODELSCOPE_TOKEN: 'test-only' });
+        assert.equal(network.status, 503);
+        assert.equal(network.body.terminal, false);
+        assert.equal(network.body.taskId, 'task-network-error');
+    } finally {
+        globalThis.fetch = originalFetch;
+    }
+});
+
+test('continuity collect keeps a completed task available when result storage fails', async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async input => {
+        if (String(input).includes('/v1/tasks/')) return Response.json({
+            task_status: 'SUCCEED', output_images: ['https://cdn.example.test/result.png'],
+        });
+        return new Response(Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64'), {
+            headers: { 'Content-Type': 'image/png' },
+        });
+    };
+    try {
+        const { status, body } = await call('/api/continuity/collect', {
+            taskId: 'task-store-retry', shotId: 'shot-01',
+        }, 'POST', {
+            MODELSCOPE_TOKEN: 'test-only',
+            CONTINUITY_KV: { put: async () => { throw new Error('temporary storage failure'); }, get: async () => null },
+        });
+        assert.equal(status, 503);
+        assert.equal(body.status, 'pending');
+        assert.equal(body.terminal, false);
+        assert.equal(body.retryable, true);
+        assert.equal(body.taskId, 'task-store-retry');
+        assert.equal(body.code, 'CONTINUITY_RESULT_STORE_FAILED');
+        assert.match(body.error, /不要重新生成/);
     } finally {
         globalThis.fetch = originalFetch;
     }

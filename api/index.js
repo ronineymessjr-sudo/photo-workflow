@@ -634,29 +634,46 @@ export default {
                     try {
                         polled = await pollModelScope({ env, taskId: body?.taskId });
                     } catch (error) {
-                        if (!['GENERATION_UPSTREAM_FAILED', 'GENERATION_INVALID_RESPONSE'].includes(error?.code)) throw error;
-                        result = { status: error.status || 502, body: {
-                            status: 'failed', terminal: true, retryable: true,
-                            shotId: body?.shotId, code: error.code,
-                            error: String(error.message || error).slice(0, 300),
-                        } };
+                        if (error?.code === 'GENERATION_POLL_RETRYABLE') {
+                            result = { status: 503, body: {
+                                status: 'pending', terminal: false, retryable: true,
+                                shotId: body?.shotId, taskId: body?.taskId,
+                                code: error.code, error: String(error.message || error).slice(0, 300),
+                            } };
+                        } else if (['GENERATION_UPSTREAM_FAILED', 'GENERATION_INVALID_RESPONSE'].includes(error?.code)) {
+                            result = { status: error.status || 502, body: {
+                                status: 'failed', terminal: true, retryable: true,
+                                shotId: body?.shotId, code: error.code,
+                                error: String(error.message || error).slice(0, 300),
+                            } };
+                        } else throw error;
                     }
                     if (!result) {
                         if (polled.status !== 'succeeded') {
-                            result = { status: 200, body: { status: 'pending', shotId: body?.shotId } };
+                            result = { status: 200, body: { status: 'pending', shotId: body?.shotId, taskId: body?.taskId } };
                         } else {
-                            const stored = await storeAsset({
-                                dataUrl: `data:${polled.contentType};base64,${polled.base64}`,
-                                role: 'misc', env,
-                            });
-                            result = { status: 200, body: {
-                                status: 'succeeded',
-                                shotId: body?.shotId,
-                                provider: 'modelscope-qwen-edit',
-                                seed: body?.seed,
-                                image: { assetId: stored.assetId, path: stored.path, bytes: stored.bytes, durable: stored.durable },
-                                qc: { verdict: 'pending' },
-                            } };
+                            try {
+                                const stored = await storeAsset({
+                                    dataUrl: `data:${polled.contentType};base64,${polled.base64}`,
+                                    role: 'misc', env,
+                                });
+                                result = { status: 200, body: {
+                                    status: 'succeeded',
+                                    shotId: body?.shotId,
+                                    provider: 'modelscope-qwen-edit',
+                                    seed: body?.seed,
+                                    image: { assetId: stored.assetId, path: stored.path, bytes: stored.bytes, durable: stored.durable },
+                                    qc: { verdict: 'pending' },
+                                } };
+                            } catch (error) {
+                                console.error('continuity_result_store_failed', error?.code || error?.name || 'STORE_ERROR');
+                                result = { status: 503, body: {
+                                    status: 'pending', terminal: false, retryable: true,
+                                    shotId: body?.shotId, taskId: body?.taskId,
+                                    code: 'CONTINUITY_RESULT_STORE_FAILED',
+                                    error: '图像已生成，暂时无法保存；请继续查询同一任务，不要重新生成。',
+                                } };
+                            }
                         }
                     }
                 }

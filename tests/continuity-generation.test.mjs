@@ -230,6 +230,48 @@ test('same-shot retry changes only its deterministic seed', async () => {
     assert.notEqual(seeds[0], seeds[1]);
 });
 
+test('ModelScope receives the selected PoseAtlas image as a pose-only reference', async () => {
+    const store = createMemoryStore();
+    const group = await readyGroup(store);
+    group.shots[0].poseRef = {
+        id: 'atlas-pose-full_single_p017', title: '站立・回眸顾盼', angle: '侧后方',
+        direction: '上身转开再回头，肩颈放松。',
+        imageUrl: 'https://hruiccc.github.io/RuiC-PoseAtlas/thumbs/full_single_p017.jpg',
+    };
+    let payload;
+    const result = await generateShot({
+        group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit',
+        env: { MODELSCOPE_TOKEN: 'test-only' }, store, submitOnly: true,
+        fetchImpl: async (url, options = {}) => {
+            if (String(url).startsWith('https://hruiccc.github.io/')) {
+                return new Response(Uint8Array.from([1, 2, 3]), { headers: { 'Content-Type': 'image/jpeg' } });
+            }
+            payload = JSON.parse(options.body);
+            return Response.json({ task_id: 'task-pose-reference' });
+        },
+    });
+
+    assert.equal(payload.image_url.length, 3, 'identity, outfit and selected pose are sent in that order');
+    assert.match(payload.prompt, /最后一张参考图来自摆姿库/);
+    assert.match(payload.prompt, /不要复制线稿/);
+    assert.equal(result.referencesSent, 3);
+    assert.equal(result.status, 'pending');
+});
+
+test('ModelScope stops before submission when an accepted pose image is unavailable', async () => {
+    const store = createMemoryStore();
+    const group = await readyGroup(store);
+    group.shots[0].poseRef = { id: 'pose-invalid', title: '已选姿势', imageUrl: 'https://example.com/pose.jpg' };
+    await assert.rejects(
+        () => generateShot({
+            group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit',
+            env: { MODELSCOPE_TOKEN: 'test-only' }, store, submitOnly: true,
+            fetchImpl: async () => assert.fail('unapproved pose URL must not be fetched or submitted'),
+        }),
+        error => error.code === 'GENERATION_REFERENCE_MISSING',
+    );
+});
+
 test('generation without credentials fails closed and names the missing env vars', async () => {
     const store = createMemoryStore();
     const group = await readyGroup(store);
