@@ -470,7 +470,9 @@ export async function pollModelScope({ env, taskId, fetchImpl = fetch }) {
     try {
         response = await fetchImpl(MODELSCOPE_TASK + taskId, {
             headers: { Authorization: `Bearer ${token}`, 'X-ModelScope-Task-Type': 'image_generation' },
-            signal: AbortSignal.timeout(20000),
+            // The Pages proxy cuts off at 30s. Give slow ModelScope task reads
+            // more room than the previous 20s while keeping a safe margin.
+            signal: AbortSignal.timeout(25000),
         });
     } catch {
         throw new GenerationError('GENERATION_POLL_RETRYABLE', '暂时无法查询魔搭任务，请稍后继续查询同一任务', 503);
