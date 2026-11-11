@@ -140,11 +140,15 @@ export async function generateCloudCandidate(input, { ai, referenceContext, fetc
             costumeImage ? `${costumeImage} is secondary guidance for outfit material and palette only; do not copy unrequested accessories or props.` : '',
         ].filter(Boolean).join(' ');
     const wardrobeContract = clean(input.shot_contract.wardrobe_styling || input.reference_brief?.modelDesc, 420) || 'Preserve the user specified garments exactly.';
+    const mustShow = list(input.shot_contract.master_must_show || input.shot_contract.must_show).join('; ');
+    const rejectIf = list(input.shot_contract.master_reject_if || input.shot_contract.reject_if).join('; ');
     let prompt = [
         `Shot contract: ${shotPrompt}`,
         waistUpCrop ? 'Required waist-up crop: frame from the top of the head through the natural waistline; the lower edge cuts at the waistline. Exclude the hips and everything below, including skirt below the waist, legs and shoes.' : '',
         selectedPose && !clothingDetail ? `Selected pose library entry: ${clean(selectedPose.title, 120)}. Pose direction: ${clean(poseDirection, 260)}` : '',
         clothingDetail ? `Shot-specific wardrobe contract: ${wardrobeContract}` : `Written wardrobe contract: ${wardrobeContract}`,
+        mustShow ? `The image must visibly include: ${mustShow}.` : '',
+        rejectIf ? `Reject the image if it contains: ${rejectIf}.` : '',
         `Scene: ${clean(input.scene_brief || input.reference_brief?.scene, 250)}`,
         `Style: ${clean(input.style_direction || input.reference_brief?.style, 150)}`,
     ].join('\n');
@@ -196,7 +200,7 @@ export async function generateCloudCandidate(input, { ai, referenceContext, fetc
             : [
             [/环境全景|环境远景|^(?:E?WS)$/i, 'Environmental long shot. Person occupies at most 40 percent of the image height. Show the surrounding location clearly. Keep the camera far enough away.'],
             [/中全景|^MFS$/i, 'Knee-up portrait. Crop above the knees, showing head, torso and hands.'],
-            [/全身|^FS$/i, 'Head-to-toe portrait. Show both shoes and ground beneath them, with margins above the head and below the feet.'],
+            [/全身|^FS$/i, 'Head-to-toe portrait. Fit the complete figure within 80% of the image height, with clear headroom above and visible ground margin below both shoe soles. Do not crop the shoes or let them touch the frame edge.'],
             [/近景|^MCU$/i, 'Head-and-shoulders portrait. Crop below the shoulders.'],
             [/特写|^E?CU$/i, 'Tight close-up of the face or the detail specified by the shot contract.'],
             [/中景|^MS$/i, 'Waist-up portrait from the top of the head through the natural waistline. The lower edge cuts at the waistline; exclude hips, legs and shoes.'],
@@ -215,7 +219,7 @@ export async function generateCloudCandidate(input, { ai, referenceContext, fetc
         const poseInstruction = clothingDetail
             ? poseDetail
             : `Do not copy unrequested bags, jewelry, hats or other accessories/props from the outfit reference. Do not replace or add garments. Follow the selected PoseAtlas action described in the shot contract as text; the written shot contract and user restrictions override any pose-image conflict. ${poseImage ? 'Use the selected pose image only for torso/limb geometry; do not render its line drawing, white background, joint marks, mannequin, or nudity.' : ''} Required pose: ${poseTitle}. ${poseDetail}`;
-        generationPrompt = `${subjectInstruction} ${waistUpCrop ? `Required camera framing: ${framing} ` : ''}${wardrobeInstruction} ${referenceInstruction} ${poseInstruction} ${prompt} Required camera framing: ${framing || 'Follow the shot contract.'} ${clothingDetail ? '' : 'Render the requested scene as a real photographic environment with natural light and material detail.'}`;
+        generationPrompt = `${subjectInstruction} ${waistUpCrop ? `Required camera framing: ${framing} ` : ''}${wardrobeInstruction} ${referenceInstruction} ${poseInstruction} ${prompt} ${mustShow ? `Required visible shot details: ${mustShow}. ` : ''}${rejectIf ? `Do not include: ${rejectIf}. ` : ''}Required camera framing: ${framing || 'Follow the shot contract.'} ${clothingDetail ? '' : 'Render the requested scene as a real photographic environment with natural light and material detail.'}`;
         form.append('prompt', generationPrompt);
         form.append('width', String(compiled.width));
         form.append('height', String(compiled.height));
