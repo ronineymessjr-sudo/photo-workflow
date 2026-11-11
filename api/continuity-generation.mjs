@@ -124,6 +124,23 @@ async function callReferenceJson({ env, fetchImpl, prompt, size, aspect, seed, r
 // person is allowed", the model dropped the subject entirely and returned an empty
 // staircase - a constraint about absence invites absence.
 const RULE_ONE_PERSON = '画面中必须有一个人，而且只有一个人：人物清楚可见、是画面主体；不要出现第二个人，不要复制、镜像或添加倒影。';
+function subjectCountHint(locked = {}, prompt = '') {
+    const brief = `${locked.people || ''} ${locked.subject || ''} ${prompt || ''}`;
+    const explicit = String(locked.people || '').trim().match(/^(\d{1,3}|[一二两三四五六七八九十]+)(?:位|名|个|人)?$/);
+    const chinese = { 一: 1, 二: 2, 两: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9, 十: 10 };
+    if (explicit) return /^\d+$/.test(explicit[1]) ? Number(explicit[1]) : (chinese[explicit[1]] || 1);
+    if (/双人|两人|二人|情侣|夫妻|伴侣|闺蜜|多人|couple|duo|two[- ]people|two[- ]person/i.test(brief)) return 2;
+    const count = brief.match(/(?:^|[^\d])([2-9]|[一二两三四五六七八九十])\s*(?:位|名|个|人)/);
+    if (!count) return 1;
+    return /^\d+$/.test(count[1]) ? Number(count[1]) : (chinese[count[1]] || 1);
+}
+
+function subjectRule(locked, prompt) {
+    const count = subjectCountHint(locked, prompt);
+    return count > 1
+        ? `画面中必须有${count}位人物，人数与人物关系严格按照拍摄需求；不要复制、镜像或添加倒影。`
+        : RULE_ONE_PERSON;
+}
 
 // Aesthetic-banned words, from the plan-quality-lab de-AI diagnosis
 // (prompt-packs/2026-10-27-deepseek/07-AI味诊断与去AI化方案.md). Each one
@@ -139,9 +156,10 @@ const BANNED_AESTHETIC_WORDS = [
 export function stripBannedWords(text) {
     let out = String(text || '');
     for (const word of BANNED_AESTHETIC_WORDS) {
-        out = out.replace(new RegExp(`${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[,.;:]?`, 'gi'), '');
+        const phrase = word.replace(/ /g, '\\s+');
+        out = out.replace(new RegExp(`(^|[^\\p{L}\\p{N}_])${phrase}(?=$|[^\\p{L}\\p{N}_])[,.;:]?`, 'giu'), '$1');
     }
-    return out.replace(/,{2,}/g, ',').replace(/\s{2,}/g, ' ').trim();
+    return out.replace(/,\s*,+/g, ',').replace(/\s{2,}/g, ' ').replace(/\s+([,.;:])/g, '$1').trim();
 }
 
 // The realism lock from the lab pack (PROMPTS-TEXTURE.md). Its three laws:
@@ -159,7 +177,7 @@ export function directionText({ prompt, locked, variant, poseRef, size }) {
     // Stated as a rule rather than left implicit. Without it, a plan line like
     // "人物停在下一层内侧踏步" was read as two positions and produced the same
     // person twice in one frame - a real photograph that fails the shoot.
-    return `${body}\n${RULE_ONE_PERSON}`;
+    return `${body}\n${subjectRule(locked, prompt)}`;
 }
 
 // One field list shared by every adapter.
@@ -398,7 +416,7 @@ export async function submitModelScope({ env, prompt, size, seed, references, va
     }
     for (const reference of references) images.push(reference.dataUrl);
     const fields = directionFields({ prompt, locked, variant, poseRef, framing: framingZh(variant) });
-    const direction = `${fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`).join('\n')}\n${RULE_ONE_PERSON}`;
+    const direction = `${fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`).join('\n')}\n${subjectRule(locked, prompt)}`;
 
     const response = await fetchImpl(MODELSCOPE_ENDPOINT, {
         method: 'POST',
@@ -498,7 +516,7 @@ async function callModelScope({ env, prompt, size, seed, references, variant, po
     }
 
     const fields = directionFields({ prompt, locked, variant, poseRef, framing: framingZh(variant) });
-    const direction = `${fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`).join('\n')}\n${RULE_ONE_PERSON}`;
+    const direction = `${fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`).join('\n')}\n${subjectRule(locked, prompt)}`;
 
     const submit = await fetchImpl(MODELSCOPE_ENDPOINT, {
         method: 'POST',
@@ -695,7 +713,7 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
  * Generates exactly one shot. Never loops, never fans out: the caller decides
  * which shot to (re)make, which is what keeps retry scoped to a single frame.
  */
-export async function generateShot({ group, shotId, providerId = '', env = {}, fetchImpl = fetch, store = null, submitOnly = false } = {}) {
+export async function generateShot({ group, shotId, providerId = '', env = {}, fetchImpl = fetch, store = null, submitOnly = false, attempt = 0 } = {}) {
     // Fall back to the provider pinned on the contract, so the shoot keeps using
     // the brush it was approved with.
     providerId = providerId || group?.imageProvider || '';
@@ -704,7 +722,7 @@ export async function generateShot({ group, shotId, providerId = '', env = {}, f
         throw new ContinuityError('CONTINUITY_SHOT_UNKNOWN', `没有这个镜头：${shotId}`, 404);
     }
     // Gate first: references confirmed, master human-confirmed, provider capable.
-    const requests = buildShotRequests(group, { providerId, shotIds: [shotId] });
+    const requests = buildShotRequests(group, { providerId, shotIds: [shotId], seedBase: 428193 + Math.max(0, Math.min(2, Number(attempt) || 0)) * 10000 });
     const request = requests[0];
     if (!request) throw new ContinuityError('CONTINUITY_SHOT_UNKNOWN', `没有这个镜头：${shotId}`, 404);
 
@@ -747,7 +765,7 @@ export async function generateShot({ group, shotId, providerId = '', env = {}, f
     // generation cannot be held open behind the Pages proxy (30s ceiling).
     if (submitOnly && providerId === 'modelscope-qwen-edit') {
         const submitted = await submitModelScope({
-            env, prompt: request.prompt, references,
+            env, prompt: request.prompt, seed: request.seed, references,
             variant: request.variant,
             poseRef: (group.shots || []).find(shot => shot.shotId === shotId)?.poseRef || null,
             anchor: request.anchor, locked: request.locked, store, fetchImpl,

@@ -29,7 +29,7 @@ const fetchImpl = async (_url, options) => {
 };
 
 test('cloud candidate compiler preserves shot contract, constraints, and framing guidance', () => {
-    const compiled = compileCloudCandidateRequest(request);
+    const compiled = compileCloudCandidateRequest({ ...request, shot_contract: { ...contract, wardrobe_styling: '成年模特穿棕色针织衫。' } });
     assert.match(compiled.prompt, /Autumn park seated portrait/);
     assert.match(compiled.prompt, /35mm eye-level environmental portrait/);
     assert.match(compiled.prompt, /低饱和电影感/);
@@ -38,6 +38,45 @@ test('cloud candidate compiler preserves shot contract, constraints, and framing
     assert.match(compiled.prompt, /portrait 3:4 composition/);
     assert.ok(compiled.prompt.length <= 2048);
     assert.deepEqual([compiled.width, compiled.height, compiled.steps], [768, 1024, 4]);
+});
+
+test('a shot-level scene takes priority over unrelated group locations in the free-form brief', () => {
+    const compiled = compileCloudCandidateRequest({
+        ...request,
+        brief: '整组计划包括竹林、湖边栈道和木亭；本镜头只在木亭长椅拍摄。',
+        scene_brief: '唯一拍摄地点：木亭长椅，秋日湖畔。',
+        reference_brief: { scene: '公园竹林小径；湖边木栈道；木亭长椅' },
+    });
+    assert.match(compiled.prompt, /唯一拍摄地点：木亭长椅/);
+    assert.doesNotMatch(compiled.prompt, /整组计划|公园竹林小径|湖边木栈道/);
+});
+
+test('the final image-model prompt keeps only the active shot scene and camera contract', async () => {
+    let translationInput = '';
+    let imagePrompt = '';
+    const input = {
+        ...request,
+        brief: '整组在公园竹林、湖边木栈道和木亭拍摄；本镜头在木亭长椅，模特自然站立回眸。',
+        scene_brief: '唯一地点：木亭长椅，秋日湖畔，柔和侧逆光。',
+        reference_brief: { scene: '公园竹林小径；湖边木栈道；木亭长椅' },
+        shot_contract: { ...contract, shot_size: '全身', generator_prompt: '35mm head-to-toe portrait; relaxed standing turn and gentle over-shoulder glance.' },
+    };
+    await generateCloudCandidate(input, { referenceContext, fetchImpl, ai: { run: async (model, payload) => {
+        if (model.includes('llama')) {
+            translationInput = payload.messages[1].content;
+            return { response: '35mm photorealistic full-body portrait at a wooden lakeside pavilion, relaxed standing turn and gentle over-shoulder glance, soft rim light.' };
+        }
+        const form = await new Response(payload.multipart.body, { headers: { 'Content-Type': payload.multipart.contentType } }).formData();
+        imagePrompt = String(form.get('prompt'));
+        return { image: Buffer.from(jpeg).toString('base64') };
+    } } });
+    assert.match(translationInput, /木亭长椅/);
+    assert.match(translationInput, /35mm head-to-toe portrait/);
+    assert.doesNotMatch(translationInput, /公园竹林小径|湖边木栈道|整组在公园/);
+    assert.match(imagePrompt, /wooden lakeside pavilion/);
+    assert.match(imagePrompt, /35mm photorealistic full-body portrait/);
+    assert.match(imagePrompt, /Head-to-toe portrait/);
+    assert.doesNotMatch(imagePrompt, /公园竹林小径|湖边木栈道/);
 });
 
 test('a mismatched costume reference cannot add accessories or replace the written wardrobe', () => {

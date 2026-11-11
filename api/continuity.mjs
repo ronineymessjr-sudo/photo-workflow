@@ -139,6 +139,13 @@ export function buildLocked(input = {}, hints = {}) {
     const scene = text(input.scene);
     const extra = text(input.extra);
     const mood = text(input.mood);
+    const people = text(input.people, '1');
+    const countMatch = people.match(/^(\d{1,3}|[一二两三四五六七八九十]+)(?:位|名|个|人)?$/);
+    const countValue = countMatch?.[1];
+    const peopleCount = Number(countValue) || ({ 一: 1, 二: 2, 两: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9, 十: 10 }[countValue] || 1);
+    const defaultSubject = peopleCount > 1
+        ? `${peopleCount}位成年人（外观以身份参考图为准）`
+        : '一名成年人（同一人物，外观以身份参考图为准）';
     const timeOfDay = hints.timeOfDay
         || (/蓝调|黄昏|日落|傍晚/.test(`${scene} ${extra} ${mood}`) ? '黄昏/蓝调窗口'
             : /夜|霓虹|午夜|车流/.test(`${scene} ${extra} ${mood}`) ? '夜间'
@@ -148,7 +155,8 @@ export function buildLocked(input = {}, hints = {}) {
         || (/(雨|雪|雾|阴天|晴)/.exec(`${scene} ${extra}`) || [])[0]
         || '阴天（散射光，无直射硬光）';
     return {
-        subject: hints.subject || `${text(input.modelDesc, '一名成年人')}（同一人物，外观以身份参考图为准）`,
+        people,
+        subject: hints.subject || text(input.modelDesc, defaultSubject),
         wardrobe: hints.wardrobe || text(input.wardrobeNote, '开拍前确认一套，全系列不换'),
         location: hints.location || scene,
         season: hints.season || (/春|花田|油菜花/.test(`${scene} ${extra}`) ? '春' : /雪|冬/.test(`${scene} ${extra}`) ? '冬' : /夏|泳池/.test(`${scene} ${extra}`) ? '夏' : '不限定'),
@@ -345,6 +353,7 @@ export function buildShotRequests(group, { providerId, shotIds = [], seedBase = 
             props: shot.props,
         },
         locked: {
+            people: checked.locked.people,
             subject: checked.locked.subject, wardrobe: checked.locked.wardrobe,
             location: checked.locked.location, weather: checked.locked.weather,
             timeOfDay: checked.locked.timeOfDay, styleProfile: checked.locked.styleProfile,

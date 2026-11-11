@@ -609,6 +609,7 @@ export default {
                             const generated = await generateShot({
                                 group: body?.group, shotId: body?.shotId, providerId: body?.providerId, env,
                                 submitOnly: isAsync,
+                                attempt: body?.attempt,
                             });
                             result = { status: isAsync ? 202 : 200, body: generated };
                         } catch (generateError) {
@@ -629,22 +630,34 @@ export default {
                 // running, so the client just calls again.
                 if (!uid) result = { status: 401, body: { error: 'SIGN_IN_REQUIRED' } };
                 else {
-                    const polled = await pollModelScope({ env, taskId: body?.taskId });
-                    if (polled.status !== 'succeeded') {
-                        result = { status: 200, body: { status: 'pending', shotId: body?.shotId } };
-                    } else {
-                        const stored = await storeAsset({
-                            dataUrl: `data:${polled.contentType};base64,${polled.base64}`,
-                            role: 'misc', env,
-                        });
-                        result = { status: 200, body: {
-                            status: 'succeeded',
-                            shotId: body?.shotId,
-                            provider: 'modelscope-qwen-edit',
-                            seed: body?.seed,
-                            image: { assetId: stored.assetId, path: stored.path, bytes: stored.bytes, durable: stored.durable },
-                            qc: { verdict: 'pending' },
+                    let polled;
+                    try {
+                        polled = await pollModelScope({ env, taskId: body?.taskId });
+                    } catch (error) {
+                        if (!['GENERATION_UPSTREAM_FAILED', 'GENERATION_INVALID_RESPONSE'].includes(error?.code)) throw error;
+                        result = { status: error.status || 502, body: {
+                            status: 'failed', terminal: true, retryable: true,
+                            shotId: body?.shotId, code: error.code,
+                            error: String(error.message || error).slice(0, 300),
                         } };
+                    }
+                    if (!result) {
+                        if (polled.status !== 'succeeded') {
+                            result = { status: 200, body: { status: 'pending', shotId: body?.shotId } };
+                        } else {
+                            const stored = await storeAsset({
+                                dataUrl: `data:${polled.contentType};base64,${polled.base64}`,
+                                role: 'misc', env,
+                            });
+                            result = { status: 200, body: {
+                                status: 'succeeded',
+                                shotId: body?.shotId,
+                                provider: 'modelscope-qwen-edit',
+                                seed: body?.seed,
+                                image: { assetId: stored.assetId, path: stored.path, bytes: stored.bytes, durable: stored.durable },
+                                qc: { verdict: 'pending' },
+                            } };
+                        }
                     }
                 }
             }

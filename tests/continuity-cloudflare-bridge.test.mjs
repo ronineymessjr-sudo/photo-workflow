@@ -591,6 +591,29 @@ test('the direction carries the lab realism lock, not banned adjectives', async 
         stripBannedWords('photorealistic portrait, 8K, masterpiece, cinematic lighting, soft glow'),
         'portrait, soft',
     );
+    assert.equal(stripBannedWords('glowing window light; overglow; glow'), 'glowing window light; overglow;');
+});
+
+test('subject-count direction lock follows the requested people count', async () => {
+    const { directionText } = await import('../api/continuity-generation.mjs');
+    const { createGroup } = await import('../api/continuity.mjs');
+    const single = directionText({ prompt: '单人肖像', locked: { people: '1', subject: '一名成年人' }, variant: { size: 'MS' } });
+    assert.match(single, /必须有一个人/);
+    assert.match(single, /不要出现第二个人/);
+
+    const couple = directionText({ prompt: '情侣在公园并肩散步', locked: { people: '2', subject: '一对情侣' }, variant: { size: 'MS' } });
+    assert.match(couple, /必须有2位人物/);
+    assert.doesNotMatch(couple, /只有一个人|不要出现第二个人/);
+
+    const inferred = directionText({ prompt: '两位朋友在公园并肩散步', locked: { subject: '两位朋友' }, variant: { size: 'MS' } });
+    assert.match(inferred, /必须有2位人物/);
+
+    const group = directionText({ prompt: '三位家人在果园散步', locked: { people: '3' }, variant: { size: 'MS' } });
+    assert.match(group, /必须有3位人物/);
+
+    const plan = createGroup({ input: { theme: '家庭写真', scene: '果园', people: '2' }, shots: [] });
+    assert.match(plan.locked.subject, /2位成年人/);
+    assert.match(directionText({ prompt: '并肩散步', locked: plan.locked, variant: { size: 'MS' } }), /必须有2位人物/);
 });
 
 test('unlit plans inherit a structured light-kit entry', async () => {
