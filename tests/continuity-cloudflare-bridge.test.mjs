@@ -4,7 +4,8 @@ import {
     ROLE_SLOTS, UNMAPPED_ROLES, planCloudFrames, contractShotToCloudInput,
     generateContractShot, CLOUDFLARE_MODEL,
 } from '../api/continuity-cloudflare-bridge.mjs';
-import { createGroup, setReference, confirmMaster } from '../api/continuity.mjs';
+import { buildShotRequests, createGroup, setReference, confirmMaster } from '../api/continuity.mjs';
+import { directionText } from '../api/continuity-generation.mjs';
 import { recommendProvider, resolveProvider, listProviders } from '../api/continuity-providers.mjs';
 
 const PNG_BYTES = Uint8Array.from(atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='), c => c.charCodeAt(0));
@@ -79,6 +80,26 @@ test('contractShotToCloudInput maps locked fields and keeps one candidate', () =
     assert.equal(input.shot_contract.wardrobe_styling.includes('炭灰'), true);
     assert.match(input.shot_contract.generator_prompt, /35mm/);
     assert.equal(input.shot_contract.shot_size, 'WS');
+});
+
+test('each continuity shot uses its own scene ahead of the group location', async () => {
+    const group = readyGroup();
+    group.shots[0].scene = '湖边木栈道';
+
+    const input = contractShotToCloudInput(group, 'shot-01');
+    assert.match(input.scene_brief, /湖边木栈道/);
+    assert.doesNotMatch(input.scene_brief, /海边旧车站月台/);
+    assert.match(input.reference_brief.scene, /湖边木栈道/);
+
+    const request = buildShotRequests(group, { providerId: 'cloudflare-flux-klein' })[0];
+    const direction = directionText({ prompt: request.prompt, locked: request.locked, variant: request.variant });
+    assert.match(direction, /场景：湖边木栈道/);
+    assert.doesNotMatch(direction, /场景：海边旧车站月台/);
+
+    const result = await generateContractShot({ group, shotId: 'shot-01', ai: fakeAi(),
+        readAsset: async () => ({ bytes: PNG_BYTES, mime: 'image/png' }) });
+    assert.match(result.prompt, /湖边木栈道/);
+    assert.doesNotMatch(result.prompt, /Location .*海边旧车站月台/);
 });
 
 test('generation is refused without an AI binding and without a reference reader', async () => {

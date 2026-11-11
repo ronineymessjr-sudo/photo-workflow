@@ -41,7 +41,7 @@ export function contractShotToCloudInput(group, shotId, { aspectRatio = 'portrai
     const shot = group?.shots?.find(item => item.shotId === shotId);
     if (!shot) throw new Error('CONTINUITY_SHOT_UNKNOWN');
     const locked = group?.locked || {};
-    const scene = [locked.location, locked.weather, locked.timeOfDay].filter(Boolean).join('・');
+    const scene = [shot.scene || locked.location, locked.weather, locked.timeOfDay].filter(Boolean).join('・');
     return {
         provider: 'cloudflare',
         model: CLOUDFLARE_MODEL,
@@ -185,13 +185,14 @@ export async function generateContractShot({
 
 function buildPrompt(group, shot, compiled, input) {
     const locked = group.locked || {};
+    const scene = shot.scene || locked.location || 'unspecified';
     const framing = framingFor(shot);
     return [
         'Create one photorealistic DSLR photograph of ONE person, with realistic skin texture and a fully rendered real location.',
         'Reference image 1, the face photograph, controls facial identity, apparent age, hair and photographic realism.',
         'Reference image 2, the outfit, controls every visible garment, layer, colour, material and accessory. Copy those garments faithfully without adding or replacing layers.',
         `Required pose and action: ${shot.action || shot.prompt || 'follow the shot contract'}.`,
-        `Location (text only, no reference image available): ${locked.location || 'unspecified'}${locked.weather ? `, ${locked.weather}` : ''}${locked.timeOfDay ? `, ${locked.timeOfDay}` : ''}.`,
+        `Location (text only, no reference image available): ${scene}${locked.weather ? `, ${locked.weather}` : ''}${locked.timeOfDay ? `, ${locked.timeOfDay}` : ''}.`,
         `Camera: ${[shot.camera, shot.lens, shot.distance, shot.subjectPlacement].filter(Boolean).join(', ') || 'per shot contract'}.`,
         `Style: ${locked.styleProfile || 'documentary, low saturation'}.`,
         framing,
