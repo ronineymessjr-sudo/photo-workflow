@@ -139,7 +139,12 @@ export async function generateCloudCandidate(input, { ai, referenceContext, fetc
             poseImage ? `${poseImage} is the selected PoseAtlas action reference (${clean(selectedPose?.id, 80)}; ${clean(selectedPose?.englishTitle || selectedPose?.title, 120)}). Use only its torso and limb positions/body orientation as pose geometry; ignore its line art, white background, joint marks, mannequin appearance and nudity. The subject must be the clothed adult specified by the written wardrobe contract.` : '',
             costumeImage ? `${costumeImage} is secondary guidance for outfit material and palette only; do not copy unrequested accessories or props.` : '',
         ].filter(Boolean).join(' ');
-    const wardrobeContract = clean(input.shot_contract.wardrobe_styling || input.reference_brief?.modelDesc, 420) || 'Preserve the user specified garments exactly.';
+    const wardrobeText = clean(input.shot_contract.wardrobe_styling || input.reference_brief?.modelDesc, 420);
+    const wardrobeContract = (waistUpCrop
+        ? wardrobeText.split(/(?<=[，、,；;。])/)
+            .filter(part => !/(裙|裤|靴|鞋|袜|下装|skirt|trousers|pants|boots|shoes|socks|lower[- ]body)/i.test(part))
+            .join('')
+        : wardrobeText) || 'Preserve the user specified garments exactly.';
     const mustShow = list(input.shot_contract.master_must_show || input.shot_contract.must_show).join('; ');
     const rejectIf = list(input.shot_contract.master_reject_if || input.shot_contract.reject_if).join('; ');
     let prompt = [
