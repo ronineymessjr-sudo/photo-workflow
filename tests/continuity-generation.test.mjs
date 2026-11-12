@@ -322,6 +322,28 @@ test('ModelScope waist-up frames keep pose text but omit conflicting full-body a
     assert.equal(result.referencesSent, 2);
 });
 
+test('anchored full-body frames omit outfit references when the wardrobe contract bans their accessories', async () => {
+    const store = createMemoryStore();
+    const wardrobe = '米白色针织裹身上衣，卡其色长裙和棕色长靴；不添加包袋、项链、首饰或帽子。';
+    const group = await readyGroup(store, { lockedSubject: `成年女性模特；${wardrobe}`, wardrobeNote: wardrobe });
+    group.shots[0].size = '全身';
+    group.shots[0].shotType = '全身';
+    group.shots[0].prompt = 'Full-body portrait following the pose contract.';
+    setAnchor(group, { assetId: group.references.find(reference => reference.role === 'identity').assetId });
+    let payload;
+    const result = await generateShot({
+        group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit',
+        env: { MODELSCOPE_TOKEN: 'test-only' }, store, submitOnly: true,
+        fetchImpl: async (_url, options = {}) => {
+            payload = JSON.parse(options.body);
+            return Response.json({ task_id: 'task-anchored-full-body-without-accessories' });
+        },
+    });
+    assert.equal(payload.image_url.length, 2, 'accepted anchor and identity remain; conflicting outfit reference is omitted');
+    assert.equal(result.referencesSent, 2);
+    assert.match(payload.prompt, /不添加包袋、项链、首饰或帽子/);
+});
+
 test('ModelScope stops before submission when an accepted pose image is unavailable', async () => {
     const store = createMemoryStore();
     const group = await readyGroup(store);

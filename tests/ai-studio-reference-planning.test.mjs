@@ -206,6 +206,7 @@ test('ordinary portrait reference selection rejects excluded poses and labels ex
     const selectedPoseFamilies = separatePoseFamilies.templates.filter(template => template.kind === 'pose');
     assert.ok(selectedPoseFamilies.some(template => template.upstreamId === 'full_single_P018'));
     assert.ok(selectedPoseFamilies.some(template => template.upstreamId === 'full_single_P025'));
+    assert.equal(selectedPoseFamilies.find(template => template.upstreamId === 'full_single_P025').poseSuitability, 'review');
     assert.equal(new Set(selectedPoseFamilies.map(template => classifyPose(template).poseFamily)).size, selectedPoseFamilies.length);
 
     const selectedPairOnly = async url => {
@@ -214,11 +215,7 @@ test('ordinary portrait reference selection rejects excluded poses and labels ex
         const { poses } = await response.json();
         return Response.json({ poses: poses.filter(pose => ['full_single_P022', 'full_single_P025'].includes(pose.id)) });
     };
-    const automaticNewPoses = await prepareReferenceContext(ordinaryReferenceInput(), { fetchImpl: selectedPairOnly });
-    const automaticNewPoseRows = automaticNewPoses.templates.filter(template => template.kind === 'pose');
-    assert.deepEqual(automaticNewPoseRows.map(template => template.upstreamId).sort(), ['full_single_P022', 'full_single_P025']);
-    assert.ok(automaticNewPoseRows.every(template => template.poseSuitability === 'safe'));
-    assert.equal(new Set(automaticNewPoseRows.map(template => classifyPose(template).poseFamily)).size, automaticNewPoseRows.length);
+    await assert.rejects(prepareReferenceContext(ordinaryReferenceInput(), { fetchImpl: selectedPairOnly }), /REFERENCE_LIBRARY_UNAVAILABLE/);
 
     await assert.rejects(prepareReferenceContext(ordinaryReferenceInput({
         theme: '人像写真', people: '双人', referenceIds: ['atlas-pose-pair60_p003', 'atlas-costume-aut-0118', 'atlas-portrait-shortface'],

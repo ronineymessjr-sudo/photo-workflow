@@ -283,6 +283,11 @@ function isWaistUp(variant = {}) {
     return /^(MS|中景|MEDIUM)$/i.test(String(variant.size || variant.shotType || '').trim());
 }
 
+function wardrobeForbidsAccessories(locked, variant) {
+    const text = [locked?.subject, locked?.wardrobe, variant?.wardrobe].filter(Boolean).join(' ');
+    return /(?:不添加|不要|不得|禁止|严禁).{0,24}(?:包袋|背包|手提包|项链|首饰|耳饰|饰品|帽子|jewelry|necklace|bag|accessor)/i.test(text);
+}
+
 function wardrobeVisibleInFrame(value, variant = {}) {
     const text = directive(value);
     if (!isWaistUp(variant) || !text) return text;
@@ -444,7 +449,7 @@ export async function submitModelScope({ env, prompt, size, seed, references, va
     }
     const waistUp = isWaistUp(variant);
     for (const reference of references) {
-        if (waistUp && reference.role === 'style') continue;
+        if (reference.role === 'style' && (waistUp || (anchor?.assetId && wardrobeForbidsAccessories(locked, variant)))) continue;
         images.push(reference.dataUrl);
     }
     const visualPoseUrl = poseRef?.imageUrl;
@@ -612,7 +617,9 @@ async function callModelScope({ env, prompt, size, seed, references, variant, po
         // The selected AUT-0118 library image contains a bag and necklace that
         // conflict with the locked wardrobe contract. Waist-up shots use its
         // already-compiled text description instead of copying those props.
-        if (waistUp && reference.role === 'style') continue;
+        // Anchored full-body shots also skip it when the written contract bans
+        // those accessories; the accepted frame carries outfit continuity.
+        if (reference.role === 'style' && (waistUp || (anchor?.assetId && wardrobeForbidsAccessories(locked, variant)))) continue;
         images.push(reference.dataUrl);
     }
     // Full-body PoseAtlas line art repeatedly overrode the waist-up crop in
@@ -870,7 +877,7 @@ export async function generateShot({ group, shotId, providerId = '', env = {}, f
         // ModelScope waist-up prompts deliberately omit the outfit image: the
         // current selected costume contains conflicting accessories. Do not
         // read its KV asset just to discard it later in submitModelScope.
-        if (providerId === 'modelscope-qwen-edit' && isWaistUp(request.variant) && reference.role === 'style') continue;
+        if (providerId === 'modelscope-qwen-edit' && reference.role === 'style' && (isWaistUp(request.variant) || (request.anchor?.assetId && wardrobeForbidsAccessories(request.locked, request.variant)))) continue;
         const definition = (group.references || []).find(item => item.role === reference.role);
         const assetPath = definition?.path;
         let asset;
