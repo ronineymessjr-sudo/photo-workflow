@@ -158,7 +158,7 @@ test('image allowance is isolated per signed-in user and refuses guests', async 
 });
 
 test('temporary unlimited image allowance applies only to its exact configured QA user', async () => {
-    const env = { ...environment(), STUDIO_IMAGE_TEST_UNLIMITED_USER_ID: 'qa-user', STUDIO_IMAGE_USER_LIMIT: '1', STUDIO_IMAGE_GLOBAL_LIMIT: '1' };
+    const env = { ...environment(), STUDIO_IMAGE_TEST_UNLIMITED_USER_ID: 'qa-user\r\n', STUDIO_IMAGE_USER_LIMIT: '1', STUDIO_IMAGE_GLOBAL_LIMIT: '1' };
     for (let index = 0; index < 5; index++) assert.equal(await consumeStudioImageQuota({ uid: 'qa-user', env }), true);
 
     const nearMatchEnv = { ...environment(), STUDIO_IMAGE_TEST_UNLIMITED_USER_ID: 'qa-user', STUDIO_IMAGE_USER_LIMIT: '1', STUDIO_IMAGE_GLOBAL_LIMIT: '1' };
