@@ -195,8 +195,8 @@ function directionFields({ prompt, locked, variant, poseRef, framing, film }) {
         // ordering that moved the result upward.
         ['framing', framing],
         ['prompt', poseInFrame(prompt, variant?.size)],
-        ['subject', locked?.subject],
-        ['wardrobeGroup', directive(locked?.wardrobe)],
+        ['subject', wardrobeVisibleInFrame(locked?.subject, variant)],
+        ['wardrobeGroup', wardrobeVisibleInFrame(locked?.wardrobe, variant)],
         ['style', locked?.styleProfile],
         ['location', variant?.scene || locked?.location],
         ['weather', locked?.weather],
@@ -220,7 +220,7 @@ function directionFields({ prompt, locked, variant, poseRef, framing, film }) {
             weather: locked?.weather || variant?.weather,
             mood: locked?.mood,
         }).light],
-        ['wardrobeShot', directive(variant?.wardrobe)],
+        ['wardrobeShot', wardrobeVisibleInFrame(variant?.wardrobe, variant)],
         ['props', directive(variant?.props)],
         // The plan's crop_boundary often describes a different framing than
         // shot_size ("头顶到膝盖入画" on an MCU shot). Passing both hands the
@@ -279,7 +279,7 @@ function isWaistUp(variant = {}) {
 function wardrobeVisibleInFrame(value, variant = {}) {
     const text = directive(value);
     if (!isWaistUp(variant) || !text) return text;
-    return text.split(/(?<=[，,；;。])/)
+    return text.split(/(?<=[，、,；;。])/)
         .filter(part => !/(裙|裤|靴|鞋|袜|下装|skirt|trousers|pants|boots|shoes|socks|lower[- ]body)/i.test(part))
         .join('');
 }

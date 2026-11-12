@@ -290,6 +290,9 @@ test('ModelScope waist-up frames keep pose text but omit conflicting full-body a
     const clothingClause = payload.prompt.match(/Subject and clothing:\s*(.*?)\. User constraints:/is)?.[1] || '';
     assert.match(clothingClause, /米白色针织裹身上衣/);
     assert.doesNotMatch(clothingClause, /半身裙|长靴|boots|skirt/i);
+    const wardrobeLines = payload.prompt.split('\n').filter(line => /^(?:人物|全组服装|服装)：/.test(line));
+    assert.ok(wardrobeLines.length > 0);
+    assert.ok(wardrobeLines.every(line => !/半身裙|长靴|boots|skirt/i.test(line)), 'all waist-up wardrobe fields must exclude garments below the crop');
     assert.equal(result.referencesSent, 1);
 });
 
