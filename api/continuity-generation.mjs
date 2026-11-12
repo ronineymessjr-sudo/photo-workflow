@@ -272,6 +272,10 @@ function visibleFrame(size) {
     return String(size || '').trim().toUpperCase();
 }
 
+function isWaistUp(variant = {}) {
+    return /^(MS|中景|MEDIUM)$/i.test(String(variant.size || variant.shotType || '').trim());
+}
+
 // Keep the clauses of the pose that still make sense inside the frame.
 function poseInFrame(pose, size) {
     const raw = typeof pose === 'string' ? pose.trim() : '';
@@ -414,7 +418,7 @@ export async function submitModelScope({ env, prompt, size, seed, references, va
         if (!stored?.buffer?.length) throw new GenerationError('GENERATION_ANCHOR_MISSING', '已锁定的母图读不到', 409);
         images.push(dataUrlFor(stored.buffer, stored.mime));
     }
-    const waistUp = visibleFrame(variant?.size) === 'MS';
+    const waistUp = isWaistUp(variant);
     for (const reference of references) {
         if (waistUp && reference.role === 'style') continue;
         images.push(reference.dataUrl);
@@ -548,7 +552,7 @@ async function callModelScope({ env, prompt, size, seed, references, variant, po
         if (!stored?.buffer?.length) throw new GenerationError('GENERATION_ANCHOR_MISSING', '已锁定的母图读不到；停止生成，不能退回无母图请求', 409);
         images.push(dataUrlFor(stored.buffer, stored.mime));
     }
-    const waistUp = visibleFrame(variant?.size) === 'MS';
+    const waistUp = isWaistUp(variant);
     for (const reference of references) {
         // The selected AUT-0118 library image contains a bag and necklace that
         // conflict with the locked wardrobe contract. Waist-up shots use its
