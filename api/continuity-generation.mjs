@@ -472,7 +472,8 @@ export async function submitModelScope({ env, prompt, size, seed, references, va
         imageRoles.push(reference.role);
     }
     const visualPoseUrl = poseRef?.imageUrl;
-    if (poseRef && !waistUp) {
+    const visualPoseSent = Boolean(poseRef && !waistUp && !anchor?.assetId);
+    if (visualPoseSent) {
         if (!visualPoseUrl) throw new GenerationError('GENERATION_REFERENCE_MISSING', '已选择姿势，但没有可用的姿势参考图', 409);
         const poseImage = await fetchLibraryImage(visualPoseUrl, fetchImpl);
         if (!poseImage) throw new GenerationError('GENERATION_REFERENCE_MISSING', '姿势参考图无法读取；已停止生成，没有退化为纯文字姿势', 409);
@@ -485,7 +486,7 @@ export async function submitModelScope({ env, prompt, size, seed, references, va
     const direction = [
         imageRoleGuidance(imageRoles),
         ...fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`),
-        ...(visualPoseUrl && !waistUp
+        ...(visualPoseSent
             ? ['最后一张参考图来自摆姿库，只参考身体动作、肢体关系和重心；不要复制线稿、参考图中的脸、服装、背景、文字或标记。']
             : []),
         subjectRule(frameLocked, framePrompt),
@@ -647,7 +648,8 @@ async function callModelScope({ env, prompt, size, seed, references, variant, po
     // Full-body PoseAtlas line art overrides waist-up framing, while the bundled
     // waist-up photo carries clothing and accessories that conflict with outfit locks.
     const visualPoseUrl = poseRef?.imageUrl;
-    if (poseRef && !waistUp) {
+    const visualPoseSent = Boolean(poseRef && !waistUp && !anchor?.assetId);
+    if (visualPoseSent) {
         if (!visualPoseUrl) throw new GenerationError('GENERATION_REFERENCE_MISSING', '已选择姿势，但没有可用的姿势参考图', 409);
         const poseImage = await fetchLibraryImage(visualPoseUrl, fetchImpl);
         if (!poseImage) throw new GenerationError('GENERATION_REFERENCE_MISSING', 'PoseAtlas 姿势参考图无法读取；已停止生成，没有退化为纯文字姿势', 409);
@@ -661,7 +663,7 @@ async function callModelScope({ env, prompt, size, seed, references, variant, po
     const direction = [
         imageRoleGuidance(imageRoles),
         ...fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`),
-        ...(visualPoseUrl && !waistUp
+        ...(visualPoseSent
             ? ['最后一张参考图来自摆姿库，只参考身体动作、肢体关系和重心；不要复制线稿、参考图中的脸、服装、背景、文字或标记。']
             : []),
         subjectRule(frameLocked, framePrompt),
