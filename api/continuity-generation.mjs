@@ -442,6 +442,7 @@ export async function submitModelScope({ env, prompt, size, seed, references, va
         body: JSON.stringify({
             model: MODELSCOPE_MODEL,
             prompt: direction,
+            ...(size ? { size } : {}),
             ...(images.length ? { image_url: images } : {}),
             ...(Number.isSafeInteger(seed) ? { seed } : {}),
         }),
@@ -820,11 +821,17 @@ export async function generateShot({ group, shotId, providerId = '', env = {}, f
         references.push({ role: reference.role, assetId: reference.assetId, mime: asset.mime, buffer: asset.buffer, dataUrl: dataUrlFor(asset.buffer, asset.mime) });
     }
 
+    const aspectSizes = {
+        '1:1': '1328x1328', '16:9': '1664x928', '9:16': '928x1664',
+        '4:3': '1472x1140', '3:4': '1140x1472', '3:2': '1584x1056', '2:3': '1056x1584',
+    };
+    const size = aspectSizes[request.aspect] || '1056x1584';
+
     // Async provider: hand the work off and return immediately. A 20-40s
     // generation cannot be held open behind the Pages proxy (30s ceiling).
     if (submitOnly && providerId === 'modelscope-qwen-edit') {
         const submitted = await submitModelScope({
-            env, prompt: request.prompt, seed: request.seed, references,
+            env, prompt: request.prompt, size, seed: request.seed, references,
             variant: request.variant,
             poseRef: (group.shots || []).find(shot => shot.shotId === shotId)?.poseRef || null,
             anchor: request.anchor, locked: request.locked, store, fetchImpl,
@@ -837,9 +844,9 @@ export async function generateShot({ group, shotId, providerId = '', env = {}, f
     }
 
     const wide = String(request.aspect || '').startsWith('3:2');
-    const size = wide ? '1536x1024' : '1024x1536';
+    const synchronousSize = wide ? '1536x1024' : '1024x1536';
     const image = await adapter({
-        env, fetchImpl, prompt: request.prompt, size,
+        env, fetchImpl, prompt: request.prompt, size: synchronousSize,
         aspect: request.aspect, seed: request.seed, references,
         // Framing lives on the shot variant; the adapter needs it to state what
         // must be visible instead of leaving the crop to the model.
