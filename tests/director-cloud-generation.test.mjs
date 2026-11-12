@@ -224,7 +224,7 @@ test('actual image payload preserves a close-up contract without forcing full-bo
 });
 
 test('MS waist-up framing stays at the waist when the wardrobe lists a full skirt and shoes', async () => {
-    const wardrobe = '象牙白衬衫、藏青色及踝长裙、黑色皮鞋';
+    const wardrobe = '象牙白宽袖衬衫、藏青色及踝长裙、黑色皮鞋';
     const input = { ...request, brief: '自然公园肖像，人物坐在长椅上', scene_brief: '秋日公园，自然光',
         reference_brief: { modelDesc: wardrobe },
         shot_contract: {
@@ -256,15 +256,17 @@ test('MS waist-up framing stays at the waist when the wardrobe lists a full skir
     assert.match(translationSystem, /wardrobe contract applies only to clothing visible inside this crop/);
     assert.match(translationSystem, /never widen or lower the framing to display the complete outfit/);
     assert.match(translationInput, /Required waist-up crop: frame from the top of the head through the natural waistline/);
+    assert.match(translationInput, /Keep the long or wide sleeves fully covering both shoulders/);
     assert.match(translationInput, /Shot contract: Waist-up portrait\. Crop at the natural waistline/);
     assert.doesNotMatch(translationInput, /Crop below the waist/);
     assert.match(translationInput, /Exclude the hips and everything below, including skirt below the waist, legs and shoes/);
-    assert.match(translationInput, /Written wardrobe contract: 象牙白衬衫/);
+    assert.match(translationInput, /Written wardrobe contract: 象牙白宽袖衬衫/);
     assert.doesNotMatch(translationInput, /Written wardrobe contract: [^\n]*(?:长裙|皮鞋)/);
     assert.match(imagePrompt, /Required camera framing: Waist-up portrait from the top of the head through the natural waistline/);
     assert.match(imagePrompt, /The written wardrobe contract identifies the outfit, but only clothing visible inside this waist-up crop should appear/);
+    assert.match(imagePrompt, /Keep the long or wide sleeves fully covering both shoulders/);
     assert.match(imagePrompt, /do not widen or lower framing to show the full skirt, legs or shoes/);
-    assert.match(imagePrompt, /象牙白衬衫/);
+    assert.match(imagePrompt, /象牙白宽袖衬衫/);
     assert.doesNotMatch(imagePrompt, /(?:Written wardrobe contract|wardrobe contract identifies the outfit)[^\n]*(?:长裙|皮鞋)/);
     assert.match(imagePrompt, /input_image_0 controls facial identity, apparent age and hair only/);
     assert.match(imagePrompt, /No full-body costume image is supplied, so it cannot pull this waist-up frame wider/);

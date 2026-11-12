@@ -285,6 +285,9 @@ test('ModelScope waist-up frames keep pose text but omit conflicting full-body a
     assert.equal(payload.size, '1140x1472', 'ModelScope uses a portrait 3:4 canvas for waist-up frames');
     assert.match(payload.prompt, /头部、肩膀、胸部和上腹/);
     assert.match(payload.prompt, /禁止全身照、七分身照/);
+    assert.match(payload.prompt, /针织宽袖上衣完整覆盖双肩，领口保持在肩线以上/);
+    assert.match(payload.prompt, /耳朵和颈部不得添加耳饰、项链或首饰/);
+    assert.match(payload.prompt, /像摄影师现场抓拍，不像广告硬照/);
     assert.match(payload.prompt, /站立・回眸顾盼/);
     assert.doesNotMatch(payload.prompt, /最后一张参考图来自摆姿库/);
     const clothingClause = payload.prompt.match(/Subject and clothing:\s*(.*?)\. User constraints:/is)?.[1] || '';
