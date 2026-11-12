@@ -94,6 +94,7 @@ export async function consumeStudioSearchQuota({ uid, ip, env = {} }) {
 
 export async function consumeStudioImageQuota({ uid, env = {} }) {
     if (!uid) return false;
+    if (env.STUDIO_IMAGE_TEST_UNLIMITED_USER_ID && uid === env.STUDIO_IMAGE_TEST_UNLIMITED_USER_ID) return true;
     // Limits are configurable: at 5/6 per day the whole test cycle dead-ends
     // after a handful of frames. Defaults stay conservative; deployments that
     // mean to test at volume raise them through env.
