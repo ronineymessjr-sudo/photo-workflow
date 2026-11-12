@@ -166,7 +166,7 @@ export function stripBannedWords(text) {
 // film stock beats any adjective, light must be uneven, the venue must be a
 // little dirty. Stated as physical constraints rather than adjectives.
 export function realismTextZh(film = 'Kodak Portra 400') {
-    return `真实感：这是一张真实拍摄的 ${film} 胶片照片，不是渲染图；胶片颗粒与高光过渡自然；光衰减真实，背光一侧真正暗下去，暗部不被提亮；场景有使用痕迹（磨损、水渍、灰尘），皮肤有毛孔与细小绒毛，不做磨皮、不像影棚布景。`;
+    return `真实感：这是一张真实拍摄的 ${film} 胶片照片，不是渲染图；胶片颗粒与高光过渡自然；光衰减真实，背光一侧真正暗下去，暗部不被提亮；场景有使用痕迹（磨损、水渍、灰尘）；保留皮肤毛孔、细小绒毛和轻微肤色差异，不磨皮、不做商业精修；表情和动作松弛克制，像摄影师现场抓拍，不像广告硬照或影棚布景。`;
 }
 
 export function directionText({ prompt, locked, variant, poseRef, size }) {
@@ -187,6 +187,10 @@ export function directionText({ prompt, locked, variant, poseRef, size }) {
 // so every frame came back as a full standing figure filling the frame. Adding a
 // field here now reaches both.
 function directionFields({ prompt, locked, variant, poseRef, framing, film }) {
+    const wardrobeText = [locked?.subject, locked?.wardrobe, variant?.wardrobe].filter(Boolean).join(' ');
+    const shoulderCoverage = isWaistUp(variant) && /宽袖|长袖|long[- ]sleeve|wide[- ]sleeve/i.test(wardrobeText)
+        ? '针织宽袖上衣完整覆盖双肩，领口保持在肩线以上，不做露肩或滑肩；耳朵和颈部不得添加耳饰、项链或首饰。'
+        : '';
     return [
         // Framing first, deliberately. Measured: when the picture description ran
         // first, a shot asking for waist-up came back full body - the prose
@@ -197,6 +201,7 @@ function directionFields({ prompt, locked, variant, poseRef, framing, film }) {
         ['prompt', poseInFrame(prompt, variant?.size)],
         ['subject', wardrobeVisibleInFrame(locked?.subject, variant)],
         ['wardrobeGroup', wardrobeVisibleInFrame(locked?.wardrobe, variant)],
+        ['wardrobeCoverage', shoulderCoverage],
         ['style', locked?.styleProfile],
         ['location', variant?.scene || locked?.location],
         ['weather', locked?.weather],
@@ -233,7 +238,7 @@ function directionFields({ prompt, locked, variant, poseRef, framing, film }) {
 }
 
 const FIELD_LABELS_ZH = {
-    prompt: '画面', subject: '人物', wardrobeGroup: '全组服装', style: '风格',
+    prompt: '画面', subject: '人物', wardrobeGroup: '全组服装', wardrobeCoverage: '服装约束', style: '风格',
     location: '场景', weather: '天气', timeOfDay: '时间', framing: '取景',
     realism: '真实感',
     pose: '姿势', poseDirection: '摆姿指导', action: '动作', camera: '机位',
@@ -281,7 +286,8 @@ function wardrobeVisibleInFrame(value, variant = {}) {
     if (!isWaistUp(variant) || !text) return text;
     return text.split(/(?<=[，、,；;。])/)
         .filter(part => !/(裙|裤|靴|鞋|袜|下装|skirt|trousers|pants|boots|shoes|socks|lower[- ]body)/i.test(part))
-        .join('');
+        .join('')
+        .replace(/[，、,；;。]+$/, '');
 }
 
 function promptVisibleInFrame(prompt, variant = {}) {
