@@ -265,6 +265,38 @@ test('ModelScope receives the selected PoseAtlas image as a pose-only reference'
     assert.equal(result.status, 'pending');
 });
 
+test('anchored ModelScope shots follow PoseAtlas text without mixing the pose photo into the master edit', async () => {
+    const store = createMemoryStore();
+    const group = await readyGroup(store);
+    group.shots[0].size = '全身';
+    group.shots[0].shotType = '全身';
+    group.shots[0].action = '站立，一只手轻扶髋部，另一只手自然下垂，双脚稳定着地。';
+    group.shots[0].poseRef = {
+        id: 'atlas-pose-p015', title: '站立・对立式平衡・手扶腰',
+        direction: '靠镜头一侧的手轻搭髋部，另一只手自然下垂。',
+        imageUrl: 'https://example.com/pose.jpg',
+    };
+    setAnchor(group, { assetId: group.references.find(reference => reference.role === 'identity').assetId });
+    let payload;
+    const fetchedUrls = [];
+    const result = await generateShot({
+        group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit',
+        env: { MODELSCOPE_TOKEN: 'test-only' }, store, submitOnly: true,
+        fetchImpl: async (url, options = {}) => {
+            fetchedUrls.push(String(url));
+            payload = JSON.parse(options.body);
+            return Response.json({ task_id: 'task-anchored-text-pose' });
+        },
+    });
+
+    assert.equal(payload.image_url.length, 3, 'the master, identity and outfit images stay in the edit request');
+    assert.deepEqual(result.referenceRolesSent, ['anchor', 'identity', 'style']);
+    assert.ok(!fetchedUrls.includes('https://example.com/pose.jpg'), 'anchored edits do not mix in another person or pose photo');
+    assert.match(payload.prompt, /站立・对立式平衡・手扶腰/);
+    assert.match(payload.prompt, /一只手轻扶髋部，另一只手自然下垂/);
+    assert.doesNotMatch(payload.prompt, /最后一张参考图来自摆姿库/);
+});
+
 test('ModelScope waist-up frames keep pose text and omit references that can override crop or wardrobe', async () => {
     const store = createMemoryStore();
     const wardrobe = '米白色针织裹身上衣（宽袖、腰前交叠系结），卡其色层叠长半身裙至脚踝，棕色及膝长靴；不添加包袋、项链、首饰或帽子。';
