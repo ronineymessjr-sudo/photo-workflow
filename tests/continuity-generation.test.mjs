@@ -261,7 +261,7 @@ test('ModelScope receives the selected PoseAtlas image as a pose-only reference'
 test('ModelScope waist-up frames keep pose text but omit conflicting full-body and accessory references', async () => {
     const store = createMemoryStore();
     const group = await readyGroup(store);
-    group.shots[0].size = 'MS';
+    group.shots[0].size = '中景';
     group.shots[0].shotType = '中景';
     group.shots[0].poseRef = {
         id: 'atlas-pose-full_single_p017', title: '站立・回眸顾盼',
