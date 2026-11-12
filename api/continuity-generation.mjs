@@ -753,6 +753,12 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
         // depth-of-field instruction below instead.
     ].filter(Boolean).join('；');
     const direction = await englishPrompt(ai, directionZh);
+    const wardrobeCoverageEn = wardrobeCoverageRules({
+        subject: locked?.subject,
+        wardrobe: locked?.wardrobe,
+        shotWardrobe: variant?.wardrobe,
+        language: 'en',
+    });
     const slots = ['identity', 'style'];
     const chosen = slots.map(role => references.find(reference => reference.role === role)).filter(Boolean);
     if (chosen.length < 2) {
@@ -792,6 +798,7 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
             ? 'Image 1 is the accepted frame from this shoot. Preserve established identity and group-wide wardrobe continuity except where the current shot contract specifies a change. Follow that contract for pose, action, scene, lighting, camera and framing. Image 2 is the approved visual-style reference.'
             : 'Image 1 supplies the identity reference; Image 2 is the approved visual-style reference.',
         direction ? `Shot: ${stripBannedWords(direction)}.` : '',
+        ...wardrobeCoverageEn,
         directive(variant?.mustShow) ? `Must contain: ${shortList(variant.mustShow)}.` : '',
         directive(variant?.rejectIf) ? `Redo if: ${shortList(variant.rejectIf)}.` : '',
         framingLine(variant),
