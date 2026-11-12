@@ -22,6 +22,7 @@
 
 import { assertReadyToGenerate } from './continuity.mjs';
 import { compileCloudCandidateRequest } from './director-cloud-generation.mjs';
+import { wardrobeCoverageRules } from './continuity-prompt-rules.mjs';
 
 export const CLOUDFLARE_MODEL = '@cf/black-forest-labs/flux-2-klein-9b';
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
@@ -195,6 +196,7 @@ function buildPrompt(group, shot, compiled, input) {
         `Location (text only, no reference image available): ${scene}${locked.weather ? `, ${locked.weather}` : ''}${locked.timeOfDay ? `, ${locked.timeOfDay}` : ''}.`,
         `Camera: ${[shot.camera, shot.lens, shot.distance, shot.subjectPlacement].filter(Boolean).join(', ') || 'per shot contract'}.`,
         `Style: ${locked.styleProfile || 'documentary, low saturation'}.`,
+        ...wardrobeCoverageRules({ subject: locked.subject, wardrobe: locked.wardrobe, shotWardrobe: shot.wardrobe }),
         framing,
         'Natural light with realistic falloff and subtle exposure variation; preserve visible skin pores and fine facial hair. Avoid plastic skin, heavy smoothing, HDR glow, text, watermark, collage, extra limbs, duplicate feet and malformed anatomy.',
     ].filter(Boolean).join(' ');
