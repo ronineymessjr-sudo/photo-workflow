@@ -249,7 +249,7 @@ const FRAMING_ZH = {
     ECU: '极特写：画框只包含脸部局部（眼睛或嘴唇），额头与下巴被画框切掉，脸占画面八成以上',
     CU: '特写：画框下沿切在锁骨下方，胸口以下完全不在画面内，画面里只有头部、颈部和肩，不出现手臂、不出现手',
     MCU: '近景半身：画框下沿切在胸部，胸部以下完全不在画面内，画面里只有头部到胸前，不出现腰、腿、脚，人物占画面高度七成以上',
-    MS: '中景：画框下沿切在腰部，腰部以下完全不在画面内，双手可以入画，人物占画面高度约七成',
+    MS: '中景腰上人像：只显示头部、肩膀、胸部和上腹，画框必须在自然腰线结束；绝不出现裙子、胯部、腿、膝盖、靴子或脚；禁止全身照、七分身照和远景，必要时裁掉手肘以下，人物占画面高度约七成',
     MFS: '中全景：画框下沿切在膝盖上方，膝盖以下完全不在画面内，人物占画面高度约八成',
     FS: '全身：从头到脚完整入画，头顶留约十分之一空间，脚下地面露出，人物不要顶到画框上下边缘',
     WS: '全景：人物只占画面高度的三分之一到二分之一，环境与建筑是主体，人物明显小于画框',
@@ -414,8 +414,12 @@ export async function submitModelScope({ env, prompt, size, seed, references, va
         if (!stored?.buffer?.length) throw new GenerationError('GENERATION_ANCHOR_MISSING', '已锁定的母图读不到', 409);
         images.push(dataUrlFor(stored.buffer, stored.mime));
     }
-    for (const reference of references) images.push(reference.dataUrl);
-    if (poseRef) {
+    const waistUp = visibleFrame(variant?.size) === 'MS';
+    for (const reference of references) {
+        if (waistUp && reference.role === 'style') continue;
+        images.push(reference.dataUrl);
+    }
+    if (poseRef && !waistUp) {
         if (!poseRef.imageUrl) throw new GenerationError('GENERATION_REFERENCE_MISSING', '已选择 PoseAtlas 姿势，但没有可用的姿势参考图', 409);
         const poseImage = await fetchLibraryImage(poseRef.imageUrl, fetchImpl);
         if (!poseImage) throw new GenerationError('GENERATION_REFERENCE_MISSING', 'PoseAtlas 姿势参考图无法读取；已停止生成，没有退化为纯文字姿势', 409);
@@ -424,7 +428,7 @@ export async function submitModelScope({ env, prompt, size, seed, references, va
     const fields = directionFields({ prompt, locked, variant, poseRef, framing: framingZh(variant) });
     const direction = [
         ...fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`),
-        ...(poseRef?.imageUrl ? ['最后一张参考图来自摆姿库，只参考身体动作、肢体关系和重心；不要复制线稿、参考图中的脸、服装、背景、文字或标记。'] : []),
+        ...(poseRef?.imageUrl && !waistUp ? ['最后一张参考图来自摆姿库，只参考身体动作、肢体关系和重心；不要复制线稿、参考图中的脸、服装、背景、文字或标记。'] : []),
         subjectRule(locked, prompt),
     ].join('\n');
 
@@ -544,10 +548,18 @@ async function callModelScope({ env, prompt, size, seed, references, variant, po
         if (!stored?.buffer?.length) throw new GenerationError('GENERATION_ANCHOR_MISSING', '已锁定的母图读不到；停止生成，不能退回无母图请求', 409);
         images.push(dataUrlFor(stored.buffer, stored.mime));
     }
+    const waistUp = visibleFrame(variant?.size) === 'MS';
     for (const reference of references) {
+        // The selected AUT-0118 library image contains a bag and necklace that
+        // conflict with the locked wardrobe contract. Waist-up shots use its
+        // already-compiled text description instead of copying those props.
+        if (waistUp && reference.role === 'style') continue;
         images.push(reference.dataUrl);
     }
-    if (poseRef) {
+    // Full-body PoseAtlas line art repeatedly overrode the waist-up crop in
+    // production. Keep the selected pose's title and direction in the prompt,
+    // but do not send its full-body image for a waist-up frame.
+    if (poseRef && !waistUp) {
         if (!poseRef.imageUrl) throw new GenerationError('GENERATION_REFERENCE_MISSING', '已选择 PoseAtlas 姿势，但没有可用的姿势参考图', 409);
         const poseImage = await fetchLibraryImage(poseRef.imageUrl, fetchImpl);
         if (!poseImage) throw new GenerationError('GENERATION_REFERENCE_MISSING', 'PoseAtlas 姿势参考图无法读取；已停止生成，没有退化为纯文字姿势', 409);
@@ -557,7 +569,7 @@ async function callModelScope({ env, prompt, size, seed, references, variant, po
     const fields = directionFields({ prompt, locked, variant, poseRef, framing: framingZh(variant) });
     const direction = [
         ...fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`),
-        ...(poseRef?.imageUrl ? ['最后一张参考图来自摆姿库，只参考身体动作、肢体关系和重心；不要复制线稿、参考图中的脸、服装、背景、文字或标记。'] : []),
+        ...(poseRef?.imageUrl && !waistUp ? ['最后一张参考图来自摆姿库，只参考身体动作、肢体关系和重心；不要复制线稿、参考图中的脸、服装、背景、文字或标记。'] : []),
         subjectRule(locked, prompt),
     ].join('\n');
 
