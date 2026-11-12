@@ -131,7 +131,7 @@ test('accepted async retry keeps its seed through collect and the saved result',
             const body = JSON.parse(init.body);
             requests.push({ path, body });
             if (path === '/api/continuity/requests') return jsonResponse(200, { requests: [{ shotId: 'shot-01', seed: 428501 }] });
-            if (path === '/api/continuity/generate') return jsonResponse(202, { status: 'pending', taskId: 'task-1' });
+            if (String(path).endsWith('/api/continuity/generate')) return jsonResponse(202, { status: 'pending', taskId: 'task-1' });
             return jsonResponse(200, { status: 'succeeded', shotId: 'shot-01', image: { assetId: 'asset-1', path: '/api/continuity/asset/0123456789abcdef' } });
         },
     });
@@ -139,11 +139,13 @@ test('accepted async retry keeps its seed through collect and the saved result',
     panel.context.collectShot = async () => null;
 
     await panel.context.generateShot('shot-01', true);
+    assert.match(requests[1].path, /^https:\/\/photoatelier-api\.photomagic\.workers\.dev\/api\/continuity\/generate$/);
     assert.equal(panel.state().retryCounts['shot-01'], 1);
     assert.equal(panel.state().pendingJobs['shot-01'].seed, 428501);
 
     panel.context.collectShot = collect;
     const completed = await panel.context.collectShot('shot-01');
+    assert.match(requests[2].path, /^https:\/\/photoatelier-api\.photomagic\.workers\.dev\/api\/continuity\/collect$/);
     assert.equal(requests[2].body.seed, 428501);
     assert.equal(completed.seed, 428501);
     assert.equal(panel.state().results['shot-01'].seed, 428501);
