@@ -232,7 +232,8 @@ test('same-shot retry changes only its deterministic seed', async () => {
 
 test('ModelScope receives the selected PoseAtlas image as a pose-only reference', async () => {
     const store = createMemoryStore();
-    const group = await readyGroup(store);
+    const wardrobe = '米白色针织裹身上衣（宽袖、腰前交叠系结），卡其色半身裙；不添加包袋、项链、首饰或帽子。';
+    const group = await readyGroup(store, { wardrobeNote: wardrobe, lockedSubject: wardrobe });
     group.shots[0].poseRef = {
         id: 'atlas-pose-p001', title: '站立・回眸顾盼', angle: '侧后方',
         direction: '上身转开再回头，肩颈放松。',
@@ -254,6 +255,8 @@ test('ModelScope receives the selected PoseAtlas image as a pose-only reference'
     assert.equal(payload.image_url.length, 3, 'identity, outfit and selected pose are sent in that order');
     assert.match(payload.prompt, /最后一张参考图来自摆姿库/);
     assert.match(payload.prompt, /不要复制线稿/);
+    assert.match(payload.prompt, /针织宽袖上衣肩缝保持在双肩自然位置，领口覆盖双肩/);
+    assert.match(payload.prompt, /人物全组不佩戴首饰/);
     assert.equal(result.referencesSent, 3);
     assert.equal(result.status, 'pending');
 });
@@ -306,8 +309,8 @@ test('ModelScope waist-up frames keep pose text but omit conflicting full-body a
     assert.equal(payload.size, '1140x1472', 'ModelScope uses a portrait 3:4 canvas for waist-up frames');
     assert.match(payload.prompt, /头部、肩膀、胸部和上腹/);
     assert.match(payload.prompt, /禁止全身照、七分身照/);
-    assert.match(payload.prompt, /针织宽袖上衣完整覆盖双肩，领口保持在肩线以上/);
-    assert.match(payload.prompt, /耳朵和颈部不得添加耳饰、项链或首饰/);
+    assert.match(payload.prompt, /针织宽袖上衣肩缝保持在双肩自然位置，领口覆盖双肩/);
+    assert.match(payload.prompt, /人物全组不佩戴首饰：耳朵、颈部、手腕和手指均无耳饰、项链、手链或戒指/);
     assert.match(payload.prompt, /像摄影师现场抓拍，不像广告硬照/);
     assert.match(payload.prompt, /站立・回眸顾盼/);
     const clothingClause = payload.prompt.match(/Subject and clothing:\s*(.*?)\. User constraints:/is)?.[1] || '';

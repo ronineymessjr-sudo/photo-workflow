@@ -188,9 +188,14 @@ export function directionText({ prompt, locked, variant, poseRef, size }) {
 // field here now reaches both.
 function directionFields({ prompt, locked, variant, poseRef, framing, film }) {
     const wardrobeText = [locked?.subject, locked?.wardrobe, variant?.wardrobe].filter(Boolean).join(' ');
-    const shoulderCoverage = isWaistUp(variant) && /宽袖|长袖|long[- ]sleeve|wide[- ]sleeve/i.test(wardrobeText)
-        ? '针织宽袖上衣完整覆盖双肩，领口保持在肩线以上，不做露肩或滑肩；耳朵和颈部不得添加耳饰、项链或首饰。'
+    const hasLongSleeves = /宽袖|长袖|long[- ]sleeve|wide[- ]sleeve/i.test(wardrobeText);
+    const shouldersCovered = hasLongSleeves && !/露肩|滑肩|off[- ]shoulder|bare shoulders?/i.test(wardrobeText)
+        ? '针织宽袖上衣肩缝保持在双肩自然位置，领口覆盖双肩，不做露肩或滑肩造型。'
         : '';
+    const jewelryExcluded = /不添加.{0,16}(?:首饰|项链|耳饰|饰品)|不要.{0,16}(?:首饰|项链|耳饰|饰品)|不得.{0,16}(?:首饰|项链|耳饰|饰品)|no jewelry|without jewelry/i.test(wardrobeText)
+        ? '人物全组不佩戴首饰：耳朵、颈部、手腕和手指均无耳饰、项链、手链或戒指。'
+        : '';
+    const wardrobeCoverage = [shouldersCovered, jewelryExcluded].filter(Boolean).join(' ');
     return [
         // Framing first, deliberately. Measured: when the picture description ran
         // first, a shot asking for waist-up came back full body - the prose
@@ -201,7 +206,7 @@ function directionFields({ prompt, locked, variant, poseRef, framing, film }) {
         ['prompt', poseInFrame(prompt, variant?.size)],
         ['subject', wardrobeVisibleInFrame(locked?.subject, variant)],
         ['wardrobeGroup', wardrobeVisibleInFrame(locked?.wardrobe, variant)],
-        ['wardrobeCoverage', shoulderCoverage],
+        ['wardrobeCoverage', wardrobeCoverage],
         ['style', locked?.styleProfile],
         ['location', variant?.scene || locked?.location],
         ['weather', locked?.weather],
