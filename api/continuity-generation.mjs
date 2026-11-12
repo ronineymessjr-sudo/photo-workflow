@@ -465,18 +465,27 @@ export async function submitModelScope({ env, prompt, size, seed, references, va
         subjectRule(frameLocked, framePrompt),
     ].join('\n');
 
-    const response = await fetchImpl(MODELSCOPE_ENDPOINT, {
-        method: 'POST',
-        headers: { ...headers, 'X-ModelScope-Async-Mode': 'true' },
-        body: JSON.stringify({
-            model: MODELSCOPE_MODEL,
-            prompt: direction,
-            ...(size ? { size } : {}),
-            ...(images.length ? { image_url: images } : {}),
-            ...(Number.isSafeInteger(seed) ? { seed } : {}),
-        }),
-        signal: AbortSignal.timeout(25000),
-    });
+    let response;
+    try {
+        response = await fetchImpl(MODELSCOPE_ENDPOINT, {
+            method: 'POST',
+            headers: { ...headers, 'X-ModelScope-Async-Mode': 'true' },
+            body: JSON.stringify({
+                model: MODELSCOPE_MODEL,
+                prompt: direction,
+                ...(size ? { size } : {}),
+                ...(images.length ? { image_url: images } : {}),
+                ...(Number.isSafeInteger(seed) ? { seed } : {}),
+            }),
+            signal: AbortSignal.timeout(25000),
+        });
+    } catch (error) {
+        throw new GenerationError(
+            'GENERATION_SUBMIT_AMBIGUOUS',
+            '魔搭提交请求超时，无法确认是否已创建任务；请先查询任务状态，不要立即重复提交。',
+            503,
+        );
+    }
     if (!response.ok) {
         const detail = await response.text().catch(() => '');
         // 403 on this endpoint is never "bad request": it is ModelScope's
