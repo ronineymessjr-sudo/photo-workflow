@@ -14,9 +14,9 @@ test('Chinese people counts keep the locked subject description consistent', () 
     assert.match(locked.subject, /2位成年人/);
 });
 
-async function readyGroup(store, { modelDesc = '一名成年人', lockedSubject = '' } = {}) {
+async function readyGroup(store, { modelDesc = '一名成年人', lockedSubject = '', wardrobeNote = '炭灰大衣' } = {}) {
     let group = createGroup({
-        input: { theme: '雨夜旧车站', scene: '旧车站月台', style: '纪实', modelDesc, wardrobeNote: '炭灰大衣' },
+        input: { theme: '雨夜旧车站', scene: '旧车站月台', style: '纪实', modelDesc, wardrobeNote },
         lockedHints: lockedSubject ? { subject: lockedSubject } : {},
         shots: [{ shotId: 'shot-01', size: 'WS', camera_angle: 'eye_level', lens: '35mm', model_pose: '沿月台行走', model_position: '画面右侧', generator_prompt: 'wide shot of a figure walking along a wet platform' }],
     });
@@ -260,9 +260,11 @@ test('ModelScope receives the selected PoseAtlas image as a pose-only reference'
 
 test('ModelScope waist-up frames keep pose text but omit conflicting full-body and accessory references', async () => {
     const store = createMemoryStore();
-    const group = await readyGroup(store);
+    const wardrobe = '米白色针织裹身上衣（宽袖、腰前交叠系结），卡其色层叠长半身裙至脚踝，棕色及膝长靴；不添加包袋、项链、首饰或帽子。';
+    const group = await readyGroup(store, { wardrobeNote: wardrobe, lockedSubject: `成年东亚女性模特；${wardrobe}` });
     group.shots[0].size = '中景';
     group.shots[0].shotType = '中景';
+    group.shots[0].prompt = `Editorial photograph. Waist-up portrait. Subject and clothing: ${wardrobe}. User constraints: one person.`;
     group.shots[0].poseRef = {
         id: 'atlas-pose-full_single_p017', title: '站立・回眸顾盼',
         direction: '上身转开再回头，肩颈放松。',
@@ -285,6 +287,9 @@ test('ModelScope waist-up frames keep pose text but omit conflicting full-body a
     assert.match(payload.prompt, /禁止全身照、七分身照/);
     assert.match(payload.prompt, /站立・回眸顾盼/);
     assert.doesNotMatch(payload.prompt, /最后一张参考图来自摆姿库/);
+    const clothingClause = payload.prompt.match(/Subject and clothing:\s*(.*?)\. User constraints:/is)?.[1] || '';
+    assert.match(clothingClause, /米白色针织裹身上衣/);
+    assert.doesNotMatch(clothingClause, /半身裙|长靴|boots|skirt/i);
     assert.equal(result.referencesSent, 1);
 });
 
