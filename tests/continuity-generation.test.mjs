@@ -328,6 +328,7 @@ test('anchored full-body frames omit outfit references when the wardrobe contrac
     group.shots[0].size = '全身';
     group.shots[0].shotType = '全身';
     group.shots[0].prompt = 'Full-body portrait following the pose contract.';
+    Object.assign(group.references.find(reference => reference.role === 'style'), { assetId: 'studio-costume-AUT-0118' });
     setAnchor(group, { assetId: group.references.find(reference => reference.role === 'identity').assetId });
     let payload;
     const result = await generateShot({
@@ -340,6 +341,29 @@ test('anchored full-body frames omit outfit references when the wardrobe contrac
     });
     assert.equal(payload.image_url.length, 2, 'accepted anchor and identity remain; conflicting outfit reference is omitted');
     assert.equal(result.referencesSent, 2);
+    assert.match(payload.prompt, /不添加包袋、项链、首饰或帽子/);
+});
+
+test('anchored full-body frames retain a sanitized outfit reference when the contract bans accessories', async () => {
+    const store = createMemoryStore();
+    const wardrobe = '米白色针织裹身上衣，卡其色长裙和棕色长靴；不添加包袋、项链、首饰或帽子。';
+    const group = await readyGroup(store, { lockedSubject: `成年女性模特；${wardrobe}`, wardrobeNote: wardrobe });
+    group.shots[0].size = '全身';
+    group.shots[0].shotType = '全身';
+    group.shots[0].prompt = 'Full-body portrait following the pose contract.';
+    setAnchor(group, { assetId: group.references.find(reference => reference.role === 'identity').assetId });
+    Object.assign(group.references.find(reference => reference.role === 'style'), { assetId: 'qa-sanitized-costume-reference' });
+    let payload;
+    const result = await generateShot({
+        group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit',
+        env: { MODELSCOPE_TOKEN: 'test-only' }, store, submitOnly: true,
+        fetchImpl: async (_url, options = {}) => {
+            payload = JSON.parse(options.body);
+            return Response.json({ task_id: 'task-anchored-full-body-with-sanitized-outfit' });
+        },
+    });
+    assert.equal(payload.image_url.length, 3, 'accepted anchor, identity and sanitized outfit remain');
+    assert.equal(result.referencesSent, 3);
     assert.match(payload.prompt, /不添加包袋、项链、首饰或帽子/);
 });
 
