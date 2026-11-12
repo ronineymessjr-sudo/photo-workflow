@@ -234,9 +234,9 @@ test('ModelScope receives the selected PoseAtlas image as a pose-only reference'
     const store = createMemoryStore();
     const group = await readyGroup(store);
     group.shots[0].poseRef = {
-        id: 'atlas-pose-full_single_p017', title: '站立・回眸顾盼', angle: '侧后方',
+        id: 'atlas-pose-p001', title: '站立・回眸顾盼', angle: '侧后方',
         direction: '上身转开再回头，肩颈放松。',
-        imageUrl: 'https://hruiccc.github.io/RuiC-PoseAtlas/thumbs/full_single_p017.jpg',
+        imageUrl: 'https://hruiccc.github.io/RuiC-PoseAtlas/thumbs/p001.jpg',
     };
     let payload;
     const result = await generateShot({
@@ -273,20 +273,29 @@ test('ModelScope waist-up frames keep pose text but omit conflicting full-body a
     group.shots[0].poseRef = {
         id: 'atlas-pose-full_single_p017', title: '站立・回眸顾盼',
         direction: '上身转开再回头，肩颈放松。',
-        imageUrl: 'https://hruiccc.github.io/RuiC-PoseAtlas/thumbs/full_single_p017.jpg',
+        imageUrl: 'https://photo-workflow.pages.dev/assets/pose-references/pose-02.jpg',
     };
     let payload;
+    let poseReferenceFetched = false;
+    const fetchedUrls = [];
     const result = await generateShot({
         group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit',
         env: { MODELSCOPE_TOKEN: 'test-only' }, store, submitOnly: true,
         fetchImpl: async (url, options = {}) => {
+            fetchedUrls.push(String(url));
             assert.doesNotMatch(String(url), /^https:\/\/hruiccc\.github\.io\//, 'waist-up must not fetch the full-body pose image');
+            if (String(url) === 'https://photo-workflow.pages.dev/assets/pose-references/pose-02.jpg') {
+                poseReferenceFetched = true;
+                return new Response(Uint8Array.from([1, 2, 3]), { headers: { 'Content-Type': 'image/jpeg' } });
+            }
             payload = JSON.parse(options.body);
             return Response.json({ task_id: 'task-waist-up' });
         },
     });
 
-    assert.equal(payload.image_url.length, 1, 'only the identity image remains; conflicting costume and full-body pose images are omitted');
+    assert.match(payload.prompt, /最后一张是已授权的实拍姿势参考/);
+    assert.equal(poseReferenceFetched, true, `fetches: ${fetchedUrls.join(', ')}; pose: ${payload.prompt.match(/姿势[^\n]*/)?.[0] || ''}`);
+    assert.equal(payload.image_url.length, 2, 'identity and an approved waist-up pose photo are sent; the costume and full-body line-art images are omitted');
     assert.ok(assetReads.length > 0);
     const styleAssetId = group.references.find(reference => reference.role === 'style')?.assetId;
     assert.ok(styleAssetId);
@@ -298,14 +307,13 @@ test('ModelScope waist-up frames keep pose text but omit conflicting full-body a
     assert.match(payload.prompt, /耳朵和颈部不得添加耳饰、项链或首饰/);
     assert.match(payload.prompt, /像摄影师现场抓拍，不像广告硬照/);
     assert.match(payload.prompt, /站立・回眸顾盼/);
-    assert.doesNotMatch(payload.prompt, /最后一张参考图来自摆姿库/);
     const clothingClause = payload.prompt.match(/Subject and clothing:\s*(.*?)\. User constraints:/is)?.[1] || '';
     assert.match(clothingClause, /米白色针织裹身上衣/);
     assert.doesNotMatch(clothingClause, /半身裙|长靴|boots|skirt/i);
     const wardrobeLines = payload.prompt.split('\n').filter(line => /^(?:人物|全组服装|服装)：/.test(line));
     assert.ok(wardrobeLines.length > 0);
     assert.ok(wardrobeLines.every(line => !/半身裙|长靴|boots|skirt/i.test(line)), 'all waist-up wardrobe fields must exclude garments below the crop');
-    assert.equal(result.referencesSent, 1);
+    assert.equal(result.referencesSent, 2);
 });
 
 test('ModelScope stops before submission when an accepted pose image is unavailable', async () => {
