@@ -261,7 +261,7 @@ test('ModelScope receives the selected PoseAtlas image as a pose-only reference'
     assert.equal(result.status, 'pending');
 });
 
-test('ModelScope waist-up frames keep pose text but omit conflicting full-body and accessory references', async () => {
+test('ModelScope waist-up frames keep pose text and omit references that can override crop or wardrobe', async () => {
     const store = createMemoryStore();
     const wardrobe = '米白色针织裹身上衣（宽袖、腰前交叠系结），卡其色层叠长半身裙至脚踝，棕色及膝长靴；不添加包袋、项链、首饰或帽子。';
     const group = await readyGroup(store, { wardrobeNote: wardrobe, lockedSubject: `成年东亚女性模特；${wardrobe}` });
@@ -298,10 +298,9 @@ test('ModelScope waist-up frames keep pose text but omit conflicting full-body a
         },
     });
 
-    assert.match(payload.prompt, /最后一张是已授权的实拍姿势参考/);
     assert.equal(submissionHeaders['X-ModelScope-Task-Type'], 'image_generation');
-    assert.equal(poseReferenceFetched, true, `fetches: ${fetchedUrls.join(', ')}; pose: ${payload.prompt.match(/姿势[^\n]*/)?.[0] || ''}`);
-    assert.equal(payload.image_url.length, 2, 'identity and an approved waist-up pose photo are sent; the costume and full-body line-art images are omitted');
+    assert.equal(poseReferenceFetched, false, `fetches: ${fetchedUrls.join(', ')}; pose: ${payload.prompt.match(/姿势[^\n]*/)?.[0] || ''}`);
+    assert.equal(payload.image_url.length, 1, 'only identity is sent; costume and pose images can override the wardrobe or waist-up crop');
     assert.ok(assetReads.length > 0);
     const styleAssetId = group.references.find(reference => reference.role === 'style')?.assetId;
     assert.ok(styleAssetId);
@@ -319,7 +318,7 @@ test('ModelScope waist-up frames keep pose text but omit conflicting full-body a
     const wardrobeLines = payload.prompt.split('\n').filter(line => /^(?:人物|全组服装|服装)：/.test(line));
     assert.ok(wardrobeLines.length > 0);
     assert.ok(wardrobeLines.every(line => !/半身裙|长靴|boots|skirt/i.test(line)), 'all waist-up wardrobe fields must exclude garments below the crop');
-    assert.equal(result.referencesSent, 2);
+    assert.equal(result.referencesSent, 1);
 });
 
 test('anchored full-body frames omit outfit references when the wardrobe contract bans their accessories', async () => {
