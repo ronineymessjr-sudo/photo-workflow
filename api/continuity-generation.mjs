@@ -469,7 +469,11 @@ export async function submitModelScope({ env, prompt, size, seed, references, va
     try {
         response = await fetchImpl(MODELSCOPE_ENDPOINT, {
             method: 'POST',
-            headers: { ...headers, 'X-ModelScope-Async-Mode': 'true' },
+            headers: {
+                ...headers,
+                'X-ModelScope-Async-Mode': 'true',
+                'X-ModelScope-Task-Type': 'image_generation',
+            },
             body: JSON.stringify({
                 model: MODELSCOPE_MODEL,
                 prompt: direction,

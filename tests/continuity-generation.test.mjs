@@ -276,6 +276,7 @@ test('ModelScope waist-up frames keep pose text but omit conflicting full-body a
         imageUrl: 'https://photo-workflow.pages.dev/assets/pose-references/pose-02.jpg',
     };
     let payload;
+    let submissionHeaders;
     let poseReferenceFetched = false;
     const fetchedUrls = [];
     const result = await generateShot({
@@ -289,11 +290,13 @@ test('ModelScope waist-up frames keep pose text but omit conflicting full-body a
                 return new Response(Uint8Array.from([1, 2, 3]), { headers: { 'Content-Type': 'image/jpeg' } });
             }
             payload = JSON.parse(options.body);
+            submissionHeaders = options.headers;
             return Response.json({ task_id: 'task-waist-up' });
         },
     });
 
     assert.match(payload.prompt, /最后一张是已授权的实拍姿势参考/);
+    assert.equal(submissionHeaders['X-ModelScope-Task-Type'], 'image_generation');
     assert.equal(poseReferenceFetched, true, `fetches: ${fetchedUrls.join(', ')}; pose: ${payload.prompt.match(/姿势[^\n]*/)?.[0] || ''}`);
     assert.equal(payload.image_url.length, 2, 'identity and an approved waist-up pose photo are sent; the costume and full-body line-art images are omitted');
     assert.ok(assetReads.length > 0);
