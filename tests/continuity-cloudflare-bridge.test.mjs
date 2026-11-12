@@ -255,13 +255,15 @@ test('Cloudflare Workers AI translation carries full-group wardrobe locks', asyn
         async get() { return { buffer: PNG_BYTES, meta: { mime: 'image/png' } }; },
     };
 
-    await generateShot({
+    const result = await generateShot({
         group, shotId: 'shot-01', providerId: 'cloudflare-flux-klein',
         env: { AI: ai }, store,
     });
 
     assert.match(translatedDirection, /针织宽袖上衣肩缝保持在双肩自然位置，领口覆盖双肩/);
     assert.match(translatedDirection, /人物全组不佩戴首饰/);
+    assert.match(result.sentPrompt, /Keep both shoulders fully covered/);
+    assert.match(result.sentPrompt, /No jewelry anywhere: no earrings, necklace, bracelets, or rings/);
 });
 
 test('generateShot reports a missing AI binding as 503, not a crash', async () => {
