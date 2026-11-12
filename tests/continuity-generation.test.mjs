@@ -330,6 +330,22 @@ test('ModelScope stops before submission when an accepted pose image is unavaila
     );
 });
 
+test('ModelScope submission timeout is reported as ambiguous instead of leaking a runtime error', async () => {
+    const store = createMemoryStore();
+    const group = await readyGroup(store);
+    await assert.rejects(
+        () => generateShot({
+            group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit',
+            env: { MODELSCOPE_TOKEN: 'test-only' }, store, submitOnly: true,
+            fetchImpl: async () => { throw new DOMException('aborted', 'TimeoutError'); },
+        }),
+        error => error.code === 'GENERATION_SUBMIT_AMBIGUOUS'
+            && error.status === 503
+            && /不要立即重复提交/.test(error.message)
+            && !/code 23|operation was aborted/i.test(error.message),
+    );
+});
+
 test('generation without credentials fails closed and names the missing env vars', async () => {
     const store = createMemoryStore();
     const group = await readyGroup(store);
