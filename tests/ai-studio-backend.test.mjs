@@ -173,6 +173,14 @@ test('temporary unlimited image allowance applies only to its exact configured Q
     assert.equal(await consumeStudioImageQuota({ uid: 'qa-user', env: unconfigured }), false);
 });
 
+test('authenticated session reports active QA image override only to its exact account', async () => {
+    const env = { ...environment(), STUDIO_IMAGE_TEST_UNLIMITED_USER_ID: 'qa-user' };
+    const qaSession = await (await call(env, '/api/auth/session', undefined, 'qa-user')).json();
+    const normalSession = await (await call(env, '/api/auth/session', undefined, 'ordinary-user')).json();
+    assert.equal(qaSession.imageQuotaTestOverrideActive, true);
+    assert.equal(Object.hasOwn(normalSession, 'imageQuotaTestOverrideActive'), false);
+});
+
 test('Worker confirmation writes only the verified account workspace and replays once', async () => {
     const env = environment();
     assert.equal((await call(env, '/api/workspace/state', { revision: 0, entries: { [planKey('plan-1')]: samplePlan } })).status, 200);
