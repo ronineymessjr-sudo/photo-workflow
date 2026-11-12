@@ -488,7 +488,11 @@ export default {
             }
             // Shared browser business data, isolated by the authenticated account.
             else if (path === '/api/auth/session' && method === 'GET') {
-                result = uid ? { status: 200, body: { success: true, user: { id: uid } } }
+                const testImageQuotaOverrideActive = String(env.STUDIO_IMAGE_TEST_UNLIMITED_USER_ID || '').trim() === uid;
+                result = uid ? { status: 200, body: {
+                    success: true, user: { id: uid },
+                    ...(testImageQuotaOverrideActive ? { imageQuotaTestOverrideActive: true } : {}),
+                } }
                     : { status: 401, body: { error: '登录已失效，请重新登录' } };
             }
             else if (path === '/api/workspace/state' && ['GET', 'POST'].includes(method)) {
