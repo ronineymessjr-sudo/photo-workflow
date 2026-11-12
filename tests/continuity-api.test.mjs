@@ -78,6 +78,44 @@ test('continuity collect returns a stored image for a succeeded async task', asy
     }
 });
 
+test('continuity collect retries return the user-scoped cached image without polling upstream again', async () => {
+    const originalFetch = globalThis.fetch;
+    const values = new Map();
+    let providerCalls = 0;
+    const CONTINUITY_KV = {
+        async get(key, type) {
+            const value = values.get(key);
+            return value && type === 'json' ? JSON.parse(value) : value || null;
+        },
+        async put(key, value, options) {
+            if (key.startsWith('continuity-result-cache/')) assert.equal(options.expirationTtl, 86400);
+            values.set(key, value);
+        },
+    };
+    globalThis.fetch = async input => {
+        if (String(input).includes('/v1/tasks/')) providerCalls += 1;
+        if (String(input).includes('/v1/tasks/')) return Response.json({
+            task_status: 'SUCCEED', output_images: ['https://cdn.example.test/result.png'],
+        });
+        return new Response(Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64'), {
+            headers: { 'Content-Type': 'image/png' },
+        });
+    };
+    try {
+        const env = { MODELSCOPE_TOKEN: 'test-only', CONTINUITY_KV };
+        const first = await call('/api/continuity/collect', { taskId: 'task-cache', shotId: 'shot-01' }, 'POST', env);
+        const second = await call('/api/continuity/collect', { taskId: 'task-cache', shotId: 'shot-01' }, 'POST', env);
+        assert.equal(first.status, 200);
+        assert.equal(second.status, 200);
+        assert.equal(second.body.status, 'succeeded');
+        assert.equal(second.body.image.assetId, first.body.image.assetId);
+        assert.equal(providerCalls, 1, 'cached success must skip ModelScope polling and image download');
+        assert.equal([...values.keys()].filter(key => key.startsWith('continuity-result-cache/')).length, 1);
+    } finally {
+        globalThis.fetch = originalFetch;
+    }
+});
+
 test('continuity collect preserves the upstream task status while it is pending', async () => {
     const originalFetch = globalThis.fetch;
     globalThis.fetch = async () => Response.json({ task_status: 'RUNNING' });

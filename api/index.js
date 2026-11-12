@@ -26,6 +26,29 @@ async function assetToDataUrl(imagePath, env) {
     if (!asset) return '';
     return `data:${asset.mime};base64,${Buffer.from(asset.buffer).toString('base64')}`;
 }
+
+function continuityResultCacheKey(uid, taskId) {
+    const digest = createHash('sha256').update(`${uid}\0${taskId}`).digest('hex');
+    return `continuity-result-cache/${digest}`;
+}
+
+async function readContinuityResultCache(env, uid, taskId) {
+    if (!env.CONTINUITY_KV || typeof taskId !== 'string') return null;
+    try {
+        return await env.CONTINUITY_KV.get(continuityResultCacheKey(uid, taskId), 'json');
+    } catch {
+        return null;
+    }
+}
+
+async function writeContinuityResultCache(env, uid, taskId, result) {
+    if (!env.CONTINUITY_KV || typeof taskId !== 'string') return;
+    try {
+        await env.CONTINUITY_KV.put(continuityResultCacheKey(uid, taskId), JSON.stringify(result), { expirationTtl: 86400 });
+    } catch (error) {
+        console.error('continuity_result_cache_failed', error?.code || error?.name || 'CACHE_ERROR');
+    }
+}
 export { WorkspaceSync } from './workspace-state.mjs';
 
 // Cloudflare Workers 环境中 Buffer 不可用，使用替代方案
@@ -634,10 +657,15 @@ export default {
                 // running, so the client just calls again.
                 if (!uid) result = { status: 401, body: { error: 'SIGN_IN_REQUIRED' } };
                 else {
+                    const cached = await readContinuityResultCache(env, uid, body?.taskId);
+                    if (cached?.status === 'succeeded' && cached.image?.assetId) {
+                        result = { status: 200, body: { ...cached, shotId: body?.shotId || cached.shotId } };
+                    }
                     let polled;
-                    try {
-                        polled = await pollModelScope({ env, taskId: body?.taskId });
-                    } catch (error) {
+                    if (!result) {
+                        try {
+                            polled = await pollModelScope({ env, taskId: body?.taskId });
+                        } catch (error) {
                         if (error?.code === 'GENERATION_POLL_RETRYABLE') {
                             result = { status: 503, body: {
                                 status: 'pending', terminal: false, retryable: true,
@@ -651,6 +679,7 @@ export default {
                                 error: String(error.message || error).slice(0, 300),
                             } };
                         } else throw error;
+                        }
                     }
                     if (!result) {
                         if (polled.status !== 'succeeded') {
@@ -672,6 +701,7 @@ export default {
                                     image: { assetId: stored.assetId, path: stored.path, bytes: stored.bytes, durable: stored.durable },
                                     qc: { verdict: 'pending' },
                                 } };
+                                await writeContinuityResultCache(env, uid, body?.taskId, result.body);
                             } catch (error) {
                                 console.error('continuity_result_store_failed', error?.code || error?.name || 'STORE_ERROR');
                                 result = { status: 503, body: {
