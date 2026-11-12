@@ -845,7 +845,9 @@ export async function generateShot({ group, shotId, providerId = '', env = {}, f
         '1:1': '1328x1328', '16:9': '1664x928', '9:16': '928x1664',
         '4:3': '1472x1140', '3:4': '1140x1472', '3:2': '1584x1056', '2:3': '1056x1584',
     };
-    const size = aspectSizes[request.aspect] || '1056x1584';
+    const size = isWaistUp(request.variant)
+        ? aspectSizes['3:4']
+        : aspectSizes[request.aspect] || '1056x1584';
 
     // Async provider: hand the work off and return immediately. A 20-40s
     // generation cannot be held open behind the Pages proxy (30s ceiling).
