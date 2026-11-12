@@ -276,6 +276,22 @@ function isWaistUp(variant = {}) {
     return /^(MS|中景|MEDIUM)$/i.test(String(variant.size || variant.shotType || '').trim());
 }
 
+function wardrobeVisibleInFrame(value, variant = {}) {
+    const text = directive(value);
+    if (!isWaistUp(variant) || !text) return text;
+    return text.split(/(?<=[，,；;。])/)
+        .filter(part => !/(裙|裤|靴|鞋|袜|下装|skirt|trousers|pants|boots|shoes|socks|lower[- ]body)/i.test(part))
+        .join('');
+}
+
+function promptVisibleInFrame(prompt, variant = {}) {
+    const text = typeof prompt === 'string' ? prompt : '';
+    if (!isWaistUp(variant)) return text;
+    const upperWardrobe = wardrobeVisibleInFrame(text.match(/Subject and clothing:\s*(.*?)\. User constraints:/is)?.[1], variant);
+    if (!upperWardrobe) return text;
+    return text.replace(/Subject and clothing:\s*.*?\. User constraints:/is, `Subject and clothing: ${upperWardrobe}. User constraints:`);
+}
+
 // Keep the clauses of the pose that still make sense inside the frame.
 function poseInFrame(pose, size) {
     const raw = typeof pose === 'string' ? pose.trim() : '';
@@ -429,11 +445,13 @@ export async function submitModelScope({ env, prompt, size, seed, references, va
         if (!poseImage) throw new GenerationError('GENERATION_REFERENCE_MISSING', 'PoseAtlas 姿势参考图无法读取；已停止生成，没有退化为纯文字姿势', 409);
         images.push(dataUrlFor(poseImage.bytes, poseImage.mime));
     }
-    const fields = directionFields({ prompt, locked, variant, poseRef, framing: framingZh(variant) });
+    const frameLocked = waistUp ? { ...locked, subject: wardrobeVisibleInFrame(locked?.subject, variant), wardrobe: wardrobeVisibleInFrame(locked?.wardrobe, variant) } : locked;
+    const framePrompt = promptVisibleInFrame(prompt, variant);
+    const fields = directionFields({ prompt: framePrompt, locked: frameLocked, variant, poseRef, framing: framingZh(variant) });
     const direction = [
         ...fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`),
         ...(poseRef?.imageUrl && !waistUp ? ['最后一张参考图来自摆姿库，只参考身体动作、肢体关系和重心；不要复制线稿、参考图中的脸、服装、背景、文字或标记。'] : []),
-        subjectRule(locked, prompt),
+        subjectRule(frameLocked, framePrompt),
     ].join('\n');
 
     const response = await fetchImpl(MODELSCOPE_ENDPOINT, {
@@ -571,11 +589,13 @@ async function callModelScope({ env, prompt, size, seed, references, variant, po
         images.push(dataUrlFor(poseImage.bytes, poseImage.mime));
     }
 
-    const fields = directionFields({ prompt, locked, variant, poseRef, framing: framingZh(variant) });
+    const frameLocked = waistUp ? { ...locked, subject: wardrobeVisibleInFrame(locked?.subject, variant), wardrobe: wardrobeVisibleInFrame(locked?.wardrobe, variant) } : locked;
+    const framePrompt = promptVisibleInFrame(prompt, variant);
+    const fields = directionFields({ prompt: framePrompt, locked: frameLocked, variant, poseRef, framing: framingZh(variant) });
     const direction = [
         ...fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`),
         ...(poseRef?.imageUrl && !waistUp ? ['最后一张参考图来自摆姿库，只参考身体动作、肢体关系和重心；不要复制线稿、参考图中的脸、服装、背景、文字或标记。'] : []),
-        subjectRule(locked, prompt),
+        subjectRule(frameLocked, framePrompt),
     ].join('\n');
 
     const submit = await fetchImpl(MODELSCOPE_ENDPOINT, {
