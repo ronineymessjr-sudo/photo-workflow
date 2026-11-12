@@ -262,6 +262,11 @@ test('ModelScope waist-up frames keep pose text but omit conflicting full-body a
     const store = createMemoryStore();
     const wardrobe = '米白色针织裹身上衣（宽袖、腰前交叠系结），卡其色层叠长半身裙至脚踝，棕色及膝长靴；不添加包袋、项链、首饰或帽子。';
     const group = await readyGroup(store, { wardrobeNote: wardrobe, lockedSubject: `成年东亚女性模特；${wardrobe}` });
+    const styleAsset = await storeAsset({ dataUrl: 'data:image/png;base64,AAECAw==', role: 'style', store });
+    Object.assign(group.references.find(reference => reference.role === 'style'), { assetId: styleAsset.assetId, path: styleAsset.path });
+    const originalGet = store.get.bind(store);
+    const assetReads = [];
+    store.get = async key => { assetReads.push(key); return originalGet(key); };
     group.shots[0].size = '中景';
     group.shots[0].shotType = '中景';
     group.shots[0].prompt = `Editorial photograph. Waist-up portrait. Subject and clothing: ${wardrobe}. User constraints: one person.`;
@@ -282,6 +287,10 @@ test('ModelScope waist-up frames keep pose text but omit conflicting full-body a
     });
 
     assert.equal(payload.image_url.length, 1, 'only the identity image remains; conflicting costume and full-body pose images are omitted');
+    assert.ok(assetReads.length > 0);
+    const styleAssetId = group.references.find(reference => reference.role === 'style')?.assetId;
+    assert.ok(styleAssetId);
+    assert.ok(assetReads.every(key => !key.includes(styleAssetId)), 'the rejected outfit image must not be loaded from asset storage');
     assert.equal(payload.size, '1140x1472', 'ModelScope uses a portrait 3:4 canvas for waist-up frames');
     assert.match(payload.prompt, /头部、肩膀、胸部和上腹/);
     assert.match(payload.prompt, /禁止全身照、七分身照/);

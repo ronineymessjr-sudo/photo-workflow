@@ -824,6 +824,10 @@ export async function generateShot({ group, shotId, providerId = '', env = {}, f
     const requiredImageSlots = provider?.requiredImageSlots || imageSlots;
     for (const reference of request.references) {
         if (!imageSlots.includes(reference.role)) continue;
+        // ModelScope waist-up prompts deliberately omit the outfit image: the
+        // current selected costume contains conflicting accessories. Do not
+        // read its KV asset just to discard it later in submitModelScope.
+        if (providerId === 'modelscope-qwen-edit' && isWaistUp(request.variant) && reference.role === 'style') continue;
         const definition = (group.references || []).find(item => item.role === reference.role);
         const assetPath = definition?.path;
         let asset;
