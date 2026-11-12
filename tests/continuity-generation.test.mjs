@@ -258,6 +258,35 @@ test('ModelScope receives the selected PoseAtlas image as a pose-only reference'
     assert.equal(result.status, 'pending');
 });
 
+test('ModelScope waist-up frames keep pose text but omit conflicting full-body and accessory references', async () => {
+    const store = createMemoryStore();
+    const group = await readyGroup(store);
+    group.shots[0].size = 'MS';
+    group.shots[0].shotType = '中景';
+    group.shots[0].poseRef = {
+        id: 'atlas-pose-full_single_p017', title: '站立・回眸顾盼',
+        direction: '上身转开再回头，肩颈放松。',
+        imageUrl: 'https://hruiccc.github.io/RuiC-PoseAtlas/thumbs/full_single_p017.jpg',
+    };
+    let payload;
+    const result = await generateShot({
+        group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit',
+        env: { MODELSCOPE_TOKEN: 'test-only' }, store, submitOnly: true,
+        fetchImpl: async (url, options = {}) => {
+            assert.doesNotMatch(String(url), /^https:\/\/hruiccc\.github\.io\//, 'waist-up must not fetch the full-body pose image');
+            payload = JSON.parse(options.body);
+            return Response.json({ task_id: 'task-waist-up' });
+        },
+    });
+
+    assert.equal(payload.image_url.length, 1, 'only the identity image remains; conflicting costume and full-body pose images are omitted');
+    assert.match(payload.prompt, /头部、肩膀、胸部和上腹/);
+    assert.match(payload.prompt, /禁止全身照、七分身照/);
+    assert.match(payload.prompt, /站立・回眸顾盼/);
+    assert.doesNotMatch(payload.prompt, /最后一张参考图来自摆姿库/);
+    assert.equal(result.referencesSent, 1);
+});
+
 test('ModelScope stops before submission when an accepted pose image is unavailable', async () => {
     const store = createMemoryStore();
     const group = await readyGroup(store);
