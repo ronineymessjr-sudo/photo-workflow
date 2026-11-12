@@ -101,10 +101,13 @@ test('pose suitability labels risky, review-only, sexualized and duo references 
     assert.deepEqual([p015, p017, p018, p021, p022, p025].map(template => classifyPose(template).poseFamily), [
         'standing_weight_shift', 'standing_look_back', 'hands_at_waist', 'standing_neck_touch', 'standing_open_chest', 'wide_stance_hands_at_waist',
     ]);
-    assert.equal(classifyPose(p022).suitability, 'safe');
-    assert.equal(classifyPose(p025).suitability, 'safe');
-    assert.equal(isPoseAllowed(p022, { naturalPoseOnly: true }), true);
-    assert.equal(isPoseAllowed(p025, { naturalPoseOnly: true }), true);
+    assert.equal(classifyPose(p022).suitability, 'review');
+    assert.ok(classifyPose(p022).reasonTags.includes('pose_exaggeration_review'));
+    assert.equal(classifyPose(p025).suitability, 'review');
+    assert.ok(classifyPose(p025).reasonTags.includes('generation_compliance_review'));
+    assert.equal(isPoseAllowed(p022, { naturalPoseOnly: true }), false);
+    assert.equal(isPoseAllowed(p025, { naturalPoseOnly: true }), false);
+    assert.equal(isPoseAllowed(p025, { allowReview: true }), true);
     assert.notEqual(classifyPose(p025).poseFamily, classifyPose(p018).poseFamily);
     assert.equal(classifyPose(sexy).suitability, 'exclude');
     assert.ok(classifyPose(sexy).reasonTags.includes('sexualized'));
@@ -143,10 +146,10 @@ test('registry search only returns whitelisted natural solo poses and preserves 
     ] });
     const registry = createRegistry({ schemaVersion: 1, templates });
     const ordinary = registry.search({ kind: 'pose', limit: 20 }).results;
-    assert.deepEqual(ordinary.map(item => item.upstreamId).sort(), ['full_single_P015', 'full_single_P017', 'full_single_P018', 'full_single_P021', 'full_single_P022', 'full_single_P025']);
+    assert.deepEqual(ordinary.map(item => item.upstreamId).sort(), ['full_single_P015', 'full_single_P017', 'full_single_P018', 'full_single_P021']);
     assert.equal(ordinary.find(item => item.upstreamId === 'full_single_P016'), undefined);
     const natural = registry.search({ kind: 'pose', naturalPoseOnly: true, limit: 20 }).results;
-    assert.deepEqual(natural.map(item => item.upstreamId).sort(), ['full_single_P015', 'full_single_P017', 'full_single_P018', 'full_single_P021', 'full_single_P022', 'full_single_P025']);
+    assert.deepEqual(natural.map(item => item.upstreamId).sort(), ['full_single_P015', 'full_single_P017', 'full_single_P018', 'full_single_P021']);
     assert.equal(new Set(natural.map(item => classifyPose(item).poseFamily)).size, natural.length);
     const duo = registry.search({ kind: 'pose', poseContext: 'multi', limit: 20 }).results;
     assert.equal(duo.some(item => item.upstreamId === 'pair60_P003'), false);

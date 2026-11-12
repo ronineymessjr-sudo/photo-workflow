@@ -283,6 +283,11 @@ function isWaistUp(variant = {}) {
     return /^(MS|中景|MEDIUM)$/i.test(String(variant.size || variant.shotType || '').trim());
 }
 
+function wardrobeForbidsAccessories(locked, variant) {
+    const text = [locked?.subject, locked?.wardrobe, variant?.wardrobe].filter(Boolean).join(' ');
+    return /(?:不添加|不要|不得|禁止|严禁).{0,24}(?:包袋|背包|手提包|项链|首饰|耳饰|饰品|帽子|jewelry|necklace|bag|accessor)/i.test(text);
+}
+
 function wardrobeVisibleInFrame(value, variant = {}) {
     const text = directive(value);
     if (!isWaistUp(variant) || !text) return text;
@@ -444,11 +449,11 @@ export async function submitModelScope({ env, prompt, size, seed, references, va
     }
     const waistUp = isWaistUp(variant);
     for (const reference of references) {
-        if (waistUp && reference.role === 'style') continue;
+        if (reference.role === 'style' && (waistUp || (anchor?.assetId && wardrobeForbidsAccessories(locked, variant)))) continue;
         images.push(reference.dataUrl);
     }
     const visualPoseUrl = poseRef?.imageUrl;
-    if (poseRef && (!waistUp || isBundledWaistPose(visualPoseUrl))) {
+    if (poseRef && !waistUp) {
         if (!visualPoseUrl) throw new GenerationError('GENERATION_REFERENCE_MISSING', '已选择姿势，但没有可用的姿势参考图', 409);
         const poseImage = await fetchLibraryImage(visualPoseUrl, fetchImpl);
         if (!poseImage) throw new GenerationError('GENERATION_REFERENCE_MISSING', '姿势参考图无法读取；已停止生成，没有退化为纯文字姿势', 409);
@@ -459,10 +464,8 @@ export async function submitModelScope({ env, prompt, size, seed, references, va
     const fields = directionFields({ prompt: framePrompt, locked: frameLocked, variant, poseRef, framing: framingZh(variant) });
     const direction = [
         ...fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`),
-        ...(visualPoseUrl && (!waistUp || isBundledWaistPose(visualPoseUrl))
-            ? [isBundledWaistPose(visualPoseUrl)
-                ? '最后一张是已授权的实拍姿势参考；只参考上半身姿势、肩线和头部朝向，保持身份图中的人物，不复制参考图人物的脸、服装、配饰或背景。'
-                : '最后一张参考图来自摆姿库，只参考身体动作、肢体关系和重心；不要复制线稿、参考图中的脸、服装、背景、文字或标记。']
+        ...(visualPoseUrl && !waistUp
+            ? ['最后一张参考图来自摆姿库，只参考身体动作、肢体关系和重心；不要复制线稿、参考图中的脸、服装、背景、文字或标记。']
             : []),
         subjectRule(frameLocked, framePrompt),
     ].join('\n');
@@ -612,14 +615,15 @@ async function callModelScope({ env, prompt, size, seed, references, variant, po
         // The selected AUT-0118 library image contains a bag and necklace that
         // conflict with the locked wardrobe contract. Waist-up shots use its
         // already-compiled text description instead of copying those props.
-        if (waistUp && reference.role === 'style') continue;
+        // Anchored full-body shots also skip it when the written contract bans
+        // those accessories; the accepted frame carries outfit continuity.
+        if (reference.role === 'style' && (waistUp || (anchor?.assetId && wardrobeForbidsAccessories(locked, variant)))) continue;
         images.push(reference.dataUrl);
     }
-    // Full-body PoseAtlas line art repeatedly overrode the waist-up crop in
-    // production. A verified Pexels waist-up photo is safe to use as visual
-    // pose guidance because its crop is already aligned with this frame.
+    // Full-body PoseAtlas line art overrides waist-up framing, while the bundled
+    // waist-up photo carries clothing and accessories that conflict with outfit locks.
     const visualPoseUrl = poseRef?.imageUrl;
-    if (poseRef && (!waistUp || isBundledWaistPose(visualPoseUrl))) {
+    if (poseRef && !waistUp) {
         if (!visualPoseUrl) throw new GenerationError('GENERATION_REFERENCE_MISSING', '已选择姿势，但没有可用的姿势参考图', 409);
         const poseImage = await fetchLibraryImage(visualPoseUrl, fetchImpl);
         if (!poseImage) throw new GenerationError('GENERATION_REFERENCE_MISSING', 'PoseAtlas 姿势参考图无法读取；已停止生成，没有退化为纯文字姿势', 409);
@@ -631,10 +635,8 @@ async function callModelScope({ env, prompt, size, seed, references, variant, po
     const fields = directionFields({ prompt: framePrompt, locked: frameLocked, variant, poseRef, framing: framingZh(variant) });
     const direction = [
         ...fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`),
-        ...(visualPoseUrl && (!waistUp || isBundledWaistPose(visualPoseUrl))
-            ? [isBundledWaistPose(visualPoseUrl)
-                ? '最后一张是已授权的实拍姿势参考；只参考上半身姿势、肩线和头部朝向，保持身份图中的人物，不复制参考图人物的脸、服装、配饰或背景。'
-                : '最后一张参考图来自摆姿库，只参考身体动作、肢体关系和重心；不要复制线稿、参考图中的脸、服装、背景、文字或标记。']
+        ...(visualPoseUrl && !waistUp
+            ? ['最后一张参考图来自摆姿库，只参考身体动作、肢体关系和重心；不要复制线稿、参考图中的脸、服装、背景、文字或标记。']
             : []),
         subjectRule(frameLocked, framePrompt),
     ].join('\n');
@@ -870,7 +872,7 @@ export async function generateShot({ group, shotId, providerId = '', env = {}, f
         // ModelScope waist-up prompts deliberately omit the outfit image: the
         // current selected costume contains conflicting accessories. Do not
         // read its KV asset just to discard it later in submitModelScope.
-        if (providerId === 'modelscope-qwen-edit' && isWaistUp(request.variant) && reference.role === 'style') continue;
+        if (providerId === 'modelscope-qwen-edit' && reference.role === 'style' && (isWaistUp(request.variant) || (request.anchor?.assetId && wardrobeForbidsAccessories(request.locked, request.variant)))) continue;
         const definition = (group.references || []).find(item => item.role === reference.role);
         const assetPath = definition?.path;
         let asset;

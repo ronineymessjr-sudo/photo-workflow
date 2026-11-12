@@ -29,6 +29,8 @@ const REASON_LABELS = Object.freeze({
   extreme_extension: '大幅度伸展或后弯，普通人像不使用',
   intimate_pair: '亲密双人姿势，不用于普通合照方案',
   overhead_action: '手臂抬高或手部过头，需摄影师确认动作自然度',
+  pose_exaggeration_review: '动作容易被生成得过于夸张，需摄影师先确认',
+  generation_compliance_review: '生成结果服从动作不稳定，需摄影师先确认',
   source_metadata_review: '原库缩略图动作需要人工核对',
   multi_person_context: '双人姿势，仅用于明确的双人拍摄并需人工复核',
 });
@@ -80,6 +82,8 @@ export function classifyPose(template) {
   if (/举过头|过头伸展|手臂上举|双臂上举|双手举|抱头|手扶后脑|抚后脑|抚后颈|overhead|arms raised/i.test(text)) add('overhead_action');
   if (RAISED_ARM_SOURCE_IDS.has(upstreamId)) add('overhead_action');
   if (REVIEWED_SOURCE_IDS.has(upstreamId)) add('source_metadata_review');
+  if (upstreamId === 'full_single_p022') add('pose_exaggeration_review');
+  if (upstreamId === 'full_single_p025') add('generation_compliance_review');
   const isDuo = ['duo', 'pair60'].includes(String(template?.series || '').toLowerCase())
     || /^pair60_/i.test(upstreamId)
     || /(?:^|[\s_-])duo(?:[_\s-]|$)|情侣|双人|两人|couple|two[- ]person/i.test(text);
