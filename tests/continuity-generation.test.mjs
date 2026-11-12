@@ -234,6 +234,7 @@ test('ModelScope receives the selected PoseAtlas image as a pose-only reference'
     const store = createMemoryStore();
     const wardrobe = '米白色针织裹身上衣（宽袖、腰前交叠系结），卡其色半身裙；不添加包袋、项链、首饰或帽子。';
     const group = await readyGroup(store, { wardrobeNote: wardrobe, lockedSubject: wardrobe });
+    group.shots[0].prompt = `Reference roles: Image 1 is the identity reference; Image 2 is a PoseAtlas pose sketch.\n${group.shots[0].prompt}`;
     group.shots[0].poseRef = {
         id: 'atlas-pose-p001', title: '站立・回眸顾盼', angle: '侧后方',
         direction: '上身转开再回头，肩颈放松。',
@@ -253,6 +254,9 @@ test('ModelScope receives the selected PoseAtlas image as a pose-only reference'
     });
 
     assert.equal(payload.image_url.length, 3, 'identity, outfit and selected pose are sent in that order');
+    assert.deepEqual(result.referenceRolesSent, ['identity', 'style', 'pose']);
+    assert.match(payload.prompt, /Image 1（identity）.*Image 2（style）.*Image 3（pose）/);
+    assert.doesNotMatch(payload.prompt, /Reference roles:/);
     assert.match(payload.prompt, /最后一张参考图来自摆姿库/);
     assert.match(payload.prompt, /不要复制线稿/);
     assert.match(payload.prompt, /针织宽袖上衣肩缝保持在双肩自然位置，领口覆盖双肩/);
@@ -319,6 +323,7 @@ test('ModelScope waist-up frames keep pose text and omit references that can ove
     assert.ok(wardrobeLines.length > 0);
     assert.ok(wardrobeLines.every(line => !/半身裙|长靴|boots|skirt/i.test(line)), 'all waist-up wardrobe fields must exclude garments below the crop');
     assert.equal(result.referencesSent, 1);
+    assert.deepEqual(result.referenceRolesSent, ['identity']);
 });
 
 test('anchored full-body frames omit outfit references when the wardrobe contract bans their accessories', async () => {
@@ -364,6 +369,7 @@ test('anchored full-body frames retain a sanitized outfit reference when the con
     });
     assert.equal(payload.image_url.length, 3, 'accepted anchor, identity and sanitized outfit remain');
     assert.equal(result.referencesSent, 3);
+    assert.deepEqual(result.referenceRolesSent, ['anchor', 'identity', 'style']);
     assert.match(payload.prompt, /不添加包袋、项链、首饰或帽子/);
 });
 

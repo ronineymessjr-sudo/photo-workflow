@@ -302,11 +302,23 @@ function wardrobeVisibleInFrame(value, variant = {}) {
 }
 
 function promptVisibleInFrame(prompt, variant = {}) {
-    const text = typeof prompt === 'string' ? prompt : '';
+    const text = (typeof prompt === 'string' ? prompt : '').replace(/^Reference roles:[^\r\n]*(?:\r?\n|$)/i, '');
     if (!isWaistUp(variant)) return text;
     const upperWardrobe = wardrobeVisibleInFrame(text.match(/Subject and clothing:\s*(.*?)\. User constraints:/is)?.[1], variant);
     if (!upperWardrobe) return text;
     return text.replace(/Subject and clothing:\s*.*?\. User constraints:/is, `Subject and clothing: ${upperWardrobe}. User constraints:`);
+}
+
+function imageRoleGuidance(roles = []) {
+    const instructions = {
+        anchor: '仅用于保持同一人物的身份和发型；服装以服装参考图和文字为准，不复制锚点中的姿势、取景或背景。',
+        identity: '仅用于人物面部身份和发型。',
+        style: '仅用于服装款式、层次、颜色和材质；忽略文字未要求的配饰。',
+        scene: '仅用于场景环境。',
+        pose: '仅用于身体动作、肢体关系和重心；不复制参考图中的脸、服装、背景、线稿或标记。',
+    };
+    if (!roles.length) return '';
+    return `参考图角色按发送顺序对应：${roles.map((role, index) => `Image ${index + 1}（${role}）：${instructions[role] || '只参考与本镜头对应的属性。'}`).join(' ')}`;
 }
 
 // Keep the clauses of the pose that still make sense inside the frame.
@@ -446,15 +458,18 @@ export async function submitModelScope({ env, prompt, size, seed, references, va
     if (!token) throw new GenerationError('GENERATION_NOT_CONFIGURED', '缺少魔搭 MODELSCOPE_TOKEN', 503, { missing: ['MODELSCOPE_TOKEN'] });
     const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
     const images = [];
+    const imageRoles = [];
     if (anchor?.assetId) {
         const stored = await readAsset(`/api/continuity/asset/${anchor.assetId}`, { env, store });
         if (!stored?.buffer?.length) throw new GenerationError('GENERATION_ANCHOR_MISSING', '已锁定的母图读不到', 409);
         images.push(dataUrlFor(stored.buffer, stored.mime));
+        imageRoles.push('anchor');
     }
     const waistUp = isWaistUp(variant);
     for (const reference of references) {
         if (reference.role === 'style' && (waistUp || (anchor?.assetId && wardrobeForbidsAccessories(locked, variant) && isAccessoryConflictingOutfitReference(reference)))) continue;
         images.push(reference.dataUrl);
+        imageRoles.push(reference.role);
     }
     const visualPoseUrl = poseRef?.imageUrl;
     if (poseRef && !waistUp) {
@@ -462,11 +477,13 @@ export async function submitModelScope({ env, prompt, size, seed, references, va
         const poseImage = await fetchLibraryImage(visualPoseUrl, fetchImpl);
         if (!poseImage) throw new GenerationError('GENERATION_REFERENCE_MISSING', '姿势参考图无法读取；已停止生成，没有退化为纯文字姿势', 409);
         images.push(dataUrlFor(poseImage.bytes, poseImage.mime));
+        imageRoles.push('pose');
     }
     const frameLocked = waistUp ? { ...locked, subject: wardrobeVisibleInFrame(locked?.subject, variant), wardrobe: wardrobeVisibleInFrame(locked?.wardrobe, variant) } : locked;
     const framePrompt = promptVisibleInFrame(prompt, variant);
     const fields = directionFields({ prompt: framePrompt, locked: frameLocked, variant, poseRef, framing: framingZh(variant) });
     const direction = [
+        imageRoleGuidance(imageRoles),
         ...fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`),
         ...(visualPoseUrl && !waistUp
             ? ['最后一张参考图来自摆姿库，只参考身体动作、肢体关系和重心；不要复制线稿、参考图中的脸、服装、背景、文字或标记。']
@@ -517,7 +534,7 @@ export async function submitModelScope({ env, prompt, size, seed, references, va
     const payload = await response.json().catch(() => null);
     const taskId = payload?.task_id || payload?.data?.task_id;
     if (!taskId) throw new GenerationError('GENERATION_INVALID_RESPONSE', '魔搭没有返回 task_id', 502);
-    return { taskId, prompt: direction, referencesSent: images.length };
+    return { taskId, prompt: direction, referencesSent: images.length, referenceRolesSent: imageRoles };
 }
 
 export async function pollModelScope({ env, taskId, fetchImpl = fetch }) {
@@ -609,10 +626,12 @@ async function callModelScope({ env, prompt, size, seed, references, variant, po
     // Reference images, anchor first: this model conditions on them directly,
     // which is why it can hold a face where the Cloudflare brush cannot.
     const images = [];
+    const imageRoles = [];
     if (anchor?.assetId) {
         const stored = await readAsset(`/api/continuity/asset/${anchor.assetId}`, { env, store });
         if (!stored?.buffer?.length) throw new GenerationError('GENERATION_ANCHOR_MISSING', '已锁定的母图读不到；停止生成，不能退回无母图请求', 409);
         images.push(dataUrlFor(stored.buffer, stored.mime));
+        imageRoles.push('anchor');
     }
     const waistUp = isWaistUp(variant);
     for (const reference of references) {
@@ -623,6 +642,7 @@ async function callModelScope({ env, prompt, size, seed, references, variant, po
         // those accessories; the accepted frame carries outfit continuity.
         if (reference.role === 'style' && (waistUp || (anchor?.assetId && wardrobeForbidsAccessories(locked, variant) && isAccessoryConflictingOutfitReference(reference)))) continue;
         images.push(reference.dataUrl);
+        imageRoles.push(reference.role);
     }
     // Full-body PoseAtlas line art overrides waist-up framing, while the bundled
     // waist-up photo carries clothing and accessories that conflict with outfit locks.
@@ -632,12 +652,14 @@ async function callModelScope({ env, prompt, size, seed, references, variant, po
         const poseImage = await fetchLibraryImage(visualPoseUrl, fetchImpl);
         if (!poseImage) throw new GenerationError('GENERATION_REFERENCE_MISSING', 'PoseAtlas 姿势参考图无法读取；已停止生成，没有退化为纯文字姿势', 409);
         images.push(dataUrlFor(poseImage.bytes, poseImage.mime));
+        imageRoles.push('pose');
     }
 
     const frameLocked = waistUp ? { ...locked, subject: wardrobeVisibleInFrame(locked?.subject, variant), wardrobe: wardrobeVisibleInFrame(locked?.wardrobe, variant) } : locked;
     const framePrompt = promptVisibleInFrame(prompt, variant);
     const fields = directionFields({ prompt: framePrompt, locked: frameLocked, variant, poseRef, framing: framingZh(variant) });
     const direction = [
+        imageRoleGuidance(imageRoles),
         ...fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`),
         ...(visualPoseUrl && !waistUp
             ? ['最后一张参考图来自摆姿库，只参考身体动作、肢体关系和重心；不要复制线稿、参考图中的脸、服装、背景、文字或标记。']
@@ -691,6 +713,7 @@ async function callModelScope({ env, prompt, size, seed, references, variant, po
                 base64: Buffer.from(bytes).toString('base64'),
                 prompt: direction,
                 referencesSent: images.length,
+                referenceRolesSent: imageRoles,
                 anchored: Boolean(anchor?.assetId),
             };
         }
@@ -919,7 +942,7 @@ export async function generateShot({ group, shotId, providerId = '', env = {}, f
         });
         return {
             shotId, provider: providerId, status: 'pending', taskId: submitted.taskId,
-            referencesSent: submitted.referencesSent, sentPrompt: submitted.prompt,
+            referencesSent: submitted.referencesSent, referenceRolesSent: submitted.referenceRolesSent, sentPrompt: submitted.prompt,
             lockedHash: request.lockedHash, qc: { verdict: 'pending' },
         };
     }
@@ -960,6 +983,7 @@ export async function generateShot({ group, shotId, providerId = '', env = {}, f
         // was supposed to follow. Useful whenever output disagrees with the plan.
         sentPrompt: image.prompt || '',
         referencesSent: image.referencesSent ?? references.length,
+        referenceRolesSent: image.referenceRolesSent || [],
         anchored: Boolean(image.anchored),
         // QC is deliberately not filled here: the planner never grades itself.
         qc: { verdict: 'pending' },
