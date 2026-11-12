@@ -477,7 +477,7 @@ export async function submitModelScope({ env, prompt, size, seed, references, va
                 ...(images.length ? { image_url: images } : {}),
                 ...(Number.isSafeInteger(seed) ? { seed } : {}),
             }),
-            signal: AbortSignal.timeout(25000),
+            signal: AbortSignal.timeout(28000),
         });
     } catch (error) {
         throw new GenerationError(
