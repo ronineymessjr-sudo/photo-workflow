@@ -445,10 +445,11 @@ export async function submitModelScope({ env, prompt, size, seed, references, va
         if (waistUp && reference.role === 'style') continue;
         images.push(reference.dataUrl);
     }
-    if (poseRef && !waistUp) {
-        if (!poseRef.imageUrl) throw new GenerationError('GENERATION_REFERENCE_MISSING', '已选择 PoseAtlas 姿势，但没有可用的姿势参考图', 409);
-        const poseImage = await fetchLibraryImage(poseRef.imageUrl, fetchImpl);
-        if (!poseImage) throw new GenerationError('GENERATION_REFERENCE_MISSING', 'PoseAtlas 姿势参考图无法读取；已停止生成，没有退化为纯文字姿势', 409);
+    const visualPoseUrl = poseRef?.imageUrl;
+    if (poseRef && (!waistUp || isBundledWaistPose(visualPoseUrl))) {
+        if (!visualPoseUrl) throw new GenerationError('GENERATION_REFERENCE_MISSING', '已选择姿势，但没有可用的姿势参考图', 409);
+        const poseImage = await fetchLibraryImage(visualPoseUrl, fetchImpl);
+        if (!poseImage) throw new GenerationError('GENERATION_REFERENCE_MISSING', '姿势参考图无法读取；已停止生成，没有退化为纯文字姿势', 409);
         images.push(dataUrlFor(poseImage.bytes, poseImage.mime));
     }
     const frameLocked = waistUp ? { ...locked, subject: wardrobeVisibleInFrame(locked?.subject, variant), wardrobe: wardrobeVisibleInFrame(locked?.wardrobe, variant) } : locked;
@@ -456,7 +457,11 @@ export async function submitModelScope({ env, prompt, size, seed, references, va
     const fields = directionFields({ prompt: framePrompt, locked: frameLocked, variant, poseRef, framing: framingZh(variant) });
     const direction = [
         ...fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`),
-        ...(poseRef?.imageUrl && !waistUp ? ['最后一张参考图来自摆姿库，只参考身体动作、肢体关系和重心；不要复制线稿、参考图中的脸、服装、背景、文字或标记。'] : []),
+        ...(visualPoseUrl && (!waistUp || isBundledWaistPose(visualPoseUrl))
+            ? [isBundledWaistPose(visualPoseUrl)
+                ? '最后一张是已授权的实拍姿势参考；只参考上半身姿势、肩线和头部朝向，保持身份图中的人物，不复制参考图人物的脸、服装、配饰或背景。'
+                : '最后一张参考图来自摆姿库，只参考身体动作、肢体关系和重心；不要复制线稿、参考图中的脸、服装、背景、文字或标记。']
+            : []),
         subjectRule(frameLocked, framePrompt),
     ].join('\n');
 
@@ -561,6 +566,16 @@ export async function pollModelScope({ env, taskId, fetchImpl = fetch }) {
 const MODELSCOPE_ENDPOINT = 'https://api-inference.modelscope.cn/v1/images/generations';
 const MODELSCOPE_TASK = 'https://api-inference.modelscope.cn/v1/tasks/';
 const MODELSCOPE_MODEL = 'Qwen/Qwen-Image-Edit-2511';
+const BUNDLED_PEXELS_WAIST_POSE = 'https://photo-workflow.pages.dev/assets/pose-references/pose-02.jpg';
+
+function isBundledWaistPose(rawUrl) {
+    try {
+        const url = new URL(rawUrl);
+        return url.href === BUNDLED_PEXELS_WAIST_POSE;
+    } catch {
+        return false;
+    }
+}
 
 async function callModelScope({ env, prompt, size, seed, references, variant, poseRef, anchor, locked, store = null, fetchImpl = fetch }) {
     const token = env?.MODELSCOPE_TOKEN;
@@ -586,11 +601,12 @@ async function callModelScope({ env, prompt, size, seed, references, variant, po
         images.push(reference.dataUrl);
     }
     // Full-body PoseAtlas line art repeatedly overrode the waist-up crop in
-    // production. Keep the selected pose's title and direction in the prompt,
-    // but do not send its full-body image for a waist-up frame.
-    if (poseRef && !waistUp) {
-        if (!poseRef.imageUrl) throw new GenerationError('GENERATION_REFERENCE_MISSING', '已选择 PoseAtlas 姿势，但没有可用的姿势参考图', 409);
-        const poseImage = await fetchLibraryImage(poseRef.imageUrl, fetchImpl);
+    // production. A verified Pexels waist-up photo is safe to use as visual
+    // pose guidance because its crop is already aligned with this frame.
+    const visualPoseUrl = poseRef?.imageUrl;
+    if (poseRef && (!waistUp || isBundledWaistPose(visualPoseUrl))) {
+        if (!visualPoseUrl) throw new GenerationError('GENERATION_REFERENCE_MISSING', '已选择姿势，但没有可用的姿势参考图', 409);
+        const poseImage = await fetchLibraryImage(visualPoseUrl, fetchImpl);
         if (!poseImage) throw new GenerationError('GENERATION_REFERENCE_MISSING', 'PoseAtlas 姿势参考图无法读取；已停止生成，没有退化为纯文字姿势', 409);
         images.push(dataUrlFor(poseImage.bytes, poseImage.mime));
     }
@@ -600,7 +616,11 @@ async function callModelScope({ env, prompt, size, seed, references, variant, po
     const fields = directionFields({ prompt: framePrompt, locked: frameLocked, variant, poseRef, framing: framingZh(variant) });
     const direction = [
         ...fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`),
-        ...(poseRef?.imageUrl && !waistUp ? ['最后一张参考图来自摆姿库，只参考身体动作、肢体关系和重心；不要复制线稿、参考图中的脸、服装、背景、文字或标记。'] : []),
+        ...(visualPoseUrl && (!waistUp || isBundledWaistPose(visualPoseUrl))
+            ? [isBundledWaistPose(visualPoseUrl)
+                ? '最后一张是已授权的实拍姿势参考；只参考上半身姿势、肩线和头部朝向，保持身份图中的人物，不复制参考图人物的脸、服装、配饰或背景。'
+                : '最后一张参考图来自摆姿库，只参考身体动作、肢体关系和重心；不要复制线稿、参考图中的脸、服装、背景、文字或标记。']
+            : []),
         subjectRule(frameLocked, framePrompt),
     ].join('\n');
 
@@ -1027,8 +1047,9 @@ function compositionLine(variant = {}) {
 async function fetchLibraryImage(rawUrl, fetchImpl = fetch) {
     let url;
     try { url = new URL(rawUrl); } catch { return null; }
-    if (url.origin !== 'https://hruiccc.github.io') return null;
-    if (!/^\/RuiC-PoseAtlas\/(?:thumbs\/[A-Za-z0-9_-]+\.jpg|(?:costume|portrait)\/thumbs\/[A-Za-z0-9_-]+\.webp)$/.test(url.pathname)) return null;
+    const poseAtlasImage = url.origin === 'https://hruiccc.github.io'
+        && /^\/RuiC-PoseAtlas\/(?:thumbs\/[A-Za-z0-9_-]+\.jpg|(?:costume|portrait)\/thumbs\/[A-Za-z0-9_-]+\.webp)$/.test(url.pathname);
+    if (!poseAtlasImage && !isBundledWaistPose(url.href)) return null;
     if (url.search || url.hash) return null;
     try {
         const response = await fetchImpl(url.href, { redirect: 'manual', signal: AbortSignal.timeout(15000) });

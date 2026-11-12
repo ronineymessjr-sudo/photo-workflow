@@ -15,6 +15,11 @@
 import { createGroup } from './continuity.mjs';
 
 const STYLE_KINDS = ['costume'];
+const BUNDLED_PEXELS_WAIST_POSE = 'https://photo-workflow.pages.dev/assets/pose-references/pose-02.jpg';
+
+function isWaistUpShot(value) {
+    return /腰上|半身|中景|近景|胸像|waist.?up|medium/i.test(String(value || ''));
+}
 
 function allowedPoseAtlasImage(raw) {
     try {
@@ -58,10 +63,15 @@ function toContinuityShot(shot, index, poseTemplates, guidance = {}) {
         || poseTemplates[index % Math.max(1, poseTemplates.length)]
         || null;
     const suggestion = pose && (guidance.suggestions || []).find(item => item.sourceItemId === pose.id)?.direction || '';
+    const poseUpstreamId = String(pose?.upstreamId || pose?.sourceItemId || pose?.id || '');
+    const waistUpPose = pose && isWaistUpShot(contract.shot_size || shot?.shotSize || shot?.shotType || shot?.size)
+        && /(?:^|[_-])p017$/i.test(poseUpstreamId);
     const poseRef = pose ? {
         id: pose.id,
         title: pose.title || pose.id,
-        imageUrl: allowedPoseAtlasImage(pose.referenceImageUrl) ? pose.referenceImageUrl : '',
+        imageUrl: waistUpPose
+            ? BUNDLED_PEXELS_WAIST_POSE
+            : allowedPoseAtlasImage(pose.referenceImageUrl) ? pose.referenceImageUrl : '',
         angle: (pose.angles || [])[0] || '',
         direction: suggestion,
     } : null;
