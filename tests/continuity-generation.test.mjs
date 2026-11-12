@@ -280,6 +280,7 @@ test('ModelScope waist-up frames keep pose text but omit conflicting full-body a
     });
 
     assert.equal(payload.image_url.length, 1, 'only the identity image remains; conflicting costume and full-body pose images are omitted');
+    assert.equal(payload.size, '1056x1584', 'ModelScope receives the plan aspect ratio as an explicit output size');
     assert.match(payload.prompt, /头部、肩膀、胸部和上腹/);
     assert.match(payload.prompt, /禁止全身照、七分身照/);
     assert.match(payload.prompt, /站立・回眸顾盼/);
