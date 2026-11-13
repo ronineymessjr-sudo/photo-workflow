@@ -82,6 +82,38 @@ test('contractShotToCloudInput maps locked fields and keeps one candidate', () =
     assert.equal(input.shot_contract.shot_size, 'WS');
 });
 
+test('Cloudflare full-body prompts preserve explicit shoulder and jewelry locks', async () => {
+    const { generateContractShot } = await import('../api/continuity-cloudflare-bridge.mjs');
+    let group = createGroup({
+        input: {
+            theme: '秋日旧车站',
+            scene: '旧车站月台',
+            wardrobeNote: '米白色针织裹身上衣（宽袖、腰前交叠系结），卡其色半身裙；不添加包袋、项链、首饰或帽子。',
+        },
+        shots: [{
+            shotId: 'shot-07', size: 'FS', lens: '50mm', camera_angle: '正面平视',
+            distance: '中等距离', model_position: '人物居中', model_pose: '全身站立，双脚落地',
+        }],
+    });
+    for (const role of ['identity', 'scene', 'style']) {
+        group = setReference(group, {
+            role, assetId: `asset-${role}`, status: 'confirmed', path: `/api/continuity/asset/asset-${role}`,
+        });
+    }
+    group = confirmMaster(group, { assetId: 'asset-identity', actor: 'human' });
+
+    const result = await generateContractShot({
+        group,
+        shotId: 'shot-07',
+        ai: fakeAi(),
+        readAsset: async () => ({ bytes: PNG_BYTES, mime: 'image/png' }),
+    });
+
+    assert.match(result.prompt, /Head-to-toe portrait/);
+    assert.match(result.prompt, /针织宽袖上衣肩缝保持在双肩自然位置，领口覆盖双肩/);
+    assert.match(result.prompt, /人物全组不佩戴首饰/);
+});
+
 test('each continuity shot uses its own scene ahead of the group location', async () => {
     const group = readyGroup();
     group.shots[0].scene = '湖边木栈道';
@@ -188,6 +220,50 @@ test('generateShot routes cloudflare through the Workers AI adapter, two images 
     assert.equal(result.provider, 'cloudflare-flux-klein');
     assert.equal(result.adapter, 'cloudflare-workers-ai');
     assert.equal(result.qc.verdict, 'pending');
+});
+
+test('Cloudflare Workers AI translation carries full-group wardrobe locks', async () => {
+    const { generateShot } = await import('../api/continuity-generation.mjs');
+    let group = createGroup({
+        input: {
+            theme: '雨夜旧车站', style: '纪实', scene: '海边旧车站月台',
+            wardrobeNote: '米白色针织裹身上衣（宽袖、腰前交叠系结），卡其色半身裙；不添加包袋、项链、首饰或帽子。',
+        },
+        lockedHints: { location: '海边旧车站月台', weather: '雨停后阴天', timeOfDay: '傍晚' },
+        shots: [{
+            shotId: 'shot-01', size: 'WS', lens: '35mm', camera_angle: 'eye_level',
+            model_pose: '沿月台缓慢行走', model_position: '画面右侧',
+            generator_prompt: 'wide shot of a figure walking along a wet platform',
+        }],
+    });
+    for (const role of ['identity', 'scene', 'style']) {
+        group = setReference(group, { role, assetId: `asset-${role}`, status: 'confirmed', path: `/api/continuity/asset/asset-${role}` });
+    }
+    group = confirmMaster(group, { assetId: 'asset-identity', actor: 'human' });
+    let translatedDirection = '';
+    const ai = {
+        async run(model, payload) {
+            if (model.includes('llama')) {
+                translatedDirection = payload.messages[1].content;
+                return { response: 'Translated photography prompt with all constraints.' };
+            }
+            return { image: Buffer.from(PNG_BYTES).toString('base64') };
+        },
+    };
+    const store = {
+        async put() {},
+        async get() { return { buffer: PNG_BYTES, meta: { mime: 'image/png' } }; },
+    };
+
+    const result = await generateShot({
+        group, shotId: 'shot-01', providerId: 'cloudflare-flux-klein',
+        env: { AI: ai }, store,
+    });
+
+    assert.match(translatedDirection, /针织宽袖上衣肩缝保持在双肩自然位置，领口覆盖双肩/);
+    assert.match(translatedDirection, /人物全组不佩戴首饰/);
+    assert.match(result.sentPrompt, /Keep both shoulders fully covered/);
+    assert.match(result.sentPrompt, /No jewelry anywhere: no earrings, necklace, bracelets, or rings/);
 });
 
 test('generateShot reports a missing AI binding as 503, not a crash', async () => {

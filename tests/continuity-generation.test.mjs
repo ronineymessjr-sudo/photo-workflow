@@ -47,8 +47,8 @@ test('waist-up framing locks the full outfit without naming lower-body garments'
         variant: { size: '中景', crop: '头顶至自然腰线，腰线以下完全不入画', wardrobe: '米白色针织上衣覆盖双肩与上胸' },
         locked: { subject: '成年东亚女性模特，浅棕色齐肩短发、自然妆容；米白针织上衣、卡其长裙、棕色长靴。全组固定同一套服装。', wardrobe: '米白针织上衣、卡其长裙、棕色长靴', mustKeep: ['同一套服装'] },
     });
-    assert.match(direction, /腰线上方服装/);
-    assert.match(direction, /腰线以下服装.*完全处于画外/);
+    assert.match(direction, /全组服装：米白针织上衣/);
+    assert.match(direction, /腰线以下完全不入画/);
     assert.doesNotMatch(direction, /长裙|长靴/);
     assert.match(direction, /米白色针织上衣覆盖肩部与腰线/);
     assert.match(direction, /浅棕色齐肩短发/);
@@ -64,9 +64,9 @@ test('a shot-specific scene wins over the group scene without leaking other shot
     assert.doesNotMatch(direction, /公园竹林小径/);
 });
 
-async function readyGroup(store, { modelDesc = '一名成年人', lockedSubject = '', mood = '' } = {}) {
+async function readyGroup(store, { modelDesc = '一名成年人', lockedSubject = '', mood = '', wardrobeNote = '炭灰大衣' } = {}) {
     let group = createGroup({
-        input: { theme: '雨夜旧车站', scene: '旧车站月台', style: '纪实', modelDesc, wardrobeNote: '炭灰大衣', mood },
+        input: { theme: '雨夜旧车站', scene: '旧车站月台', style: '纪实', modelDesc, wardrobeNote, mood },
         lockedHints: lockedSubject ? { subject: lockedSubject } : {},
         shots: [{ shotId: 'shot-01', size: 'WS', camera_angle: 'eye_level', lens: '35mm', model_pose: '沿月台行走', model_position: '画面右侧', generator_prompt: 'wide shot of a figure walking along a wet platform' }],
     });
@@ -277,7 +277,7 @@ test('same-shot retry changes only its deterministic seed', async () => {
     const fetchImpl = async (_url, options) => {
         const body = JSON.parse(options.body);
         seeds.push(body.seed);
-        assert.equal(body.size, '1024x1536', '全身镜头保留既有 2:3 画幅');
+        assert.equal(body.size, '1056x1584', '全身镜头保留既有 2:3 画幅');
         return Response.json({ task_id: `task-${seeds.length}` });
     };
     await generateShot({ group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit', env: { MODELSCOPE_TOKEN: 'test-only' }, store, fetchImpl, submitOnly: true, attempt: 0 });
@@ -300,7 +300,7 @@ test('ModelScope uses 3:4 only for waist-up medium shots', async () => {
         },
         submitOnly: true,
     });
-    assert.equal(body.size, '1024x1365', '中景使用接近 3:4 的竖幅尺寸');
+    assert.equal(body.size, '1140x1472', '中景使用当前 3:4 竖幅尺寸');
 });
 
 test('ModelScope uses the identity photo and keeps clothing constraints in text', async () => {
@@ -391,7 +391,212 @@ test('ModelScope fails clearly when the selected pose image cannot be loaded', a
             assert.fail('姿势参考缺失时不得提交无参考请求');
         },
         submitOnly: true,
-    }), error => error.code === 'GENERATION_REFERENCE_MISSING' && error.status === 409);
+}), error => error.code === 'GENERATION_REFERENCE_MISSING' && error.status === 409);
+});
+
+test('ModelScope receives the selected PoseAtlas image as a pose-only reference', async () => {
+    const store = createMemoryStore();
+    const wardrobe = '米白色针织裹身上衣（宽袖、腰前交叠系结），卡其色半身裙；不添加包袋、项链、首饰或帽子。';
+    const group = await readyGroup(store, { wardrobeNote: wardrobe, lockedSubject: wardrobe });
+    group.shots[0].prompt = `Reference roles: Image 1 is the identity reference; Image 2 is a PoseAtlas pose sketch.\n${group.shots[0].prompt}`;
+    group.shots[0].poseRef = {
+        id: 'atlas-pose-p001', title: '站立・回眸顾盼', angle: '侧后方',
+        direction: '上身转开再回头，肩颈放松。',
+        imageUrl: 'https://hruiccc.github.io/RuiC-PoseAtlas/thumbs/p001.jpg',
+    };
+    let payload;
+    const result = await generateShot({
+        group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit',
+        env: { MODELSCOPE_TOKEN: 'test-only' }, store, submitOnly: true,
+        fetchImpl: async (url, options = {}) => {
+            if (String(url).startsWith('https://hruiccc.github.io/')) {
+                return new Response(Uint8Array.from([1, 2, 3]), { headers: { 'Content-Type': 'image/jpeg' } });
+            }
+            payload = JSON.parse(options.body);
+            return Response.json({ task_id: 'task-pose-reference' });
+        },
+    });
+
+    assert.equal(payload.image_url.length, 2, 'identity and selected pose are sent; conflicting wardrobe reference is omitted');
+    assert.deepEqual(result.referenceRolesSent, ['identity', 'pose']);
+    assert.match(payload.prompt, /Image 1（identity）.*Image 2（pose）/);
+    assert.doesNotMatch(payload.prompt, /Reference roles:/);
+    assert.match(payload.prompt, /最后一张参考图来自摆姿库/);
+    assert.match(payload.prompt, /不要复制线稿/);
+    assert.match(payload.prompt, /针织宽袖上衣肩缝保持在双肩自然位置，领口覆盖双肩/);
+    assert.match(payload.prompt, /人物全组不佩戴首饰/);
+    assert.equal(result.referencesSent, 2);
+    assert.equal(result.status, 'pending');
+});
+
+test('anchored ModelScope shots follow PoseAtlas text without mixing the pose photo into the master edit', async () => {
+    const store = createMemoryStore();
+    const group = await readyGroup(store);
+    group.shots[0].size = '全身';
+    group.shots[0].shotType = '全身';
+    group.shots[0].action = '站立，一只手轻扶髋部，另一只手自然下垂，双脚稳定着地。';
+    group.shots[0].poseRef = {
+        id: 'atlas-pose-p015', title: '站立・对立式平衡・手扶腰',
+        direction: '靠镜头一侧的手轻搭髋部，另一只手自然下垂。',
+        imageUrl: 'https://example.com/pose.jpg',
+    };
+    setAnchor(group, { assetId: group.references.find(reference => reference.role === 'identity').assetId });
+    let payload;
+    const fetchedUrls = [];
+    const result = await generateShot({
+        group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit',
+        env: { MODELSCOPE_TOKEN: 'test-only' }, store, submitOnly: true,
+        fetchImpl: async (url, options = {}) => {
+            fetchedUrls.push(String(url));
+            payload = JSON.parse(options.body);
+            return Response.json({ task_id: 'task-anchored-text-pose' });
+        },
+    });
+
+    assert.equal(payload.image_url.length, 2, 'the master and identity remain; conflicting outfit accessories are omitted');
+    assert.deepEqual(result.referenceRolesSent, ['anchor', 'identity']);
+    assert.ok(!fetchedUrls.includes('https://example.com/pose.jpg'), 'anchored edits do not mix in another person or pose photo');
+    assert.match(payload.prompt, /站立・对立式平衡・手扶腰/);
+    assert.match(payload.prompt, /一只手轻扶髋部，另一只手自然下垂/);
+    assert.doesNotMatch(payload.prompt, /最后一张参考图来自摆姿库/);
+});
+
+test('ModelScope waist-up frames keep pose text and omit references that can override crop or wardrobe', async () => {
+    const store = createMemoryStore();
+    const wardrobe = '米白色针织裹身上衣（宽袖、腰前交叠系结），卡其色层叠长半身裙至脚踝，棕色及膝长靴；不添加包袋、项链、首饰或帽子。';
+    const group = await readyGroup(store, { wardrobeNote: wardrobe, lockedSubject: `成年东亚女性模特；${wardrobe}` });
+    const styleAsset = await storeAsset({ dataUrl: 'data:image/png;base64,AAECAw==', role: 'style', store });
+    Object.assign(group.references.find(reference => reference.role === 'style'), { assetId: styleAsset.assetId, path: styleAsset.path });
+    const originalGet = store.get.bind(store);
+    const assetReads = [];
+    store.get = async key => { assetReads.push(key); return originalGet(key); };
+    group.shots[0].size = '中景';
+    group.shots[0].shotType = '中景';
+    group.shots[0].prompt = `Editorial photograph. Waist-up portrait. Subject and clothing: ${wardrobe}. User constraints: one person.`;
+    group.shots[0].poseRef = {
+        id: 'atlas-pose-full_single_p017', title: '站立・回眸顾盼',
+        direction: '上身转开再回头，肩颈放松。',
+        imageUrl: 'https://photo-workflow.pages.dev/assets/pose-references/pose-02.jpg',
+    };
+    let payload;
+    let submissionHeaders;
+    let poseReferenceFetched = false;
+    const fetchedUrls = [];
+    const result = await generateShot({
+        group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit',
+        env: { MODELSCOPE_TOKEN: 'test-only' }, store, submitOnly: true,
+        fetchImpl: async (url, options = {}) => {
+            fetchedUrls.push(String(url));
+            assert.doesNotMatch(String(url), /^https:\/\/hruiccc\.github\.io\//, 'waist-up must not fetch the full-body pose image');
+            if (String(url) === 'https://photo-workflow.pages.dev/assets/pose-references/pose-02.jpg') {
+                poseReferenceFetched = true;
+                return new Response(Uint8Array.from([1, 2, 3]), { headers: { 'Content-Type': 'image/jpeg' } });
+            }
+            payload = JSON.parse(options.body);
+            submissionHeaders = options.headers;
+            return Response.json({ task_id: 'task-waist-up' });
+        },
+    });
+
+    assert.equal(submissionHeaders['X-ModelScope-Task-Type'], 'image_generation');
+    assert.equal(poseReferenceFetched, false, `fetches: ${fetchedUrls.join(', ')}; pose: ${payload.prompt.match(/姿势[^\n]*/)?.[0] || ''}`);
+    assert.equal(payload.image_url.length, 1, 'only identity is sent; costume and pose images can override the wardrobe or waist-up crop');
+    assert.ok(assetReads.length > 0);
+    const styleAssetId = group.references.find(reference => reference.role === 'style')?.assetId;
+    assert.ok(styleAssetId);
+    assert.ok(assetReads.every(key => !key.includes(styleAssetId)), 'the rejected outfit image must not be loaded from asset storage');
+    assert.equal(payload.size, '1140x1472', 'ModelScope uses a portrait 3:4 canvas for waist-up frames');
+    assert.match(payload.prompt, /头部、肩膀、胸部和上腹/);
+    assert.match(payload.prompt, /禁止全身照、七分身照/);
+    assert.match(payload.prompt, /针织宽袖上衣肩缝保持在双肩自然位置，领口覆盖双肩/);
+    assert.match(payload.prompt, /人物全组不佩戴首饰：耳朵、颈部、手腕和手指均无耳饰、项链、手链或戒指/);
+    assert.match(payload.prompt, /像摄影师现场抓拍，不像广告硬照/);
+    assert.match(payload.prompt, /站立・回眸顾盼/);
+    const clothingClause = payload.prompt.match(/Subject and clothing:\s*(.*?)\. User constraints:/is)?.[1] || '';
+    assert.match(clothingClause, /米白色针织裹身上衣/);
+    assert.doesNotMatch(clothingClause, /半身裙|长靴|boots|skirt/i);
+    const wardrobeLines = payload.prompt.split('\n').filter(line => /^(?:人物|全组服装|服装)：/.test(line));
+    assert.ok(wardrobeLines.length > 0);
+    assert.ok(wardrobeLines.every(line => !/半身裙|长靴|boots|skirt/i.test(line)), 'all waist-up wardrobe fields must exclude garments below the crop');
+    assert.equal(result.referencesSent, 1);
+    assert.deepEqual(result.referenceRolesSent, ['identity']);
+});
+
+test('anchored full-body frames omit outfit references when the wardrobe contract bans their accessories', async () => {
+    const store = createMemoryStore();
+    const wardrobe = '米白色针织裹身上衣，卡其色长裙和棕色长靴；不添加包袋、项链、首饰或帽子。';
+    const group = await readyGroup(store, { lockedSubject: `成年女性模特；${wardrobe}`, wardrobeNote: wardrobe });
+    group.shots[0].size = '全身';
+    group.shots[0].shotType = '全身';
+    group.shots[0].prompt = 'Full-body portrait following the pose contract.';
+    Object.assign(group.references.find(reference => reference.role === 'style'), { assetId: 'studio-costume-AUT-0118' });
+    setAnchor(group, { assetId: group.references.find(reference => reference.role === 'identity').assetId });
+    let payload;
+    const result = await generateShot({
+        group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit',
+        env: { MODELSCOPE_TOKEN: 'test-only' }, store, submitOnly: true,
+        fetchImpl: async (_url, options = {}) => {
+            payload = JSON.parse(options.body);
+            return Response.json({ task_id: 'task-anchored-full-body-without-accessories' });
+        },
+    });
+    assert.equal(payload.image_url.length, 2, 'accepted anchor and identity remain; conflicting outfit reference is omitted');
+    assert.equal(result.referencesSent, 2);
+    assert.match(payload.prompt, /不添加包袋、项链、首饰或帽子/);
+});
+
+test('anchored full-body frames omit an outfit reference that conflicts with banned accessories', async () => {
+    const store = createMemoryStore();
+    const wardrobe = '米白色针织裹身上衣，卡其色长裙和棕色长靴；不添加包袋、项链、首饰或帽子。';
+    const group = await readyGroup(store, { lockedSubject: `成年女性模特；${wardrobe}`, wardrobeNote: wardrobe });
+    group.shots[0].size = '全身';
+    group.shots[0].shotType = '全身';
+    group.shots[0].prompt = 'Full-body portrait following the pose contract.';
+    setAnchor(group, { assetId: group.references.find(reference => reference.role === 'identity').assetId });
+    Object.assign(group.references.find(reference => reference.role === 'style'), { assetId: 'qa-sanitized-costume-reference' });
+    let payload;
+    const result = await generateShot({
+        group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit',
+        env: { MODELSCOPE_TOKEN: 'test-only' }, store, submitOnly: true,
+        fetchImpl: async (_url, options = {}) => {
+            payload = JSON.parse(options.body);
+            return Response.json({ task_id: 'task-anchored-full-body-with-sanitized-outfit' });
+        },
+    });
+    assert.equal(payload.image_url.length, 2, 'accepted anchor and identity remain; outfit reference is omitted');
+    assert.equal(result.referencesSent, 2);
+    assert.deepEqual(result.referenceRolesSent, ['anchor', 'identity']);
+    assert.match(payload.prompt, /不添加包袋、项链、首饰或帽子/);
+});
+
+test('ModelScope stops before submission when an accepted pose image is unavailable', async () => {
+    const store = createMemoryStore();
+    const group = await readyGroup(store);
+    group.shots[0].poseRef = { id: 'pose-invalid', title: '已选姿势', imageUrl: 'https://example.com/pose.jpg' };
+    await assert.rejects(
+        () => generateShot({
+            group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit',
+            env: { MODELSCOPE_TOKEN: 'test-only' }, store, submitOnly: true,
+            fetchImpl: async () => assert.fail('unapproved pose URL must not be fetched or submitted'),
+        }),
+        error => error.code === 'GENERATION_REFERENCE_MISSING',
+    );
+});
+
+test('ModelScope submission timeout is reported as ambiguous instead of leaking a runtime error', async () => {
+    const store = createMemoryStore();
+    const group = await readyGroup(store);
+    await assert.rejects(
+        () => generateShot({
+            group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit',
+            env: { MODELSCOPE_TOKEN: 'test-only' }, store, submitOnly: true,
+            fetchImpl: async () => { throw new DOMException('aborted', 'TimeoutError'); },
+        }),
+        error => error.code === 'GENERATION_SUBMIT_AMBIGUOUS'
+            && error.status === 503
+            && /不要立即重复提交/.test(error.message)
+            && !/code 23|operation was aborted/i.test(error.message),
+    );
 });
 
 test('generation without credentials fails closed and names the missing env vars', async () => {

@@ -145,7 +145,7 @@ test('continuity collect keeps an upstream task pending when polling has a trans
         assert.equal(response.status, 503);
         assert.match(response.headers.get('content-type') || '', /application\/json/);
         assert.deepEqual(await response.json(), {
-            status: 'pending', terminal: false, retryable: true, shotId: 'shot-01',
+            status: 'pending', terminal: false, retryable: true, shotId: 'shot-01', taskId: 'still-running-task',
             code: 'GENERATION_POLL_RETRYABLE',
             error: '暂时无法查询魔搭任务，请稍后继续查询同一任务',
         });
@@ -186,8 +186,8 @@ test('continuity collect keeps a provider HTTP 503 pending and retryable', async
         }), { JWT_SECRET: secret, MODELSCOPE_TOKEN: 'test-only' });
         assert.equal(response.status, 503);
         assert.deepEqual(await response.json(), {
-            status: 'pending', terminal: false, retryable: true, shotId: 'shot-01',
-            code: 'GENERATION_POLL_RETRYABLE', error: '魔搭查询暂时返回 503',
+            status: 'pending', terminal: false, retryable: true, shotId: 'shot-01', taskId: 'still-running-task',
+            code: 'GENERATION_POLL_RETRYABLE', error: '魔搭暂时无法查询任务（HTTP 503），请稍后继续查询同一任务',
         });
     } finally {
         globalThis.fetch = originalFetch;

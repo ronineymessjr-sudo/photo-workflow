@@ -140,12 +140,22 @@ export async function generateCloudCandidate(input, { ai, referenceContext, fetc
             poseImage ? `${poseImage} is the selected PoseAtlas action reference (${clean(selectedPose?.id, 80)}; ${clean(selectedPose?.englishTitle || selectedPose?.title, 120)}). Use only its torso and limb positions/body orientation as pose geometry; ignore its line art, white background, joint marks, mannequin appearance and nudity. The subject must be the clothed adult specified by the written wardrobe contract.` : '',
             costumeImage ? `${costumeImage} is secondary guidance for outfit material and palette only; do not copy unrequested accessories or props.` : '',
         ].filter(Boolean).join(' ');
-    const wardrobeContract = clean(input.shot_contract.wardrobe_styling || input.reference_brief?.modelDesc, 420) || 'Preserve the user specified garments exactly.';
+    const wardrobeText = clean(input.shot_contract.wardrobe_styling || input.reference_brief?.modelDesc, 420);
+    const shoulderCoverageRule = waistUpCrop && /宽袖|长袖|long[- ]sleeve|wide[- ]sleeve/i.test(wardrobeText)
+        ? 'Keep the long or wide sleeves fully covering both shoulders; the neckline stays above the shoulder line. Do not let the top slip off either shoulder; add no earrings, necklace or other jewelry.'
+        : '';
+    const wardrobeContract = (waistUpCrop
+        ? wardrobeText.split(/(?<=[，、,；;。])/)
+            .filter(part => !/(裙|裤|靴|鞋|袜|下装|skirt|trousers|pants|boots|shoes|socks|lower[- ]body)/i.test(part))
+            .join('')
+            .replace(/[，、,；;。]+$/, '')
+        : wardrobeText) || 'Preserve the user specified garments exactly.';
     const mustShow = list(input.shot_contract.master_must_show || input.shot_contract.must_show).join('; ');
     const rejectIf = list(input.shot_contract.master_reject_if || input.shot_contract.reject_if).join('; ');
     let prompt = [
         `Shot contract: ${shotPrompt}`,
         waistUpCrop ? 'Required waist-up crop: frame from the top of the head through the natural waistline; the lower edge cuts at the waistline. Exclude the hips and everything below, including skirt below the waist, legs and shoes.' : '',
+        shoulderCoverageRule,
         selectedPose && !clothingDetail ? `Selected pose library entry: ${clean(selectedPose.title, 120)}. Pose direction: ${clean(poseDirection, 260)}` : '',
         clothingDetail ? `Shot-specific wardrobe contract: ${wardrobeContract}` : `Written wardrobe contract: ${wardrobeContract}`,
         mustShow ? `The image must visibly include: ${mustShow}.` : '',
@@ -209,7 +219,7 @@ export async function generateCloudCandidate(input, { ai, referenceContext, fetc
         const wardrobeInstruction = clothingDetail
             ? `The shot-specific wardrobe contract is authoritative and overrides any global full-outfit text. Show only the requested garment detail worn on the model, with a visible shoulder or upper-torso segment; keep the face and rest of the outfit outside the crop: ${wardrobeContract}.`
             : waistUpCrop
-            ? `The written wardrobe contract identifies the outfit, but only clothing visible inside this waist-up crop should appear; do not widen or lower framing to show the full skirt, legs or shoes: ${wardrobeContract}.`
+            ? `${shoulderCoverageRule ? `${shoulderCoverageRule} ` : ''}The written wardrobe contract identifies the outfit, but only clothing visible inside this waist-up crop should appear; do not widen or lower framing to show the full skirt, legs or shoes: ${wardrobeContract}.`
             : `The written wardrobe contract is authoritative for exact garments, colors, layers, skirt length and shoes: ${wardrobeContract}.`;
         const subjectInstruction = clothingDetail
             ? 'Create a photorealistic close-up of the named garment worn on the model, with a visible shoulder or upper-torso segment for context.'

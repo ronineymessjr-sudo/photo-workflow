@@ -4,16 +4,22 @@
 // id, a kind and a source URL, but no bytes, because the library is licensed for
 // reference only. The continuity contract needs three roles backed by stored
 // assets. Selected face and costume images remain remote references and are
-// fetched transiently; poses stay as text constraints so sketches cannot affect image style.
+// fetched transiently; the ModelScope adapter may also fetch the chosen pose
+// image as a pose-only input, while other providers use its text constraint.
 //
 // Role mapping:
 //   portrait / styling -> identity   (who)
 //   costume            -> style      (what it looks like)
-//   pose               -> shot constraint, not a reference (how it is framed)
+//   pose               -> shot constraint plus a provider-scoped pose image (how it is framed)
 
 import { createGroup } from './continuity.mjs';
 
 const STYLE_KINDS = ['costume'];
+const BUNDLED_PEXELS_WAIST_POSE = 'https://photo-workflow.pages.dev/assets/pose-references/pose-02.jpg';
+
+function isWaistUpShot(value) {
+    return /腰上|半身|中景|近景|胸像|waist.?up|medium/i.test(String(value || ''));
+}
 
 function allowedPoseAtlasImage(raw) {
     try {
@@ -82,10 +88,15 @@ function toContinuityShot(shot, index, poseTemplates, guidance = {}) {
         || null;
     const suggestion = pose && (guidance.suggestions || []).find(item => item.sourceItemId === pose.id)?.direction || '';
     const angle = poseAngleForShot(pose, shot, contract);
+    const poseUpstreamId = String(pose?.upstreamId || pose?.sourceItemId || pose?.id || '');
+    const waistUpPose = pose && isWaistUpShot(contract.shot_size || shot?.shotSize || shot?.shotType || shot?.size)
+        && /(?:^|[_-])p017$/i.test(poseUpstreamId);
     const poseRef = pose ? {
         id: pose.id,
         title: pose.title || pose.id,
-        imageUrl: allowedPoseAtlasImage(pose.referenceImageUrl) ? pose.referenceImageUrl : '',
+        imageUrl: waistUpPose
+            ? BUNDLED_PEXELS_WAIST_POSE
+            : allowedPoseAtlasImage(pose.referenceImageUrl) ? pose.referenceImageUrl : '',
         angle,
         direction: poseDirectionForShot(pose, shot, contract, angle, suggestion),
     } : null;
@@ -200,12 +211,14 @@ export function groupFromStudio({ templates = [], input = {}, planId = '', planR
             : valid.map(template => template.id).slice(0, 12),
         templateIds: valid.map(template => template.id).slice(0, 12),
     };
-    // Poses are constraints for future shots, not references.
+    // Pose constraints are separate from the three locked group roles. The
+    // ModelScope adapter can also send the selected pose image in its dedicated
+    // pose-only input slot.
     group.poseConstraints = poses.slice(0, 6).map(template => ({
         templateId: template.id,
         angles: Array.isArray(template.angles) ? template.angles : [],
         referenceImageUrl: allowedPoseAtlasImage(template.referenceImageUrl) ? template.referenceImageUrl : '',
-        note: `构图/姿态参考：${template.title || template.id}（仅参考，不入参考图）`,
+        note: `构图/姿态参考：${template.title || template.id}（只参考身体动作，不复制线稿造型）`,
         sourceUrl: template.sourceUrl || '',
     }));
 

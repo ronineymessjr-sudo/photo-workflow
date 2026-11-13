@@ -157,6 +157,30 @@ test('image allowance is isolated per signed-in user and refuses guests', async 
     assert.equal(await consumeStudioImageQuota({ uid: 'user-b', env }), 'global-limit');
 });
 
+test('temporary unlimited image allowance applies only to its exact configured QA user', async () => {
+    const env = { ...environment(), STUDIO_IMAGE_TEST_UNLIMITED_USER_ID: 'qa-user\r\n', STUDIO_IMAGE_USER_LIMIT: '1', STUDIO_IMAGE_GLOBAL_LIMIT: '1' };
+    for (let index = 0; index < 5; index++) assert.equal(await consumeStudioImageQuota({ uid: 'qa-user', env }), true);
+
+    const nearMatchEnv = { ...environment(), STUDIO_IMAGE_TEST_UNLIMITED_USER_ID: 'qa-user', STUDIO_IMAGE_USER_LIMIT: '1', STUDIO_IMAGE_GLOBAL_LIMIT: '1' };
+    assert.equal(await consumeStudioImageQuota({ uid: 'qa-user ', env: nearMatchEnv }), true);
+    assert.equal(await consumeStudioImageQuota({ uid: 'qa-user ', env: nearMatchEnv }), false);
+
+    assert.equal(await consumeStudioImageQuota({ uid: 'ordinary-user', env }), true);
+    assert.equal(await consumeStudioImageQuota({ uid: 'ordinary-user', env }), false);
+    assert.equal(await consumeStudioImageQuota({ uid: 'other-user', env }), 'global-limit');
+    const unconfigured = { ...environment(), STUDIO_IMAGE_USER_LIMIT: '1', STUDIO_IMAGE_GLOBAL_LIMIT: '1' };
+    assert.equal(await consumeStudioImageQuota({ uid: 'qa-user', env: unconfigured }), true);
+    assert.equal(await consumeStudioImageQuota({ uid: 'qa-user', env: unconfigured }), false);
+});
+
+test('authenticated session reports active QA image override only to its exact account', async () => {
+    const env = { ...environment(), STUDIO_IMAGE_TEST_UNLIMITED_USER_ID: 'qa-user' };
+    const qaSession = await (await call(env, '/api/auth/session', undefined, 'qa-user')).json();
+    const normalSession = await (await call(env, '/api/auth/session', undefined, 'ordinary-user')).json();
+    assert.equal(qaSession.imageQuotaTestOverrideActive, true);
+    assert.equal(Object.hasOwn(normalSession, 'imageQuotaTestOverrideActive'), false);
+});
+
 test('Worker confirmation writes only the verified account workspace and replays once', async () => {
     const env = environment();
     assert.equal((await call(env, '/api/workspace/state', { revision: 0, entries: { [planKey('plan-1')]: samplePlan } })).status, 200);

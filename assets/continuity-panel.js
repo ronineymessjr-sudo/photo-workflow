@@ -5,6 +5,7 @@
 // State lives in localStorage (the contract is a document, not a session).
 
 const STORAGE_KEY = 'photoatelier.continuity.v1';
+const CONTINUITY_WORKER_ORIGIN = 'https://photoatelier-api.photomagic.workers.dev';
 const ROLES = [
     { role: 'identity', label: '人物参考', hint: '只负责脸、发型、体态' },
     { role: 'scene', label: '场景参考', hint: '默认使用方案里的场地描述；也可以上传现场照片' },
@@ -107,7 +108,10 @@ function el(tag, attrs = {}, children = []) {
 }
 async function api(path, body, method = 'POST') {
     const token = localStorage.getItem('pw_token');
-    const response = await fetch(path, {
+    const requestUrl = ['/api/continuity/generate', '/api/continuity/collect'].includes(path)
+        ? `${CONTINUITY_WORKER_ORIGIN}${path}`
+        : path;
+    const response = await fetch(requestUrl, {
         method,
         headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: method === 'GET' ? undefined : JSON.stringify(body || {}),

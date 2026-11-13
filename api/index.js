@@ -26,6 +26,29 @@ async function assetToDataUrl(imagePath, env) {
     if (!asset) return '';
     return `data:${asset.mime};base64,${Buffer.from(asset.buffer).toString('base64')}`;
 }
+
+function continuityResultCacheKey(uid, taskId) {
+    const digest = createHash('sha256').update(`${uid}\0${taskId}`).digest('hex');
+    return `continuity-result-cache/${digest}`;
+}
+
+async function readContinuityResultCache(env, uid, taskId) {
+    if (!env.CONTINUITY_KV || typeof taskId !== 'string') return null;
+    try {
+        return await env.CONTINUITY_KV.get(continuityResultCacheKey(uid, taskId), 'json');
+    } catch {
+        return null;
+    }
+}
+
+async function writeContinuityResultCache(env, uid, taskId, result) {
+    if (!env.CONTINUITY_KV || typeof taskId !== 'string') return;
+    try {
+        await env.CONTINUITY_KV.put(continuityResultCacheKey(uid, taskId), JSON.stringify(result), { expirationTtl: 86400 });
+    } catch (error) {
+        console.error('continuity_result_cache_failed', error?.code || error?.name || 'CACHE_ERROR');
+    }
+}
 export { WorkspaceSync } from './workspace-state.mjs';
 
 // Cloudflare Workers 环境中 Buffer 不可用，使用替代方案
@@ -488,7 +511,11 @@ export default {
             }
             // Shared browser business data, isolated by the authenticated account.
             else if (path === '/api/auth/session' && method === 'GET') {
-                result = uid ? { status: 200, body: { success: true, user: { id: uid } } }
+                const testImageQuotaOverrideActive = String(env.STUDIO_IMAGE_TEST_UNLIMITED_USER_ID || '').trim() === uid;
+                result = uid ? { status: 200, body: {
+                    success: true, user: { id: uid },
+                    ...(testImageQuotaOverrideActive ? { imageQuotaTestOverrideActive: true } : {}),
+                } }
                     : { status: 401, body: { error: '登录已失效，请重新登录' } };
             }
             else if (path === '/api/workspace/state' && ['GET', 'POST'].includes(method)) {
@@ -634,52 +661,61 @@ export default {
                 // running, so the client just calls again.
                 if (!uid) result = { status: 401, body: { error: 'SIGN_IN_REQUIRED' } };
                 else {
+                    const cached = await readContinuityResultCache(env, uid, body?.taskId);
+                    if (cached?.status === 'succeeded' && cached.image?.assetId) {
+                        result = { status: 200, body: { ...cached, shotId: body?.shotId || cached.shotId } };
+                    }
                     let polled;
-                    try {
-                        polled = await pollModelScope({ env, taskId: body?.taskId });
-                    } catch (error) {
-                        if (error?.code === 'GENERATION_POLL_RETRYABLE') {
-                            result = { status: 503, body: {
-                                status: 'pending', terminal: false, retryable: true,
-                                shotId: body?.shotId, code: error.code,
-                                error: String(error.message || error).slice(0, 300),
-                            } };
-                        } else if (['GENERATION_UPSTREAM_FAILED', 'GENERATION_INVALID_RESPONSE'].includes(error?.code)) {
-                            result = { status: error.status || 502, body: {
-                                status: 'failed', terminal: true, retryable: error.details?.retryable === true,
-                                shotId: body?.shotId, code: error.code,
-                                error: String(error.message || error).slice(0, 300),
-                            } };
-                        } else if (error?.name === 'AbortError' || error?.name === 'TimeoutError' || error instanceof TypeError) {
-                            // Network/DNS/timeouts during status polling say nothing
-                            // about the provider task. Preserve its pending state so
-                            // clients can retry the same task instead of receiving
-                            // an unhelpful Cloudflare HTML error page.
-                            result = { status: 503, body: {
-                                status: 'pending', terminal: false, retryable: true,
-                                shotId: body?.shotId, code: 'GENERATION_POLL_RETRYABLE',
-                                error: '暂时无法查询魔搭任务，请稍后继续查询同一任务',
-                            } };
-                        } else {
-                            throw error;
+                    if (!result) {
+                        try {
+                            polled = await pollModelScope({ env, taskId: body?.taskId });
+                        } catch (error) {
+                            if (error?.code === 'GENERATION_POLL_RETRYABLE' || error?.name === 'AbortError' || error?.name === 'TimeoutError' || error instanceof TypeError) {
+                                result = { status: 503, body: {
+                                    status: 'pending', terminal: false, retryable: true,
+                                    shotId: body?.shotId, taskId: body?.taskId,
+                                    code: 'GENERATION_POLL_RETRYABLE',
+                                    error: String(error.message || error).slice(0, 300),
+                                } };
+                            } else if (['GENERATION_UPSTREAM_FAILED', 'GENERATION_INVALID_RESPONSE', 'GENERATION_TASK_ID_INVALID'].includes(error?.code)) {
+                                result = { status: error.status || 502, body: {
+                                    status: 'failed', terminal: true, retryable: error.details?.retryable === true,
+                                    shotId: body?.shotId, code: error.code,
+                                    error: String(error.message || error).slice(0, 300),
+                                } };
+                            } else throw error;
                         }
                     }
                     if (!result) {
                         if (polled.status !== 'succeeded') {
-                            result = { status: 200, body: { status: 'pending', shotId: body?.shotId } };
-                        } else {
-                            const stored = await storeAsset({
-                                dataUrl: `data:${polled.contentType};base64,${polled.base64}`,
-                                role: 'misc', env,
-                            });
                             result = { status: 200, body: {
-                                status: 'succeeded',
-                                shotId: body?.shotId,
-                                provider: 'modelscope-qwen-edit',
-                                seed: body?.seed,
-                                image: { assetId: stored.assetId, path: stored.path, bytes: stored.bytes, durable: stored.durable },
-                                qc: { verdict: 'pending' },
+                                status: 'pending', shotId: body?.shotId, taskId: body?.taskId,
+                                providerStatus: polled.upstream || 'PENDING',
                             } };
+                        } else {
+                            try {
+                                const stored = await storeAsset({
+                                    dataUrl: `data:${polled.contentType};base64,${polled.base64}`,
+                                    role: 'misc', env,
+                                });
+                                result = { status: 200, body: {
+                                    status: 'succeeded',
+                                    shotId: body?.shotId,
+                                    provider: 'modelscope-qwen-edit',
+                                    seed: body?.seed,
+                                    image: { assetId: stored.assetId, path: stored.path, bytes: stored.bytes, durable: stored.durable },
+                                    qc: { verdict: 'pending' },
+                                } };
+                                await writeContinuityResultCache(env, uid, body?.taskId, result.body);
+                            } catch (error) {
+                                console.error('continuity_result_store_failed', error?.code || error?.name || 'STORE_ERROR');
+                                result = { status: 503, body: {
+                                    status: 'pending', terminal: false, retryable: true,
+                                    shotId: body?.shotId, taskId: body?.taskId,
+                                    code: 'CONTINUITY_RESULT_STORE_FAILED',
+                                    error: '图像已生成，暂时无法保存；请继续查询同一任务，不要重新生成。',
+                                } };
+                            }
                         }
                     }
                 }

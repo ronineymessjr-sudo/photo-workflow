@@ -89,6 +89,21 @@ test('a terminal collect failure clears the pending task and exposes a retry sta
     assert.equal(panel.state().generationErrors['shot-01'].code, 'GENERATION_UPSTREAM_FAILED');
 });
 
+test('a transient collect failure preserves the same task for another poll', async () => {
+    const panel = createPanel({
+        initialState: { pendingJobs: { 'shot-01': { taskId: 'task-retry', providerId: 'modelscope-qwen-edit', seed: 428501 } } },
+        fetchImpl: async () => jsonResponse(503, {
+            status: 'pending', terminal: false, retryable: true,
+            taskId: 'task-retry', shotId: 'shot-01', code: 'GENERATION_POLL_RETRYABLE',
+        }),
+    });
+
+    assert.equal(await panel.context.collectShot('shot-01'), null);
+    assert.equal(panel.state().pendingJobs['shot-01'].taskId, 'task-retry');
+    assert.equal(panel.state().pendingJobs['shot-01'].seed, 428501);
+    assert.equal(panel.state().generationErrors?.['shot-01'], undefined);
+});
+
 test('retry counts are unchanged for 401, 429, 503 and network failures', async t => {
     for (const failure of [
         async () => jsonResponse(401, { error: 'SIGN_IN_REQUIRED' }),
@@ -116,7 +131,7 @@ test('accepted async retry keeps its seed through collect and the saved result',
             const body = JSON.parse(init.body);
             requests.push({ path, body });
             if (path === '/api/continuity/requests') return jsonResponse(200, { requests: [{ shotId: 'shot-01', seed: 428501 }] });
-            if (path === '/api/continuity/generate') return jsonResponse(202, { status: 'pending', taskId: 'task-1' });
+            if (String(path).endsWith('/api/continuity/generate')) return jsonResponse(202, { status: 'pending', taskId: 'task-1' });
             return jsonResponse(200, { status: 'succeeded', shotId: 'shot-01', image: { assetId: 'asset-1', path: '/api/continuity/asset/0123456789abcdef' } });
         },
     });
@@ -124,11 +139,13 @@ test('accepted async retry keeps its seed through collect and the saved result',
     panel.context.collectShot = async () => null;
 
     await panel.context.generateShot('shot-01', true);
+    assert.match(requests[1].path, /^https:\/\/photoatelier-api\.photomagic\.workers\.dev\/api\/continuity\/generate$/);
     assert.equal(panel.state().retryCounts['shot-01'], 1);
     assert.equal(panel.state().pendingJobs['shot-01'].seed, 428501);
 
     panel.context.collectShot = collect;
     const completed = await panel.context.collectShot('shot-01');
+    assert.match(requests[2].path, /^https:\/\/photoatelier-api\.photomagic\.workers\.dev\/api\/continuity\/collect$/);
     assert.equal(requests[2].body.seed, 428501);
     assert.equal(completed.seed, 428501);
     assert.equal(panel.state().results['shot-01'].seed, 428501);
