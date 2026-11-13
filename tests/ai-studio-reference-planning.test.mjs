@@ -519,3 +519,16 @@ test('the existing save entry stamps new plan revisions and refuses stale plan r
     await context.savePlan({ id: 'new-plan', title: '新方案' });
     assert.equal(plans[0].revision, 1);
 });
+
+test('a signed-in plan is not reported as account-saved when workspace sync fails', async () => {
+    const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+    const source = html.slice(html.indexOf('async function savePlan(plan){'), html.indexOf('function delPlan(id)'));
+    let plans = [];
+    const context = vm.createContext({
+        getPlans: () => structuredClone(plans), savePlans: value => { plans = structuredClone(value); return true; },
+        window: { __PHOTOATELIER_SESSION_VERIFIED__: true, PhotoAtelierWorkspaceSync: { sync: async () => false } }, Date,
+    });
+    vm.runInContext(source, context);
+    await assert.rejects(context.savePlan({ id: 'unsynced-plan', title: '暂存方案' }), /账户云端保存未确认/);
+    assert.equal(plans[0].id, 'unsynced-plan');
+});

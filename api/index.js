@@ -1,7 +1,6 @@
 // Photo Workflow Backend API - Cloudflare Workers
 import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
-import { createDirectorPlan, createGuestPlanDraft, createTemplatePlan } from './director-plan.mjs';
-import { prepareReferenceContext } from './ai-studio/reference-brief.mjs';
+import { createDirectorPlan } from './director-plan.mjs';
 import { buildDirectorIdentityWorkflow } from './director-identity-workflow.mjs';
 import { attachJevReview } from './jev-review.mjs';
 import { recordWebRequest } from './web-telemetry.mjs';
@@ -9,7 +8,7 @@ import { emailLoginEnabled, handleEmailAuth } from './email-auth.mjs';
 import { aiPlanProviders, handleAiPlan } from './ai-plan.mjs';
 import { handleAiBrief } from './ai-brief.mjs';
 import { generateCloudCandidate, prepareCloudCandidateReferences } from './director-cloud-generation.mjs';
-import { confirmStudioProposal, createStudioProposal, searchStudio, consumeStudioSearchQuota, consumeStudioImageQuota, AiStudioError } from './ai-studio/service.mjs';
+import { confirmStudioProposal, createStudioProposal, searchStudio, consumeStudioSearchQuota, consumeStudioPlanQuota, consumeStudioImageQuota, AiStudioError } from './ai-studio/service.mjs';
 import { checkStudioFeishuConnection, syncStudioPlan } from './ai-studio/feishu-sync.mjs';
 import { workspaceEntryKey } from '../assets/workspace-sync-protocol.mjs';
 export { AiStudioQuota } from './ai-studio/quota.mjs';
@@ -494,10 +493,15 @@ export default {
                 }
             }
             else if (path === '/api/ai/providers' && method === 'GET') {
-                result = { status: 200, body: { providers: aiPlanProviders(env) } };
+                result = { status: 200, body: { providers: aiPlanProviders(env).filter(provider => !provider.internalOnly) } };
             }
             else if (path === '/api/ai/plan' && method === 'POST') {
-                result = await handleAiPlan(body, env);
+                if (body?.provider === 'cloudflare-workers-ai') {
+                    const allowed = await consumeStudioPlanQuota({ uid, env });
+                    if (allowed === null) result = { status: 503, body: { error: '方案生成额度服务暂不可用，请稍后重试。', code: 'AI_PLAN_QUOTA_NOT_CONFIGURED' } };
+                    else if (!allowed) result = { status: 429, body: { error: '今日方案生成额度已用完，请明天再试。', code: 'AI_PLAN_DAILY_LIMIT_REACHED' } };
+                    else result = await handleAiPlan(body, env);
+                } else result = await handleAiPlan(body, env);
                 if (result.status === 200) {
                     result.body.director = { ...result.body.director,
                         imageGenerationConnected: cloudImageGenerationEnabled(result.body, uid, env),
@@ -747,16 +751,27 @@ export default {
             // Auth
             else if (path === '/api/director/plan' && method === 'POST') {
                 let plan;
-                const wantsReferencePlan = body.useReferenceLibrary === true || body.referenceIds?.length > 0;
-                if (wantsReferencePlan && (!env.DIRECTOR_API_BASE || !env.DIRECTOR_API_BASE.startsWith('https://'))) {
-                    const referenceContext = await prepareReferenceContext({ ...body, requireImageReferences: Boolean(uid) });
-                    if (!referenceContext?.templates.some(template => template.kind === 'pose' && template.sourceUrl)) {
-                        throw new Error('REFERENCE_LIBRARY_UNAVAILABLE');
+                if (!env.DIRECTOR_API_BASE || !env.DIRECTOR_API_BASE.startsWith('https://')) {
+                    if (!env.AI || typeof env.AI.run !== 'function') result = { status: 503, body: { error: '摄影方案 AI 当前未连接，请稍后重试或在设置中接入自己的 AI。', code: 'PLAN_PROVIDER_NOT_CONFIGURED' } };
+                    else {
+                        const allowed = await consumeStudioPlanQuota({ uid, env });
+                        if (allowed === null) result = { status: 503, body: { error: '方案生成额度服务暂不可用，请稍后重试。', code: 'AI_PLAN_QUOTA_NOT_CONFIGURED' } };
+                        else if (!allowed) result = { status: 429, body: { error: '今日方案生成额度已用完，请明天再试。', code: 'AI_PLAN_DAILY_LIMIT_REACHED' } };
+                        else {
+                            const generated = await handleAiPlan({ provider: 'cloudflare-workers-ai',
+                                model: aiPlanProviders(env).find(provider => provider.id === 'cloudflare-workers-ai')?.suggestedModel,
+                                input: { ...body, requireImageReferences: true } }, env);
+                            if (generated.status !== 200) result = generated;
+                            else {
+                                plan = generated.body;
+                                plan.director = { ...plan.director,
+                                    imageGenerationConnected: cloudImageGenerationEnabled(plan, uid, env),
+                                    imageGenerationMode: cloudImageGenerationEnabled(plan, uid, env)
+                                        ? 'cloud-fal-candidate-review' : 'cloud-image-provider-not-configured',
+                                };
+                            }
+                        }
                     }
-                    plan = createTemplatePlan(body, referenceContext);
-                    plan.director.imageGenerationConnected = Boolean(uid) && cloudImageGenerationEnabled(plan, uid, env);
-                } else if (!env.DIRECTOR_API_BASE || !env.DIRECTOR_API_BASE.startsWith('https://')) {
-                    plan = createGuestPlanDraft(body);
                 } else {
                     plan = await createDirectorPlan({ ...body, requireImageReferences: Boolean(uid) }, { baseUrl: env.DIRECTOR_API_BASE });
                     plan.director = { ...plan.director,
@@ -765,7 +780,7 @@ export default {
                             ? 'cloud-fal-candidate-review' : 'cloud-image-provider-not-configured',
                     };
                 }
-                result = { status: 200, body: await attachJevReview(plan, env) };
+                if (plan) result = { status: 200, body: await attachJevReview(plan, env) };
             }
             else if (path === '/api/director/generate-candidate' && method === 'POST') {
                 if (!uid) result = { status: 401, body: { error: 'SIGN_IN_REQUIRED' } };

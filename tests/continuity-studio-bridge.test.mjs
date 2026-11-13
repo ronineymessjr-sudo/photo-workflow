@@ -83,6 +83,27 @@ test('real Studio referencePlanFields shape maps sourceItemId into identity, sty
     assert.match(result.group.locked.wardrobe, /针织/);
 });
 
+test('an explicit empty pose selection stays empty for detail shots', () => {
+    const result = groupFromStudio({
+        templates: [portrait, costume, pose],
+        shots: [{ id: 'detail-shot', directorContract: {
+            shot_size: '特写', referenceIds: [], model_pose: '服装细节特写，不安排手部动作。',
+        } }],
+    });
+
+    assert.equal(result.group.shots[0].poseRef, null);
+    assert.equal(result.group.poseConstraints.length, 1, 'the selected library item remains traceable even when this shot does not use it');
+});
+
+test('legacy Studio shots without pose selection metadata retain their positional fallback', () => {
+    const result = groupFromStudio({
+        templates: [portrait, costume, pose],
+        shots: [{ id: 'legacy-shot', directorContract: { shot_size: '全身', model_pose: '自然站姿' } }],
+    });
+
+    assert.equal(result.group.shots[0].poseRef.id, pose.id);
+});
+
 test('waist-up P017 plans use the bundled licensed pose-only photograph', () => {
     const result = groupFromStudio({
         templates: [portrait, costume, { ...pose, id: 'atlas-pose-full_single_p017', upstreamId: 'full_single_p017', title: '站立・回眸顾盼' }],

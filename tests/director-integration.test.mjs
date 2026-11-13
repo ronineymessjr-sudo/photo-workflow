@@ -469,7 +469,7 @@ test('main PhotoAtelier plan route keeps the Director generator when references 
     assert.equal(plan.director.source, 'director-shoot-plan');
     assert.equal(directorCalls, 1);
     assert.equal(plan.shotList[0].title, '人像拍摄镜头 1');
-    assert.equal(plan.shotList[0].scene, '公园小径；木亭长椅');
+    assert.equal(plan.shotList[0].scene, '公园小径');
     assert.ok(plan.aiStudio.references.some(reference => reference.kind === 'pose'));
     assert.ok(plan.aiStudio.references.some(reference => reference.kind === 'costume'));
     assert.ok(plan.aiStudio.references.some(reference => reference.kind === 'portrait'));
@@ -523,7 +523,7 @@ test('all inline scripts parse and submit awaits director, shot list reuses resp
     for (const match of html.matchAll(/<script([^>]*)>([\s\S]*?)<\/script>/g)) {
         if (!/application\/ld\+json|src=/.test(match[1])) new vm.Script(match[2]);
     }
-    assert.match(html, /const plan=await window\.generateDirectorPlan\(input\)/);
+    assert.match(html, /const plan=generatedPlan=await window\.generateDirectorPlan\(input\)/);
     assert.match(html, /if \(plan\.director\) return plan\.shotList \|\| \[\];/);
     assert.match(html, /generateDirectorCandidateForPlan/);
     assert.match(html, /candidate-model-/);

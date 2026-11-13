@@ -83,9 +83,10 @@ function poseDirectionForShot(pose, shot, contract, angle, suggestion) {
 function toContinuityShot(shot, index, poseTemplates, guidance = {}) {
     const contract = shot?.directorContract && typeof shot.directorContract === 'object' ? shot.directorContract : {};
     const referenceIds = Array.isArray(contract.referenceIds) ? contract.referenceIds : [];
-    const pose = poseTemplates.find(template => referenceIds.includes(template.id))
-        || poseTemplates[index % Math.max(1, poseTemplates.length)]
-        || null;
+    const hasExplicitPoseSelection = Array.isArray(contract.referenceIds);
+    const pose = hasExplicitPoseSelection
+        ? poseTemplates.find(template => referenceIds.includes(template.id)) || null
+        : poseTemplates[index % Math.max(1, poseTemplates.length)] || null;
     const suggestion = pose && (guidance.suggestions || []).find(item => item.sourceItemId === pose.id)?.direction || '';
     const angle = poseAngleForShot(pose, shot, contract);
     const poseUpstreamId = String(pose?.upstreamId || pose?.sourceItemId || pose?.id || '');
