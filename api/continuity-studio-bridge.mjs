@@ -56,6 +56,30 @@ function toReferenceEntry(template, role) {
     };
 }
 
+function poseAngleForShot(pose, shot, contract) {
+    const text = [contract.shot_language, contract.model_pose, shot?.description, shot?.action]
+        .filter(value => typeof value === 'string').join(' ');
+    const angle = /(?:45\s*(?:°|度|degree)?|四十五度|回眸|回头|转离镜头|转身回望|over[- ]the[- ]shoulder)/i.test(text)
+        ? 'diagonal'
+        : /(?:俯拍|俯视|高机位|high angle)/i.test(text)
+            ? 'high'
+            : /(?:仰拍|仰视|低机位|low angle)/i.test(text)
+                ? 'low'
+                : /(?:正侧面|侧面|profile|side view)/i.test(text)
+                    ? 'side'
+                    : '';
+    return pose?.angles?.includes(angle) ? angle : (pose?.angles || [])[0] || '';
+}
+
+function poseDirectionForShot(pose, shot, contract, angle, suggestion) {
+    const text = [contract.shot_language, contract.model_pose, shot?.description, shot?.action]
+        .filter(value => typeof value === 'string').join(' ');
+    if (angle === 'diagonal' && /(?:45\s*(?:°|度|degree)?|四十五度|回眸|回头|转离镜头|转身回望|over[- ]the[- ]shoulder)/i.test(text)) {
+        return '身体斜侧转离镜头约45度，肩线不正对镜头；头部回望镜头附近，视线自然，不摆正面直视姿势。';
+    }
+    return suggestion;
+}
+
 function toContinuityShot(shot, index, poseTemplates, guidance = {}) {
     const contract = shot?.directorContract && typeof shot.directorContract === 'object' ? shot.directorContract : {};
     const referenceIds = Array.isArray(contract.referenceIds) ? contract.referenceIds : [];
@@ -63,6 +87,7 @@ function toContinuityShot(shot, index, poseTemplates, guidance = {}) {
         || poseTemplates[index % Math.max(1, poseTemplates.length)]
         || null;
     const suggestion = pose && (guidance.suggestions || []).find(item => item.sourceItemId === pose.id)?.direction || '';
+    const angle = poseAngleForShot(pose, shot, contract);
     const poseUpstreamId = String(pose?.upstreamId || pose?.sourceItemId || pose?.id || '');
     const waistUpPose = pose && isWaistUpShot(contract.shot_size || shot?.shotSize || shot?.shotType || shot?.size)
         && /(?:^|[_-])p017$/i.test(poseUpstreamId);
@@ -72,8 +97,8 @@ function toContinuityShot(shot, index, poseTemplates, guidance = {}) {
         imageUrl: waistUpPose
             ? BUNDLED_PEXELS_WAIST_POSE
             : allowedPoseAtlasImage(pose.referenceImageUrl) ? pose.referenceImageUrl : '',
-        angle: (pose.angles || [])[0] || '',
-        direction: suggestion,
+        angle,
+        direction: poseDirectionForShot(pose, shot, contract, angle, suggestion),
     } : null;
     return {
         shotId: shot?.shotId || shot?.id || `shot-${String(index + 1).padStart(2, '0')}`,
@@ -89,6 +114,8 @@ function toContinuityShot(shot, index, poseTemplates, guidance = {}) {
         aspect: shot?.aspect || shot?.aspectRatio || '2:3',
         props: contract.shot_props || shot?.props || '',
         lighting: contract.lighting_setup || shot?.lighting || '',
+        mood: contract.mood || shot?.mood || guidance.mood || '',
+        colorGrade: contract.color_grade || shot?.colorGrade || shot?.color_grade || guidance.colorGrade || '',
         wardrobe: contract.wardrobe_styling || shot?.wardrobe || '',
         crop: contract.crop_boundary || shot?.crop || '',
         mustShow: contract.must_show || shot?.mustShow || shot?.must_show || '',

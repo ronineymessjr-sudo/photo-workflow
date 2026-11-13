@@ -15,7 +15,7 @@ import { workspaceEntryKey } from '../assets/workspace-sync-protocol.mjs';
 export { AiStudioQuota } from './ai-studio/quota.mjs';
 import { createGroup, setReference, confirmMaster, buildShotRequests, recordQc, continuitySummary, continuitySchema, attachResult, handoffFor, setImageProvider, setAnchor, ContinuityError } from './continuity.mjs';
 import { storeAsset, readAsset } from './continuity-assets.mjs';
-import { generateShot, submitModelScope, pollModelScope } from './continuity-generation.mjs';
+import { generateShot, submitModelScope, pollModelScope, isModelScopeModelAllowed } from './continuity-generation.mjs';
 import { listProviders, recommendProvider, assertGroupProvider } from './continuity-providers.mjs';
 import { groupFromStudio } from './continuity-studio-bridge.mjs';
 import { prescreen, mergeScores, summariseVision } from './continuity-vision.mjs';
@@ -621,6 +621,9 @@ export default {
             }
             else if (path === '/api/continuity/generate' && method === 'POST') {
                 if (!uid) result = { status: 401, body: { error: 'SIGN_IN_REQUIRED' } };
+                else if (body?.providerId === 'modelscope-qwen-edit' && !isModelScopeModelAllowed(body?.modelId)) {
+                    result = { status: 400, body: { error: 'MODEL_NOT_ALLOWED', code: 'GENERATION_MODEL_NOT_ALLOWED' } };
+                }
                 else {
                     const allowed = await consumeStudioImageQuota({ uid, env });
                     if (allowed === null) result = { status: 503, body: { error: 'IMAGE_QUOTA_NOT_CONFIGURED' } };
@@ -637,6 +640,7 @@ export default {
                                 group: body?.group, shotId: body?.shotId, providerId: body?.providerId, env,
                                 submitOnly: isAsync,
                                 attempt: body?.attempt,
+                                modelId: body?.modelId,
                             });
                             result = { status: isAsync ? 202 : 200, body: generated };
                         } catch (generateError) {
@@ -666,19 +670,20 @@ export default {
                         try {
                             polled = await pollModelScope({ env, taskId: body?.taskId });
                         } catch (error) {
-                        if (error?.code === 'GENERATION_POLL_RETRYABLE') {
-                            result = { status: 503, body: {
-                                status: 'pending', terminal: false, retryable: true,
-                                shotId: body?.shotId, taskId: body?.taskId,
-                                code: error.code, error: String(error.message || error).slice(0, 300),
-                            } };
-                        } else if (['GENERATION_UPSTREAM_FAILED', 'GENERATION_INVALID_RESPONSE'].includes(error?.code)) {
-                            result = { status: error.status || 502, body: {
-                                status: 'failed', terminal: true, retryable: true,
-                                shotId: body?.shotId, code: error.code,
-                                error: String(error.message || error).slice(0, 300),
-                            } };
-                        } else throw error;
+                            if (error?.code === 'GENERATION_POLL_RETRYABLE' || error?.name === 'AbortError' || error?.name === 'TimeoutError' || error instanceof TypeError) {
+                                result = { status: 503, body: {
+                                    status: 'pending', terminal: false, retryable: true,
+                                    shotId: body?.shotId, taskId: body?.taskId,
+                                    code: 'GENERATION_POLL_RETRYABLE',
+                                    error: String(error.message || error).slice(0, 300),
+                                } };
+                            } else if (['GENERATION_UPSTREAM_FAILED', 'GENERATION_INVALID_RESPONSE', 'GENERATION_TASK_ID_INVALID'].includes(error?.code)) {
+                                result = { status: error.status || 502, body: {
+                                    status: 'failed', terminal: true, retryable: error.details?.retryable === true,
+                                    shotId: body?.shotId, code: error.code,
+                                    error: String(error.message || error).slice(0, 300),
+                                } };
+                            } else throw error;
                         }
                     }
                     if (!result) {
@@ -743,7 +748,7 @@ export default {
             else if (path === '/api/director/plan' && method === 'POST') {
                 let plan;
                 const wantsReferencePlan = body.useReferenceLibrary === true || body.referenceIds?.length > 0;
-                if (wantsReferencePlan) {
+                if (wantsReferencePlan && (!env.DIRECTOR_API_BASE || !env.DIRECTOR_API_BASE.startsWith('https://'))) {
                     const referenceContext = await prepareReferenceContext({ ...body, requireImageReferences: Boolean(uid) });
                     if (!referenceContext?.templates.some(template => template.kind === 'pose' && template.sourceUrl)) {
                         throw new Error('REFERENCE_LIBRARY_UNAVAILABLE');
@@ -911,11 +916,14 @@ export default {
             });
 
         } catch (e) {
-            if (path === '/api/director/plan' && ['REFERENCE_LIBRARY_UNAVAILABLE', 'REFERENCE_IMAGES_REQUIRED', 'UNAVAILABLE_REFERENCE', 'INVALID_REFERENCE_SELECTION',
+            if (path === '/api/director/plan' && ['INVALID_BRIEF', 'PERSON_REQUIRED', 'REFERENCE_LIBRARY_UNAVAILABLE', 'REFERENCE_IMAGES_REQUIRED', 'UNAVAILABLE_REFERENCE', 'INVALID_REFERENCE_SELECTION',
                 'POSE_REFERENCE_CONFLICTS_WITH_USER_CONSTRAINTS', 'WARDROBE_REFERENCE_MISMATCH'].includes(e?.message)) {
                 const status = e.message === 'WARDROBE_REFERENCE_MISMATCH' ? 422
-                    : ['INVALID_REFERENCE_SELECTION', 'POSE_REFERENCE_CONFLICTS_WITH_USER_CONSTRAINTS'].includes(e.message) ? 400 : 503;
-                return new Response(JSON.stringify({ error: e.message }), {
+                    : ['INVALID_BRIEF', 'PERSON_REQUIRED', 'INVALID_REFERENCE_SELECTION', 'POSE_REFERENCE_CONFLICTS_WITH_USER_CONSTRAINTS'].includes(e.message) ? 400 : 503;
+                const body = e.message === 'PERSON_REQUIRED'
+                    ? { error: '当前方案流程至少需要 1 位拍摄对象；纯静物方案暂未支持。', code: 'PERSON_REQUIRED' }
+                    : { error: e.message };
+                return new Response(JSON.stringify(body), {
                     status, headers: { ...CORS, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
                 });
             }

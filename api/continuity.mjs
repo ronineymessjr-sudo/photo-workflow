@@ -24,7 +24,12 @@ export const CONTINUITY_PROVIDERS = {
         maxReferences: 6,
         supportsSeed: true,
         canGenerate: true,
-        imageSlots: ['identity', 'style', 'pose'],
+        // The catalog's style slot is a flat costume reference, not a real
+        // editorial photograph. Qwen copied its neckline/accessories despite
+        // explicit shot constraints, so keep only the face/identity image and
+        // express wardrobe, scene and pose in the shot contract.
+        imageSlots: ['identity'],
+        requiredImageSlots: ['identity'],
     },
     'volcengine-seedream': {
         // The strongest option for one shoot with one face: 14 references, native
@@ -162,6 +167,7 @@ export function buildLocked(input = {}, hints = {}) {
         season: hints.season || (/春|花田|油菜花/.test(`${scene} ${extra}`) ? '春' : /雪|冬/.test(`${scene} ${extra}`) ? '冬' : /夏|泳池/.test(`${scene} ${extra}`) ? '夏' : '不限定'),
         weather,
         timeOfDay,
+        mood: hints.mood || mood,
         light: hints.light || text(input.light, '按现场可用光'),
         colorGrade: hints.colorGrade || text(input.style, '按题材统一调色'),
         styleProfile: hints.styleProfile || `从用户选定的风格参考提取：${text(input.style, '按题材')}`,
@@ -211,6 +217,7 @@ export function normalizeShots(shots = []) {
         subjectPlacement: text(shot.model_position),
         scene: text(shot.scene),
         mustKeep: Array.isArray(shot.mustKeep) ? shot.mustKeep : ['同一人物', '同一服装', '同一地点', '同一天气'],
+        mustAvoid: Array.isArray(shot.mustAvoid) ? shot.mustAvoid : [],
         prompt: text(shot.prompt || shot.generator_prompt),
         size: text(shot.size || shot.shot_size),
         aspect: text(shot.aspect, '2:3'),
@@ -220,6 +227,8 @@ export function normalizeShots(shots = []) {
         // lighting, the must-show list, the reject list, the crop, the wardrobe
         // and the camera settings, and none of it reached the prompt.
         lighting: text(shot.lighting_setup || shot.lighting),
+        mood: text(shot.mood || shot.atmosphere),
+        colorGrade: text(shot.colorGrade || shot.color_grade),
         wardrobe: text(shot.wardrobe_styling || shot.wardrobe),
         crop: text(shot.crop_boundary || shot.crop),
         mustShow: text(shot.must_show || shot.mustShow).slice(0, 400),
@@ -348,7 +357,9 @@ export function buildShotRequests(group, { providerId, shotIds = [], seedBase = 
             shotType: shot.shotType, camera: shot.camera, lens: shot.lens,
             distance: shot.distance, action: shot.action, subjectPlacement: shot.subjectPlacement,
             scene: shot.scene,
-            scene: shot.scene, lighting: shot.lighting, wardrobe: shot.wardrobe, crop: shot.crop,
+            lighting: shot.lighting, mood: shot.mood, colorGrade: shot.colorGrade,
+            wardrobe: shot.wardrobe, crop: shot.crop,
+            mustKeep: shot.mustKeep, mustAvoid: shot.mustAvoid,
             mustShow: shot.mustShow, rejectIf: shot.rejectIf, cameraSettings: shot.cameraSettings,
             props: shot.props,
         },
@@ -357,6 +368,9 @@ export function buildShotRequests(group, { providerId, shotIds = [], seedBase = 
             subject: checked.locked.subject, wardrobe: checked.locked.wardrobe,
             location: checked.locked.location, weather: checked.locked.weather,
             timeOfDay: checked.locked.timeOfDay, styleProfile: checked.locked.styleProfile,
+            mood: checked.locked.mood, light: checked.locked.light,
+            colorGrade: checked.locked.colorGrade, mustKeep: checked.locked.mustKeep,
+            mustAvoid: checked.locked.mustAvoid,
         },
         lockedHash,
         // Present from the second frame onward: the accepted frame this one should

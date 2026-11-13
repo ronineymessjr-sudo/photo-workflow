@@ -95,7 +95,7 @@
             const saved = await aiRequest('/api/ai/local-config', 'GET');
             rememberLabel.hidden = !saved.supported && !saved.configured;
             if (saved.configured && catalog.some(item => item.id === saved.provider)) {
-                provider.value = saved.provider; model.value = saved.model; consent.checked = true; remember.checked = true;
+                provider.value = saved.provider; model.value = saved.model; showEndpoint(); consent.checked = true; remember.checked = true;
                 active = { useSaved: true }; status.textContent = `已载入本机配置 ${saved.provider} / ${saved.model}；调用时验证服务。`;
                 changed();
             }

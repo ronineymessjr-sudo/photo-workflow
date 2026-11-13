@@ -109,12 +109,12 @@ test('the converter reports import blockers when a shot list is missing', () => 
 test('a real Studio plan keeps per-shot scenes and pose selections in the continuity group', () => {
     const result = groupFromStudio({
         templates: [portrait, costume, pose],
-        input: { theme: '多场景秋日人像', modelDesc: '一名成年人', style: '自然纪实' },
+        input: { theme: '多场景秋日人像', modelDesc: '一名成年人', style: '自然纪实', mood: '静谧而有张力' },
         guidance: { style: '柔和自然光', suggestions: [{ sourceItemId: pose.id, kind: 'pose', direction: '双脚稳定站立，肩颈放松。' }] },
         planId: 'plan-2', planRevision: 7,
         selectedIds: [portrait.id, costume.id, pose.id],
         shots: [
-            { id: 'plan-shot-1', title: '公园全景', shotSize: '环境全景', scene: '枫树公园', focalLength: '35mm', description: '自然行走', method: '摄影师平视', composition: '人物位于右侧', lighting: '阴天柔光', directorContract: { referenceIds: [pose.id], scene: '枫树公园', camera_angle: '平视', model_pose: '自然行走', generator_prompt: '秋日公园全景，人物自然行走。' } },
+            { id: 'plan-shot-1', title: '公园全景', shotSize: '环境全景', scene: '枫树公园', focalLength: '35mm', description: '自然行走', method: '摄影师平视', composition: '人物位于右侧', lighting: '阴天柔光', directorContract: { referenceIds: [pose.id], scene: '枫树公园', camera_angle: '平视', model_pose: '自然行走', mood: '安静克制', color_grade: '低饱和青灰', generator_prompt: '秋日公园全景，人物自然行走。' } },
             { id: 'plan-shot-2', title: '咖啡馆近景', shotSize: '近景', scene: '窗边咖啡馆', focalLength: '85mm', description: '双手自然交叠', method: '摄影师侧前方', composition: '肩部以上', lighting: '窗光侧照', directorContract: { referenceIds: [pose.id], scene: '窗边咖啡馆', camera_angle: '侧前方', model_pose: '双手自然交叠', generator_prompt: '窗边咖啡馆近景，面部清晰。' } },
         ],
     });
@@ -127,6 +127,10 @@ test('a real Studio plan keeps per-shot scenes and pose selections in the contin
     assert.equal(result.group.shots.length, 2);
     assert.equal(result.group.shots[0].shotId, 'plan-shot-1');
     assert.equal(result.group.shots[0].scene, '枫树公园');
+    assert.equal(result.group.locked.mood, '静谧而有张力');
+    assert.equal(result.group.shots[0].mood, '安静克制');
+    assert.equal(result.group.shots[0].colorGrade, '低饱和青灰');
+    assert.equal(result.group.shots[0].lighting, '阴天柔光');
     assert.equal(result.group.shots[1].scene, '窗边咖啡馆');
     assert.equal(result.group.shots[0].poseRef.id, pose.id);
     assert.equal(result.group.shots[0].poseRef.direction, '双脚稳定站立，肩颈放松。');
@@ -205,4 +209,27 @@ test('a converted group has no shots yet, so attaching an image is refused', () 
         () => attachResult(result.group, { shotId: 'shot-01', assetId: 'abc123', path: '/api/continuity/asset/abc123' }),
         error => error.code === 'CONTINUITY_SHOT_UNKNOWN',
     );
+});
+
+test('a pose with a 45-degree turn selects a diagonal PoseAtlas angle instead of front', () => {
+    const result = groupFromStudio({
+        templates: [portrait, costume, pose],
+        input: { theme: '回眸角度映射' },
+        shots: [{
+            id: 'shot-over-shoulder',
+            directorContract: {
+                referenceIds: [pose.id],
+                model_pose: '上身转离镜头约四十五度，再回头看向镜头附近。',
+            },
+        }, {
+            id: 'shot-neutral',
+            directorContract: { referenceIds: [pose.id], model_pose: '肩颈放松的自然站姿。' },
+        }],
+    });
+
+    assert.equal(result.group.shots[0].poseRef.angle, 'diagonal');
+    assert.match(result.group.shots[0].poseRef.direction, /身体斜侧转离镜头约45度/);
+    assert.match(result.group.shots[0].poseRef.direction, /肩线不正对镜头/);
+    assert.equal(result.group.shots[1].poseRef.angle, 'front', 'shots without a directional cue preserve the library default');
+    assert.equal(result.group.shots[1].poseRef.direction, '', 'neutral shots keep the selected library suggestion');
 });

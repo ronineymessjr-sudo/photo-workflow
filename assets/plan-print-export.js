@@ -62,7 +62,58 @@
         </style></head><body><div class="toolbar"><button type="button" onclick="window.print()">打印 / 另存为 PDF</button><span>在打印窗口中将目标选择为“另存为 PDF”</span></div>${documents}<div class="footer">PhotoAtelier · ${new Date().toLocaleDateString('zh-CN')}</div></body></html>`;
     }
 
+    function openInlinePreview(plans, mode) {
+        const doc = global.document;
+        if (!doc?.createElement || !doc.body) return false;
+        doc.getElementById('photoatelier-print-preview')?.remove();
+
+        const overlay = doc.createElement('div');
+        overlay.id = 'photoatelier-print-preview';
+        overlay.setAttribute('role', 'dialog');
+        overlay.setAttribute('aria-modal', 'true');
+        overlay.setAttribute('aria-label', '拍摄方案打印预览');
+        overlay.tabIndex = -1;
+        overlay.style.cssText = 'position:fixed;inset:0;z-index:2147483000;background:rgba(16,20,18,.72);display:flex;align-items:center;justify-content:center;padding:16px';
+
+        const panel = doc.createElement('div');
+        panel.style.cssText = 'width:min(1180px,100%);height:min(900px,100%);background:#fff;border-radius:8px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 18px 60px rgba(0,0,0,.28)';
+        const toolbar = doc.createElement('div');
+        toolbar.style.cssText = 'display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid #d9dfdb;font:14px/1.4 system-ui,sans-serif;color:#28332c';
+        const printButton = doc.createElement('button');
+        printButton.type = 'button';
+        printButton.textContent = '打印 / 另存为 PDF';
+        printButton.style.cssText = 'border:0;border-radius:5px;background:#345b49;color:#fff;padding:9px 16px;font:inherit;cursor:pointer';
+        const hint = doc.createElement('span');
+        hint.textContent = '在打印窗口中将目标选择为“另存为 PDF”';
+        hint.style.cssText = 'flex:1;color:#5e6962';
+        const closeButton = doc.createElement('button');
+        closeButton.type = 'button';
+        closeButton.textContent = '关闭';
+        closeButton.setAttribute('aria-label', '关闭打印预览');
+        closeButton.style.cssText = 'border:1px solid #d9dfdb;border-radius:5px;background:#fff;color:#28332c;padding:8px 14px;font:inherit;cursor:pointer';
+        const frame = doc.createElement('iframe');
+        frame.title = '拍摄方案打印预览内容';
+        frame.style.cssText = 'width:100%;flex:1;min-height:0;border:0;background:#f1f3f2';
+        frame.srcdoc = buildHtml(plans, mode).replace('</style>', '.toolbar{display:none!important}</style>');
+
+        printButton.onclick = () => {
+            frame.contentWindow?.focus();
+            frame.contentWindow?.print();
+        };
+        closeButton.onclick = () => overlay.remove();
+        overlay.addEventListener('keydown', event => {
+            if (event.key === 'Escape') overlay.remove();
+        });
+        toolbar.append(printButton, hint, closeButton);
+        panel.append(toolbar, frame);
+        overlay.append(panel);
+        doc.body.append(overlay);
+        closeButton.focus();
+        return true;
+    }
+
     function open(plans, mode = 'plan') {
+        if (global.document?.createElement && global.document.body) return openInlinePreview(plans, mode);
         const printWindow = global.open('', '_blank');
         if (!printWindow) return false;
         printWindow.document.open();

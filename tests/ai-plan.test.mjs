@@ -54,6 +54,7 @@ test('real provider response is mapped to existing plan without keys or a templa
     assert.equal(r.status, 200);
     assert.equal(r.body.director.source, 'byok-ai-plan');
     assert.equal(r.body.director.imageGenerationConnected, false);
+    assert.equal(r.body.director.qualityRepairAttempted, false);
     assert.equal(r.body.shotList.length, 9);
     assert.equal(r.body.shotList[0].angle, '俯拍');
     assert.equal(r.body.shotList[0].composition, '左下角');
@@ -68,6 +69,7 @@ test('provider prompt names required shot codes and absent resources explicitly'
     const result = await handleAiPlan(requestWithLimitedResources, {}, { fetchImpl: async (_url, options) => {
         const system = JSON.parse(options.body).messages[0].content;
         assert.match(system, /"shot_size":"FS","camera_angle":"eye_level"/);
+        assert.match(system, /MFS=knee-up，FS=full-body/);
         assert.match(system, /不得假设.*橱窗或窗户/);
         assert.doesNotMatch(system, /不得假设[^\n]*桌子/);
         return response(output());
@@ -86,6 +88,110 @@ test('partial, duplicated, invalid and truncated model outputs fail instead of p
     }
     const r = await handleAiPlan(request, {}, { fetchImpl: async () => Response.json({ choices: [{ finish_reason: 'length', message: { content: JSON.stringify(output()) } }] }) });
     assert.equal(r.status, 502);
+});
+
+test('a conflicting image-prompt framing is aligned only when shot instructions agree', async () => {
+    const draft = output();
+    draft.shot_plans[2].shot_size = 'MS';
+    draft.shot_plans[2].crop_boundary = '腰部以上取景';
+    draft.shot_plans[2].must_show = '人物表情与室内自然光环境';
+    draft.shot_plans[2].generator_prompt = 'high-angle full-body portrait, standing, 35mm lens';
+    let calls = 0;
+    const result = await handleAiPlan({ ...request, input: { ...input, extra: '拍一组舒适自然的人像，不限制全身或半身构图' } }, {}, {
+        fetchImpl: async () => { calls++; return response(draft); },
+    });
+    assert.equal(calls, 1, JSON.stringify(result.body));
+    assert.equal(result.status, 200);
+    assert.equal(result.body.director.qualityRepairAttempted, false);
+});
+
+test('quality repair identifies unconfirmed on-site resources by shot and field', async () => {
+    const draft = output();
+    draft.shot_plans[0].lighting_setup = '窗边自然光从侧面照亮人物';
+    let calls = 0;
+    const result = await handleAiPlan(request, {}, { fetchImpl: async (_url, options) => {
+        calls++;
+        if (calls === 1) return response(draft);
+        const repair = JSON.parse(options.body).messages[3].content;
+        assert.match(repair, /镜头1 的 lighting_setup/);
+        assert.match(repair, /用户没有确认这些资源存在/);
+        assert.match(repair, /给出真实可执行的替代方案/);
+        return response(output());
+    } });
+    assert.equal(calls, 2);
+    assert.equal(result.status, 200);
+    assert.equal(result.body.director.qualityRepairAttempted, true);
+});
+
+test('one quality-repair attempt fixes a rejected plan without exposing the rejected draft', async () => {
+    const invalid = output();
+    invalid.shot_plans[7].shot_size = 'MS';
+    let calls = 0;
+    const result = await handleAiPlan(request, {}, { fetchImpl: async (_url, options) => {
+        calls++;
+        const payload = JSON.parse(options.body);
+        if (calls === 1) return response(invalid);
+        assert.equal(payload.messages.length, 4);
+        assert.match(payload.messages[3].content, /景别与裁切范围或必须呈现范围冲突/);
+        assert.match(payload.messages[3].content, /镜头8当前：shot_size=MS；crop_boundary=完整全身；must_show=脚部和路面/);
+        assert.match(payload.messages[3].content, /FS=完整全身/);
+        assert.match(payload.messages[3].content, /shot_size、crop_boundary、must_show 三者表达同一景别与画面边界/);
+        assert.match(payload.messages[3].content, /人物动作必须与 model_pose 完全一致/);
+        return response(output());
+    } });
+    assert.equal(calls, 2);
+    assert.equal(result.status, 200);
+    assert.equal(result.body.shotList.length, 9);
+    assert.equal(result.body.director.qualityRepairAttempted, true);
+    assert.equal(JSON.stringify(result).includes('invalid'), false);
+});
+
+test('quality repair allows two retries and final rejection remains unsaved', async () => {
+    const invalid = output();
+    invalid.shot_plans[0].model_pose = '大幅后仰至接近水平，双臂绕到背后交叉举过头顶';
+    let calls = 0;
+    const result = await handleAiPlan(request, {}, { fetchImpl: async () => {
+        calls++;
+        return response(invalid);
+    } });
+    assert.equal(calls, 3);
+    assert.equal(result.status, 422);
+    assert.equal(result.body.code, 'AI_PHOTOGRAPHER_FEASIBILITY_FAILED');
+    assert.equal(result.body.shotList, undefined);
+});
+
+test('a second quality repair can produce an accepted plan', async () => {
+    const invalid = output();
+    invalid.shot_plans[0].shot_size = 'MS';
+    let calls = 0;
+    const result = await handleAiPlan(request, {}, { fetchImpl: async () => {
+        calls++;
+        return response(calls < 3 ? invalid : output());
+    } });
+    assert.equal(calls, 3);
+    assert.equal(result.status, 200);
+    assert.equal(result.body.shotList.length, 9);
+    assert.equal(result.body.director.qualityRepairAttempted, true);
+});
+
+test('provider quota and network failures never trigger a second model call', async () => {
+    for (const responseStatus of [429, 500]) {
+        let calls = 0;
+        const result = await handleAiPlan(request, {}, { fetchImpl: async () => {
+            calls++;
+            return new Response('provider unavailable', { status: responseStatus });
+        } });
+        assert.equal(calls, 1);
+        assert.equal(result.status, responseStatus === 429 ? 429 : 502);
+    }
+    let networkDiagnostic;
+    const networkFailure = await handleAiPlan(request, {}, {
+        fetchImpl: async () => { const error = new TypeError('fetch failed'); error.cause = { code: 'ECONNRESET', private: 'do-not-return' }; throw error; },
+        onNetworkError: detail => { networkDiagnostic = detail; },
+    });
+    assert.equal(networkFailure.body.code, 'AI_NETWORK_ERROR');
+    assert.deepEqual(networkDiagnostic, { name: 'TypeError', causeCode: 'ECONNRESET', failureKind: 'provider_fetch_or_mapping_error' });
+    assert.doesNotMatch(JSON.stringify(networkFailure), /ECONNRESET|do-not-return/);
 });
 
 test('invalid model fields identify the shot and problem without returning raw model content', async () => {
@@ -227,6 +333,7 @@ test('explicit all-shot constraints accept a compliant plan without saving forbi
     });
     const result = await handleAiPlan({ ...request, input: strictInput }, {}, { fetchImpl: async (_, options) => {
         assert.match(JSON.parse(options.body).messages[0].content, /每个镜头 lens 只能为 35mm/);
+        assert.match(JSON.parse(options.body).messages[0].content, /不要写成“禁止\/不使用\/without”等否定句/);
         return response(compliant);
     } });
     assert.equal(result.status, 200);
@@ -362,8 +469,8 @@ test('conditional dependency with a fallback is accepted per the prompt contract
 });
 
 test('english negations in generator prompts are not counted as positive resource mentions', () => {
-    const input = { theme: '雨夜纪实', duration: '1小时', extra: '无闪光灯，无窗户场地' };
-    const shots = [{ shot_language: '夜景全身', model_pose: '静立望向镜头', photographer_position: '高台阶俯拍，距主体约6米', lens: '35mm', model_position: '左下角', wardrobe_styling: '深色外套', lighting_setup: '路灯环境光', shot_props: '无', crop_boundary: '全身', must_show: '全身', reject_if: '模糊', execution_note: '改拍倒影', generator_prompt: 'moody night portrait, restrained mood, no flash, natural light only, windowless alley backdrop', shot_size: 'FS', camera_angle: 'high_angle' }];
+    const input = { theme: '雨夜纪实', duration: '1小时', extra: '无闪光灯、反光板，无窗户场地' };
+    const shots = [{ shot_language: '夜景全身', model_pose: '静立望向镜头', photographer_position: '高台阶俯拍，距主体约6米', lens: '35mm', model_position: '左下角', wardrobe_styling: '深色外套', lighting_setup: '路灯环境光', shot_props: '无', crop_boundary: '全身', must_show: '全身', reject_if: '模糊', execution_note: '改拍倒影', generator_prompt: 'moody night portrait, restrained mood, flash-free, reflector-free, natural light only, windowless alley backdrop', shot_size: 'FS', camera_angle: 'high_angle' }];
     const violations = validateHardConstraints(shots, input);
     assert.deepEqual(violations, []);
 });

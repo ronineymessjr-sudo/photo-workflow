@@ -14,9 +14,59 @@ test('Chinese people counts keep the locked subject description consistent', () 
     assert.match(locked.subject, /2位成年人/);
 });
 
-async function readyGroup(store, { modelDesc = '一名成年人', lockedSubject = '', wardrobeNote = '炭灰大衣' } = {}) {
+test('photography direction layers camera and mood over immutable plan facts', () => {
+    const direction = directionText({
+        prompt: '两位朋友并肩交谈，不改变彼此关系',
+        locked: {
+            people: '2', subject: '两位成年朋友', wardrobe: '原方案中的米色风衣',
+            location: '海边旧车站', weather: '阴天', timeOfDay: '傍晚', mood: '克制、安静',
+            colorGrade: '低饱和青灰', mustKeep: ['两位朋友关系不变', '服装不变'], mustAvoid: ['增加第三人'],
+        },
+        variant: {
+            size: 'MS', scene: '海边旧车站月台', action: '自然侧身交谈，视线相接',
+            camera: '略高机位，从斜前方拍摄', lens: '50mm', subjectPlacement: '落在画面右侧三分线',
+            lighting: '侧逆光勾出发丝，脸部保持柔和层次', mood: '安静而有张力', colorGrade: '青灰底色与暖肤色分离',
+            mustKeep: ['两人都清晰可见'],
+        },
+    });
+    assert.match(direction, /内容与摄影分层规则：人物身份、人数与关系/);
+    assert.match(direction, /全组必须保持：两位朋友关系不变、服装不变/);
+    assert.match(direction, /全组不得出现：增加第三人/);
+    assert.match(direction, /场景：海边旧车站月台/);
+    assert.match(direction, /动作：自然侧身交谈，视线相接/);
+    assert.match(direction, /光线：侧逆光勾出发丝，脸部保持柔和层次/);
+    assert.match(direction, /人物曝光：人物面部与眼睛细节清楚/);
+    assert.match(direction, /氛围：安静而有张力/);
+    assert.match(direction, /色彩倾向：青灰底色与暖肤色分离/);
+});
+
+test('waist-up framing locks the full outfit without naming lower-body garments', () => {
+    const direction = directionText({
+        prompt: '腰上人像，米白色针织上衣覆盖肩部与腰线',
+        size: '中景',
+        variant: { size: '中景', crop: '头顶至自然腰线，腰线以下完全不入画', wardrobe: '米白色针织上衣覆盖双肩与上胸' },
+        locked: { subject: '成年东亚女性模特，浅棕色齐肩短发、自然妆容；米白针织上衣、卡其长裙、棕色长靴。全组固定同一套服装。', wardrobe: '米白针织上衣、卡其长裙、棕色长靴', mustKeep: ['同一套服装'] },
+    });
+    assert.match(direction, /全组服装：米白针织上衣/);
+    assert.match(direction, /腰线以下完全不入画/);
+    assert.doesNotMatch(direction, /长裙|长靴/);
+    assert.match(direction, /米白色针织上衣覆盖肩部与腰线/);
+    assert.match(direction, /浅棕色齐肩短发/);
+});
+
+test('a shot-specific scene wins over the group scene without leaking other shot locations', () => {
+    const direction = directionText({
+        prompt: '单人回眸人像',
+        locked: { subject: '成年女性', location: '公园竹林小径', wardrobe: '原方案服装' },
+        variant: { size: '中景', scene: '木亭长椅', crop: '腰线上方' },
+    });
+    assert.match(direction, /场景：木亭长椅/);
+    assert.doesNotMatch(direction, /公园竹林小径/);
+});
+
+async function readyGroup(store, { modelDesc = '一名成年人', lockedSubject = '', mood = '', wardrobeNote = '炭灰大衣' } = {}) {
     let group = createGroup({
-        input: { theme: '雨夜旧车站', scene: '旧车站月台', style: '纪实', modelDesc, wardrobeNote },
+        input: { theme: '雨夜旧车站', scene: '旧车站月台', style: '纪实', modelDesc, wardrobeNote, mood },
         lockedHints: lockedSubject ? { subject: lockedSubject } : {},
         shots: [{ shotId: 'shot-01', size: 'WS', camera_angle: 'eye_level', lens: '35mm', model_pose: '沿月台行走', model_position: '画面右侧', generator_prompt: 'wide shot of a figure walking along a wet platform' }],
     });
@@ -71,10 +121,11 @@ test('Cloudflare prompt translation carries the selected PoseAtlas pose and dire
 
 test('Cloudflare anchor prompt preserves identity while following the current shot contract', async () => {
     const store = createMemoryStore();
-    const group = await readyGroup(store, { modelDesc: '两位成年伴侣', lockedSubject: '两位成年伴侣' });
+    const group = await readyGroup(store, { modelDesc: '两位成年朋友', lockedSubject: '两位成年朋友', mood: '安静而有张力' });
     Object.assign(group.shots[0], {
         size: 'EWS', prompt: '两位成年人并排坐在河边长椅上', action: '两人并排坐在长椅上交谈',
         scene: '河边公园', lighting: '树荫下柔和的自然散射光', wardrobe: '棕色针织和深色长裤', cameraSettings: '50mm f/2',
+        mood: '安静克制', colorGrade: '青灰底色与暖肤色分离',
     });
     group.shots[0].poseRef = { id: 'pose-seated', title: '自然并坐交谈', direction: '坐姿放松，身体微微转向彼此。' };
     setAnchor(group, { assetId: group.references.find(reference => reference.role === 'identity').assetId });
@@ -97,17 +148,20 @@ test('Cloudflare anchor prompt preserves identity while following the current sh
         fetchImpl: async () => assert.fail('fixture refs must come from the in-memory asset store'),
     });
 
-    assert.match(translated, /人物范围：两位成年伴侣/);
+    assert.match(translated, /人物范围：两位成年朋友/);
     assert.match(translated, /两人并排坐在长椅上交谈/);
     assert.match(translated, /本镜场景：河边公园/);
     assert.match(translated, /树荫下柔和的自然散射光/);
     assert.match(translated, /本镜服装：棕色针织和深色长裤/);
+    assert.match(translated, /内容事实和摄影表达分层/);
+    assert.match(translated, /情绪氛围：安静克制/);
+    assert.match(translated, /色彩倾向：青灰底色与暖肤色分离/);
     assert.match(composed, /Preserve established identity and group-wide wardrobe continuity/);
     assert.match(composed, /Follow that contract for pose, action, scene, lighting, camera and framing/);
     assert.match(composed, /Two adults seated together on a bench in a riverside park/);
     assert.match(composed, /preserve the shot's specified pose and action/i);
     assert.doesNotMatch(composed, /exactly one person|change only the camera position|only the camera position and framing/i);
-    assert.doesNotMatch(composed, /visible pores|fine facial hair|exposure variation/i);
+    assert.doesNotMatch(composed, /visible pores|fine facial hair|exposure variation|venue shows wear|the unlit side genuinely dark/i);
     assert.match(composed, /shot's specified focus detail/i);
     assert.doesNotMatch(composed, /only the face is sharp|whole scene is sharp from foreground to background/i);
 });
@@ -221,13 +275,123 @@ test('same-shot retry changes only its deterministic seed', async () => {
     const group = await readyGroup(store);
     const seeds = [];
     const fetchImpl = async (_url, options) => {
-        seeds.push(JSON.parse(options.body).seed);
+        const body = JSON.parse(options.body);
+        seeds.push(body.seed);
+        assert.equal(body.size, '1056x1584', '全身镜头保留既有 2:3 画幅');
         return Response.json({ task_id: `task-${seeds.length}` });
     };
     await generateShot({ group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit', env: { MODELSCOPE_TOKEN: 'test-only' }, store, fetchImpl, submitOnly: true, attempt: 0 });
     await generateShot({ group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit', env: { MODELSCOPE_TOKEN: 'test-only' }, store, fetchImpl, submitOnly: true, attempt: 1 });
     assert.equal(seeds.length, 2);
     assert.notEqual(seeds[0], seeds[1]);
+});
+
+test('ModelScope uses 3:4 only for waist-up medium shots', async () => {
+    const store = createMemoryStore();
+    const group = await readyGroup(store);
+    group.shots[0].size = 'MS';
+    let body;
+    await generateShot({
+        group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit',
+        env: { MODELSCOPE_TOKEN: 'test-only' }, store,
+        fetchImpl: async (_url, options) => {
+            body = JSON.parse(options.body);
+            return Response.json({ task_id: 'medium-task' });
+        },
+        submitOnly: true,
+    });
+    assert.equal(body.size, '1140x1472', '中景使用当前 3:4 竖幅尺寸');
+});
+
+test('ModelScope uses the identity photo and keeps clothing constraints in text', async () => {
+    const store = createMemoryStore();
+    const group = await readyGroup(store);
+    group.shots[0].prompt = 'A candid waist-up portrait on a lakeside boardwalk.';
+    let body;
+    await generateShot({
+        group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit',
+        env: { MODELSCOPE_TOKEN: 'test-only' }, store,
+        fetchImpl: async (_url, options) => {
+            body = JSON.parse(options.body);
+            return Response.json({ task_id: 'identity-only-task' });
+        },
+        submitOnly: true,
+    });
+    assert.equal(body.image_url.length, 1, '只传人像身份参考，不把平铺服装图误当成风格照片');
+    assert.equal(body.model, 'Qwen/Qwen-Image-Edit-2511', '默认生产模型保持不变');
+    assert.match(body.prompt, /炭灰大衣/);
+    assert.match(body.prompt, /lakeside boardwalk/);
+});
+
+test('ModelScope can select only the allowlisted 2.1 Turbo model for a controlled comparison', async () => {
+    const store = createMemoryStore();
+    const group = await readyGroup(store);
+    let body;
+    await generateShot({
+        group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit', modelId: 'Qwen/Qwen-Image-2.1-Turbo',
+        env: { MODELSCOPE_TOKEN: 'test-only' }, store,
+        fetchImpl: async (_url, options) => {
+            body = JSON.parse(options.body);
+            return Response.json({ task_id: 'turbo-task' });
+        },
+        submitOnly: true,
+    });
+    assert.equal(body.model, 'Qwen/Qwen-Image-2.1-Turbo');
+    assert.match(body.prompt, /景别与画框边界：/);
+    assert.match(body.prompt, /场景：/);
+    assert.doesNotMatch(body.prompt, /内容与摄影分层规则|成像质感：真实摄影成像/);
+    await assert.rejects(generateShot({
+        group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit', modelId: 'unlisted/model',
+        env: { MODELSCOPE_TOKEN: 'test-only' }, store,
+        fetchImpl: async () => assert.fail('unlisted model must be rejected before any provider request'),
+        submitOnly: true,
+    }), error => error.code === 'GENERATION_MODEL_NOT_ALLOWED');
+});
+
+test('ModelScope sends the allowlisted PoseAtlas sketch as pose-only guidance', async () => {
+    const store = createMemoryStore();
+    const group = await readyGroup(store);
+    group.shots[0].poseRef = {
+        id: 'pose-diagonal', title: '回眸顾盼', angle: 'diagonal',
+        imageUrl: 'https://hruiccc.github.io/RuiC-PoseAtlas/thumbs/P017.jpg',
+        direction: '身体侧转，头部回眸。',
+    };
+    let body;
+    const fetchImpl = async (url, options) => {
+        if (String(url).startsWith('https://hruiccc.github.io/')) {
+            return new Response(new Uint8Array([0xff, 0xd8, 0xff, 0xd9]), { headers: { 'Content-Type': 'image/jpeg' } });
+        }
+        body = JSON.parse(options.body);
+        return Response.json({ task_id: 'pose-reference-task' });
+    };
+    const result = await generateShot({
+        group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit',
+        env: { MODELSCOPE_TOKEN: 'test-only' }, store, fetchImpl, submitOnly: true,
+    });
+    assert.equal(body.image_url.length, 2, '发送身份图与姿势线稿，不发送目录服装图');
+    assert.match(body.image_url[0], /^data:image\/png;base64,/);
+    assert.match(body.image_url[1], /^data:image\/jpeg;base64,/);
+    assert.match(body.prompt, /use only its body angle and pose, never its face, clothing or background/);
+    assert.equal(result.poseReferenceSent, true);
+});
+
+test('ModelScope fails clearly when the selected pose image cannot be loaded', async () => {
+    const store = createMemoryStore();
+    const group = await readyGroup(store);
+    group.shots[0].poseRef = {
+        id: 'pose-missing', title: '回眸顾盼', angle: 'diagonal',
+        imageUrl: 'https://hruiccc.github.io/RuiC-PoseAtlas/thumbs/missing.jpg',
+        direction: '身体侧转，头部回眸。',
+    };
+    await assert.rejects(generateShot({
+        group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit',
+        env: { MODELSCOPE_TOKEN: 'test-only' }, store,
+        fetchImpl: async url => {
+            if (String(url).startsWith('https://hruiccc.github.io/')) return new Response('missing', { status: 404 });
+            assert.fail('姿势参考缺失时不得提交无参考请求');
+        },
+        submitOnly: true,
+}), error => error.code === 'GENERATION_REFERENCE_MISSING' && error.status === 409);
 });
 
 test('ModelScope receives the selected PoseAtlas image as a pose-only reference', async () => {
@@ -253,15 +417,15 @@ test('ModelScope receives the selected PoseAtlas image as a pose-only reference'
         },
     });
 
-    assert.equal(payload.image_url.length, 3, 'identity, outfit and selected pose are sent in that order');
-    assert.deepEqual(result.referenceRolesSent, ['identity', 'style', 'pose']);
-    assert.match(payload.prompt, /Image 1（identity）.*Image 2（style）.*Image 3（pose）/);
+    assert.equal(payload.image_url.length, 2, 'identity and selected pose are sent; conflicting wardrobe reference is omitted');
+    assert.deepEqual(result.referenceRolesSent, ['identity', 'pose']);
+    assert.match(payload.prompt, /Image 1（identity）.*Image 2（pose）/);
     assert.doesNotMatch(payload.prompt, /Reference roles:/);
     assert.match(payload.prompt, /最后一张参考图来自摆姿库/);
     assert.match(payload.prompt, /不要复制线稿/);
     assert.match(payload.prompt, /针织宽袖上衣肩缝保持在双肩自然位置，领口覆盖双肩/);
     assert.match(payload.prompt, /人物全组不佩戴首饰/);
-    assert.equal(result.referencesSent, 3);
+    assert.equal(result.referencesSent, 2);
     assert.equal(result.status, 'pending');
 });
 
@@ -289,8 +453,8 @@ test('anchored ModelScope shots follow PoseAtlas text without mixing the pose ph
         },
     });
 
-    assert.equal(payload.image_url.length, 3, 'the master, identity and outfit images stay in the edit request');
-    assert.deepEqual(result.referenceRolesSent, ['anchor', 'identity', 'style']);
+    assert.equal(payload.image_url.length, 2, 'the master and identity remain; conflicting outfit accessories are omitted');
+    assert.deepEqual(result.referenceRolesSent, ['anchor', 'identity']);
     assert.ok(!fetchedUrls.includes('https://example.com/pose.jpg'), 'anchored edits do not mix in another person or pose photo');
     assert.match(payload.prompt, /站立・对立式平衡・手扶腰/);
     assert.match(payload.prompt, /一只手轻扶髋部，另一只手自然下垂/);
@@ -381,7 +545,7 @@ test('anchored full-body frames omit outfit references when the wardrobe contrac
     assert.match(payload.prompt, /不添加包袋、项链、首饰或帽子/);
 });
 
-test('anchored full-body frames retain a sanitized outfit reference when the contract bans accessories', async () => {
+test('anchored full-body frames omit an outfit reference that conflicts with banned accessories', async () => {
     const store = createMemoryStore();
     const wardrobe = '米白色针织裹身上衣，卡其色长裙和棕色长靴；不添加包袋、项链、首饰或帽子。';
     const group = await readyGroup(store, { lockedSubject: `成年女性模特；${wardrobe}`, wardrobeNote: wardrobe });
@@ -399,9 +563,9 @@ test('anchored full-body frames retain a sanitized outfit reference when the con
             return Response.json({ task_id: 'task-anchored-full-body-with-sanitized-outfit' });
         },
     });
-    assert.equal(payload.image_url.length, 3, 'accepted anchor, identity and sanitized outfit remain');
-    assert.equal(result.referencesSent, 3);
-    assert.deepEqual(result.referenceRolesSent, ['anchor', 'identity', 'style']);
+    assert.equal(payload.image_url.length, 2, 'accepted anchor and identity remain; outfit reference is omitted');
+    assert.equal(result.referencesSent, 2);
+    assert.deepEqual(result.referenceRolesSent, ['anchor', 'identity']);
     assert.match(payload.prompt, /不添加包袋、项链、首饰或帽子/);
 });
 
@@ -574,4 +738,22 @@ test('vision JSON verdicts are parsed and summarised', async () => {
     assert.equal(result.scores.wardrobe, 'fail');
     assert.equal(result.scores['place-weather'], 'unknown');
     assert.match(summariseVision(result), /wardrobe/);
+});
+
+test('ModelScope removes render-look adjectives but keeps physical photo constraints', async () => {
+    const store = createMemoryStore();
+    const group = await readyGroup(store);
+    group.shots[0].prompt = 'Photorealistic portrait, cinematic lighting, masterpiece, visible natural skin texture and soft side light.';
+    let body;
+    await generateShot({
+        group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit',
+        env: { MODELSCOPE_TOKEN: 'test-only' }, store,
+        fetchImpl: async (_url, options) => {
+            body = JSON.parse(options.body);
+            return Response.json({ task_id: 'texture-direction-task' });
+        },
+        submitOnly: true,
+    });
+    assert.doesNotMatch(body.prompt, /photorealistic|cinematic lighting|masterpiece/i);
+    assert.match(body.prompt, /visible natural skin texture and soft side light/i);
 });

@@ -132,7 +132,7 @@ test('continuity collect preserves the upstream task status while it is pending'
     }
 });
 
-test('continuity collect marks failed provider tasks terminal and transient polling errors retryable', async () => {
+test('continuity collect separates terminal provider failures from transient poll errors', async () => {
     const originalFetch = globalThis.fetch;
     try {
         for (const [taskId, response] of [
@@ -144,7 +144,7 @@ test('continuity collect marks failed provider tasks terminal and transient poll
             assert.equal(status, 502);
             assert.equal(body.status, 'failed');
             assert.equal(body.terminal, true);
-            assert.equal(body.retryable, true);
+            assert.equal(body.retryable, false);
             assert.equal(body.shotId, 'shot-02');
             assert.match(body.code, /^GENERATION_UPSTREAM_FAILED$/);
         }
@@ -153,8 +153,10 @@ test('continuity collect marks failed provider tasks terminal and transient poll
         assert.equal(transient.status, 503);
         assert.equal(transient.body.status, 'pending');
         assert.equal(transient.body.terminal, false);
-        assert.equal(transient.body.taskId, 'task-http-error');
+        assert.equal(transient.body.retryable, true);
+        assert.equal(transient.body.shotId, 'shot-02');
         assert.equal(transient.body.code, 'GENERATION_POLL_RETRYABLE');
+        assert.equal(transient.body.taskId, 'task-http-error');
 
         globalThis.fetch = async () => { throw new Error('temporary network failure'); };
         const network = await call('/api/continuity/collect', { taskId: 'task-network-error', shotId: 'shot-02' }, 'POST', { MODELSCOPE_TOKEN: 'test-only' });

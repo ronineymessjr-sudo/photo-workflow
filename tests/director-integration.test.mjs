@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { randomInt } from 'node:crypto';
 import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -7,7 +8,54 @@ import vm from 'node:vm';
 import { createDirectorPlan, createGuestPlanDraft } from '../api/director-plan.mjs';
 import { generateDirectorCandidate } from '../api/director-generation.mjs';
 import { buildDirectorIdentityWorkflow } from '../api/director-identity-workflow.mjs';
-import { createServer } from '../tools/serve-director.mjs';
+import { attachLocalImageGenerationStatus, createServer } from '../tools/serve-director.mjs';
+
+async function listenOnFetchablePort(server) {
+    let lastError;
+    for (let attempt = 0; attempt < 8; attempt++) {
+        const port = randomInt(49152, 65536);
+        try {
+            await new Promise((resolve, reject) => {
+                const onError = error => { server.off('listening', onListening); reject(error); };
+                const onListening = () => { server.off('error', onError); resolve(); };
+                server.once('error', onError);
+                server.once('listening', onListening);
+                server.listen(port, '127.0.0.1');
+            });
+            return port;
+        } catch (error) {
+            lastError = error;
+        }
+    }
+    throw lastError;
+}
+
+test('local BYOK plans expose candidate generation only when Director credentials are verified', async () => {
+    const plan = { director: { source: 'byok-ai-plan', imageGenerationConnected: false, imageGenerationMode: 'text-only-ai-plan' } };
+    const configured = await attachLocalImageGenerationStatus(plan, {
+        baseUrl: 'http://127.0.0.1:8004',
+        fetchImpl: async url => {
+            assert.equal(String(url), 'http://127.0.0.1:8004/v1/photoatelier/external-provider-status');
+            return Response.json({ credential_configured: true, provider: 'huggingface', model: 'black-forest-labs/FLUX.1-schnell', secret_exposed: false });
+        },
+    });
+    assert.equal(configured.director.imageGenerationConnected, true);
+    assert.equal(configured.director.imageGenerationMode, 'local-external-provider-candidate-review');
+    assert.equal(configured.director.imageGenerationProvider, 'huggingface');
+    assert.equal(configured.director.imageGenerationModel, 'black-forest-labs/FLUX.1-schnell');
+    assert.equal(Object.hasOwn(configured.director, 'apiKey'), false);
+
+    const unavailable = { director: { source: 'byok-ai-plan', imageGenerationConnected: false } };
+    await attachLocalImageGenerationStatus(unavailable, {
+        baseUrl: 'http://127.0.0.1:8004', fetchImpl: async () => Response.json({ credential_configured: false }),
+    });
+    assert.equal(unavailable.director.imageGenerationConnected, false);
+    const unrelated = { director: { source: 'guest-rule-draft', imageGenerationConnected: false } };
+    await attachLocalImageGenerationStatus(unrelated, {
+        baseUrl: 'http://127.0.0.1:8004', fetchImpl: async () => { throw new Error('must not be called'); },
+    });
+    assert.equal(unrelated.director.imageGenerationConnected, false);
+});
 
 test('preserves current input and actual director shots without legacy templates', async () => {
     let submitted;
@@ -32,15 +80,181 @@ test('theme and style can be omitted while the Director receives safe creative g
     const plan = await createDirectorPlan({ scene: '有树荫的公园', duration: '1小时', people: '1' }, {
         baseUrl: 'http://127.0.0.1:8004', fetchImpl: async (url, options) => {
             submitted = JSON.parse(options.body);
-            return Response.json({ shot_plans: [{ model_pose: '自然行走', photographer_position: '沿步道侧前方拍摄' }] });
+            return Response.json({ shot_plans: [{ model_pose: '打开书本并拿取饮品', shot_props: '书本、饮品', photographer_position: '沿步道侧前方拍摄' }] });
         },
     });
     assert.match(submitted.brief, /主题未指定/);
     assert.match(submitted.brief, /不要臆造未提供的具体地点、人物关系、服装或道具/);
+    assert.match(submitted.brief, /道具限制为硬约束/);
+    assert.match(submitted.brief, /用户未指定服装、发型或妆容：将其标为待确认/);
     assert.equal(plan.input.theme, '');
     assert.equal(plan.input.style, '');
-    assert.equal(plan.title, '自由主题拍摄方案');
+    assert.equal(plan.title, '有树荫的公园拍摄方案');
     assert.equal(plan.shotList[0].scene, '有树荫的公园');
+    assert.match(plan.shotList[0].description, /模特自然站立/);
+    assert.match(plan.shotList[0].props, /无新增道具/);
+});
+
+test('person-focused Director rejects a zero-person brief instead of returning portraits', async () => {
+    await assert.rejects(createDirectorPlan({ theme: '陶瓷杯静物产品图', people: '0' }, {
+        baseUrl: 'http://127.0.0.1:8004', fetchImpl: async () => { throw new Error('must not call portrait planner'); },
+    }), /PERSON_REQUIRED/);
+});
+
+test('brand-product briefs keep the user product while removing invented props', async () => {
+    const plan = await createDirectorPlan({
+        theme: '品牌人物内容', modelDesc: '成年人物与产品使用者', scene: '明亮室内或店铺',
+        extra: '明确产品使用动作，预留横竖画幅裁切空间', people: '1',
+    }, {
+        baseUrl: 'http://127.0.0.1:8004',
+        fetchImpl: async () => Response.json({ shot_plans: [{
+            shot_language: 'prop-interaction', model_pose: '展示产品，打开书本并拿取饮品',
+            model_position: '人物和产品位于画面中央，书本与饮料作为辅助道具',
+            photographer_position: '在桌边拍摄', shot_props: '产品、书本、饮品',
+            framing: '中景产品使用场景', shot_size: 'MS', camera_angle: 'eye_level',
+            crop_boundary: '双手与产品完整', must_show: '产品使用动作', reject_if: '产品被遮挡',
+        }] }),
+    });
+
+    const shot = plan.shotList[0];
+    assert.match(shot.props, /用户指定产品/);
+    assert.match(shot.description, /用户指定产品/);
+    assert.doesNotMatch(`${shot.description} ${shot.composition} ${shot.notes} ${shot.directorContract.generator_prompt}`, /书本|饮品|books?|drink/i);
+});
+
+test('specific product briefs preserve the exact product and remove unrelated objects from every shot field', async () => {
+    const plan = await createDirectorPlan({
+        theme: '白色陶瓷杯品牌产品摄影', modelDesc: '成年模特', scene: '简洁室内',
+        extra: '以白色陶瓷杯为主体，不新增其他物品', people: '1',
+    }, {
+        baseUrl: 'http://127.0.0.1:8004',
+        fetchImpl: async () => Response.json({ shot_plans: [
+            { shot_language: '桌边生活方式', model_pose: '模特阅读书本并拿起咖啡', model_position: '书本和咖啡杯放在桌上', shot_props: '陶瓷杯、书本、咖啡', shot_size: 'MS', camera_angle: 'eye_level' },
+            { shot_language: '产品细节', model_pose: '展示产品', shot_props: '产品、手机', shot_size: 'CU', camera_angle: 'high_angle' },
+        ] }),
+    });
+
+    assert.equal(plan.shotList.length, 2);
+    for (const shot of plan.shotList) {
+        const content = [shot.title, shot.description, shot.composition, shot.props, shot.notes,
+            shot.alternative, shot.directorContract.generator_prompt].join(' ');
+        assert.match(content, /陶瓷杯/);
+        assert.doesNotMatch(content, /书本|咖啡|手机|coffee|book/i);
+    }
+});
+
+test('product actions stay distinct across close, medium, and environmental shot sizes', async () => {
+    const shotSizes = ['CU', 'MCU', 'ECU', 'MS', 'MFS', 'MS', 'FS', 'WS', 'EWS'];
+    const plan = await createDirectorPlan({
+        theme: '白色陶瓷杯产品摄影', modelDesc: '成年模特', scene: '简洁室内', duration: '2小时', people: '1',
+    }, {
+        baseUrl: 'http://127.0.0.1:8004',
+        fetchImpl: async () => Response.json({ shot_plans: shotSizes.map((shot_size, i) => ({
+            shot_language: `产品镜头 ${i + 1}`, model_pose: '打开书本后展示产品', shot_size, camera_angle: 'eye_level',
+        })) }),
+    });
+
+    assert.equal(plan.shotList.length, shotSizes.length);
+    assert.ok(new Set(plan.shotList.map(shot => shot.description)).size >= 7);
+    assert.ok(plan.shotList.every(shot => /陶瓷杯/.test(`${shot.description} ${shot.composition} ${shot.directorContract.generator_prompt}`)));
+});
+
+test('ten-shot product plans do not repeat actions when the same framing occurs several times', async () => {
+    const shotSizes = ['CU', 'FS', 'FS', 'MS', 'FS', 'MS', 'FS', 'MFS', 'MS', 'MFS'];
+    const plan = await createDirectorPlan({
+        modelDesc: '一位成年模特', scene: '干净的白色室内背景', style: '自然柔光',
+        extra: '产品是白色陶瓷杯；只使用这个杯子，不增加其他道具。', duration: '1小时', people: '1',
+    }, {
+        baseUrl: 'http://127.0.0.1:8004',
+        fetchImpl: async () => Response.json({ shot_plans: shotSizes.map((shot_size, i) => ({
+            shot_language: `产品镜头 ${i + 1}`, model_pose: '展示白色陶瓷杯', shot_size, camera_angle: 'eye_level',
+        })) }),
+    });
+
+    assert.equal(plan.shotList.length, shotSizes.length);
+    assert.equal(new Set(plan.shotList.map(shot => shot.description)).size, shotSizes.length);
+});
+
+test('explicit no-prop constraints sanitize unsafe Director fields and internal English labels', async () => {
+    const plan = await createDirectorPlan({
+        theme: '雨后老城街巷人像', modelDesc: '成年模特', scene: '旧城街巷，傍晚自然光',
+        extra: '不新增未提供的道具',
+    }, {
+        baseUrl: 'http://127.0.0.1:8004',
+        fetchImpl: async () => Response.json({ shot_plans: [{
+            shot_language: 'reflection-frame', model_pose: '查看地图并触碰橱窗',
+            model_position: '人物整理衣摆，手持咖啡', photographer_position: 'near the window',
+            shot_props: '地图、咖啡', must_show: '橱窗倒影与地图', execution_note: 'touch the glass',
+            camera_angle: 'over_shoulder', shot_size: 'FS', lens: '35mm',
+        }] }),
+    });
+
+    const shot = plan.shotList[0];
+    assert.equal(shot.title, '肩后全身人像 1');
+    assert.match(shot.description, /自然站立/);
+    assert.match(shot.composition, /不加入未提供的物件/);
+    assert.match(shot.method, /安全通行区域/);
+    assert.match(shot.wardrobe, /待确认/);
+    assert.match(shot.props, /无新增道具/);
+    assert.equal(shot.angle, '肩后机位');
+    assert.equal(shot.directorContract.must_show, '人物姿态、视线方向与已确认场地');
+    assert.equal(shot.directorContract.reject_if, '新增未提供的物品、人物关系或物件互动');
+    assert.equal(shot.directorContract.execution_note, '根据当前景别和机位，使用站姿、步行、视线及重心变化完成镜头。');
+    assert.doesNotMatch(shot.notes, /地图|橱窗|咖啡|道具互动/);
+    assert.doesNotMatch(shot.alternative, /touch|glass|map/i);
+    assert.doesNotMatch(shot.directorContract.generator_prompt, /地图|橱窗|咖啡|查看地图|触碰橱窗/);
+});
+
+test('unprovided lighting equipment is removed from the lighting plan and image prompt', async () => {
+    const plan = await createDirectorPlan({
+        theme: '室内自然人像', modelDesc: '成年模特；服装由现场确认', scene: '简洁室内自然光',
+        extra: '不要新增道具，拍摄使用现场自然光。',
+    }, {
+        baseUrl: 'http://127.0.0.1:8004',
+        fetchImpl: async () => Response.json({ shot_plans: [{
+            model_pose: '模特自然站立，轻微转动肩线。', photographer_position: '距主体约3米，平视拍摄',
+            lens: '50mm', shot_size: 'FS', camera_angle: 'eye_level',
+            lighting_setup: '使用白色反光板在人物正前方补光。',
+            generator_prompt: 'Editorial portrait, full-body, white reflector fill light.',
+        }] }),
+    });
+
+    const shot = plan.shotList[0];
+    assert.match(shot.lighting, /现场已有自然光/);
+    assert.doesNotMatch(shot.lighting, /反光板/);
+    assert.match(shot.directorContract.generator_prompt, /natural ambient light/);
+    assert.doesNotMatch(shot.directorContract.generator_prompt, /reflector/i);
+});
+
+test('explicitly provided lighting equipment remains available to the plan', async () => {
+    const plan = await createDirectorPlan({
+        theme: '室内自然人像', modelDesc: '成年模特', scene: '简洁室内自然光',
+        extra: '摄影师自带白色反光板补光。',
+    }, {
+        baseUrl: 'http://127.0.0.1:8004',
+        fetchImpl: async () => Response.json({ shot_plans: [{
+            model_pose: '模特自然站立，轻微转动肩线。', photographer_position: '距主体约3米，平视拍摄',
+            lens: '50mm', shot_size: 'FS', camera_angle: 'eye_level',
+            lighting_setup: '使用白色反光板在人物正前方补光。',
+            generator_prompt: 'Editorial portrait, full-body, white reflector fill light.',
+        }] }),
+    });
+
+    assert.match(plan.shotList[0].lighting, /反光板/);
+});
+
+test('an explicitly labeled theme in extra requirements becomes the saved plan title', async () => {
+    let submitted;
+    const plan = await createDirectorPlan({ scene: '校园林荫道', duration: '2小时', extra: '主题：校园毕业季人像；情绪清新克制' }, {
+        baseUrl: 'http://127.0.0.1:8004', fetchImpl: async (url, options) => {
+            submitted = JSON.parse(options.body);
+            return Response.json({ shot_plans: [{ model_pose: '自然站立并回望', photographer_position: '距主体约3米平视拍摄' }] });
+        },
+    });
+    assert.match(submitted.brief, /主题：校园毕业季人像/);
+    assert.doesNotMatch(submitted.brief, /主题未指定/);
+    assert.equal(plan.input.theme, '校园毕业季人像');
+    assert.equal(plan.title, '校园毕业季人像');
 });
 
 test('shot target varies with duration without copying upstream shots to fill it', async () => {
@@ -66,7 +280,7 @@ test('shot target varies with duration without copying upstream shots to fill it
         assert.equal(plan.director.desiredShotCount, count);
         assert.equal(plan.director.shotCountLimited, true);
         assert.equal(plan.shotList.length, 2);
-        assert.equal(plan.shotList[0].title, 'same');
+        assert.equal(plan.shotList[0].title, '人像拍摄镜头 1');
         assert.equal(plan.shotList[0].description, '走动');
         assert.equal(plan.shotList[1].sourceShotIndex, 2);
         assert.equal(plan.shotList[0].angle, '平视');
@@ -91,6 +305,47 @@ test('guest draft can generate a neutral portrait plan with no theme or style', 
     assert.equal(plan.input.theme, undefined);
     assert.equal(plan.input.style, undefined);
     assert.equal(plan.shotList.length, 9);
+});
+
+test('plan title uses the chosen scene and style when theme is omitted', async () => {
+    const plan = await createDirectorPlan({ scene: '旧城街巷', style: '纪实自然', duration: '1小时' }, {
+        baseUrl: 'http://127.0.0.1:8004', fetchImpl: async () => Response.json({
+            shot_plans: [{ shot_language: '街巷环境', model_pose: '自然行走' }],
+        }),
+    });
+    assert.equal(plan.title, '旧城街巷·纪实自然拍摄方案');
+});
+
+test('minimal briefs replace ambiguous alternative actions and number every shot', async () => {
+    const plan = await createDirectorPlan({ extra: '想拍一组自然的人像照片。', duration: '1小时' }, {
+        baseUrl: 'http://127.0.0.1:8004',
+        fetchImpl: async () => Response.json({ shot_plans: [
+            { shot_language: '环境远景人像', model_pose: '完整站姿或沿横向路径缓慢行走，不看镜头，动作与环境发生关系', shot_size: 'EWS' },
+            { shot_language: '表情特写', model_pose: '先闭眼呼吸再缓慢睁眼', shot_size: 'CU' },
+        ] }),
+    });
+
+    assert.equal(plan.shotList.length, 2);
+    assert.match(plan.shotList[0].title, /1$/);
+    assert.match(plan.shotList[0].description, /模特/);
+    assert.doesNotMatch(plan.shotList[0].description, /或|动作与环境发生关系/);
+    assert.match(plan.shotList[1].title, /2$/);
+});
+
+test('sixteen-shot minimal portrait plans use distinct location-neutral fallback actions', async () => {
+    const plan = await createDirectorPlan({
+        scene: '室内；自然光', extra: '想拍自然的人像照片。', duration: '5小时', people: '1',
+    }, {
+        baseUrl: 'http://127.0.0.1:8004',
+        fetchImpl: async () => Response.json({ shot_plans: Array.from({ length: 16 }, (_, i) => ({
+            shot_language: `人像镜头 ${i + 1}`, model_pose: '站立或行走，根据现场情况与环境互动', shot_size: 'MS',
+        })) }),
+    });
+
+    assert.equal(plan.shotList.length, 16);
+    assert.equal(new Set(plan.shotList.map(shot => shot.description)).size, 16);
+    assert.ok(plan.shotList.every((shot, i) => shot.title.endsWith(String(i + 1))));
+    assert.doesNotMatch(plan.shotList.map(shot => shot.description).join(' '), /街巷|咖啡|书本|橱窗/);
 });
 
 test('candidate generation returns a review-only external result', async () => {
@@ -158,10 +413,15 @@ test('fails closed for missing configuration, invalid input, and upstream failur
 
 test('loopback bridge serves UI, blocks cross-origin and private files', async t => {
     const server = createServer({ fetchImpl: async () => Response.json({ shot_plans: [{ model_pose: '走动' }] }) });
-    await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+    const port = await listenOnFetchablePort(server);
     t.after(() => new Promise(resolve => server.close(resolve)));
-    const base = `http://127.0.0.1:${server.address().port}`;
+    const base = `http://127.0.0.1:${port}`;
     assert.equal((await fetch(base)).status, 200);
+    const health = await fetch(base + '/api/health');
+    assert.equal(health.status, 200);
+    assert.deepEqual(await health.json().then(({ status, service }) => ({ status, service })), {
+        status: 'ok', service: 'photo-workflow-local',
+    });
     assert.equal((await fetch(base + '/favicon.jpg')).status, 200);
     assert.equal((await fetch(base + '/.env.example')).status, 404);
     const options = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ theme: '雨夜' }) };
@@ -170,7 +430,7 @@ test('loopback bridge serves UI, blocks cross-origin and private files', async t
     assert.equal((await fetch(base + '/api/director/plan', { ...options, body: '{' })).status, 400);
 });
 
-test('main PhotoAtelier plan route uses the selected reference-library workflow', async t => {
+test('main PhotoAtelier plan route keeps the Director generator when references are enabled', async t => {
     let directorCalls = 0;
     const fetched = [];
     const fetchImpl = async url => {
@@ -195,9 +455,9 @@ test('main PhotoAtelier plan route uses the selected reference-library workflow'
         throw new Error('UNEXPECTED_FETCH');
     };
     const server = createServer({ fetchImpl });
-    await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+    const port = await listenOnFetchablePort(server);
     t.after(() => new Promise(resolve => server.close(resolve)));
-    const response = await fetch(`http://127.0.0.1:${server.address().port}/api/director/plan`, {
+    const response = await fetch(`http://127.0.0.1:${port}/api/director/plan`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
             theme: '秋日人像', scene: '公园小径；木亭长椅', modelDesc: '棕色针织上衣',
             duration: '1小时', people: '1', useReferenceLibrary: true, requireImageReferences: true,
@@ -206,11 +466,13 @@ test('main PhotoAtelier plan route uses the selected reference-library workflow'
     });
     assert.equal(response.status, 200, `${await response.clone().text()} ${JSON.stringify(fetched)}`);
     const plan = await response.json();
-    assert.equal(plan.director.source, 'template-library-plan');
-    assert.equal(directorCalls, 0);
-    assert.deepEqual([...new Set(plan.shotList.map(shot => shot.scene))], ['公园小径', '木亭长椅']);
-    assert.equal(plan.shotList.filter(shot => shot.directorContract.referenceIds.length).every(shot => shot.directorContract.referenceIds[0].startsWith('atlas-pose-')), true);
-    assert.deepEqual(plan.shotList.find(shot => /服装细节/.test(shot.directorContract.shot_language)).directorContract.referenceIds, []);
+    assert.equal(plan.director.source, 'director-shoot-plan');
+    assert.equal(directorCalls, 1);
+    assert.equal(plan.shotList[0].title, '人像拍摄镜头 1');
+    assert.equal(plan.shotList[0].scene, '公园小径；木亭长椅');
+    assert.ok(plan.aiStudio.references.some(reference => reference.kind === 'pose'));
+    assert.ok(plan.aiStudio.references.some(reference => reference.kind === 'costume'));
+    assert.ok(plan.aiStudio.references.some(reference => reference.kind === 'portrait'));
 });
 
 test('loopback bridge serves only generated PNG candidates', async t => {
@@ -233,9 +495,9 @@ test('loopback bridge serves only generated PNG candidates', async t => {
             });
         },
     });
-    await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+    const port = await listenOnFetchablePort(server);
     t.after(() => new Promise(resolve => server.close(resolve)));
-    const base = 'http://127.0.0.1:' + server.address().port;
+    const base = 'http://127.0.0.1:' + port;
     const response = await fetch(base + '/api/director/generate-candidate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -362,4 +624,28 @@ test('candidate card explains composition and unverified-face blockers', async (
     assert.match(context.result, /src="https:\/\/photoatelier-api\.photomagic\.workers\.dev\/api\/director\/candidates\/cloud-test"/);
     assert.match(context.result, /alt="镜头 3 AI合成候选图"/);
     assert.doesNotMatch(context.result, /untrusted\.example/);
+});
+
+test('local BYOK candidate panel selects the verified image model and avoids cloud quota claims', async () => {
+    const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+    const start = html.indexOf('function renderDirectorCandidatePanel(plan) {');
+    const end = html.indexOf('\nfunction formatDirectorGenerationError(error)', start);
+    const context = {
+        window: { location: { hostname: '127.0.0.1' } },
+        plan: {
+            id: 'local-test',
+            input: { theme: '咖啡馆人像' },
+            shotList: [{ title: '窗边全身环境像', directorContract: { shot_language: '窗边环境像', generator_prompt: 'full-body adult portrait by a cafe window' } }],
+            director: { imageGenerationConnected: true, imageGenerationMode: 'local-external-provider-candidate-review',
+                imageGenerationProvider: 'huggingface', imageGenerationModel: 'black-forest-labs/FLUX.1-schnell', submittedBrief: '咖啡馆窗边' },
+        },
+        escHtml: value => String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char])),
+        inferAspectRatioFromPlan: () => 'portrait', renderShotInstructions: () => '', getDirectorShotFitWarning: () => '',
+    };
+    assert.ok(start >= 0 && end > start);
+    vm.runInNewContext(html.slice(start, end) + '\nresult = renderDirectorCandidatePanel(plan);', context);
+    assert.match(context.result, /value="huggingface:black-forest-labs\/FLUX\.1-schnell" selected/);
+    assert.match(context.result, /FLUX\.1-schnell · 本机已配置/);
+    assert.match(context.result, /文件由本机 Director 管理/);
+    assert.doesNotMatch(context.result, /每个账号每天最多 50 张|云端图片保留 90 天/);
 });

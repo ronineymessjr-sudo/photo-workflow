@@ -3,8 +3,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomBytes } from 'node:crypto';
-import { createDirectorPlan, createTemplatePlan } from '../api/director-plan.mjs';
-import { prepareReferenceContext } from '../api/ai-studio/reference-brief.mjs';
+import { createDirectorPlan } from '../api/director-plan.mjs';
 import { generateDirectorCandidate } from '../api/director-generation.mjs';
 import { buildDirectorIdentityWorkflow } from '../api/director-identity-workflow.mjs';
 import { aiPlanProviders, handleAiPlan } from '../api/ai-plan.mjs';
@@ -58,6 +57,26 @@ function localStudioQuota() {
     };
 }
 
+export async function attachLocalImageGenerationStatus(plan, { baseUrl, fetchImpl = fetch } = {}) {
+    if (!plan || plan.director?.source !== 'byok-ai-plan' || !baseUrl) return plan;
+    try {
+        const response = await fetchImpl(new URL('/v1/photoatelier/external-provider-status', baseUrl), {
+            headers: { Accept: 'application/json' }, redirect: 'error', signal: AbortSignal.timeout(5000),
+        });
+        if (!response.ok) return plan;
+        const status = await response.json();
+        if (status?.credential_configured !== true) return plan;
+        plan.director = {
+            ...plan.director,
+            imageGenerationConnected: true,
+            imageGenerationMode: 'local-external-provider-candidate-review',
+            imageGenerationProvider: typeof status.provider === 'string' ? status.provider : '',
+            imageGenerationModel: typeof status.model === 'string' ? status.model : '',
+        };
+    } catch { /* Image generation remains unavailable if the local Director cannot be verified. */ }
+    return plan;
+}
+
 export function createServer({
     baseUrl = 'http://127.0.0.1:8004',
     fetchImpl = fetch,
@@ -85,6 +104,9 @@ export function createServer({
             // Only the loopback UI may invoke this credential-using local service.
             if (!/^127\.0\.0\.1:\d+$/.test(req.headers.host || '')) return reply(403, { error: 'INVALID_HOST' });
             const pathname = new URL(req.url, 'http://127.0.0.1').pathname;
+            if (pathname === '/api/health' && req.method === 'GET') {
+                return reply(200, { status: 'ok', service: 'photo-workflow-local', time: new Date().toISOString() });
+            }
             if (authProxyPaths.has(pathname)) {
                 const expectedMethod = ['/api/auth/methods', '/api/auth/session'].includes(pathname) ? 'GET' : 'POST';
                 if (req.method !== expectedMethod) return reply(405, { error: 'METHOD_NOT_ALLOWED' });
@@ -212,7 +234,33 @@ export function createServer({
                     if (!saved) return reply(503, { error: '本机保存的 AI 配置不可用，请到设置检查。' });
                     input = { ...saved, ...(pathname === '/api/ai/brief' ? { conversation: input.conversation } : { input: input.input }) };
                 }
-                const result = await (pathname === '/api/ai/brief' ? handleAiBrief : handleAiPlan)(input, {}, { fetchImpl });
+                const providerFetch = async (url, options) => {
+                    try {
+                        const response = await fetchImpl(url, options);
+                        if (response?.status === 0) {
+                            let host = 'unknown';
+                            try { host = new URL(url).host; } catch { /* keep the sanitized fallback */ }
+                            console.warn(JSON.stringify({ event: 'ai_provider_empty_response', host,
+                                responseType: response.type || 'unknown', ok: response.ok === true }));
+                        }
+                        return response;
+                    }
+                    catch (error) {
+                        let host = 'unknown';
+                        try { host = new URL(url).host; } catch { /* keep the sanitized fallback */ }
+                        console.warn(JSON.stringify({ event: 'ai_provider_network_failure', host,
+                            errorName: error?.name || 'Error', causeCode: error?.cause?.code || '' }));
+                        throw error;
+                    }
+                };
+                const result = await (pathname === '/api/ai/brief'
+                    ? handleAiBrief(input, {}, { fetchImpl: providerFetch })
+                    : handleAiPlan(input, {}, { fetchImpl: providerFetch, onNetworkError: detail => {
+                        console.warn(JSON.stringify({ event: 'ai_provider_network_failure', ...detail }));
+                    } }));
+                if (pathname === '/api/ai/plan' && result.status === 200) {
+                    await attachLocalImageGenerationStatus(result.body, { baseUrl, fetchImpl });
+                }
                 return reply(result.status, result.body);
             }
             if (pathname === '/api/director/plan' && req.method === 'POST') {
@@ -224,13 +272,6 @@ export function createServer({
                     if (Buffer.byteLength(body) > 16000) return reply(413, { error: 'BRIEF_TOO_LARGE' });
                 }
                 const input = JSON.parse(body);
-                if (input.useReferenceLibrary === true || input.referenceIds?.length) {
-                    const referenceContext = await prepareReferenceContext({
-                        ...input,
-                        requireImageReferences: input.requireImageReferences === true,
-                    }, { fetchImpl });
-                    return reply(200, createTemplatePlan(input, referenceContext));
-                }
                 return reply(200, await createDirectorPlan(input, { baseUrl, fetchImpl, referenceFetchImpl: fetchImpl }));
             }
             if (pathname === '/api/director/generate-candidate' && req.method === 'POST') {
@@ -305,10 +346,13 @@ export function createServer({
             const status = error.code === 'ENOENT' ? 404
                 : error instanceof SyntaxError || error.message === 'INVALID_BRIEF' || error.message === 'INVALID_REFERENCE_SELECTION'
                     || error.message === 'POSE_REFERENCE_CONFLICTS_WITH_USER_CONSTRAINTS' ? 400
+                    : error.message === 'PERSON_REQUIRED' ? 400
                     : error.message === 'WARDROBE_REFERENCE_MISMATCH' ? 422
                         : referenceFailure ? 503 : 502;
-            reply(status, { error: referenceFailure || error.message?.startsWith('DIRECTOR_')
-                ? error.message : '摄影 Agent 请求失败，请检查服务和输入；未使用旧模板替代。' });
+            reply(status, error.message === 'PERSON_REQUIRED'
+                ? { error: '当前方案流程至少需要 1 位拍摄对象；纯静物方案暂未支持。', code: 'PERSON_REQUIRED' }
+                : { error: referenceFailure || error.message?.startsWith('DIRECTOR_') || error.message === 'INVALID_BRIEF'
+                    ? error.message : '摄影 Agent 请求失败，请检查服务和输入；未使用旧模板替代。' });
         }
     });
 }

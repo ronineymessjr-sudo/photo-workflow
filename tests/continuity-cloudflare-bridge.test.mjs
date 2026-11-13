@@ -518,7 +518,7 @@ test('framing follows the size code, not the machine label', async () => {
     }
 });
 
-test('modelscope adapter: submits, polls the task, and carries references', async () => {
+test('modelscope adapter: submits, polls the task, and sends only the identity reference', async () => {
     const { generateShot } = await import('../api/continuity-generation.mjs');
     let group = createGroup({
         input: { theme: '楼梯', scene: '美术馆' },
@@ -555,15 +555,16 @@ test('modelscope adapter: submits, polls the task, and carries references', asyn
     });
 
     assert.equal(submitted.model, 'Qwen/Qwen-Image-Edit-2511');
-    assert.ok(Array.isArray(submitted.image_url) && submitted.image_url.length >= 2, '参考图必须以数组传入');
-    assert.ok(submitted.image_url[0].startsWith('data:image/'), '参考图是 data URL');
+    assert.deepEqual(submitted.image_url?.length, 1, '魔搭只接收人物身份图，场景和风格以文字约束');
+    assert.ok(submitted.image_url[0].startsWith('data:image/'), '身份参考图是 data URL');
     // Chinese native: the direction should not have been translated.
     assert.match(submitted.prompt, /[\u4e00-\u9fa5]/);
     assert.match(submitted.prompt, /取景：/, '景别指令必须进提示词');
+    assert.match(submitted.prompt, /supplies face identity and hairstyle only/i, '身份参考必须明确不提供服装、姿势和背景');
     // Submit then poll.
     assert.ok(calls.some(url => url.includes('/v1/tasks/')), '必须轮询任务');
     assert.equal(result.provider, 'modelscope-qwen-edit');
-    assert.equal(result.referencesSent, 2);
+    assert.equal(result.referencesSent, 1);
 });
 
 test('modelscope poll accepts the SUCCEED spelling and reads output_images', async () => {
@@ -599,6 +600,30 @@ test('modelscope poll still reports a running task as pending', async () => {
     });
     assert.equal(result.status, 'pending');
     assert.equal(result.upstream, 'RUNNING');
+});
+
+test('modelscope poll treats a missing task as a terminal provider failure', async () => {
+    const { pollModelScope } = await import('../api/continuity-generation.mjs');
+    await assert.rejects(
+        pollModelScope({
+            env: { MODELSCOPE_TOKEN: 'ms-test' }, taskId: 'missing-task',
+            fetchImpl: async () => new Response(JSON.stringify({
+                task_status: 'FAILED', errors: { message: 'task not found' },
+            }), { status: 200, headers: { 'content-type': 'application/json' } }),
+        }),
+        error => error.code === 'GENERATION_UPSTREAM_FAILED' && error.details?.retryable === false,
+    );
+});
+
+test('modelscope poll classifies HTTP 5xx as retryable instead of task failure', async () => {
+    const { pollModelScope } = await import('../api/continuity-generation.mjs');
+    await assert.rejects(
+        pollModelScope({
+            env: { MODELSCOPE_TOKEN: 'ms-test' }, taskId: 'still-running-task',
+            fetchImpl: async () => new Response('upstream unavailable', { status: 503 }),
+        }),
+        error => error.code === 'GENERATION_POLL_RETRYABLE' && error.status === 503,
+    );
 });
 
 test('framing states where the frame cuts, and the pose is trimmed to what fits', async () => {
@@ -660,7 +685,7 @@ test('the assembled direction always requires exactly one person', async () => {
     assert.match(text, /不要出现第二个人/);
 });
 
-test('the direction carries the lab realism lock, not banned adjectives', async () => {
+test('the direction preserves selected style without forcing a global film or grime', async () => {
     const { directionText, stripBannedWords } = await import('../api/continuity-generation.mjs');
     const text = directionText({
         prompt: '美术馆螺旋楼梯',
@@ -668,13 +693,11 @@ test('the direction carries the lab realism lock, not banned adjectives', async 
         variant: { size: 'FS' },
         size: 'FS',
     });
-    // The whole nine-shot set came back flat-lit and AI-flavoured because the
-    // direction carried framing but no texture anchor. The lab pack's fix is a
-    // realism lock: film stock, true light falloff, venue wear.
-    assert.match(text, /真实感：/);
-    assert.match(text, /Kodak Portra 400/);
-    assert.match(text, /背光一侧真正暗下去/);
-    // A named film stock in the plan overrides the default.
+    // Rendering follows this shot's chosen look; no global stock or dirt is added.
+    assert.match(text, /成像质感：真实摄影成像/);
+    assert.match(text, /颗粒与色彩服从本镜风格参考/);
+    assert.doesNotMatch(text, /Kodak Portra 400|场景有使用痕迹|强制加入.*灰尘/);
+    // A named film stock in the plan is respected when present.
     const custom = directionText({
         prompt: '黄昏天台',
         locked: { location: '天台', filmStock: 'CineStill 800T' },
