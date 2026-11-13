@@ -9491,7 +9491,7 @@ async function handleSubmit(e){
         // 初始化报价计算器
         setTimeout(() => calculateQuote(plan.id), 100);
         toast(plan.director?.source === 'guest-rule-draft' ? '模板草稿已保存（未连接 Director）' : '方案已生成并保存','ok');
-    }catch(e){console.error('生成失败:', e); toast('生成失败: ' + (e.message || '未知错误'),'er');$('outLoad').classList.remove('active');$(hadVisiblePlan?'outCnt':'outEmpty').classList.add('active');}
+    }catch(e){console.error('生成失败:', e); const message=/SIGN_IN_REQUIRED/.test(String(e.message||''))?'请先登录后再生成摄影方案':'生成失败: '+(e.message||'未知错误'); toast(message,'er');$('outLoad').classList.remove('active');$(hadVisiblePlan?'outCnt':'outEmpty').classList.add('active');}
     finally{btn.disabled=false;btn.classList.remove('btn-loading');btn.innerHTML=btnOrigHTML;}
 }
 $('briefForm').addEventListener('submit',handleSubmit);
