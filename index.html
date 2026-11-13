@@ -6660,7 +6660,9 @@ function renderPlanContent(plan) {
     const sourceNotice = plan.director?.source === 'guest-rule-draft'
         ? '<p role="status" class="reference-rights">模板草稿 · 当前未连接 Director，以下不是模型生成结果，具体需求尚未由模型处理。</p>'
         : plan.director?.source === 'byok-ai-plan'
-            ? `<p class="reference-rights">AI 方案 · ${escHtml(plan.director.provider)} / ${escHtml(plan.director.model)}${plan.director.qualityRepairAttempted ? ' · 已按校验问题自动修订一次' : ''} · 拍摄前请核对现场条件</p>` : '';
+            ? `<p class="reference-rights">AI 方案 · ${escHtml(plan.director.provider)} / ${escHtml(plan.director.model)}${plan.director.qualityRepairAttempted ? ' · 已按校验问题自动修订一次' : ''} · 拍摄前请核对现场条件</p>`
+            : plan.director?.source === 'cloudflare-workers-ai-plan'
+                ? `<p class="reference-rights">AI 方案 · Cloudflare Workers AI / ${escHtml(plan.director.model)} · 由网站额度生成，拍摄前请核对现场条件</p>` : '';
     const metaHtml = sourceNotice + `<div class="plan-meta"><div class="mtag"><strong>主题</strong><span>${escHtml(plan.input && plan.input.theme||plan.title||'自然生成方案')}</span></div><div class="mtag"><strong>风格</strong><span>${escHtml(plan.input && plan.input.style||'自动建议')}</span></div><div class="mtag"><strong>时长</strong><span>${plan.input && plan.input.duration||'待定'}</span></div><div class="mtag"><strong>人数</strong><span>${plan.input && plan.input.people||1}人</span></div></div>`;
 
     const sectionsHtml = (plan.director ? [] : (plan.sections || []).filter(s => !/本次需求|接入记录|拍摄清单|拍摄当天/.test(s.ti))).map(s=>`
@@ -9439,7 +9441,8 @@ async function savePlan(plan){
     if(ps.length>50)ps.pop();
     if(!savePlans(ps)) throw new Error('本地存储不可用或空间不足，方案未保存。请检查浏览器存储设置。');
     if(window.__PHOTOATELIER_LOCAL_MODE__||window.__PHOTOATELIER_GUEST_MODE__) return plan.id;
-    await window.PhotoAtelierWorkspaceSync?.sync({force:true,noReload:true});
+    const synced = await window.PhotoAtelierWorkspaceSync?.sync({force:true,noReload:true});
+    if(synced !== true) throw new Error('方案已暂存在本机，但账户云端保存未确认；请检查登录状态和网络后重试。');
     return plan.id;
 }
 function delPlan(id){let ps=getPlans();ps=ps.filter(p=>p.id!==id);savePlans(ps)}
@@ -9479,8 +9482,9 @@ async function handleSubmit(e){
     $('outEmpty').classList.remove('active'); $('outCnt').classList.remove('active'); $('outLoad').classList.add('active');
     btn.disabled=true;
     await new Promise(r=>setTimeout(r,900));
+    let generatedPlan=null;
     try{
-        const plan=await window.generateDirectorPlan(input);
+        const plan=generatedPlan=await window.generateDirectorPlan(input);
         await savePlan(plan);
         currentPlanData=plan;
         $('tplSavePanel').style.display='block';
@@ -9491,7 +9495,7 @@ async function handleSubmit(e){
         // 初始化报价计算器
         setTimeout(() => calculateQuote(plan.id), 100);
         toast(plan.director?.source === 'guest-rule-draft' ? '模板草稿已保存（未连接 Director）' : '方案已生成并保存','ok');
-    }catch(e){console.error('生成失败:', e); const message=/SIGN_IN_REQUIRED/.test(String(e.message||''))?'请先登录后再生成摄影方案':'生成失败: '+(e.message||'未知错误'); toast(message,'er');$('outLoad').classList.remove('active');$(hadVisiblePlan?'outCnt':'outEmpty').classList.add('active');}
+    }catch(e){console.error('生成失败:', e); const message=/SIGN_IN_REQUIRED/.test(String(e.message||''))?'请先登录后再生成摄影方案':'生成失败: '+(e.message||'未知错误'); toast(message,'er');$('outLoad').classList.remove('active');if(generatedPlan&&getPlans().some(item=>String(item.id)===String(generatedPlan.id))){currentPlanData=generatedPlan;$('outCnt').innerHTML=renderPlanContent(generatedPlan);renderHistMini();updateBadge();$('outCnt').classList.add('active');}else $(hadVisiblePlan?'outCnt':'outEmpty').classList.add('active');}
     finally{btn.disabled=false;btn.classList.remove('btn-loading');btn.innerHTML=btnOrigHTML;}
 }
 $('briefForm').addEventListener('submit',handleSubmit);

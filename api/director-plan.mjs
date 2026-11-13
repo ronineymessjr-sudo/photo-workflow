@@ -70,7 +70,7 @@ export async function createDirectorPlan(input, { baseUrl, fetchImpl = fetch, re
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ request_id: requestId, brief: compiledBrief, output_count: desiredShotCount }),
         signal: AbortSignal.timeout(60000),
-    });
+    }, referenceContext);
     if (!response.ok) throw new Error(`DIRECTOR_UPSTREAM_${response.status}`);
     const result = await response.json();
     if (!Array.isArray(result.shot_plans) || !result.shot_plans.length) throw new Error('DIRECTOR_INVALID_RESPONSE');
@@ -82,6 +82,7 @@ export async function createDirectorPlan(input, { baseUrl, fetchImpl = fetch, re
     // Do not duplicate shots to meet a target that the upstream cannot yet supply.
     const executionShots = [...uniqueShots.values()];
     const text = value => typeof value === 'string' ? value : '';
+    const sceneLocations = cleanInput.scene.split(/[;；\n]+/).map(value => value.trim()).filter(Boolean);
     const sceneScale = classifySceneScale(`${cleanInput.theme}\n${cleanInput.extra}`);
     const productActionCounts = new Map();
     const usedProductActions = new Set();
@@ -198,14 +199,25 @@ export async function createDirectorPlan(input, { baseUrl, fetchImpl = fetch, re
         const mustShow = safeRewrite ? safeMustShow : text(shot.must_show);
         const rejectIf = safeRewrite ? safeReject : text(shot.reject_if);
         const executionNote = safeRewrite ? safeExecutionNote : text(shot.execution_note);
+        const clothingDetail = /服装细节|衣料细节/.test(title);
+        const referencePoses = (referenceContext?.templates || []).filter(template => template.kind === 'pose');
+        const poseText = `${title} ${description}`;
+        const poseRef = clothingDetail || !referencePoses.length ? null : referencePoses.find(template => {
+            const hints = [template.title, template.description, ...(template.tags || []),
+                (referenceContext.guidance?.suggestions || []).find(item => item.sourceItemId === template.id)?.direction]
+                .filter(Boolean).join(' ');
+            const terms = ['回眸', '回望', '回头', '侧身', '行走', '步行', '迈步', '坐姿', '坐着', '靠墙', '扶腰', '腰侧', '触发丝', '整理头发'];
+            return terms.some(term => poseText.includes(term) && hints.includes(term));
+        }) || referencePoses[index % referencePoses.length];
         const directorContract = { ...shot, shot_language: title, model_pose: description,
+            referenceIds: poseRef ? [poseRef.id] : [],
             model_position: safeComposition, photographer_position: method, wardrobe_styling: wardrobe, shot_props: props,
             lighting_setup: lighting, generator_prompt: generatorPrompt,
             execution_note: executionNote, must_show: mustShow, reject_if: rejectIf,
             ...(safeRewrite ? { framing: safeFraming, crop_boundary: safeCrop,
                 generator_prompt: `${productSubject ? 'Editorial product photography with an adult model.' : 'Editorial portrait.'} ${safeFraming}. Action: ${description} Composition: ${safeComposition} Crop: ${safeCrop} User constraint: no unrequested props or object interactions.` } : {}) };
         return {
-        id: `${requestId}-${index}`, scene: cleanInput.scene || '场地待确认',
+        id: `${requestId}-${index}`, scene: sceneLocations[index % Math.max(1, sceneLocations.length)] || '场地待确认',
         description, shotSize: ({ECU:'局部特写',CU:'特写',MCU:'近景',MS:'中景',MFS:'中全景',FS:'全身',WS:'环境全景',EWS:'环境远景'})[shot.shot_size] || (safeRewrite ? sceneScale.shotSize : text(shot.framing) || sceneScale.shotSize),
         title,
         sourceShotIndex: shot.sourceIndex,
