@@ -579,6 +579,35 @@ test('all inline scripts parse and submit awaits director, shot list reuses resp
     assert.match(html, /不会自动邀请其他账号或发送通知/);
 });
 
+test('plan submission explains sign-in failures without changing candidate-image guidance', async () => {
+    const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+    const start = html.indexOf('async function handleSubmit(e){');
+    const end = html.indexOf("\n$('briefForm').addEventListener", start);
+    assert.ok(start >= 0 && end > start);
+
+    const elements = new Map();
+    const getElement = id => {
+        if (!elements.has(id)) elements.set(id, {
+            value: '', innerHTML: '', disabled: false,
+            classList: { add() {}, remove() {}, contains() { return false; } }
+        });
+        return elements.get(id);
+    };
+    const notices = [];
+    const context = {
+        $: getElement,
+        window: { generateDirectorPlan: async () => { throw new Error('SIGN_IN_REQUIRED'); } },
+        toast: (...args) => notices.push(args),
+        console: { error() {} },
+        setTimeout: callback => { callback(); return 0; }
+    };
+    vm.runInNewContext(html.slice(start, end) + '\nresult = handleSubmit({ preventDefault() {} });', context);
+    await context.result;
+
+    assert.deepEqual(notices[0], ['请先登录后再生成摄影方案', 'er']);
+    assert.match(html, /请登录后再生成并保存云端候选图/);
+});
+
 test('candidate card explains composition and unverified-face blockers', async () => {
     const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
     const start = html.indexOf('function getDirectorShotFitWarning(plan, shot, selectedIndex) {');
