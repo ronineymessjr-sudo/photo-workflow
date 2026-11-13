@@ -9,7 +9,7 @@ account_id = "eaab0ca2aac12cd19b8a697a508da342"
 ENVIRONMENT = "production"
 RESEND_AUTH_ENABLED = "true"
 # Initial release image limits: ten per account and fifty site-wide per day.
-STUDIO_IMAGE_USER_LIMIT = "10"
+STUDIO_IMAGE_USER_LIMIT = "50"
 STUDIO_IMAGE_GLOBAL_LIMIT = "50"
 AI_STUDIO_ALLOWED_ORIGINS = "https://photo-workflow.pages.dev,https://photo.ronineymessjrstudio.cn,https://fix-multi-pose-library-gener.photo-workflow.pages.dev,https://ronineymessjr-sudo.github.io"
 

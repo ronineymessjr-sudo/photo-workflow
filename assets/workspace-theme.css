@@ -659,6 +659,18 @@ input::placeholder, textarea::placeholder { color: var(--t3); opacity: 1; }
     #tab-calendar > div { max-width: none !important; }
     #tab-calendar .p-head { align-items: flex-start; flex-wrap: wrap; gap: 10px; }
     #tab-calendar .p-head > div { flex-wrap: wrap; }
+    #tab-calendar .schedule-item {
+        display: grid;
+        grid-template-columns: 22px 48px minmax(0, 1fr) 40px;
+        align-items: start;
+        gap: 8px;
+    }
+    #tab-calendar .schedule-item > .drag-handle { grid-column: 1; grid-row: 1; margin: 0 !important; padding: 4px 0; }
+    #tab-calendar .schedule-date { grid-column: 2; grid-row: 1; min-width: 0; }
+    #tab-calendar .schedule-info { grid-column: 3 / 5; grid-row: 1; min-width: 0; overflow-wrap: anywhere; }
+    #tab-calendar .schedule-title, #tab-calendar .schedule-meta { overflow-wrap: anywhere; word-break: break-word; line-height: 1.4; }
+    #tab-calendar .schedule-item > .btn { grid-column: 3; grid-row: 2; justify-self: start; min-height: 40px; }
+    #tab-calendar .schedule-item > .btn-i2 { grid-column: 4; grid-row: 2; justify-self: end; width: 40px; min-height: 40px; }
     .resource-tabs { width: 100%; flex-wrap: nowrap; overflow-x: auto; }
     .resource-tab { flex: 1 0 auto; }
     .g2 { grid-template-columns: minmax(0, 1fr); }

@@ -72,6 +72,7 @@ test('the browser restores the saved configuration without receiving its key', a
     await vm.runInNewContext(source, { window, fetch, AbortSignal, document: { getElementById: id => nodes[id], createElement: () => ({}) } });
     assert.equal(window.PhotoAtelierOwnAI.isEnabled(), true);
     assert.equal(nodes.ownAiRememberLabel.hidden, false);
+    assert.equal(nodes.ownAiEndpoint.textContent, 'https://api.deepseek.com/chat/completions');
     await window.PhotoAtelierOwnAI.extractBrief('一位朋友在公园');
     const sent = JSON.parse(requests.at(-1).options.body);
     assert.equal(sent.useSaved, true);

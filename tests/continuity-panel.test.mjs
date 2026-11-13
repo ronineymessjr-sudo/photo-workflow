@@ -133,3 +133,38 @@ test('accepted async retry keeps its seed through collect and the saved result',
     assert.equal(completed.seed, 428501);
     assert.equal(panel.state().results['shot-01'].seed, 428501);
 });
+
+test('switching plans archives and restores the prior group with its original images', () => {
+    const original = {
+        continuityGroupId: 'shoot-original', locked: { theme: '原方案' },
+        shots: [{ shotId: 'shot-01' }],
+    };
+    const panel = createPanel({ initialState: {
+        group: original,
+        results: { 'shot-01': { image: { assetId: 'original-image', path: '/api/continuity/asset/0123456789abcdef' } } },
+        qc: { 'shot-01': { verdict: 'pass' } },
+    } });
+
+    panel.context.activateGroup({ continuityGroupId: 'shoot-new', locked: { theme: '新方案' }, shots: [] });
+    assert.equal(panel.state().results['shot-01'], undefined);
+    assert.equal(panel.state().groupArchives['shoot-original'].results['shot-01'].image.assetId, 'original-image');
+
+    panel.context.activateGroup(original);
+    assert.equal(panel.state().group.continuityGroupId, 'shoot-original');
+    assert.equal(panel.state().results['shot-01'].image.assetId, 'original-image');
+    assert.equal(panel.state().qc['shot-01'].verdict, 'pass');
+});
+
+test('regenerating a shot keeps the previous image as a selectable history version', () => {
+    const panel = createPanel({ initialState: {
+        group: { continuityGroupId: 'shoot', shots: [{ shotId: 'shot-01' }] },
+        results: { 'shot-01': { image: { assetId: 'image-v1', path: '/api/continuity/asset/0123456789abcdef' }, seed: 10 } },
+        qc: { 'shot-01': { verdict: 'pass', scores: { anatomy: 'pass' } } },
+    } });
+
+    panel.context.saveShotResult('shot-01', { image: { assetId: 'image-v2', path: '/api/continuity/asset/fedcba9876543210' }, seed: 20 });
+    assert.equal(panel.state().results['shot-01'].image.assetId, 'image-v2');
+    assert.equal(panel.state().resultHistory['shot-01'][0].image.assetId, 'image-v1');
+    assert.equal(panel.state().resultHistory['shot-01'][0].qcReview.verdict, 'pass');
+    assert.equal(panel.state().qc['shot-01'], undefined);
+});

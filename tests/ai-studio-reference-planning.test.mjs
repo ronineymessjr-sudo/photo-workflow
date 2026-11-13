@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 import { createDirectorPlan, createTemplatePlan } from '../api/director-plan.mjs';
-import { prepareReferenceContext } from '../api/ai-studio/reference-brief.mjs';
+import { deriveReferenceGuidance, prepareReferenceContext } from '../api/ai-studio/reference-brief.mjs';
 import { prepareCloudCandidateReferences, compileCloudCandidateRequest } from '../api/director-cloud-generation.mjs';
 import { searchStudio, createStudioProposal, confirmStudioProposal } from '../api/ai-studio/service.mjs';
 import { classifyPose } from '../api/ai-studio/pose-suitability.mjs';
@@ -74,7 +74,7 @@ test('automatic references choose varied natural poses and match the requested o
     assert.ok(poses.some(template => template.upstreamId === 'full_single_P021'));
     assert.equal(new Set(poses.map(template => classifyPose(template).poseFamily)).size, poses.length);
     assert.equal(context.templates.find(template => template.kind === 'costume')?.upstreamId, 'AUT-0118');
-    assert.equal(context.templates.find(template => template.kind === 'portrait')?.section, 'face');
+    assert.equal(context.templates.some(template => template.kind === 'portrait'), false);
 
     const plan = createTemplatePlan(input, context);
     assert.deepEqual([...new Set(plan.shotList.map(shot => shot.scene))], ['公园竹林小径', '湖边木栈道', '木亭长椅']);
@@ -109,6 +109,34 @@ test('automatic references choose varied natural poses and match the requested o
     assert.equal(compositionChange.angle, '平视');
     assert.equal(compositionChange.directorContract.camera_angle, '平视');
     assert.match(compositionChange.directorContract.generator_prompt, /35mm, 平视/);
+});
+
+test('wardrobe left for on-site confirmation does not select an arbitrary costume reference', async () => {
+    const source = sourceFixture();
+    const context = await prepareReferenceContext({
+        theme: '室内自然人像', modelDesc: '成年模特；外貌、服装由现场确认',
+        scene: '简洁室内自然光', people: '1', useReferenceLibrary: true, requireImageReferences: true,
+    }, { fetchImpl: source.fetchImpl });
+    assert.equal(context.templates.some(template => template.kind === 'costume'), false);
+    assert.equal(context.guidance.brief.includes('服装库'), false);
+});
+
+test('generic clothing detail from Director is converted to a portrait detail when outfit is unconfirmed', async () => {
+    const source = sourceFixture();
+    const plan = await createDirectorPlan({
+        theme: '室内自然人像', modelDesc: '成年模特；外貌、服装由现场确认',
+        scene: '简洁室内自然光', duration: '1小时', people: '1', useReferenceLibrary: true,
+    }, {
+        baseUrl: 'https://director.test', referenceFetchImpl: source.fetchImpl,
+        fetchImpl: async () => Response.json({ shot_plans: [{
+            shot_language: '道具互动镜头', model_pose: '模特自然站立并转向镜头。',
+            lens: '50mm', shot_size: 'CU', camera_angle: 'eye_level',
+        }] }),
+    });
+    assert.equal(plan.aiStudio.references.some(reference => reference.kind === 'costume'), false);
+    assert.doesNotMatch(plan.shotList[0].title, /人物与服装细节|服装细节/);
+    assert.doesNotMatch(plan.shotList[0].directorContract.model_pose, /服装库|AUT-|用户指定服装/);
+    assert.doesNotMatch(plan.shotList[0].directorContract.generator_prompt, /服装库|AUT-|用户指定服装/);
 });
 
 test('template plan aligns selected poses, close crops, and backlight instructions with each shot', async () => {
@@ -244,15 +272,14 @@ test('template plan and candidate compilation retain retrieved pose, processing 
         billing_mode: 'free-credit-first', brief: plan.shotList[0].description, reference_brief: input,
         reference_ids: plan.aiStudio.references.map(reference => reference.sourceItemId), shot_contract: plan.shotList[0].directorContract };
     const resolved = await prepareCloudCandidateReferences(request, { fetchImpl: source.fetchImpl });
-    assert.deepEqual(resolved.templates.map(template => template.kind), ['pose', 'costume', 'portrait']);
+    assert.deepEqual(resolved.templates.map(template => template.kind), ['pose', 'costume']);
     assert.equal(resolved.templates[0].upstreamId, 'full_single_P018');
-    assert.equal(resolved.templates[2].section, 'face');
     const compiled = compileCloudCandidateRequest(request, resolved);
     assert.equal(plan.director.source, 'template-library-plan');
     assert.match(compiled.prompt, /atlas-pose-full_single_p018/);
     assert.doesNotMatch(compiled.prompt, /atlas-pose-full_single_p015|atlas-pose-full_single_p017|atlas-pose-full_single_p021/);
+    assert.match(compiled.prompt, /双脚自然错开/);
     assert.match(compiled.prompt, /双手轻放腰侧/);
-    assert.match(compiled.prompt, /双脚稳定着地/);
     assert.match(compiled.prompt, /黑色长裤/);
     assert.match(compiled.prompt, /不交叉双腿/);
     assert.match(compiled.prompt, /feet parallel and hip-width apart/);
@@ -286,13 +313,14 @@ test('template plan and candidate compilation retain retrieved pose, processing 
     assert.equal(plan.shotList[2].directorContract.referenceIds[0], 'atlas-pose-full_single_p017');
     assert.equal(plan.shotList[3].directorContract.referenceIds[0], 'atlas-pose-full_single_p021');
     assert.equal(plan.aiStudio.references.filter(reference => reference.kind === 'costume').length, 1);
-    assert.equal(plan.aiStudio.references.filter(reference => reference.kind === 'portrait').length, 1);
+    assert.equal(plan.aiStudio.references.filter(reference => reference.kind === 'portrait').length, 0);
     assert.ok(['brown', 'knit'].every(tag => plan.aiStudio.references.find(reference => reference.kind === 'costume').tags.includes(tag)));
     const secondShotRequest = { ...request, brief: plan.shotList[1].description, shot_contract: plan.shotList[1].directorContract };
     const secondShotReferences = await prepareCloudCandidateReferences(secondShotRequest, { fetchImpl: source.fetchImpl });
     assert.equal(secondShotReferences.templates.find(template => template.kind === 'pose').id, 'atlas-pose-full_single_p015');
     assert.equal(resolved.templates.find(template => template.kind === 'costume').id, secondShotReferences.templates.find(template => template.kind === 'costume').id);
-    assert.equal(resolved.templates.find(template => template.kind === 'portrait').id, secondShotReferences.templates.find(template => template.kind === 'portrait').id);
+    assert.equal(resolved.templates.some(template => template.kind === 'portrait'), false);
+    assert.equal(secondShotReferences.templates.some(template => template.kind === 'portrait'), false);
     assert.ok(compiled.prompt.length <= 2048);
     await assert.rejects(prepareCloudCandidateReferences({ ...request, shot_contract: { ...request.shot_contract, referenceIds: ['atlas-pose-forged'] } }, { fetchImpl: source.fetchImpl }), /INVALID_REFERENCE_SELECTION|UNAVAILABLE_REFERENCE/);
     await assert.rejects(prepareCloudCandidateReferences(request, { fetchImpl: async () => { throw new Error('offline'); } }), /UNAVAILABLE_REFERENCE|REFERENCE_LIBRARY_UNAVAILABLE/);
@@ -373,7 +401,7 @@ test('real source IDs survive signed search, explicit proposal, and confirmation
     const commit = await confirmStudioProposal({ proposalToken: proposal.proposalToken, idempotencyKey: 'test-confirm-0001', uid: 'user-1', env });
     assert.equal(commit.references[0].licenseStatus, 'external-reference');
     assert.equal(commit.references[0].poseNumber, 'P021');
-    assert.match(commit.guidance.brief, /双脚稳定着地/);
+    assert.match(commit.guidance.brief, /轻触颈侧/);
     assert.equal(commit.conversation.length, 2);
     assert.equal(source.calls.length, 3);
 });
@@ -419,6 +447,51 @@ test('the integrated planning page passes reference selection through its normal
     assert.doesNotMatch(app, /checkbox\.checked = true/);
     assert.match(app, /PhotoAtelierWorkspaceSync\?\.sync/);
     assert.match(app, /sourceUpdatedAt|sync\.updatedAt/);
+});
+
+test('automatic references do not invent wardrobe or facial identity when the brief omits them', async () => {
+    const source = sourceFixture();
+    const context = await prepareReferenceContext({
+        ...ordinaryReferenceInput(), modelDesc: '一位成年人物，无助手',
+        scene: '安全的人行步道', extra: '所有镜头自然站姿，使用35mm。',
+    }, { fetchImpl: source.fetchImpl });
+    assert.ok(context.templates.some(template => template.kind === 'pose'));
+    assert.equal(context.templates.some(template => template.kind === 'costume'), false);
+    assert.equal(context.templates.some(template => template.kind === 'portrait'), false);
+    assert.doesNotMatch(context.guidance.brief, /AUT-0001|AUT-0006|AUT-0118|teststyle|shortface/);
+    assert.deepEqual(source.calls.length, 3);
+});
+
+test('reference UI explains that unselected wardrobe and styling assets are not auto-added', async () => {
+    const page = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+    assert.match(page, /自动推荐姿势；服装只按已填写的要求匹配/);
+    assert.match(page, /未选择的素材不会加入方案/);
+    assert.doesNotMatch(page, /检索姿态、衣装与妆发/);
+});
+
+test('explicit wardrobe reference is retained while an unrequested face reference stays out', async () => {
+    const source = sourceFixture();
+    const context = await prepareReferenceContext({
+        ...ordinaryReferenceInput(), modelDesc: '成年模特，棕色针织上衣',
+    }, { fetchImpl: source.fetchImpl });
+    assert.ok(context.templates.some(template => template.kind === 'costume'));
+    assert.equal(context.templates.some(template => template.kind === 'portrait'), false);
+});
+
+test('pose guidance gives distinct executable directions for distinct standing references', () => {
+    const templates = [
+        { id: 'P015', kind: 'pose', title: '站立・对立式平衡・手扶腰' },
+        { id: 'P017', kind: 'pose', title: '站立・回眸顾盼' },
+        { id: 'P018', kind: 'pose', title: '站立・双手扶腰' },
+        { id: 'P021', kind: 'pose', title: '站立・一手抚颈一手扶腿' },
+    ];
+    const guidance = deriveReferenceGuidance(templates);
+    const directions = guidance.suggestions.map(item => item.direction);
+    assert.equal(new Set(directions).size, 4);
+    assert.match(directions[0], /重心落在后脚/);
+    assert.match(directions[1], /轻轻回头/);
+    assert.match(directions[2], /双手轻放腰侧/);
+    assert.match(directions[3], /轻触颈侧/);
 });
 
 test('an unavailable saved intent provider asks for clarification and keeps deterministic search usable', async () => {

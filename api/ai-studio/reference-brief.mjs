@@ -11,7 +11,8 @@ export function isNaturalPoseRequested(value) {
 
 function outfitConstraints(input) {
     const text = [input.modelDesc, input.extra].filter(Boolean).join('；');
-    const segments = text.split(/[，,、；;。\n]+/).map(value => value.trim()).filter(Boolean);
+    const segments = text.split(/[，,、；;。\n]+/).map(value => value.trim()).filter(value => value
+        && !(/(?:服装|穿搭|穿着|衣着).{0,10}(?:现场确认|待确认|不指定|之后确定)|(?:现场确认|待确认|不指定|之后确定).{0,8}(?:服装|穿搭|穿着|衣着)/i.test(value)));
     const colors = [];
     const garments = new Set();
     const addColor = (id, values, primaryValues) => {
@@ -32,7 +33,8 @@ function outfitConstraints(input) {
         else if (/黑色|black/i.test(segment)) addColor('black', ['black', '黑色'], ['black']);
         else if (/白色|white/i.test(segment)) addColor('white', ['white', '白色', 'ivory'], ['white', 'ivory']);
     }
-    return { colors, garments: [...garments], text: segments.filter(segment => /衣服|穿着|穿搭|服装|上衣|上装|针织|毛衣|衬衫|裙|裤|靴|鞋|外套|coat|shirt|knit|skirt|pants|boots|jacket/i.test(segment)).join('，') };
+    const outfitText = segments.filter(segment => /衣服|穿着|穿搭|服装|上衣|上装|针织|毛衣|衬衫|裙|裤|靴|鞋|外套|coat|shirt|knit|skirt|pants|boots|jacket/i.test(segment)).join('，');
+    return { colors, garments: [...garments], text: outfitText, requested: Boolean(outfitText) };
 }
 
 function matchesOutfit(template, constraints) {
@@ -71,6 +73,7 @@ function searchMatchingCostume(registry, input, candidates, constraints, require
         if (!matchesOutfit(explicit, constraints)) throw Error('WARDROBE_REFERENCE_MISMATCH');
         return explicit;
     }
+    if (!constraints.requested) return undefined;
     const automatic = candidates.find(template => template.kind === 'costume' && (!requireImages || template.referenceImageUrl));
     if (!constraints.colors.length && !constraints.garments.length) return automatic;
     const query = constraints.garments.join(' ');
@@ -91,6 +94,14 @@ export function deriveReferenceGuidance(templates, input = {}) {
         if (template.kind === 'pose') {
             direction = /坐|seat|sitting/i.test(terms)
                 ? '在现有安全座面上坐稳，双脚有支撑，肩颈放松，先定住重心再微调手部与视线。无座面时改为自然站姿。'
+                : /回眸|顾盼|look.?back/i.test(terms)
+                    ? '身体保持稳定站姿，先将肩线转离镜头约三十度，再轻轻回头看向镜头侧后方；重心留在双脚，避免扭腰。'
+                    : /双手扶腰|both hands on hips/i.test(terms)
+                        ? '双脚自然错开，双手轻放腰侧、肘部放松；先拍正面，再微调身体朝向，不挺胸或过度撑肘。'
+                        : /抚颈.*扶腿|hand.*neck.*thigh/i.test(terms)
+                            ? '一手轻触颈侧、另一手自然落在大腿外侧；肩颈放松，手指不抓衣物，重心保持在支撑脚上。'
+                            : /对立式平衡|contrapposto/i.test(terms)
+                                ? '双脚前后错开半步，重心落在后脚；一手轻搭髋侧，另一手自然下垂，肩膀放松。'
                 : /举|伸展|stretch|raised/i.test(terms)
                     ? '双脚站稳，手臂缓慢抬起并保留关节弯曲，连续拍摄起势、停顿和回落，避免强迫拉伸。'
                     : /走|行|walk/i.test(terms)
@@ -104,8 +115,8 @@ export function deriveReferenceGuidance(templates, input = {}) {
             const angles = (template.angles || []).map(angle => angleNames[angle] || angle).join('、');
             if (angles) direction += `可参照原库的${angles}视角，实际机位服从用户限制。`;
         } else if (template.kind === 'costume') {
-            const wardrobe = String(input.modelDesc || '').trim();
-            direction = `${wardrobe ? `用户指定的完整穿搭为：${wardrobe}。` : ''}库图只辅助参考材质与色系；单品、颜色、裙长、鞋型和层次以用户文字为准，不替换、不增添。忽略参考图中未指定的包袋、首饰、帽子等配饰。`;
+            const wardrobe = outfitConstraints(input).text;
+            direction = `${wardrobe ? `用户指定的穿搭要求为：${wardrobe}。` : '用户尚未指定具体穿搭。'}库图只辅助参考材质与色系；单品、颜色、裙长、鞋型和层次以用户文字为准，不替换、不增添。忽略参考图中未指定的包袋、首饰、帽子等配饰。`;
         } else {
             direction = '仅提炼发型轮廓、发丝整理和妆容气质，保持实际模特的身份与外貌。先确认发长与可执行的妆发条件。';
         }
@@ -164,10 +175,10 @@ export async function prepareReferenceContext(input, options = {}) {
         })].slice(0, 4);
     const constraints = outfitConstraints(input);
     const costume = searchMatchingCostume(registry, input, [...templates, ...automatic], constraints, requireImages);
-    const portrait = templates.find(template => usable(template, 'portrait')) || automatic.find(template => usable(template, 'portrait'));
+    const portrait = templates.find(template => usable(template, 'portrait'));
     templates = [...poses, costume, portrait].filter(Boolean);
     if ((constraints.colors.length || constraints.garments.length) && !costume) throw new Error('WARDROBE_REFERENCE_MISMATCH');
-    if (!poses.length || !costume || !portrait) throw new Error(requireImages ? 'REFERENCE_IMAGES_REQUIRED' : 'REFERENCE_LIBRARY_UNAVAILABLE');
+    if (!poses.length) throw new Error(requireImages ? 'REFERENCE_IMAGES_REQUIRED' : 'REFERENCE_LIBRARY_UNAVAILABLE');
     return { templates, library, guidance: deriveReferenceGuidance(templates, input) };
 }
 

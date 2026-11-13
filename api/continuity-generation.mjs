@@ -165,19 +165,60 @@ export function stripBannedWords(text) {
 // The realism lock from the lab pack (PROMPTS-TEXTURE.md). Its three laws:
 // film stock beats any adjective, light must be uneven, the venue must be a
 // little dirty. Stated as physical constraints rather than adjectives.
-export function realismTextZh(film = 'Kodak Portra 400') {
-    return `真实感：这是一张真实拍摄的 ${film} 胶片照片，不是渲染图；胶片颗粒与高光过渡自然；光衰减真实，背光一侧真正暗下去，暗部不被提亮；场景有使用痕迹（磨损、水渍、灰尘），皮肤有毛孔与细小绒毛，不做磨皮、不像影棚布景。`;
+export function realismTextZh(film = '') {
+    const medium = film ? `按方案指定的 ${film} 成像。` : '颗粒与色彩服从本镜风格参考，不固定胶片模拟。';
+    return `真实摄影成像：${medium}高光自然过渡，阴影有方向但面部细节清楚；肤质自然，不重磨皮、不塑料、不夸张锐化；色彩、颗粒和场地整洁度服从摄影方案，不额外添加灰尘、水渍或磨损。`;
 }
 
 export function directionText({ prompt, locked, variant, poseRef, size }) {
     const framed = { ...variant, size: size || variant?.size };
-    const film = directive(locked?.filmStock) || directive(variant?.filmStock) || 'Kodak Portra 400';
+    const film = directive(locked?.filmStock) || directive(variant?.filmStock) || '';
     const fields = directionFields({ prompt, locked, variant: framed, poseRef, framing: framingZh(framed), film });
     const body = fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`).join('\n');
     // Stated as a rule rather than left implicit. Without it, a plan line like
     // "人物停在下一层内侧踏步" was read as two positions and produced the same
     // person twice in one frame - a real photograph that fails the shoot.
-    return `${body}\n${subjectRule(locked, prompt)}`;
+    return stripBannedWords(`${body}\n${subjectRule(locked, prompt)}`);
+}
+
+function modelScopeDirection({ modelId, prompt, locked, variant, poseRef, size }) {
+    if (modelId !== MODELSCOPE_TURBO_MODEL) {
+        return directionText({ prompt, locked, variant, poseRef, size });
+    }
+    const crop = directive(variant?.crop) || framingZh({ ...variant, size: size || variant?.size });
+    const fields = [
+        ['任务', '生成一张真实摄影成片，单张照片，不是拼图或插画。'],
+        ['人物身份', subjectDirectionForFrame(locked?.subject, { ...variant, size: size || variant?.size }) || directive(locked?.subject)],
+        ['场景', variant?.scene || locked?.location],
+        ['景别与画框边界', crop],
+        ['动作与构图', directive(variant?.mustShow) || directive(variant?.action) || directive(poseRef?.direction)],
+        ['机位', directive(variant?.camera)],
+        ['构图', directive(variant?.subjectPlacement)],
+        ['服装', directive(variant?.wardrobe) || directive(locked?.wardrobe)],
+        ['光线', resolveLighting(variant, locked)],
+        ['风格质感', directive(locked?.styleProfile) || realismTextZh()],
+        ['禁止出现', directive(variant?.rejectIf)],
+    ].filter(([, value]) => typeof value === 'string' && value.trim());
+    return fields.map(([key, value]) => `${key}：${value}`).join('\n');
+}
+
+function wardrobeDirectionForFrame(lockedWardrobe, variant) {
+    const crop = [variant?.crop, variant?.size, variant?.shotType]
+        .filter(value => typeof value === 'string').join(' ');
+    if (/(?:腰上|腰线|腰部以上|waist[- ]?up|above (?:the )?waist)/i.test(crop)) {
+        return '全组服装身份与款式保持原方案不变；本镜只呈现腰线上方服装，腰线以下服装仍按原方案锁定但完全处于画外。';
+    }
+    return directive(lockedWardrobe);
+}
+
+function subjectDirectionForFrame(subject, variant) {
+    const crop = [variant?.crop, variant?.size, variant?.shotType]
+        .filter(value => typeof value === 'string').join(' ');
+    if (!/(?:腰上|腰线|腰部以上|waist[- ]?up|above (?:the )?waist)/i.test(crop)) return directive(subject);
+    const visibleIdentity = String(subject || '').split(/[；;。]/)
+        .map(part => part.trim())
+        .filter(part => part && !/(?:裙|裤|靴|鞋|袜|下装|裙摆|skirt|pants|boots|shoes|trousers|lower body)/i.test(part));
+    return [...visibleIdentity, '人物数量、脸部身份、年龄与发型按参考锁定；腰线以下不在画面内。'].join('；');
 }
 
 // One field list shared by every adapter.
@@ -195,12 +236,18 @@ function directionFields({ prompt, locked, variant, poseRef, framing, film }) {
         // ordering that moved the result upward.
         ['framing', framing],
         ['prompt', poseInFrame(prompt, variant?.size)],
-        ['subject', locked?.subject],
-        ['wardrobeGroup', directive(locked?.wardrobe)],
+        ['priority', '人物身份、人数与关系、方案指定的场景、服装及道具是内容事实，不得改写。摄影层只调整景别、视角、机位、构图、摆姿、光线氛围与色彩；若冲突，保留内容事实并改用可兼容的摄影表达。'],
+        ['subject', subjectDirectionForFrame(locked?.subject, variant)],
+        ['wardrobeGroup', wardrobeDirectionForFrame(locked?.wardrobe, variant)],
         ['style', locked?.styleProfile],
         ['location', variant?.scene || locked?.location],
         ['weather', locked?.weather],
         ['timeOfDay', locked?.timeOfDay],
+        ['mood', directive(variant?.mood) || directive(locked?.mood)],
+        ['colorGrade', directive(variant?.colorGrade) || directive(locked?.colorGrade)],
+        ['continuityKeep', Array.isArray(locked?.mustKeep) ? locked.mustKeep.join('、') : ''],
+        ['shotKeep', Array.isArray(variant?.mustKeep) ? variant.mustKeep.filter(item => !locked?.mustKeep?.includes(item)).join('、') : ''],
+        ['avoid', Array.isArray(locked?.mustAvoid) ? locked.mustAvoid.join('、') : ''],
         // The realism lock runs right after the scene fields so the film stock
         // anchors every concrete description that follows it.
         ['realism', realismTextZh(film)],
@@ -214,12 +261,8 @@ function directionFields({ prompt, locked, variant, poseRef, framing, film }) {
         // structured kit entry matched by time of day, location and weather -
         // distilled from the lab briefs that were actually run. Without this,
         // unlit plans came back flat and evenly bright.
-        ['lighting', directive(variant?.lighting) || pickLightKit({
-            timeOfDay: locked?.timeOfDay || variant?.timeOfDay,
-            location: variant?.scene || locked?.location || variant?.location,
-            weather: locked?.weather || variant?.weather,
-            mood: locked?.mood,
-        }).light],
+        ['lighting', resolveLighting(variant, locked)],
+        ['faceExposure', '人物面部与眼睛细节清楚；暗部可以有层次，但不能吞没五官。'],
         ['wardrobeShot', directive(variant?.wardrobe)],
         ['props', directive(variant?.props)],
         // The plan's crop_boundary often describes a different framing than
@@ -232,10 +275,25 @@ function directionFields({ prompt, locked, variant, poseRef, framing, film }) {
     ].filter(([, value]) => typeof value === 'string' && value.trim());
 }
 
+function resolveLighting(variant = {}, locked = {}) {
+    const shotLight = directive(variant.lighting);
+    if (shotLight) return shotLight;
+    const globalLight = directive(locked.light);
+    if (globalLight && !/按现场可用光|待确认/.test(globalLight)) return globalLight;
+    return pickLightKit({
+        timeOfDay: locked.timeOfDay || variant.timeOfDay,
+        location: variant.scene || locked.location || variant.location,
+        weather: locked.weather || variant.weather,
+        mood: variant.mood || locked.mood,
+    }).light;
+}
+
 const FIELD_LABELS_ZH = {
     prompt: '画面', subject: '人物', wardrobeGroup: '全组服装', style: '风格',
+    priority: '内容与摄影分层规则', continuityKeep: '全组必须保持', shotKeep: '本镜必须保持', avoid: '全组不得出现',
     location: '场景', weather: '天气', timeOfDay: '时间', framing: '取景',
-    realism: '真实感',
+    mood: '氛围', colorGrade: '色彩倾向',
+    realism: '成像质感', faceExposure: '人物曝光',
     pose: '姿势', poseDirection: '摆姿指导', action: '动作', camera: '机位',
     lens: '焦段', placement: '构图位置', lighting: '光线', wardrobeShot: '服装',
     props: '道具', crop: '裁切', mustShow: '必须出现', rejectIf: '不得出现',
@@ -404,30 +462,50 @@ async function callSeedream({ env, prompt, size, seed, references, variant, pose
 // 30s, so the work is split: submit() returns a task id immediately, and a
 // separate poll() call collects the result. Each HTTP request then finishes in
 // a couple of seconds.
-export async function submitModelScope({ env, prompt, size, seed, references, variant, poseRef, anchor, locked, store = null, fetchImpl = fetch }) {
+export async function submitModelScope({ env, prompt, size, seed, references, variant, poseRef, anchor, locked, modelId = MODELSCOPE_MODEL, store = null, fetchImpl = fetch }) {
+    modelId = modelId || MODELSCOPE_MODEL;
+    if (!isModelScopeModelAllowed(modelId)) throw new GenerationError('GENERATION_MODEL_NOT_ALLOWED', '不支持的魔搭图像模型', 400);
     const token = env?.MODELSCOPE_TOKEN;
     if (!token) throw new GenerationError('GENERATION_NOT_CONFIGURED', '缺少魔搭 MODELSCOPE_TOKEN', 503, { missing: ['MODELSCOPE_TOKEN'] });
     const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
     const images = [];
+    const imageNotes = [];
     if (anchor?.assetId) {
         const stored = await readAsset(`/api/continuity/asset/${anchor.assetId}`, { env, store });
         if (!stored?.buffer?.length) throw new GenerationError('GENERATION_ANCHOR_MISSING', '已锁定的母图读不到', 409);
         images.push(dataUrlFor(stored.buffer, stored.mime));
+        imageNotes.push(`Image ${images.length} is the accepted frame; preserve its established look`);
     }
-    for (const reference of references) images.push(reference.dataUrl);
-    const fields = directionFields({ prompt, locked, variant, poseRef, framing: framingZh(variant) });
-    const direction = `${fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`).join('\n')}\n${subjectRule(locked, prompt)}`;
+    for (const reference of references) {
+        images.push(reference.dataUrl);
+        imageNotes.push(reference.role === 'identity'
+            ? `Image ${images.length} supplies face identity and hairstyle only; do not copy its clothing, shoulders, pose, lighting, background or crop`
+            : `Image ${images.length} is the ${reference.role} reference`);
+    }
+    let poseReferenceSent = false;
+    if (poseRef?.imageUrl) {
+        const poseImage = await fetchLibraryImage(poseRef.imageUrl, fetchImpl);
+        if (!poseImage) throw new GenerationError('GENERATION_REFERENCE_MISSING', '已选择的摆姿参考图无法读取；请重新选择后再生成', 409);
+        images.push(dataUrlFor(poseImage.bytes, poseImage.mime));
+        imageNotes.push(`Image ${images.length} is a PoseAtlas pose sketch: use only its body angle and pose, never its face, clothing or background`);
+        poseReferenceSent = true;
+    }
+    const direction = [
+        imageNotes.length ? `Reference roles: ${imageNotes.join('; ')}.` : '',
+        modelScopeDirection({ modelId, prompt, locked, variant, poseRef, size: variant?.size }),
+    ].filter(Boolean).join('\n');
 
     const response = await fetchImpl(MODELSCOPE_ENDPOINT, {
         method: 'POST',
         headers: { ...headers, 'X-ModelScope-Async-Mode': 'true' },
         body: JSON.stringify({
-            model: MODELSCOPE_MODEL,
+            model: modelId,
             prompt: direction,
+            size: size || modelScopeSizeForVariant(variant),
             ...(images.length ? { image_url: images } : {}),
             ...(Number.isSafeInteger(seed) ? { seed } : {}),
         }),
-        signal: AbortSignal.timeout(25000),
+        signal: AbortSignal.timeout(120000),
     });
     if (!response.ok) {
         const detail = await response.text().catch(() => '');
@@ -447,7 +525,7 @@ export async function submitModelScope({ env, prompt, size, seed, references, va
     const payload = await response.json().catch(() => null);
     const taskId = payload?.task_id || payload?.data?.task_id;
     if (!taskId) throw new GenerationError('GENERATION_INVALID_RESPONSE', '魔搭没有返回 task_id', 502);
-    return { taskId, prompt: direction, referencesSent: images.length };
+    return { taskId, prompt: direction, referencesSent: images.length, poseReferenceSent };
 }
 
 export async function pollModelScope({ env, taskId, fetchImpl = fetch }) {
@@ -457,14 +535,19 @@ export async function pollModelScope({ env, taskId, fetchImpl = fetch }) {
         headers: { Authorization: `Bearer ${token}`, 'X-ModelScope-Task-Type': 'image_generation' },
         signal: AbortSignal.timeout(20000),
     });
-    if (!response.ok) throw new GenerationError('GENERATION_UPSTREAM_FAILED', `魔搭查询返回 ${response.status}`, 502);
+    if (!response.ok) {
+        if (response.status === 429 || response.status >= 500) {
+            throw new GenerationError('GENERATION_POLL_RETRYABLE', `魔搭查询暂时返回 ${response.status}`, 503);
+        }
+        throw new GenerationError('GENERATION_UPSTREAM_FAILED', `魔搭查询返回 ${response.status}`, response.status, { retryable: false });
+    }
     const state = await response.json().catch(() => null);
     // ModelScope answers with "SUCCEED", not "SUCCEEDED". Matching only the
     // longer spelling meant a finished task read as pending forever, and the
     // caller timed out while the image sat on the server.
     const status = String(state?.task_status || '').toUpperCase();
     if (status === 'FAILED' || status === 'CANCELED' || status === 'CANCELLED') {
-        throw new GenerationError('GENERATION_UPSTREAM_FAILED', `魔搭任务失败：${String(state?.errors?.message || state?.message || '').slice(0, 200)}`, 502);
+        throw new GenerationError('GENERATION_UPSTREAM_FAILED', `魔搭任务失败：${String(state?.errors?.message || state?.message || '').slice(0, 200)}`, 502, { retryable: false });
     }
     if (status !== 'SUCCEED' && status !== 'SUCCEEDED' && status !== 'SUCCESS') {
         return { status: 'pending', upstream: status || 'PENDING' };
@@ -495,8 +578,23 @@ export async function pollModelScope({ env, taskId, fetchImpl = fetch }) {
 const MODELSCOPE_ENDPOINT = 'https://api-inference.modelscope.cn/v1/images/generations';
 const MODELSCOPE_TASK = 'https://api-inference.modelscope.cn/v1/tasks/';
 const MODELSCOPE_MODEL = 'Qwen/Qwen-Image-Edit-2511';
+const MODELSCOPE_TURBO_MODEL = 'Qwen/Qwen-Image-2.1-Turbo';
+const MODELSCOPE_MODELS = new Set([MODELSCOPE_MODEL, MODELSCOPE_TURBO_MODEL]);
+const MODELSCOPE_DEFAULT_SIZE = '1024x1536';
 
-async function callModelScope({ env, prompt, size, seed, references, variant, poseRef, anchor, locked, store = null, fetchImpl = fetch }) {
+export function isModelScopeModelAllowed(modelId) {
+    return modelId === undefined || modelId === null || modelId === '' || MODELSCOPE_MODELS.has(modelId);
+}
+
+function modelScopeSizeForVariant(variant) {
+    return /^(?:MS|中景|waist[- ]?up)$/i.test(String(variant?.size || '').trim())
+        ? '1024x1365'
+        : MODELSCOPE_DEFAULT_SIZE;
+}
+
+async function callModelScope({ env, prompt, size, seed, references, variant, poseRef, anchor, locked, modelId = MODELSCOPE_MODEL, store = null, fetchImpl = fetch }) {
+    modelId = modelId || MODELSCOPE_MODEL;
+    if (!isModelScopeModelAllowed(modelId)) throw new GenerationError('GENERATION_MODEL_NOT_ALLOWED', '不支持的魔搭图像模型', 400);
     const token = env?.MODELSCOPE_TOKEN;
     if (!token) {
         throw new GenerationError('GENERATION_NOT_CONFIGURED', '缺少魔搭 MODELSCOPE_TOKEN（实名后每日 2000 次免费）', 503, { missing: ['MODELSCOPE_TOKEN'] });
@@ -506,24 +604,30 @@ async function callModelScope({ env, prompt, size, seed, references, variant, po
     // Reference images, anchor first: this model conditions on them directly,
     // which is why it can hold a face where the Cloudflare brush cannot.
     const images = [];
+    const imageNotes = [];
     if (anchor?.assetId) {
         const stored = await readAsset(`/api/continuity/asset/${anchor.assetId}`, { env, store });
         if (!stored?.buffer?.length) throw new GenerationError('GENERATION_ANCHOR_MISSING', '已锁定的母图读不到；停止生成，不能退回无母图请求', 409);
         images.push(dataUrlFor(stored.buffer, stored.mime));
+        imageNotes.push(`Image ${images.length} is the accepted frame; preserve its established look`);
     }
     for (const reference of references) {
         images.push(reference.dataUrl);
+        imageNotes.push(reference.role === 'identity'
+            ? `Image ${images.length} supplies face identity and hairstyle only; do not copy its clothing, shoulders, pose, lighting, background or crop`
+            : `Image ${images.length} is the ${reference.role} reference`);
     }
 
-    const fields = directionFields({ prompt, locked, variant, poseRef, framing: framingZh(variant) });
-    const direction = `${fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`).join('\n')}\n${subjectRule(locked, prompt)}`;
+    const direction = [imageNotes.length ? `Reference roles: ${imageNotes.join('; ')}.` : '',
+        modelScopeDirection({ modelId, prompt, locked, variant, poseRef, size: variant?.size })].filter(Boolean).join('\n');
 
     const submit = await fetchImpl(MODELSCOPE_ENDPOINT, {
         method: 'POST',
         headers: { ...headers, 'X-ModelScope-Async-Mode': 'true' },
         body: JSON.stringify({
-            model: MODELSCOPE_MODEL,
+            model: modelId,
             prompt: direction,
+            size: size || modelScopeSizeForVariant(variant),
             ...(images.length ? { image_url: images } : {}),
             ...(Number.isSafeInteger(seed) ? { seed } : {}),
         }),
@@ -602,6 +706,13 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
         return text.length > max ? `${text.slice(0, max)}…` : text;
     };
     const directionZh = [
+        '内容事实和摄影表达分层：保持方案规定的人物身份、人数与关系、场景、服装和道具；摄影层只改变景别、机位、构图、摆姿、光线氛围与色彩，发生冲突时调整摄影表达，不改内容。',
+        Array.isArray(locked?.mustKeep) && locked.mustKeep.length ? `全组关系锁定：${clamp(locked.mustKeep.join('、'), 90)}` : '',
+        Array.isArray(locked?.mustAvoid) && locked.mustAvoid.length ? `全组禁止：${clamp(locked.mustAvoid.join('、'), 60)}` : '',
+        Array.isArray(variant?.mustKeep) && variant.mustKeep.length ? `本镜必须保留：${clamp(variant.mustKeep.filter(item => !locked?.mustKeep?.includes(item)).join('、'), 70)}` : '',
+        Array.isArray(variant?.mustAvoid) && variant.mustAvoid.length ? `本镜禁止：${clamp(variant.mustAvoid.join('、'), 60)}` : '',
+        Array.isArray(variant?.mustKeep) && variant.mustKeep.length ? `本镜必须保留：${clamp(variant.mustKeep.join('、'), 70)}` : '',
+        Array.isArray(variant?.mustAvoid) && variant.mustAvoid.length ? `本镜禁止：${clamp(variant.mustAvoid.join('、'), 60)}` : '',
         clamp(poseInFrame(prompt, variant?.size), 220),
         locked?.subject ? `人物范围：${clamp(locked.subject, 80)}` : '',
         poseRef ? `摆姿库约束：${[
@@ -612,8 +723,11 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
         variant?.scene ? `本镜场景：${clamp(variant.scene, 80)}` : '',
         locked?.wardrobe ? `全组服装保持：${clamp(locked.wardrobe, 80)}` : '',
         locked?.styleProfile ? `整体风格：${clamp(locked.styleProfile, 60)}` : '',
+        (variant?.mood || locked?.mood) ? `情绪氛围：${clamp(variant?.mood || locked.mood, 48)}` : '',
+        (variant?.colorGrade || locked?.colorGrade) ? `色彩倾向：${clamp(variant?.colorGrade || locked.colorGrade, 48)}` : '',
         locked?.weather ? `天气：${clamp(locked.weather, 24)}` : '',
         locked?.timeOfDay ? `时间：${clamp(locked.timeOfDay, 24)}` : '',
+        '人物曝光：面部与眼睛细节必须清楚，暗部不能吞没五官。',
         variant?.action ? `姿势与动作：${clamp(variant.action, 70)}` : '',
         directive(variant?.wardrobe) ? `本镜服装：${clamp(directive(variant.wardrobe), 70)}` : '',
         variant?.camera ? `机位：${clamp(variant.camera, 26)}` : '',
@@ -621,9 +735,7 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
         variant?.subjectPlacement ? `人物在画面中的位置：${clamp(variant.subjectPlacement, 40)}` : '',
         // The plan names the light. Not sending it is why frames came back with
         // generic studio lighting no matter what the shot called for.
-        directive(variant?.lighting) ? `现场光线：${clamp(directive(variant.lighting), 80)}` : (pickLightKit({
-            timeOfDay: locked?.timeOfDay, location: locked?.location, weather: locked?.weather,
-        }).light),
+        `现场光线：${clamp(resolveLighting(variant, locked), 80)}`,
         directive(variant?.wardrobe) ? `服装与妆发：${directive(variant.wardrobe)}` : '',
         directive(variant?.props) ? `道具：${directive(variant.props)}` : '画面不额外添加道具',
         // Crop is already expressed by the framing line, and "16mm f/8 1/1000s"
@@ -662,10 +774,9 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
     // longer prompts degrade rather than truncate cleanly. The version below runs
     // ~400 tokens so nothing important falls off the end.
     const composed = [
-        // Opens with the realism lock, never with "photorealistic" - that word is
-        // the first entry on the lab pack's banned list and pushes toward the
-        // flat-lit render look this pipeline existed to escape.
-        'Real photograph, real optical light falloff, the unlit side genuinely dark, venue shows wear, visible skin pores, no retouching. Follow the subject brief for who appears in the frame; do not add people.',
+        // Follow the chosen shoot's look instead of imposing one global film or
+        // gritty texture on every location. Keep facial information readable.
+        'Photographic texture: natural skin and highlight rolloff, directional but balanced shadows with facial details preserved; follow the specified style, lighting and location without forced film grain, grime, dust, water stains or wear. Follow the subject brief for who appears in the frame; do not add people.',
         anchorBuffer
             ? 'Image 1 is the accepted frame from this shoot. Preserve established identity and group-wide wardrobe continuity except where the current shot contract specifies a change. Follow that contract for pose, action, scene, lighting, camera and framing. Image 2 is the approved visual-style reference.'
             : 'Image 1 supplies the identity reference; Image 2 is the approved visual-style reference.',
@@ -713,10 +824,14 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
  * Generates exactly one shot. Never loops, never fans out: the caller decides
  * which shot to (re)make, which is what keeps retry scoped to a single frame.
  */
-export async function generateShot({ group, shotId, providerId = '', env = {}, fetchImpl = fetch, store = null, submitOnly = false, attempt = 0 } = {}) {
+export async function generateShot({ group, shotId, providerId = '', env = {}, fetchImpl = fetch, store = null, submitOnly = false, attempt = 0, modelId = MODELSCOPE_MODEL } = {}) {
     // Fall back to the provider pinned on the contract, so the shoot keeps using
     // the brush it was approved with.
     providerId = providerId || group?.imageProvider || '';
+    modelId = modelId || MODELSCOPE_MODEL;
+    if (providerId === 'modelscope-qwen-edit' && !isModelScopeModelAllowed(modelId)) {
+        throw new GenerationError('GENERATION_MODEL_NOT_ALLOWED', '不支持的魔搭图像模型', 400);
+    }
     if (!shotId) throw new ContinuityError('CONTINUITY_SHOT_REQUIRED', '需要镜头 ID', 400);
     if (!(group?.shots || []).some(shot => shot.shotId === shotId)) {
         throw new ContinuityError('CONTINUITY_SHOT_UNKNOWN', `没有这个镜头：${shotId}`, 404);
@@ -765,14 +880,16 @@ export async function generateShot({ group, shotId, providerId = '', env = {}, f
     // generation cannot be held open behind the Pages proxy (30s ceiling).
     if (submitOnly && providerId === 'modelscope-qwen-edit') {
         const submitted = await submitModelScope({
-            env, prompt: request.prompt, seed: request.seed, references,
+            env, prompt: request.prompt, size: modelScopeSizeForVariant(request.variant), seed: request.seed, references,
             variant: request.variant,
             poseRef: (group.shots || []).find(shot => shot.shotId === shotId)?.poseRef || null,
+            modelId,
             anchor: request.anchor, locked: request.locked, store, fetchImpl,
         });
         return {
             shotId, provider: providerId, status: 'pending', taskId: submitted.taskId,
             referencesSent: submitted.referencesSent, sentPrompt: submitted.prompt,
+            poseReferenceSent: submitted.poseReferenceSent,
             lockedHash: request.lockedHash, qc: { verdict: 'pending' },
         };
     }
@@ -788,6 +905,7 @@ export async function generateShot({ group, shotId, providerId = '', env = {}, f
         locked: request.locked,
         // The pose template the operator picked for THIS frame, if any.
         poseRef: (group.shots || []).find(shot => shot.shotId === shotId)?.poseRef || null,
+        modelId,
         // The accepted frame to edit from. Present from the second shot onward.
         anchor: request.anchor,
         store,

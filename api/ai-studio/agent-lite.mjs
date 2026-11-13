@@ -60,7 +60,7 @@ function chooseQuery(kind, prompt) {
           .join(" "),
         ...(has(prompt, /棕|brown|咖啡色/) ? { color: "brown" } : {}),
       };
-    return { query: "服装" };
+    return { query: "" };
   }
   if (/(?:霓虹|太空人|宇航员|火星)/.test(prompt))
     return { query: "霓虹色太空人" };

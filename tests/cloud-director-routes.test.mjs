@@ -8,10 +8,10 @@ import worker from '../api/index.js';
 test('production image generation has per-account and site-wide daily limits', async () => {
     const config = await readFile(new URL('../wrangler.toml', import.meta.url), 'utf8');
     const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
-    assert.match(config, /STUDIO_IMAGE_USER_LIMIT\s*=\s*"10"/);
+    assert.match(config, /STUDIO_IMAGE_USER_LIMIT\s*=\s*"50"/);
     assert.match(config, /STUDIO_IMAGE_GLOBAL_LIMIT\s*=\s*"50"/);
-    assert.match(html, /每个账号每天最多 10 张，全站每天最多 50 张/);
-    assert.match(html, /候选生图上限（每个账号 10 张）/);
+    assert.match(html, /每个账号每天最多 50 张，全站每天最多 50 张/);
+    assert.match(html, /候选生图上限（每个账号 50 张）/);
     assert.match(html, /候选图额度（全站 50 张）/);
 });
 
@@ -20,6 +20,24 @@ test('template fallback is visibly distinct from a real Director result', async 
     assert.match(html, /source === 'guest-rule-draft'/);
     assert.match(html, /以下不是模型生成结果/);
     assert.match(html, /模板草稿已保存（未连接 Director）/);
+});
+
+test('cloud Director rejects zero-person portrait briefs before calling the model', async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async () => { throw new Error('portrait model must not run for a zero-person brief'); };
+    try {
+        const secret = 'unit-test-secret';
+        const response = await worker.fetch(new Request('https://unit.test/api/director/plan', {
+            method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token('user-1', secret)}` },
+            body: JSON.stringify({ theme: '陶瓷杯静物产品图', people: '0' }),
+        }), { JWT_SECRET: secret, DIRECTOR_API_BASE: 'https://director.example.test' });
+        assert.equal(response.status, 400);
+        const body = await response.json();
+        assert.equal(body.code, 'PERSON_REQUIRED');
+        assert.match(body.error, /纯静物方案暂未支持/);
+    } finally {
+        globalThis.fetch = originalFetch;
+    }
 });
 
 test('guest multi-person plan uses interaction-led shots without assuming romance', () => {
@@ -110,6 +128,72 @@ test('continuity image generation blocks guests and applies the user and shared 
     assert.equal(aiCalls, 0);
 });
 
+test('continuity collect keeps an upstream task pending when polling has a transient network error', async () => {
+    const secret = 'unit-test-secret';
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async () => { throw new TypeError('fetch failed'); };
+    try {
+        const response = await worker.fetch(new Request('https://unit.test/api/continuity/collect', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token('user-1', secret)}`,
+            },
+            body: JSON.stringify({ taskId: 'still-running-task', shotId: 'shot-01' }),
+        }), { JWT_SECRET: secret, MODELSCOPE_TOKEN: 'test-only' });
+
+        assert.equal(response.status, 503);
+        assert.match(response.headers.get('content-type') || '', /application\/json/);
+        assert.deepEqual(await response.json(), {
+            status: 'pending', terminal: false, retryable: true, shotId: 'shot-01',
+            code: 'GENERATION_POLL_RETRYABLE',
+            error: '暂时无法查询魔搭任务，请稍后继续查询同一任务',
+        });
+    } finally {
+        globalThis.fetch = originalFetch;
+    }
+});
+
+test('continuity collect stops retrying a terminal task-not-found response', async () => {
+    const secret = 'unit-test-secret';
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async () => Response.json({ task_status: 'FAILED', errors: { message: 'task not found' } });
+    try {
+        const response = await worker.fetch(new Request('https://unit.test/api/continuity/collect', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token('user-1', secret)}` },
+            body: JSON.stringify({ taskId: 'missing-task', shotId: 'shot-01' }),
+        }), { JWT_SECRET: secret, MODELSCOPE_TOKEN: 'test-only' });
+        assert.equal(response.status, 502);
+        assert.deepEqual(await response.json(), {
+            status: 'failed', terminal: true, retryable: false, shotId: 'shot-01',
+            code: 'GENERATION_UPSTREAM_FAILED', error: '魔搭任务失败：task not found',
+        });
+    } finally {
+        globalThis.fetch = originalFetch;
+    }
+});
+
+test('continuity collect keeps a provider HTTP 503 pending and retryable', async () => {
+    const secret = 'unit-test-secret';
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async () => new Response('upstream unavailable', { status: 503 });
+    try {
+        const response = await worker.fetch(new Request('https://unit.test/api/continuity/collect', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token('user-1', secret)}` },
+            body: JSON.stringify({ taskId: 'still-running-task', shotId: 'shot-01' }),
+        }), { JWT_SECRET: secret, MODELSCOPE_TOKEN: 'test-only' });
+        assert.equal(response.status, 503);
+        assert.deepEqual(await response.json(), {
+            status: 'pending', terminal: false, retryable: true, shotId: 'shot-01',
+            code: 'GENERATION_POLL_RETRYABLE', error: '魔搭查询暂时返回 503',
+        });
+    } finally {
+        globalThis.fetch = originalFetch;
+    }
+});
+
 test('cloud plans stay text-only when the Cloudflare AI binding is unavailable', async () => {
     const originalFetch = globalThis.fetch;
     const secret = 'unit-test-secret';
@@ -129,12 +213,19 @@ test('cloud plans stay text-only when the Cloudflare AI binding is unavailable',
     }
 });
 
-test('the deployed site honors reference-library planning even when Director is configured', async () => {
+test('configured Director remains the plan generator when reference retrieval is enabled', async () => {
     const originalFetch = globalThis.fetch;
     const fetched = [];
-    globalThis.fetch = async url => {
+    let directorCalls = 0;
+    globalThis.fetch = async (url, init = {}) => {
         const target = String(url);
         fetched.push(target);
+        if (target.endsWith('/v1/photoatelier/shoot-plan')) {
+            directorCalls++;
+            const request = JSON.parse(init.body || '{}');
+            assert.match(request.brief, /atlas-pose-full_single_p015/);
+            return Response.json({ shot_plans: [{ shot_language: 'Director构思的环境人像', model_pose: '模特自然站立并观察街景', photographer_position: '距人物约4米平视' }] });
+        }
         if (target.endsWith('/data/poses.json')) return Response.json({ poses: [
             { id: 'full_single_P015', no: 'P015', category: '站姿', names: { zh: '手扶腰自然站姿' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P015_front.jpg' }] },
             { id: 'full_single_P016', no: 'P016', category: '站姿', names: { zh: '自然整理发丝' }, variants: [{ angle: 'front', thumb: 'thumbs/full_single_P016_front.jpg' }] },
@@ -147,7 +238,7 @@ test('the deployed site honors reference-library planning even when Director is 
         if (target.endsWith('/data/faces.json')) return Response.json({ images: [
             { id: 'test-face', thumb: 'portrait/thumbs/test-face.webp', sec: 'face', hair: 'medium', style: '自然人像参考' },
         ] });
-        throw new Error('Director must not replace a requested reference plan');
+        throw new Error(`Unexpected request: ${target}`);
     };
     try {
         const secret = 'unit-test-secret';
@@ -160,15 +251,17 @@ test('the deployed site honors reference-library planning even when Director is 
         }), { JWT_SECRET: secret, DIRECTOR_API_BASE: 'https://director.example.test' });
         const plan = await response.json();
         assert.equal(response.status, 200);
-        assert.equal(plan.director.source, 'template-library-plan');
-        assert.equal(fetched.length, 3);
-        assert.deepEqual([...new Set(plan.shotList.map(shot => shot.scene))], ['公园小径', '木亭长椅']);
+        assert.equal(plan.director.source, 'director-shoot-plan');
+        assert.equal(directorCalls, 1);
+        assert.equal(fetched.filter(url => url.includes('/data/')).length, 3);
+        assert.equal(plan.shotList[0].title, '人像拍摄镜头 1');
+        assert.equal(plan.aiStudio.references.some(reference => reference.kind === 'pose'), true);
     } finally {
         globalThis.fetch = originalFetch;
     }
 });
 
-test('site plan and multi-scene candidate generation keep face, outfit, and per-shot pose references aligned', async () => {
+test('site plan and multi-scene candidate generation keep selected outfit and per-shot pose references aligned without injecting face references', async () => {
     const originalFetch = globalThis.fetch;
     const requestPrompts = [];
     const imagePrompts = [];
@@ -209,7 +302,7 @@ test('site plan and multi-scene candidate generation keep face, outfit, and per-
         } }),
     };
     const env = {
-        JWT_SECRET: 'unit-test-secret', DIRECTOR_API_BASE: 'https://director.example.test', WORKSPACE_SYNC: workspace,
+        JWT_SECRET: 'unit-test-secret', WORKSPACE_SYNC: workspace,
         AI_STUDIO_QUOTA: { idFromName: value => value, get: () => ({ fetch: async () => Response.json({ allowed: true }) }) },
         AI: { async run(model, input) {
             if (model.includes('llama')) {
@@ -269,10 +362,10 @@ test('site plan and multi-scene candidate generation keep face, outfit, and per-
             const clothingDetail = /服装细节|衣料细节/.test(shot.directorContract.shot_language || '');
             const selectedPose = shot.directorContract.referenceIds[0];
             const expectedRefs = clothingDetail ? fixedRefs.filter(id => id.includes('costume'))
-                : [...(upperBodyCrop ? fixedRefs.filter(id => id.includes('portrait')) : fixedRefs), selectedPose].sort();
+                : [...(upperBodyCrop ? [] : fixedRefs), selectedPose].sort();
             assert.deepEqual(candidate.candidateAsset.referenceImages.map(reference => reference.sourceItemId).sort(), expectedRefs);
             assert.deepEqual(candidate.candidateAsset.referenceImages.map(reference => reference.kind), clothingDetail
-                ? ['costume'] : upperBodyCrop ? ['portrait', 'pose'] : ['portrait', 'pose', 'costume']);
+                ? ['costume'] : upperBodyCrop ? ['pose'] : ['pose', 'costume']);
             if (shot.directorContract.referenceIds.length) {
                 assert.ok(candidate.candidateAsset.referenceIds.includes(shot.directorContract.referenceIds[0]));
             }
@@ -290,7 +383,7 @@ test('site plan and multi-scene candidate generation keep face, outfit, and per-
             const shot = shots[index];
             const upperBodyCrop = /^(?:中景|近景|特写|局部特写|MS|MCU|CU|ECU)$/.test(shot.directorContract.shot_size || '');
             const clothingDetail = /服装细节|衣料细节/.test(shot.directorContract.shot_language || '');
-            return JSON.stringify(prompt.slots) === JSON.stringify(clothingDetail ? [true, false, false] : upperBodyCrop ? [true, true, false] : [true, true, true]);
+            return JSON.stringify(prompt.slots) === JSON.stringify(clothingDetail ? [true, false, false] : upperBodyCrop ? [true, false, false] : [true, true, false]);
         }));
         assert.ok(shots.every((shot, index) => !/服装细节|衣料细节/.test(shot.directorContract.shot_language || '')
             || (/input_image_0 is the selected clothing-detail reference/.test(imagePrompts[index].prompt)
@@ -300,7 +393,7 @@ test('site plan and multi-scene candidate generation keep face, outfit, and per-
                 && /do not show a floating garment/i.test(imagePrompts[index].prompt)
                 && !/face photograph|face reference|portrait reference|identity reference|PoseAtlas action reference/i.test(imagePrompts[index].prompt))));
         assert.ok(shots.every((shot, index) => /服装细节|衣料细节/.test(shot.directorContract.shot_language || '')
-            || (/input_image_1 is the selected PoseAtlas action reference/.test(imagePrompts[index].prompt)
+            || (/input_image_0 is the selected PoseAtlas action reference/.test(imagePrompts[index].prompt)
                 && /Use only its torso and limb positions\/body orientation as pose geometry/.test(imagePrompts[index].prompt)
                 && /do not render its line drawing, white background, joint marks, mannequin, or nudity/i.test(imagePrompts[index].prompt))));
         assert.ok(imagePrompts.every((prompt, index) => /服装细节|衣料细节/.test(shots[index].directorContract.shot_language || '')

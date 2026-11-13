@@ -78,23 +78,31 @@ test('continuity collect returns a stored image for a succeeded async task', asy
     }
 });
 
-test('continuity collect marks provider failures and HTTP errors as terminal and retryable', async () => {
+test('continuity collect separates terminal provider failures from transient poll errors', async () => {
     const originalFetch = globalThis.fetch;
     try {
         for (const [taskId, response] of [
             ['task-failed', Response.json({ task_status: 'FAILED', errors: { message: 'provider rejected task' } })],
             ['task-canceled', Response.json({ task_status: 'CANCELED' })],
-            ['task-http-error', new Response('upstream unavailable', { status: 503 })],
         ]) {
             globalThis.fetch = async () => response.clone();
             const { status, body } = await call('/api/continuity/collect', { taskId, shotId: 'shot-02' }, 'POST', { MODELSCOPE_TOKEN: 'test-only' });
             assert.equal(status, 502);
             assert.equal(body.status, 'failed');
             assert.equal(body.terminal, true);
-            assert.equal(body.retryable, true);
+            assert.equal(body.retryable, false);
             assert.equal(body.shotId, 'shot-02');
             assert.match(body.code, /^GENERATION_UPSTREAM_FAILED$/);
         }
+
+        globalThis.fetch = async () => new Response('upstream unavailable', { status: 503 });
+        const transient = await call('/api/continuity/collect', { taskId: 'task-http-error', shotId: 'shot-02' }, 'POST', { MODELSCOPE_TOKEN: 'test-only' });
+        assert.equal(transient.status, 503);
+        assert.equal(transient.body.status, 'pending');
+        assert.equal(transient.body.terminal, false);
+        assert.equal(transient.body.retryable, true);
+        assert.equal(transient.body.shotId, 'shot-02');
+        assert.equal(transient.body.code, 'GENERATION_POLL_RETRYABLE');
     } finally {
         globalThis.fetch = originalFetch;
     }

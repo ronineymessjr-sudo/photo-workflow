@@ -5,8 +5,8 @@ import vm from 'node:vm';
 
 const source = await readFile(new URL('../assets/plan-print-export.js', import.meta.url), 'utf8');
 
-function loadExporter(open = () => null) {
-    const window = { open };
+function loadExporter(open = () => null, document = null) {
+    const window = { open, document };
     vm.runInNewContext(source, { window, Date });
     return window.PhotoAtelierPrintExport;
 }
@@ -72,6 +72,38 @@ test('print view reports popup blocking and writes a complete document when avai
     };
     assert.equal(loadExporter(() => popup).open([plan]), true);
     assert.match(written, /双人城市纪实/);
+});
+
+test('print preview stays visible in the app when a browser popup is unavailable', () => {
+    const body = { children: [], append(node) { this.children.push(node); } };
+    const document = {
+        body,
+        createElement(tagName) {
+            return {
+                tagName, children: [], style: {}, attributes: {},
+                setAttribute(name, value) { this.attributes[name] = value; },
+                append(...nodes) { this.children.push(...nodes); },
+                addEventListener(name, listener) { this.listeners = { ...this.listeners, [name]: listener }; },
+                focus() {},
+                remove() { body.children = body.children.filter(node => node !== this); },
+            };
+        },
+        getElementById(id) { return body.children.find(node => node.id === id) || null; },
+    };
+    let printCalls = 0;
+    const exporter = loadExporter(() => null, document);
+    assert.equal(exporter.open([plan]), true);
+    const overlay = body.children[0];
+    const panel = overlay.children[0];
+    const [toolbar, frame] = panel.children;
+    assert.equal(overlay.attributes.role, 'dialog');
+    assert.equal(frame.title, '拍摄方案打印预览内容');
+    assert.match(frame.srcdoc, /双人城市纪实/);
+    frame.contentWindow = { focus() {}, print() { printCalls++; } };
+    toolbar.children[0].onclick();
+    assert.equal(printCalls, 1);
+    toolbar.children[2].onclick();
+    assert.equal(body.children.length, 0);
 });
 
 test('page routes its PDF buttons through the browser-native print renderer', async () => {

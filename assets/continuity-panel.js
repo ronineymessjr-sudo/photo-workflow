@@ -41,6 +41,59 @@ function load() {
 function save() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch { }
 }
+function archiveCurrentGroup() {
+    const groupId = state.group?.continuityGroupId;
+    if (!groupId) return;
+    state.groupArchives = {
+        ...(state.groupArchives || {}),
+        [groupId]: {
+            group: state.group, qc: state.qc || {}, results: state.results || {},
+            resultHistory: state.resultHistory || {}, thumbs: state.thumbs || {},
+            retryCounts: state.retryCounts || {}, generationErrors: state.generationErrors || {},
+        },
+    };
+}
+function activateGroup(group, { thumbs = {} } = {}) {
+    if (!group) return;
+    const currentId = state.group?.continuityGroupId;
+    const nextId = group.continuityGroupId;
+    if (currentId && currentId !== nextId) archiveCurrentGroup();
+    const archived = nextId ? state.groupArchives?.[nextId] : null;
+    state.group = group;
+    if (archived) {
+        state.qc = archived.qc;
+        state.results = archived.results;
+        state.resultHistory = archived.resultHistory;
+        state.thumbs = archived.thumbs;
+        state.retryCounts = archived.retryCounts;
+        state.generationErrors = archived.generationErrors;
+    } else if (currentId !== nextId) {
+        state.qc = group.qc || {};
+        state.results = {};
+        state.resultHistory = {};
+        state.thumbs = thumbs;
+        state.retryCounts = {};
+        state.generationErrors = {};
+    }
+    save();
+}
+function restoreGroup(groupId) {
+    const archived = state.groupArchives?.[groupId];
+    if (archived?.group) activateGroup(archived.group);
+    render();
+}
+function saveShotResult(shotId, result) {
+    const previous = state.results?.[shotId];
+    if (previous?.image?.assetId && previous.image.assetId !== result?.image?.assetId) {
+        const priorVersion = { ...previous, qcReview: state.qc?.[shotId] || null };
+        const history = (state.resultHistory?.[shotId] || []).filter(item => item.image?.assetId !== priorVersion.image.assetId);
+        state.resultHistory = { ...(state.resultHistory || {}), [shotId]: [priorVersion, ...history] };
+        const qc = { ...(state.qc || {}) };
+        delete qc[shotId];
+        state.qc = qc;
+    }
+    state.results = { ...(state.results || {}), [shotId]: result };
+}
 function el(tag, attrs = {}, children = []) {
     const node = document.createElement(tag);
     for (const [key, value] of Object.entries(attrs)) {
@@ -97,10 +150,7 @@ async function createNewGroup() {
     }
     const { ok, payload } = await api('/api/continuity/init', { input, shots });
     if (!ok) { toast(payload.error || '初始化失败', 'error'); return; }
-    state.group = payload.group;
-    state.qc = {};
-    state.generationErrors = {};
-    save();
+    activateGroup(payload.group);
     render();
     toast('已建立连续性分组，三张参考图待确认', 'ok');
 }
@@ -110,9 +160,9 @@ function importGroup(file) {
     reader.onload = () => {
         try {
             const parsed = JSON.parse(String(reader.result));
-            state.group = parsed.group || parsed;
-            state.qc = parsed.qc || {};
-            state.generationErrors = {};
+            const imported = parsed.group || parsed;
+            activateGroup(imported);
+            if (parsed.qc) state.qc = parsed.qc;
             save();
             render();
             toast('已导入分组契约', 'ok');
@@ -255,6 +305,14 @@ function renderShots() {
                         ? el('span', { class: 'badge confirmed', text: '当前锚点' })
                         : el('button', { class: 'ghost', text: '人工确认此图并作为后续镜头锚点', onclick: () => setAnchor(shot.shotId) }),
                 ]) : null,
+                ...(state.resultHistory?.[shot.shotId] || []).map((version, index) => {
+                    const thumb = safeThumbUrl(version.image?.path);
+                    return thumb ? el('div', { class: 'row' }, [
+                        el('img', { src: thumb, class: 'shot-thumb', alt: `${shot.shotId} 历史版本 ${index + 1}` }),
+                        el('span', { class: 'muted small', text: `保留的旧图 ${index + 1}${version.qcReview?.verdict ? ` · ${version.qcReview.verdict}` : ''}` }),
+                        el('button', { class: 'ghost', text: '用这张旧图作锚点', onclick: () => setAnchor(shot.shotId, version) }),
+                    ]) : null;
+                }),
             ]),
         ]));
     }
@@ -356,7 +414,7 @@ async function generateShot(shotId, retry = false) {
             toast('服务未返回与当前镜头对应的成图，已阻止标记成功。', 'error');
             return;
         }
-        state.results = { ...(state.results || {}), [shotId]: { ...completed, attempt } };
+        saveShotResult(shotId, { ...completed, attempt });
         output.textContent = JSON.stringify(completed, null, 2);
         save();
         render();
@@ -404,7 +462,7 @@ async function collectShot(shotId, { waitMs = 0, quiet = false } = {}) {
                 delete pendingJobs[shotId];
                 state.pendingJobs = pendingJobs;
                 const completed = { ...payload, ...(Number.isSafeInteger(payload.seed) || !Number.isSafeInteger(job.seed) ? {} : { seed: job.seed }), attempt: job.attempt };
-                state.results = { ...(state.results || {}), [shotId]: completed };
+                saveShotResult(shotId, completed);
                 save();
                 document.getElementById('request-output').textContent = JSON.stringify(completed, null, 2);
                 if (!quiet) toast(`${shotId} 已生成并待质检。`, 'ok');
@@ -422,8 +480,7 @@ async function collectShot(shotId, { waitMs = 0, quiet = false } = {}) {
     }
 }
 
-async function setAnchor(shotId) {
-    const result = state.results?.[shotId];
+async function setAnchor(shotId, result = state.results?.[shotId]) {
     if (!result?.image?.assetId || !result?.image?.path) {
         toast('先生成并检查这一镜，再设置锚点。', 'error');
         return;
@@ -597,6 +654,13 @@ function renderSummary() {
                 el('span', { class: `badge ${payload.readyToGenerate ? 'confirmed' : 'pending'}`, text: payload.readyToGenerate ? '可以生成' : '被门禁拦住' }),
             ]),
             el('p', { class: 'muted', text: payload.blockedReason || `镜头 ${payload.shots} 个，已通过质检 ${payload.qc.passed} 个` }),
+            ...Object.entries(state.groupArchives || {})
+                .filter(([id]) => id !== state.group?.continuityGroupId)
+                .map(([id, saved]) => el('button', {
+                    class: 'ghost',
+                    text: `恢复旧分组「${saved.group?.locked?.theme || saved.group?.locked?.location || id}」及原图`,
+                    onclick: () => restoreGroup(id),
+                })),
         );
     });
 }
@@ -636,13 +700,10 @@ async function importStudioPlanFromQuery() {
         guidance: plan.aiStudio.guidance || {},
     });
     if (!ok) { toast(payload.error || '方案导入连续性工作台失败', 'error'); return false; }
-    state.group = payload.group;
-    state.qc = {};
-    state.results = {};
-    state.thumbs = Object.fromEntries((payload.group.references || [])
+    const thumbs = Object.fromEntries((payload.group.references || [])
         .filter(reference => reference.referenceImageUrl)
         .map(reference => [reference.role, reference.referenceImageUrl]));
-    save();
+    activateGroup(payload.group, { thumbs });
     history.replaceState(null, '', location.pathname);
     render();
     const shots = payload.group.shots?.length || 0;
