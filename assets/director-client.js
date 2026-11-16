@@ -11,7 +11,7 @@
             if (!response.ok) throw new Error(data.error || '摄影 Agent 未连接');
             return data;
         }
-        return window.api.request('/api/director/plan', 'POST', input);
+        return window.api.request('/api/director/plan', 'POST', input, 65000);
     };
     window.generateDirectorCandidate = async function (input) {
         const local = ['127.0.0.1', 'localhost', '[::1]'].includes(location.hostname);

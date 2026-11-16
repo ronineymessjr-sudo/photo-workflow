@@ -108,14 +108,22 @@ function el(tag, attrs = {}, children = []) {
 }
 async function api(path, body, method = 'POST') {
     const token = localStorage.getItem('pw_token');
-    const requestUrl = ['/api/continuity/generate', '/api/continuity/collect'].includes(path)
-        ? `${CONTINUITY_WORKER_ORIGIN}${path}`
-        : path;
-    const response = await fetch(requestUrl, {
+    const isLocal = typeof location !== 'undefined' && ['127.0.0.1', 'localhost', '[::1]'].includes(location.hostname);
+    const directWorker = !isLocal && ['/api/continuity/generate', '/api/continuity/collect'].includes(path);
+    const requestUrl = directWorker ? `${CONTINUITY_WORKER_ORIGIN}${path}` : path;
+    const init = {
         method,
         headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: method === 'GET' ? undefined : JSON.stringify(body || {}),
-    });
+    };
+    let response;
+    try {
+        response = await fetch(requestUrl, init);
+    } catch (error) {
+        // *.workers.dev may be unreachable from mainland China without proxy; fall back to same-origin Pages proxy.
+        if (!directWorker) throw error;
+        response = await fetch(path, init);
+    }
     const payload = await response.json().catch(() => ({}));
     return { ok: response.ok, status: response.status, payload };
 }

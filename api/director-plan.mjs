@@ -19,6 +19,17 @@ const propMentionPatterns = [
 ];
 const lightingEquipmentPattern = /反光板|反光材料|补光板|补光灯|闪光灯|柔光箱|柔光屏|灯架|\breflector\b|\bsoftbox\b|\bfill light\b|\bflash\b|\bLED light\b/i;
 
+function suggestShotOptics(shot, description) {
+    const size = String(shot?.shot_size || '').toUpperCase();
+    const textAll = `${description || ''} ${shot?.shot_language || ''}`;
+    const isMoving = /行走|步行|迈步|走动|奔跑|转身|回眸|飘动|抓拍|walk|run|turn|move/i.test(textAll);
+    const aperture = ['ECU', 'CU', 'MCU'].includes(size) ? 'f/1.8–f/2.8（突出眼神与细节，虚化背景）'
+        : ['WS', 'EWS'].includes(size) ? 'f/5.6–f/8.0（交代环境空间与层次）'
+        : 'f/2.8–f/4.0（保证人物轮廓与服装质感锐利）';
+    const shutter = isMoving ? '1/500s 以上（凝固动态防拖影）' : '1/160s 以上（安全手持快门）';
+    return { aperture, shutter };
+}
+
 // Shared by the local bridge and the authenticated Worker route.
 export async function createDirectorPlan(input, { baseUrl, fetchImpl = fetch, referenceFetchImpl = fetch } = {}) {
     if (!baseUrl) throw new Error('DIRECTOR_NOT_CONFIGURED');
@@ -70,7 +81,7 @@ export async function createDirectorPlan(input, { baseUrl, fetchImpl = fetch, re
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ request_id: requestId, brief: compiledBrief, output_count: desiredShotCount }),
         signal: AbortSignal.timeout(60000),
-    });
+    }, referenceContext);
     if (!response.ok) throw new Error(`DIRECTOR_UPSTREAM_${response.status}`);
     const result = await response.json();
     if (!Array.isArray(result.shot_plans) || !result.shot_plans.length) throw new Error('DIRECTOR_INVALID_RESPONSE');
@@ -82,6 +93,7 @@ export async function createDirectorPlan(input, { baseUrl, fetchImpl = fetch, re
     // Do not duplicate shots to meet a target that the upstream cannot yet supply.
     const executionShots = [...uniqueShots.values()];
     const text = value => typeof value === 'string' ? value : '';
+    const sceneLocations = cleanInput.scene.split(/[;；\n]+/).map(value => value.trim()).filter(Boolean);
     const sceneScale = classifySceneScale(`${cleanInput.theme}\n${cleanInput.extra}`);
     const productActionCounts = new Map();
     const usedProductActions = new Set();
@@ -198,14 +210,26 @@ export async function createDirectorPlan(input, { baseUrl, fetchImpl = fetch, re
         const mustShow = safeRewrite ? safeMustShow : text(shot.must_show);
         const rejectIf = safeRewrite ? safeReject : text(shot.reject_if);
         const executionNote = safeRewrite ? safeExecutionNote : text(shot.execution_note);
+        const clothingDetail = /服装细节|衣料细节/.test(title);
+        const referencePoses = (referenceContext?.templates || []).filter(template => template.kind === 'pose');
+        const poseText = `${title} ${description}`;
+        const poseRef = clothingDetail || !referencePoses.length ? null : referencePoses.find(template => {
+            const hints = [template.title, template.description, ...(template.tags || []),
+                (referenceContext.guidance?.suggestions || []).find(item => item.sourceItemId === template.id)?.direction]
+                .filter(Boolean).join(' ');
+            const terms = ['回眸', '回望', '回头', '侧身', '行走', '步行', '迈步', '坐姿', '坐着', '靠墙', '扶腰', '腰侧', '触发丝', '整理头发'];
+            return terms.some(term => poseText.includes(term) && hints.includes(term));
+        }) || referencePoses[index % referencePoses.length];
+        const shotScene = sceneLocations[index % Math.max(1, sceneLocations.length)] || cleanInput.scene || '场地待确认';
         const directorContract = { ...shot, shot_language: title, model_pose: description,
+            referenceIds: poseRef ? [poseRef.id] : [],
             model_position: safeComposition, photographer_position: method, wardrobe_styling: wardrobe, shot_props: props,
             lighting_setup: lighting, generator_prompt: generatorPrompt,
             execution_note: executionNote, must_show: mustShow, reject_if: rejectIf,
             ...(safeRewrite ? { framing: safeFraming, crop_boundary: safeCrop,
-                generator_prompt: `${productSubject ? 'Editorial product photography with an adult model.' : 'Editorial portrait.'} ${safeFraming}. Action: ${description} Composition: ${safeComposition} Crop: ${safeCrop} User constraint: no unrequested props or object interactions.` } : {}) };
+                generator_prompt: `${productSubject ? 'Editorial product photography with an adult model.' : 'Editorial portrait.'} ${safeFraming}. Scene: ${shotScene}. Action: ${description} Composition: ${safeComposition} Crop: ${safeCrop} User constraint: no unrequested props or object interactions.` } : {}) };
         return {
-        id: `${requestId}-${index}`, scene: cleanInput.scene || '场地待确认',
+        id: `${requestId}-${index}`, scene: shotScene,
         description, shotSize: ({ECU:'局部特写',CU:'特写',MCU:'近景',MS:'中景',MFS:'中全景',FS:'全身',WS:'环境全景',EWS:'环境远景'})[shot.shot_size] || (safeRewrite ? sceneScale.shotSize : text(shot.framing) || sceneScale.shotSize),
         title,
         sourceShotIndex: shot.sourceIndex,
@@ -215,7 +239,7 @@ export async function createDirectorPlan(input, { baseUrl, fetchImpl = fetch, re
         mood: cleanInput.mood || '待确认', duration: 0,
         notes: `裁切：${cropBoundary}；必须呈现：${mustShow}；拒绝：${rejectIf}`,
         lightingSetup: lighting, priority: '待人工确认',
-        alternative: executionNote, camera: {},
+        alternative: executionNote, camera: suggestShotOptics(shot, description),
         // Scene-scale hints describe the overall request and may contain
         // multiple requested shot types. They must not overwrite this
         // specific shot's framing contract.

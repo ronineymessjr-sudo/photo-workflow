@@ -12,14 +12,14 @@ export class AiStudioQuota {
         const limit = Number(body?.limit);
         // 100 was the original ceiling; a test cycle needs more, and a limit that is
         // rejected here silently surfaces to the caller as "quota reached".
-        if (!['search', 'model', 'image', 'image-global'].includes(action) || !Number.isInteger(limit) || limit < 1 || limit > 5000) {
+        if (!['search', 'model', 'plan', 'image', 'image-global'].includes(action) || !Number.isInteger(limit) || limit < 1 || limit > 5000) {
             return Response.json({ error: 'INVALID_QUOTA_REQUEST' }, { status: 400 });
         }
 
         const allowed = await this.state.storage.transaction(async transaction => {
             const now = Date.now();
             const quota = await transaction.get('quota') || {};
-            if (action === 'model' || action === 'image' || action === 'image-global') {
+            if (action === 'model' || action === 'plan' || action === 'image' || action === 'image-global') {
                 const day = new Date(now).toISOString().slice(0, 10);
                 const prefix = action === 'image-global' ? 'imageGlobal' : action;
                 if (quota[`${prefix}Day`] !== day) { quota[`${prefix}Day`] = day; quota[`${prefix}Used`] = 0; }

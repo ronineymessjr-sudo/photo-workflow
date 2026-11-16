@@ -111,6 +111,15 @@ async function consumeModelQuota(env, uid) {
     return (await consumeQuota(env, `user:${uid}`, 'model', MODEL_DAILY_LIMIT)) === true;
 }
 
+export async function consumeStudioPlanQuota({ uid, env = {} }) {
+    if (!uid) return false;
+    const planLimit = Number(env.STUDIO_PLAN_USER_LIMIT) > 0 ? Number(env.STUDIO_PLAN_USER_LIMIT) : MODEL_DAILY_LIMIT;
+    const userAllowed = await consumeQuota(env, `user:${uid}`, 'plan', planLimit);
+    if (userAllowed !== true) return userAllowed;
+    const globalLimit = Number(env.STUDIO_PLAN_GLOBAL_LIMIT) > 0 ? Number(env.STUDIO_PLAN_GLOBAL_LIMIT) : 50;
+    return consumeQuota(env, 'global:cloud-plan', 'plan', globalLimit);
+}
+
 export async function searchStudio({ prompt, planId, expectedRevision, uid, env = {}, now = Date.now(), fetchImpl = fetch, intentProviderFactory }) {
     if (typeof prompt !== 'string' || !prompt.trim() || prompt.length > 1800) throw new AiStudioError('INVALID_PROMPT');
     const intent = parseServerIntent(prompt);

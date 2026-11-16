@@ -213,7 +213,155 @@ test('cloud plans stay text-only when the Cloudflare AI binding is unavailable',
     }
 });
 
-test('configured Director remains the plan generator when reference retrieval is enabled', async () => {
+test('authenticated plan requests use Workers AI and never return an unlabelled rule draft', async () => {
+    const secret = 'unit-test-secret';
+    const quotaActions = [];
+    let planCalls = 0;
+    const fields = ['镜头名称', '人物动作口令', '摄影师站位', '35mm', '人物位置', '服装与妆发', '现场光用法', '道具', '裁切范围', '必须看见', '废片判据', '替代做法', 'english 35mm portrait prompt', 'FS', 'eye_level'];
+    const rows = Array.from({ length: 9 }, (_, index) => {
+        const row = [...fields];
+        row[0] = `场景交代${index}`;
+        row[1] = `双脚站稳后轻转肩线${index}`;
+        row[2] = '距主体约3米，平视拍摄';
+        row[4] = '画面中心偏左';
+        row[5] = '按用户提供的服装';
+        row[6] = '利用现场柔和侧光';
+        row[7] = '无';
+        row[8] = '从头顶至脚下完整入画';
+        row[9] = '完整人物与自然表情';
+        row[10] = '动作僵硬或裁切脚部';
+        row[11] = '站立不适时改为自然坐姿';
+        row[12] = `full body portrait, natural standing pose ${index}, 35mm`;
+        return row;
+    });
+    const env = {
+        JWT_SECRET: secret,
+        AI_STUDIO_QUOTA: { idFromName: value => value, get: id => ({ fetch: async (input, init) => {
+            const request = input instanceof Request ? input : new Request(input, init);
+            const { action, limit } = await request.json();
+            quotaActions.push({ id, action, limit });
+            return Response.json({ allowed: true });
+        } }) },
+        AI: { run: async (_model, options) => {
+            if (options.response_format?.type === 'json_object') {
+                planCalls += 1;
+                return { response: JSON.stringify({ shots: rows }) };
+            }
+            return { response: JSON.stringify({ answers: {
+                brief_sufficient: { noul: 0.05 }, shot_sequence_quality: { score: 2, confidence: 0.9 },
+                execution_feasibility: { score: 2, confidence: 0.9 }, duplicate_risk: { noul: 0.05 },
+            } }) };
+        } },
+    };
+    const response = await worker.fetch(new Request('https://unit.test/api/director/plan', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token('user-1', secret)}` },
+        body: JSON.stringify({ theme: '自然人像', scene: '公园', modelDesc: '一位成年人', people: '1', duration: '1小时' }),
+    }), env);
+    const plan = await response.json();
+    assert.equal(response.status, 200, JSON.stringify(plan));
+    assert.equal(plan.director.source, 'cloudflare-workers-ai-plan');
+    assert.equal(plan.director.provider, 'cloudflare-workers-ai');
+    assert.equal(plan.shotList.length, 9);
+    assert.equal(planCalls, 1);
+    assert.deepEqual(quotaActions.map(item => item.action), ['plan', 'plan']);
+    assert.deepEqual(quotaActions.map(item => item.limit), [5, 50]);
+});
+
+test('Cloudflare Workers AI accepts parsed JSON object responses and performs quality repair retry', async () => {
+    const secret = 'unit-test-secret';
+    let planCalls = 0;
+    const validRows = Array.from({ length: 9 }, (_, index) => [
+        `自然林间镜头 ${index + 1}`, '模特自然站立看向左侧林荫', '距主体约3米，胸口高度平视', '50mm', '人物位于画面偏左',
+        '日常简约服装，自然妆发待确认', '树荫漫反射自然光', '无', '从头顶至脚下完整入画', '完整人物与自然表情',
+        '动作僵硬或裁切脚部', '站立不适时改为自然坐姿', `full body portrait, natural standing pose ${index}, 50mm`,
+        'FS', 'eye_level',
+    ]);
+    const brokenRows = validRows.map((row, idx) => idx === 0 ? row.map((v, i) => i === 7 ? '带一把透明雨伞' : v) : row);
+    const env = {
+        JWT_SECRET: secret,
+        AI_STUDIO_QUOTA: { idFromName: value => value, get: () => ({ fetch: async () => Response.json({ allowed: true }) }) },
+        AI: {
+            run: async (_model, options) => {
+                if (options.response_format?.type === 'json_object') {
+                    planCalls += 1;
+                    if (planCalls === 1) return { response: { shots: brokenRows } };
+                    const prior = JSON.parse(options.messages.find(m => m.role === 'assistant')?.content || '{}');
+                    assert.ok(Array.isArray(prior.shots), 'repair turn preserves compact shots array format');
+                    return { response: { shots: validRows } };
+                }
+                return { response: JSON.stringify({ answers: {
+                    brief_sufficient: { noul: 0.05 }, shot_sequence_quality: { score: 2, confidence: 0.9 },
+                    execution_feasibility: { score: 2, confidence: 0.9 }, duplicate_risk: { noul: 0.05 },
+                } }) };
+            },
+        },
+    };
+    const response = await worker.fetch(new Request('https://unit.test/api/director/plan', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token('user-1', secret)}` },
+        body: JSON.stringify({ theme: '自然人像', scene: '公园', modelDesc: '一位成年人', people: '1', duration: '1小时', extra: '不新增道具' }),
+    }), env);
+    const plan = await response.json();
+    assert.equal(response.status, 200, JSON.stringify(plan));
+    assert.equal(planCalls, 2);
+    assert.equal(plan.director.qualityRepairAttempted, true);
+    assert.equal(plan.shotList[0].camera.aperture, 'f/2.8–f/4.0（保证人物轮廓与服装质感锐利）');
+});
+
+test('authenticated plan request fails clearly instead of returning a rule draft when no model binding exists', async () => {
+    const secret = 'unit-test-secret';
+    const response = await worker.fetch(new Request('https://unit.test/api/director/plan', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token('user-1', secret)}` },
+        body: JSON.stringify({ theme: '自然人像', modelDesc: '一位成年人' }),
+    }), { JWT_SECRET: secret });
+    assert.equal(response.status, 503);
+    assert.deepEqual(await response.json(), {
+        error: '摄影方案 AI 当前未连接，请稍后重试或在设置中接入自己的 AI。', code: 'PLAN_PROVIDER_NOT_CONFIGURED',
+    });
+});
+
+test('server model plan generation fails closed when its per-user or global quota is unavailable', async () => {
+    const secret = 'unit-test-secret';
+    let aiCalls = 0;
+    const request = () => new Request('https://unit.test/api/director/plan', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token('user-1', secret)}` },
+        body: JSON.stringify({ theme: '自然人像', modelDesc: '一位成年人' }),
+    });
+    const ai = { run: async () => { aiCalls += 1; return {}; } };
+    const noQuota = await worker.fetch(request(), { JWT_SECRET: secret, AI: ai });
+    assert.equal(noQuota.status, 503);
+    assert.equal((await noQuota.json()).code, 'AI_PLAN_QUOTA_NOT_CONFIGURED');
+    const limited = await worker.fetch(request(), { JWT_SECRET: secret, AI: ai, AI_STUDIO_QUOTA: {
+        idFromName: value => value, get: () => ({ fetch: async (input, init) => {
+            const quotaRequest = input instanceof Request ? input : new Request(input, init);
+            const { action } = await quotaRequest.json();
+            return Response.json({ allowed: action !== 'plan' });
+        } }),
+    } });
+    assert.equal(limited.status, 429);
+    assert.equal((await limited.json()).code, 'AI_PLAN_DAILY_LIMIT_REACHED');
+    assert.equal(aiCalls, 0);
+});
+
+test('unauthenticated plan request returns 401 SIGN_IN_REQUIRED instead of claiming quota is exhausted', async () => {
+    const secret = 'unit-test-secret';
+    let aiCalls = 0;
+    const anonymousDirector = await worker.fetch(new Request('https://unit.test/api/director/plan', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ theme: '自然人像', modelDesc: '一位成年人' }),
+    }), { JWT_SECRET: secret, AI: { run: async () => { aiCalls++; return {}; } } });
+    assert.equal(anonymousDirector.status, 401);
+    assert.equal((await anonymousDirector.json()).error, 'SIGN_IN_REQUIRED');
+
+    const anonymousAi = await worker.fetch(new Request('https://unit.test/api/ai/plan', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ provider: 'cloudflare-workers-ai', model: '@cf/meta/llama-3.3-70b-instruct-fp8-fast', input: { theme: '自然人像' } }),
+    }), { JWT_SECRET: secret, AI: { run: async () => { aiCalls++; return {}; } } });
+    assert.equal(anonymousAi.status, 401);
+    assert.equal((await anonymousAi.json()).error, 'SIGN_IN_REQUIRED');
+    assert.equal(aiCalls, 0);
+});
+
+test('the deployed site honors reference-library planning even when Director is configured', async () => {
     const originalFetch = globalThis.fetch;
     const fetched = [];
     let directorCalls = 0;
@@ -306,6 +454,19 @@ test('site plan and multi-scene candidate generation keep selected outfit and pe
         AI_STUDIO_QUOTA: { idFromName: value => value, get: () => ({ fetch: async () => Response.json({ allowed: true }) }) },
         AI: { async run(model, input) {
             if (model.includes('llama')) {
+                if (input.response_format?.type === 'json_object') {
+                    const fields = ['镜头名', '双脚站稳，手臂自然下垂，视线轻转。', '距主体约3米，平视拍摄', '35mm', '画面中心偏左',
+                        '成年女性模特，米白色针织上衣、卡其色半身裙、棕色短靴；自然妆发', '利用现场柔和侧光', '无', '按景别完整裁切', '人物与指定场景',
+                        '动作僵硬或裁切错误', '不适用时改为自然站姿', 'full body natural portrait, 35mm', 'FS', 'eye_level'];
+                    const rows = Array.from({ length: 12 }, (_, index) => {
+                        const row = [...fields];
+                        row[0] = index === 11 ? '服装细节' : `自然人像镜头${index + 1}`;
+                        row[12] = index === 11 ? 'Close-up wardrobe detail, worn on model, knit fabric texture, 35mm' : `Full body natural standing portrait ${index + 1}, 35mm`;
+                        row[13] = index === 11 ? 'CU' : index < 4 ? 'WS' : 'FS';
+                        return row;
+                    });
+                    return { response: JSON.stringify({ shots: rows }) };
+                }
                 if (input.response_format?.json_schema) return { response: JSON.stringify({ answers: {
                     brief_sufficient: { noul: 0.05 }, shot_sequence_quality: { score: 2, confidence: 0.9 },
                     execution_feasibility: { score: 2, confidence: 0.9 }, duplicate_risk: { noul: 0.05 },
@@ -335,7 +496,7 @@ test('site plan and multi-scene candidate generation keep selected outfit and pe
         }), env);
         assert.equal(planResponse.status, 200);
         const plan = await planResponse.json();
-        assert.equal(plan.director.source, 'template-library-plan');
+        assert.equal(plan.director.source, 'cloudflare-workers-ai-plan');
         assert.equal(plan.director.imageGenerationConnected, true);
         const fixedRefs = plan.aiStudio.references.filter(reference => reference.kind !== 'pose').map(reference => reference.sourceItemId).sort();
         const shots = plan.shotList;
@@ -422,9 +583,10 @@ test('an unavailable reference library returns a recoverable planning error', as
         const response = await worker.fetch(new Request('https://unit.test/api/director/plan', {
             method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token('user-1', 'unit-test-secret')}` },
             body: JSON.stringify({ theme: '自然人像', useReferenceLibrary: true }),
-        }), { JWT_SECRET: 'unit-test-secret' });
+        }), { JWT_SECRET: 'unit-test-secret', AI: { run: async () => { assert.fail('reference failure must happen before model call'); } },
+            AI_STUDIO_QUOTA: { idFromName: value => value, get: () => ({ fetch: async () => Response.json({ allowed: true }) }) } });
         assert.equal(response.status, 503);
-        assert.equal((await response.json()).error, 'REFERENCE_IMAGES_REQUIRED');
+        assert.equal((await response.json()).code, 'REFERENCE_IMAGES_REQUIRED');
         assert.equal(response.headers.get('Cache-Control'), 'no-store');
     } finally {
         globalThis.fetch = originalFetch;
