@@ -93,11 +93,12 @@ function classifyEvaluationFailure(error) {
     return 'evaluation_failed';
 }
 
-export async function evaluateJevPlan(plan, env, { now = new Date().toISOString() } = {}) {
+export async function evaluateJevPlan(plan, env, { now = new Date().toISOString(), timeoutMs = 10000 } = {}) {
     if (!env || !env.AI || typeof env.AI.run !== 'function') return { version: REVIEW_VERSION, status: 'unavailable', reason: 'ai_binding_not_configured', evaluatedAt: now };
+    let timer;
     try {
         const questions = buildJevQuestions(plan);
-        const response = await env.AI.run(REVIEW_MODEL, {
+        const aiCall = env.AI.run(REVIEW_MODEL, {
             messages: [
                 { role: 'system', content: 'Evaluate a photography plan. For noul questions, return the probability from 0 to 1 that the statement is true. For score questions, use the supplied 0 to 2 rubric and return confidence from 0 to 1. Return only the requested JSON.' },
                 { role: 'user', content: JSON.stringify({ state: buildJevState(plan), questions }) },
@@ -106,10 +107,20 @@ export async function evaluateJevPlan(plan, env, { now = new Date().toISOString(
             temperature: 0,
             max_tokens: 500,
         });
+        const response = timeoutMs > 0
+            ? await Promise.race([
+                aiCall,
+                new Promise((_, reject) => {
+                    timer = setTimeout(() => reject(new Error('review timed out')), timeoutMs);
+                }),
+            ])
+            : await aiCall;
+        clearTimeout(timer);
         const answers = readAnswers(response);
         if (!hasValidAnswers(questions, answers)) return { version: REVIEW_VERSION, status: 'unavailable', reason: 'invalid_response', evaluatedAt: now };
         return { version: REVIEW_VERSION, status: 'ok', model: REVIEW_MODEL, answers, ...verdict(answers), evaluatedAt: now };
     } catch (error) {
+        clearTimeout(timer);
         console.error('Plan review failed', { name: error && error.name, message: error && error.message });
         return { version: REVIEW_VERSION, status: 'unavailable', reason: classifyEvaluationFailure(error), evaluatedAt: now };
     }

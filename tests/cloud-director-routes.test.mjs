@@ -453,7 +453,7 @@ test('site plan and multi-scene candidate generation keep selected outfit and pe
         JWT_SECRET: 'unit-test-secret', WORKSPACE_SYNC: workspace,
         AI_STUDIO_QUOTA: { idFromName: value => value, get: () => ({ fetch: async () => Response.json({ allowed: true }) }) },
         AI: { async run(model, input) {
-            if (model.includes('llama')) {
+            if (model.includes('llama') || model.includes('qwen')) {
                 if (input.response_format?.type === 'json_object') {
                     const fields = ['镜头名', '双脚站稳，手臂自然下垂，视线轻转。', '距主体约3米，平视拍摄', '35mm', '画面中心偏左',
                         '成年女性模特，米白色针织上衣、卡其色半身裙、棕色短靴；自然妆发', '利用现场柔和侧光', '无', '按景别完整裁切', '人物与指定场景',
