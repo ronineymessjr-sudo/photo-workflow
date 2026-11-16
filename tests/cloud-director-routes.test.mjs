@@ -267,6 +267,46 @@ test('authenticated plan requests use Workers AI and never return an unlabelled 
     assert.deepEqual(quotaActions.map(item => item.limit), [5, 50]);
 });
 
+test('Cloudflare Workers AI accepts parsed JSON object responses and performs quality repair retry', async () => {
+    const secret = 'unit-test-secret';
+    let planCalls = 0;
+    const validRows = Array.from({ length: 9 }, (_, index) => [
+        `自然林间镜头 ${index + 1}`, '模特自然站立看向左侧林荫', '距主体约3米，胸口高度平视', '50mm', '人物位于画面偏左',
+        '日常简约服装，自然妆发待确认', '树荫漫反射自然光', '无', '从头顶至脚下完整入画', '完整人物与自然表情',
+        '动作僵硬或裁切脚部', '站立不适时改为自然坐姿', `full body portrait, natural standing pose ${index}, 50mm`,
+        'FS', 'eye_level',
+    ]);
+    const brokenRows = validRows.map((row, idx) => idx === 0 ? row.map((v, i) => i === 7 ? '带一把透明雨伞' : v) : row);
+    const env = {
+        JWT_SECRET: secret,
+        AI_STUDIO_QUOTA: { idFromName: value => value, get: () => ({ fetch: async () => Response.json({ allowed: true }) }) },
+        AI: {
+            run: async (_model, options) => {
+                if (options.response_format?.type === 'json_object') {
+                    planCalls += 1;
+                    if (planCalls === 1) return { response: { shots: brokenRows } };
+                    const prior = JSON.parse(options.messages.find(m => m.role === 'assistant')?.content || '{}');
+                    assert.ok(Array.isArray(prior.shots), 'repair turn preserves compact shots array format');
+                    return { response: { shots: validRows } };
+                }
+                return { response: JSON.stringify({ answers: {
+                    brief_sufficient: { noul: 0.05 }, shot_sequence_quality: { score: 2, confidence: 0.9 },
+                    execution_feasibility: { score: 2, confidence: 0.9 }, duplicate_risk: { noul: 0.05 },
+                } }) };
+            },
+        },
+    };
+    const response = await worker.fetch(new Request('https://unit.test/api/director/plan', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token('user-1', secret)}` },
+        body: JSON.stringify({ theme: '自然人像', scene: '公园', modelDesc: '一位成年人', people: '1', duration: '1小时', extra: '不新增道具' }),
+    }), env);
+    const plan = await response.json();
+    assert.equal(response.status, 200, JSON.stringify(plan));
+    assert.equal(planCalls, 2);
+    assert.equal(plan.director.qualityRepairAttempted, true);
+    assert.equal(plan.shotList[0].camera.aperture, 'f/2.8–f/4.0（保证人物轮廓与服装质感锐利）');
+});
+
 test('authenticated plan request fails clearly instead of returning a rule draft when no model binding exists', async () => {
     const secret = 'unit-test-secret';
     const response = await worker.fetch(new Request('https://unit.test/api/director/plan', {
