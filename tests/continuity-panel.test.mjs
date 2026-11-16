@@ -151,6 +151,46 @@ test('accepted async retry keeps its seed through collect and the saved result',
     assert.equal(panel.state().results['shot-01'].seed, 428501);
 });
 
+test('local origin routes continuity requests directly to local server without prefixing remote worker origin', async () => {
+    const requests = [];
+    const panel = createPanel({
+        initialState: { group: { shots: [{ shotId: 'shot-local' }] }, retryCounts: { 'shot-local': 0 } },
+        fetchImpl: async (path, init) => {
+            requests.push({ path, body: JSON.parse(init.body || '{}') });
+            if (path === '/api/continuity/requests') return jsonResponse(200, { requests: [{ shotId: 'shot-local', seed: 100 }] });
+            if (path === '/api/continuity/generate') return jsonResponse(202, { status: 'pending', taskId: 'task-local' });
+            return jsonResponse(200, { status: 'succeeded', shotId: 'shot-local' });
+        },
+    });
+    panel.context.location = { origin: 'http://127.0.0.1:8134', hostname: '127.0.0.1' };
+    panel.context.collectShot = async () => null;
+
+    await panel.context.generateShot('shot-local', true);
+    assert.equal(requests[1].path, '/api/continuity/generate');
+});
+
+test('falls back to same-origin Pages proxy when direct workers.dev origin fails network request', async () => {
+    const requests = [];
+    const panel = createPanel({
+        initialState: { group: { shots: [{ shotId: 'shot-fb' }] }, retryCounts: { 'shot-fb': 0 } },
+        fetchImpl: async (path, init) => {
+            requests.push(path);
+            if (path === '/api/continuity/requests') return jsonResponse(200, { requests: [{ shotId: 'shot-fb', seed: 101 }] });
+            if (String(path).startsWith('https://photoatelier-api.photomagic.workers.dev')) throw new TypeError('Failed to fetch');
+            if (path === '/api/continuity/generate') return jsonResponse(202, { status: 'pending', taskId: 'task-fb' });
+            return jsonResponse(200, { status: 'succeeded', shotId: 'shot-fb' });
+        },
+    });
+    panel.context.collectShot = async () => null;
+
+    await panel.context.generateShot('shot-fb', true);
+    assert.deepEqual(requests, [
+        '/api/continuity/requests',
+        'https://photoatelier-api.photomagic.workers.dev/api/continuity/generate',
+        '/api/continuity/generate',
+    ]);
+});
+
 test('switching plans archives and restores the prior group with its original images', () => {
     const original = {
         continuityGroupId: 'shoot-original', locked: { theme: '原方案' },

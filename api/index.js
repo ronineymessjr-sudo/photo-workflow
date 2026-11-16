@@ -497,10 +497,13 @@ export default {
             }
             else if (path === '/api/ai/plan' && method === 'POST') {
                 if (body?.provider === 'cloudflare-workers-ai') {
-                    const allowed = await consumeStudioPlanQuota({ uid, env });
-                    if (allowed === null) result = { status: 503, body: { error: '方案生成额度服务暂不可用，请稍后重试。', code: 'AI_PLAN_QUOTA_NOT_CONFIGURED' } };
-                    else if (!allowed) result = { status: 429, body: { error: '今日方案生成额度已用完，请明天再试。', code: 'AI_PLAN_DAILY_LIMIT_REACHED' } };
-                    else result = await handleAiPlan(body, env);
+                    if (!uid) result = { status: 401, body: { error: '请先登录后再生成摄影方案', code: 'SIGN_IN_REQUIRED' } };
+                    else {
+                        const allowed = await consumeStudioPlanQuota({ uid, env });
+                        if (allowed === null) result = { status: 503, body: { error: '方案生成额度服务暂不可用，请稍后重试。', code: 'AI_PLAN_QUOTA_NOT_CONFIGURED' } };
+                        else if (!allowed) result = { status: 429, body: { error: '今日方案生成额度已用完，请明天再试。', code: 'AI_PLAN_DAILY_LIMIT_REACHED' } };
+                        else result = await handleAiPlan(body, env);
+                    }
                 } else result = await handleAiPlan(body, env);
                 if (result.status === 200) {
                     result.body.director = { ...result.body.director,
@@ -751,7 +754,8 @@ export default {
             // Auth
             else if (path === '/api/director/plan' && method === 'POST') {
                 let plan;
-                if (!env.DIRECTOR_API_BASE || !env.DIRECTOR_API_BASE.startsWith('https://')) {
+                if (!uid) result = { status: 401, body: { error: '请先登录后再生成摄影方案', code: 'SIGN_IN_REQUIRED' } };
+                else if (!env.DIRECTOR_API_BASE || !env.DIRECTOR_API_BASE.startsWith('https://')) {
                     if (!env.AI || typeof env.AI.run !== 'function') result = { status: 503, body: { error: '摄影方案 AI 当前未连接，请稍后重试或在设置中接入自己的 AI。', code: 'PLAN_PROVIDER_NOT_CONFIGURED' } };
                     else {
                         const allowed = await consumeStudioPlanQuota({ uid, env });

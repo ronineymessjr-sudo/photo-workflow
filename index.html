@@ -3912,6 +3912,7 @@
 <script src="assets/account-storage.js"></script>
 <script src="assets/workflow-activity.js"></script>
 <script src="assets/director-client.js"></script>
+<script src="assets/shoot-mode.js"></script>
 <script>
 // i18n System
 const i18n = {
@@ -6205,6 +6206,7 @@ function renderShotInstructions(shot, showResources = true) {
         ['拍什么', shot.title || shot.scene], ['人物怎么做', shot.description],
         ['摄影师站哪里', shot.method], ['人物放在哪里', shot.composition],
         ['景别与焦段', [shot.shotSize, shot.focalLength].filter(Boolean).join(' · ')],
+        ['光圈与快门建议', [shot.camera?.aperture, shot.camera?.shutter].filter(Boolean).join(' · ')],
         ...(showResources ? [['服装与妆发', directorShotResource(shot, 'wardrobe_styling')],
             ['本镜头道具', directorShotResource(shot, 'shot_props')]] : []),
         ['光线怎么用', shot.lightingSetup || shot.lighting],
@@ -6874,11 +6876,18 @@ function renderPlanContent(plan) {
         // Use saved shots if available
         shotList = savedShots;
     }
+    const orderMode = window.__paStoryboardOrder === 'location' ? 'location' : 'story';
+    const displayShots = (orderMode === 'location' && window.PhotoAtelierShootMode)
+        ? window.PhotoAtelierShootMode.clusterShotsForLocation(shotList)
+        : shotList.map((s, originalIndex) => ({ ...s, originalIndex }));
+    const doneSet = window.PhotoAtelierShootMode ? window.PhotoAtelierShootMode.getDoneSet(plan.id) : new Set();
     const shotListHtml = `
         <section class="storyboard" aria-label="分镜脚本">
             <header class="storyboard-header">
-                <div><h3>分镜脚本</h3><p>${shotList.length} 个镜头 · ${shotList.every(s => Number(s.duration) > 0) ? shotList.reduce((sum,s) => sum + Number(s.duration),0) + ' 分钟' : '时长待确认'}</p></div>
-                <div class="storyboard-actions">
+                <div><h3>分镜脚本</h3><p>${shotList.length} 个镜头${doneSet.size ? ` · 已拍 ${doneSet.size}/${shotList.length}` : ''} · ${shotList.every(s => Number(s.duration) > 0) ? shotList.reduce((sum,s) => sum + Number(s.duration),0) + ' 分钟' : '时长待确认'}</p></div>
+                <div class="storyboard-actions" style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;">
+                    <button type="button" class="btn btn-p btn-sm" onclick="window.PhotoAtelierShootMode?.open('${escHtml(plan.id)}', 0, { mode: '${orderMode}' })">📷 进入片场模式</button>
+                    <button type="button" class="btn btn-s btn-sm" onclick="window.__paStoryboardOrder = '${orderMode === 'location' ? 'story' : 'location'}'; $('outCnt').innerHTML = renderPlanContent(currentPlanData);">${orderMode === 'location' ? '✓ 已按场地/焦段动线归组' : '📍 按场地/焦段动线归组'}</button>
                     <details class="storyboard-export"><summary>导出</summary><div>
                         <button class="btn btn-s btn-sm" onclick="exportShotListPDF('${plan.id}')">PDF</button>
                         <button class="btn btn-s btn-sm" onclick="printShotList('${plan.id}')">打印</button>
@@ -6889,18 +6898,18 @@ function renderPlanContent(plan) {
             <p class="storyboard-size-summary" aria-label="成片构成配比">${renderShotSizeSummary(shotList)}</p>
             ${plan.director && plan.director.shotCountLimited ? '<p class="reference-rights">当前生成服务只提供 ' + shotList.length + ' 个不同分镜，尚未达到本次建议数量；未复制镜头补数。</p>' : ''}
             <div class="storyboard-overview"><table><caption>分镜总表</caption><thead><tr><th>序号</th><th>拍摄画面</th><th>景别 / 焦段</th><th>机位</th></tr></thead><tbody>
-                ${shotList.map((s,i)=>`<tr><td>${String(i+1).padStart(2,'0')}</td><td><a href="#shot-detail-${i}" onclick="document.getElementById('shot-detail-${i}').open=true">${escHtml(s.title || s.description || s.scene)}</a></td><td>${escHtml(s.shotSize || '待确认')} / ${escHtml(s.focalLength || '待确认')}</td><td>${escHtml(s.angle || '待确认')}</td></tr>`).join('')}
+                ${displayShots.map((s) => { const i = s.originalIndex; const doneMark = doneSet.has(i) ? '✓ ' : ''; return `<tr><td>${doneMark}${String(i+1).padStart(2,'0')}</td><td><a href="#shot-detail-${i}" onclick="document.getElementById('shot-detail-${i}').open=true">${escHtml(s.title || s.description || s.scene)}</a>${orderMode === 'location' && s.scene ? ` <small style="color:var(--t3)">(${escHtml(s.scene)})</small>` : ''}</td><td>${escHtml(s.shotSize || '待确认')} / ${escHtml(s.focalLength || '待确认')}</td><td>${escHtml(s.angle || '待确认')}</td></tr>`; }).join('')}
             </tbody></table></div>
             <div class="storyboard-list">
-                ${shotList.map((shot,i) => `
-                    <details class="storyboard-shot" id="shot-detail-${i}"><summary>镜头 ${String(i+1).padStart(2,'0')} · ${escHtml(shot.title || shot.scene || '拍摄细节')}</summary><article>
+                ${displayShots.map((shot) => { const i = shot.originalIndex; const doneMark = doneSet.has(i) ? '✓ ' : ''; return `
+                    <details class="storyboard-shot" id="shot-detail-${i}"><summary>${doneMark}镜头 ${String(i+1).padStart(2,'0')} · ${escHtml(shot.title || shot.scene || '拍摄细节')}${orderMode === 'location' && shot.scene ? ` · 📍${escHtml(shot.scene)}` : ''}</summary><article>
                         ${renderShotInstructions(shot, !plan.director)}
                         ${plan.director ? `<div class="storyboard-shot-resources">
                             <label>服装与妆发<input type="text" maxlength="300" data-plan-id="${escHtml(plan.id)}" data-shot-index="${i}" data-field="wardrobe_styling" value="${escHtml(directorShotResource(shot, 'wardrobe_styling'))}" onchange="saveDirectorShotField(this)"></label>
                             <label>本镜头道具<input type="text" maxlength="300" data-plan-id="${escHtml(plan.id)}" data-shot-index="${i}" data-field="shot_props" value="${escHtml(directorShotResource(shot, 'shot_props'))}" onchange="saveDirectorShotField(this)"></label>
                         </div>` : ''}
                     </article></details>
-                `).join('')}
+                `; }).join('')}
             </div>
         </section>
     `;

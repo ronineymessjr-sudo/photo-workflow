@@ -302,6 +302,25 @@ test('server model plan generation fails closed when its per-user or global quot
     assert.equal(aiCalls, 0);
 });
 
+test('unauthenticated plan request returns 401 SIGN_IN_REQUIRED instead of claiming quota is exhausted', async () => {
+    const secret = 'unit-test-secret';
+    let aiCalls = 0;
+    const anonymousDirector = await worker.fetch(new Request('https://unit.test/api/director/plan', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ theme: '自然人像', modelDesc: '一位成年人' }),
+    }), { JWT_SECRET: secret, AI: { run: async () => { aiCalls++; return {}; } } });
+    assert.equal(anonymousDirector.status, 401);
+    assert.equal((await anonymousDirector.json()).error, 'SIGN_IN_REQUIRED');
+
+    const anonymousAi = await worker.fetch(new Request('https://unit.test/api/ai/plan', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ provider: 'cloudflare-workers-ai', model: '@cf/meta/llama-3.3-70b-instruct-fp8-fast', input: { theme: '自然人像' } }),
+    }), { JWT_SECRET: secret, AI: { run: async () => { aiCalls++; return {}; } } });
+    assert.equal(anonymousAi.status, 401);
+    assert.equal((await anonymousAi.json()).error, 'SIGN_IN_REQUIRED');
+    assert.equal(aiCalls, 0);
+});
+
 test('the deployed site honors reference-library planning even when Director is configured', async () => {
     const originalFetch = globalThis.fetch;
     const fetched = [];
