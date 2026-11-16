@@ -104,7 +104,20 @@ export async function consumeStudioImageQuota({ uid, env = {} }) {
     const userAllowed = await consumeQuota(env, `user:${uid}`, 'image', userLimit);
     if (userAllowed !== true) return userAllowed;
     const globalAllowed = await consumeQuota(env, 'global:cloud-image', 'image-global', globalLimit);
-    return globalAllowed === true ? true : globalAllowed === null ? null : 'global-limit';
+    if (globalAllowed === true) return true;
+    await consumeQuota(env, `user:${uid}`, 'refund-image', userLimit);
+    return globalAllowed === null ? null : 'global-limit';
+}
+
+export async function refundStudioImageQuota({ uid, env = {} }) {
+    if (!uid) return false;
+    const testUnlimitedUserId = String(env.STUDIO_IMAGE_TEST_UNLIMITED_USER_ID || '').trim();
+    if (testUnlimitedUserId && uid === testUnlimitedUserId) return true;
+    const userLimit = Number(env.STUDIO_IMAGE_USER_LIMIT) > 0 ? Number(env.STUDIO_IMAGE_USER_LIMIT) : 5;
+    const globalLimit = Number(env.STUDIO_IMAGE_GLOBAL_LIMIT) > 0 ? Number(env.STUDIO_IMAGE_GLOBAL_LIMIT) : 6;
+    const userRefunded = await consumeQuota(env, `user:${uid}`, 'refund-image', userLimit);
+    const globalRefunded = await consumeQuota(env, 'global:cloud-image', 'refund-image-global', globalLimit);
+    return userRefunded === true && globalRefunded === true;
 }
 
 async function consumeModelQuota(env, uid) {
@@ -117,7 +130,19 @@ export async function consumeStudioPlanQuota({ uid, env = {} }) {
     const userAllowed = await consumeQuota(env, `user:${uid}`, 'plan', planLimit);
     if (userAllowed !== true) return userAllowed;
     const globalLimit = Number(env.STUDIO_PLAN_GLOBAL_LIMIT) > 0 ? Number(env.STUDIO_PLAN_GLOBAL_LIMIT) : 50;
-    return consumeQuota(env, 'global:cloud-plan', 'plan', globalLimit);
+    const globalAllowed = await consumeQuota(env, 'global:cloud-plan', 'plan', globalLimit);
+    if (globalAllowed === true) return true;
+    await consumeQuota(env, `user:${uid}`, 'refund-plan', planLimit);
+    return globalAllowed;
+}
+
+export async function refundStudioPlanQuota({ uid, env = {} }) {
+    if (!uid) return false;
+    const planLimit = Number(env.STUDIO_PLAN_USER_LIMIT) > 0 ? Number(env.STUDIO_PLAN_USER_LIMIT) : MODEL_DAILY_LIMIT;
+    const globalLimit = Number(env.STUDIO_PLAN_GLOBAL_LIMIT) > 0 ? Number(env.STUDIO_PLAN_GLOBAL_LIMIT) : 50;
+    const userRefunded = await consumeQuota(env, `user:${uid}`, 'refund-plan', planLimit);
+    const globalRefunded = await consumeQuota(env, 'global:cloud-plan', 'refund-plan', globalLimit);
+    return userRefunded === true && globalRefunded === true;
 }
 
 export async function searchStudio({ prompt, planId, expectedRevision, uid, env = {}, now = Date.now(), fetchImpl = fetch, intentProviderFactory }) {

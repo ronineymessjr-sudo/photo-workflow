@@ -78,16 +78,16 @@ export function compileCloudCandidateRequest(input, referenceContext) {
     const dimensions = {
         landscape: [1024, 768], 'landscape-wide': [1024, 576], square: [768, 768],
         portrait: [768, 1024], 'portrait-tall': [576, 1024],
-    }[input.aspect_ratio] || [1024, 768];
+    }[input.aspect_ratio] || [768, 1024];
     const aspectDescription = {
         landscape: 'landscape 4:3 composition', 'landscape-wide': 'wide landscape 16:9 composition',
         square: 'square composition', portrait: 'portrait 3:4 composition', 'portrait-tall': 'vertical portrait 9:16 composition',
-    }[input.aspect_ratio] || 'landscape 4:3 composition';
+    }[input.aspect_ratio] || 'portrait 3:4 composition';
     const suffix = `\nFrame the scene as a ${aspectDescription}. Avoid: ${avoid}.`;
     const compiledPrompt = prompt.slice(0, MAX_PROMPT_CHARS - suffix.length) + suffix;
     return {
         prompt: compiledPrompt.slice(0, MAX_PROMPT_CHARS), width: dimensions[0], height: dimensions[1],
-        steps: 4, seed: Number.isSafeInteger(input.seed) ? input.seed : Math.floor(Math.random() * 2147483647),
+        steps: 24, seed: Number.isSafeInteger(input.seed) ? input.seed : Math.floor(Math.random() * 2147483647),
         shotLanguage, model: CLOUDFLARE_MODEL,
     };
 }
@@ -192,7 +192,6 @@ export async function generateCloudCandidate(input, { ai, referenceContext, fetc
             if (typeof translated?.response !== 'string' || translated.response.trim().length < 20) throw new Error('PROMPT_TRANSLATION_FAILED');
             prompt = translated.response.trim().slice(0, MAX_PROMPT_CHARS);
         }
-        const form = new FormData();
         const poseTitle = clothingDetail ? 'Garment-detail crop; no pose reference'
             : upperBodyCrop ? 'Upper-body pose adapted from the selected PoseAtlas reference'
                 : clean(selectedPose?.englishTitle || selectedPose?.title, 120) || clean(input.shot_contract.model_pose, 260);
@@ -231,16 +230,34 @@ export async function generateCloudCandidate(input, { ai, referenceContext, fetc
             ? poseDetail
             : `Do not copy unrequested bags, jewelry, hats or other accessories/props from the outfit reference. Do not replace or add garments. Follow the selected PoseAtlas action described in the shot contract as text; the written shot contract and user restrictions override any pose-image conflict. ${poseImage ? 'Use the selected pose image only for torso/limb geometry; do not render its line drawing, white background, joint marks, mannequin, or nudity.' : ''} Required pose: ${poseTitle}. ${poseDetail}`;
         generationPrompt = `${subjectInstruction} ${waistUpCrop ? `Required camera framing: ${framing} ` : ''}${wardrobeInstruction} ${referenceInstruction} ${poseInstruction} ${prompt} ${mustShow ? `Required visible shot details: ${mustShow}. ` : ''}${rejectIf ? `Do not include: ${rejectIf}. ` : ''}Required camera framing: ${framing || 'Follow the shot contract.'} ${clothingDetail ? '' : 'Render the requested scene as a real photographic environment with natural light and material detail.'}`;
-        form.append('prompt', generationPrompt);
-        form.append('width', String(compiled.width));
-        form.append('height', String(compiled.height));
-        images.forEach((image, index) => form.append(`input_image_${index}`, image, `reference-${index}`));
-        const serialized = new Response(form);
-        result = await ai.run(CLOUDFLARE_MODEL, { multipart: { body: serialized.body, contentType: serialized.headers.get('content-type') } });
+        for (let attempt = 0; attempt < 2; attempt++) {
+            const form = new FormData();
+            form.append('prompt', generationPrompt);
+            form.append('width', String(compiled.width));
+            form.append('height', String(compiled.height));
+            form.append('steps', String(compiled.steps));
+            form.append('seed', String(compiled.seed));
+            images.forEach((image, index) => form.append(`input_image_${index}`, image, `reference-${index}`));
+            try {
+                const serialized = new Response(form);
+                result = await ai.run(CLOUDFLARE_MODEL, { multipart: { body: serialized.body, contentType: serialized.headers.get('content-type') } });
+                break;
+            } catch (error) {
+                const message = String(error?.message || error);
+                console.error('director_flux_upstream_failure', JSON.stringify({ attempt: attempt + 1, code: error?.code || '', message: message.slice(0, 300) }));
+                if (/4006\s*:?\s*you have used up your daily free allocation/i.test(message)) throw new Error('IMAGE_PROVIDER_FREE_QUOTA_EXHAUSTED');
+                if (attempt === 0 && /\b3043\b|\b502\b|\b503\b|internal server error|temporarily unavailable/i.test(message)) {
+                    await new Promise(resolve => setTimeout(resolve, 150));
+                    continue;
+                }
+                if (/4006\s*:?\s*you have used up your daily free allocation/i.test(message)) throw new Error('IMAGE_PROVIDER_FREE_QUOTA_EXHAUSTED');
+                throw new Error('IMAGE_PROVIDER_GENERATION_FAILED');
+            }
+        }
     } catch (error) {
         const message = String(error?.message || error);
         console.error('reference_image_generation_failed', message.slice(0, 400));
-        if (/4006\s*:?\s*you have used up your daily free allocation/i.test(message)) {
+        if (message === 'IMAGE_PROVIDER_FREE_QUOTA_EXHAUSTED' || /4006\s*:?\s*you have used up your daily free allocation/i.test(message)) {
             throw new Error('IMAGE_PROVIDER_FREE_QUOTA_EXHAUSTED');
         }
         throw new Error('IMAGE_PROVIDER_GENERATION_FAILED');
@@ -254,7 +271,10 @@ export async function generateCloudCandidate(input, { ai, referenceContext, fetc
     const bytes = Uint8Array.from(binary, char => char.charCodeAt(0));
     const mime = bytes[0] === 137 ? 'image/png' : bytes[0] === 82 ? 'image/webp' : 'image/jpeg';
     if (!hasValidImageSignature(bytes, mime)) throw new Error('IMAGE_PROVIDER_INVALID_IMAGE_TYPE');
-    return { ...compiled, prompt: generationPrompt, bytes, mime, referenceImages: references.map((reference, index) => ({
+    return { ...compiled, prompt: generationPrompt, bytes, mime,
+        referenceWarnings: !references.some(reference => reference.kind === 'portrait')
+            ? ['未选择人物人脸参考图；本镜需要人工检查跨镜身份一致性。'] : [],
+        referenceImages: references.map((reference, index) => ({
         kind: reference.kind, sourceItemId: reference.id, imageIndex: index,
         sourceUrl: reference.sourceUrl, referenceImageUrl: reference.referenceImageUrl,
     })) };

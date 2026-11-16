@@ -157,6 +157,13 @@ test('image allowance is isolated per signed-in user and refuses guests', async 
     assert.equal(await consumeStudioImageQuota({ uid: 'user-b', env }), 'global-limit');
 });
 
+test('a global image-limit denial compensates the user reservation', async () => {
+    const env = { ...environment(), STUDIO_IMAGE_USER_LIMIT: '1', STUDIO_IMAGE_GLOBAL_LIMIT: '1' };
+    assert.equal(await consumeStudioImageQuota({ uid: 'already-used-user', env }), true);
+    assert.equal(await consumeStudioImageQuota({ uid: 'blocked-user', env }), 'global-limit');
+    assert.equal(await consumeStudioImageQuota({ uid: 'blocked-user', env: { ...env, STUDIO_IMAGE_GLOBAL_LIMIT: '2' } }), true);
+});
+
 test('temporary unlimited image allowance applies only to its exact configured QA user', async () => {
     const env = { ...environment(), STUDIO_IMAGE_TEST_UNLIMITED_USER_ID: 'qa-user\r\n', STUDIO_IMAGE_USER_LIMIT: '1', STUDIO_IMAGE_GLOBAL_LIMIT: '1' };
     for (let index = 0; index < 5; index++) assert.equal(await consumeStudioImageQuota({ uid: 'qa-user', env }), true);

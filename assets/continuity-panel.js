@@ -5,7 +5,6 @@
 // State lives in localStorage (the contract is a document, not a session).
 
 const STORAGE_KEY = 'photoatelier.continuity.v1';
-const CONTINUITY_WORKER_ORIGIN = 'https://photoatelier-api.photomagic.workers.dev';
 const ROLES = [
     { role: 'identity', label: '人物参考', hint: '只负责脸、发型、体态' },
     { role: 'scene', label: '场景参考', hint: '默认使用方案里的场地描述；也可以上传现场照片' },
@@ -28,7 +27,7 @@ function safeThumbUrl(raw) {
         const url = new URL(raw, location.origin);
         if (url.origin === location.origin
             && /^\/api\/continuity\/asset\/[a-f0-9]{16}$/.test(url.pathname)
-            && !url.search && !url.hash) return url.href;
+            && !url.hash && /^\?owner=[^&]{1,128}&exp=\d{13}&sig=[a-f0-9]{64}$/i.test(url.search)) return url.href;
         if (url.origin === 'https://hruiccc.github.io'
             && /^\/RuiC-PoseAtlas\/(?:thumbs\/[A-Za-z0-9_-]+\.jpg|(?:costume|portrait)\/thumbs\/[A-Za-z0-9_-]+\.webp)$/.test(url.pathname)
             && !url.search && !url.hash) return url.href;
@@ -108,22 +107,13 @@ function el(tag, attrs = {}, children = []) {
 }
 async function api(path, body, method = 'POST') {
     const token = localStorage.getItem('pw_token');
-    const isLocal = typeof location !== 'undefined' && ['127.0.0.1', 'localhost', '[::1]'].includes(location.hostname);
-    const directWorker = !isLocal && ['/api/continuity/generate', '/api/continuity/collect'].includes(path);
-    const requestUrl = directWorker ? `${CONTINUITY_WORKER_ORIGIN}${path}` : path;
     const init = {
         method,
         headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: method === 'GET' ? undefined : JSON.stringify(body || {}),
+        signal: AbortSignal.timeout(28000),
     };
-    let response;
-    try {
-        response = await fetch(requestUrl, init);
-    } catch (error) {
-        // *.workers.dev may be unreachable from mainland China without proxy; fall back to same-origin Pages proxy.
-        if (!directWorker) throw error;
-        response = await fetch(path, init);
-    }
+    const response = await fetch(path, init);
     const payload = await response.json().catch(() => ({}));
     return { ok: response.ok, status: response.status, payload };
 }
@@ -220,11 +210,11 @@ function renderReferences() {
                 }),
                 el('button', {
                     class: 'ghost', text: '标记已确认',
-                    onclick: () => updateReference(definition.role, reference.assetId || `${definition.role}-asset`, 'confirmed'),
+                    onclick: () => updateReference(definition.role, reference.assetId || '', 'confirmed'),
                 }),
                 el('button', {
                     class: 'ghost', text: '标记缺失',
-                    onclick: () => updateReference(definition.role, reference.assetId || `${definition.role}-asset`, 'missing'),
+                    onclick: () => updateReference(definition.role, reference.assetId || '', 'missing'),
                 }),
             ]),
         ]));
@@ -252,7 +242,12 @@ async function uploadReference(role, dataUrl, fileName) {
 }
 
 async function updateReference(role, assetId, status) {
-    const { ok, payload } = await api('/api/continuity/reference', { group: state.group, reference: { role, assetId, status } });
+    const textOnly = role === 'scene' && status === 'confirmed' && !assetId;
+    if (status === 'confirmed' && !textOnly && !/^[a-f0-9]{16}$/i.test(assetId)) {
+        toast('请先上传并保存真实参考图，再标记已确认。', 'error');
+        return;
+    }
+    const { ok, payload } = await api('/api/continuity/reference', { group: state.group, reference: { role, assetId, status, ...(textOnly ? { textOnly: true } : {}) } });
     if (!ok) { toast(payload.error || '更新失败', 'error'); return; }
     state.group = payload.group;
     save();
@@ -724,6 +719,15 @@ async function importStudioPlanFromQuery() {
 }
 
 async function boot() {
+    const banner = document.getElementById('auth-banner');
+    const session = await api('/api/auth/session', null, 'GET').catch(() => ({ ok: false, payload: {} }));
+    if (banner && (!session.ok || !session.payload?.user)) {
+        banner.hidden = false;
+        banner.textContent = '请先登录后再生成连续性方案。';
+        const link = el('a', { href: '/', text: '回首页登录' });
+        link.style.marginLeft = '8px';
+        banner.append(link);
+    }
     const schemaResponse = await api('/api/continuity/schema', null, 'GET');
     schema = schemaResponse.payload;
 
@@ -743,10 +747,14 @@ async function boot() {
             provider.append(option);
         }
         const hint = document.getElementById('provider-hint');
-        if (hint) {
-            hint.textContent = catalog.payload.blockedReason
-                || `推荐：${catalog.payload.recommended}（便宜档且能带参考图）`;
-        }
+        const updateProviderHint = () => {
+            if (!hint) return;
+            hint.textContent = provider.value === 'modelscope-qwen-edit'
+                ? '魔搭走异步排队；衣装参考图不会传给模型，只作为方案文字提示。推荐优先使用 Cloudflare FLUX。'
+                : catalog.payload.blockedReason || `推荐：${catalog.payload.recommended}（便宜档且能带参考图）`;
+        };
+        updateProviderHint();
+        provider.addEventListener('change', updateProviderHint);
     } catch {
         provider.replaceChildren(el('option', { value: 'manual-chatgpt-web', text: '手动 · ChatGPT 网页' }));
     }

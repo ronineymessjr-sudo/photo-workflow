@@ -264,7 +264,7 @@ function requireGroup(group) {
     return { group, lockedHash: current };
 }
 
-export function setReference(group, { role, assetId, status = 'confirmed', path = '', referenceImageUrl = '', sourceItemId = '' } = {}) {
+export function setReference(group, { role, assetId, status = 'confirmed', path = '', referenceImageUrl = '', sourceItemId = '', textOnly = false } = {}) {
     const { group: checked } = requireGroup(group);
     if (!CONTINUITY_ROLES.includes(role)) throw new ContinuityError('CONTINUITY_ROLE_INVALID', `参考角色只能是 ${CONTINUITY_ROLES.join('/')}`, 400);
     if (!text(assetId)) throw new ContinuityError('CONTINUITY_ASSET_REQUIRED', '需要资产 ID', 400);
@@ -273,7 +273,7 @@ export function setReference(group, { role, assetId, status = 'confirmed', path 
     // picked in AI Studio, so the generated frame can be traced back to the
     // template it was supposed to follow instead of an anonymous photo.
     checked.references = checked.references.map(reference => reference.role === role
-        ? { ...reference, assetId, status, path: text(path), referenceImageUrl: text(referenceImageUrl), sourceItemId: text(sourceItemId) }
+        ? { ...reference, assetId, status, path: text(path), referenceImageUrl: text(referenceImageUrl), sourceItemId: text(sourceItemId), textOnly: textOnly === true }
         : reference);
     return checked;
 }

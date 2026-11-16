@@ -25,6 +25,7 @@ function createPanel({ initialState = {}, fetchImpl } = {}) {
         Date,
         Promise,
         Set,
+        AbortSignal,
         Number,
         JSON,
         String,
@@ -139,13 +140,13 @@ test('accepted async retry keeps its seed through collect and the saved result',
     panel.context.collectShot = async () => null;
 
     await panel.context.generateShot('shot-01', true);
-    assert.match(requests[1].path, /^https:\/\/photoatelier-api\.photomagic\.workers\.dev\/api\/continuity\/generate$/);
+    assert.equal(requests[1].path, '/api/continuity/generate');
     assert.equal(panel.state().retryCounts['shot-01'], 1);
     assert.equal(panel.state().pendingJobs['shot-01'].seed, 428501);
 
     panel.context.collectShot = collect;
     const completed = await panel.context.collectShot('shot-01');
-    assert.match(requests[2].path, /^https:\/\/photoatelier-api\.photomagic\.workers\.dev\/api\/continuity\/collect$/);
+    assert.equal(requests[2].path, '/api/continuity/collect');
     assert.equal(requests[2].body.seed, 428501);
     assert.equal(completed.seed, 428501);
     assert.equal(panel.state().results['shot-01'].seed, 428501);
@@ -169,14 +170,13 @@ test('local origin routes continuity requests directly to local server without p
     assert.equal(requests[1].path, '/api/continuity/generate');
 });
 
-test('falls back to same-origin Pages proxy when direct workers.dev origin fails network request', async () => {
+test('continuity generate uses the same-origin Pages proxy with its request timeout', async () => {
     const requests = [];
     const panel = createPanel({
         initialState: { group: { shots: [{ shotId: 'shot-fb' }] }, retryCounts: { 'shot-fb': 0 } },
         fetchImpl: async (path, init) => {
             requests.push(path);
             if (path === '/api/continuity/requests') return jsonResponse(200, { requests: [{ shotId: 'shot-fb', seed: 101 }] });
-            if (String(path).startsWith('https://photoatelier-api.photomagic.workers.dev')) throw new TypeError('Failed to fetch');
             if (path === '/api/continuity/generate') return jsonResponse(202, { status: 'pending', taskId: 'task-fb' });
             return jsonResponse(200, { status: 'succeeded', shotId: 'shot-fb' });
         },
@@ -186,9 +186,16 @@ test('falls back to same-origin Pages proxy when direct workers.dev origin fails
     await panel.context.generateShot('shot-fb', true);
     assert.deepEqual(requests, [
         '/api/continuity/requests',
-        'https://photoatelier-api.photomagic.workers.dev/api/continuity/generate',
         '/api/continuity/generate',
     ]);
+});
+
+test('asset thumbnails accept signed continuity links but reject unsigned asset links', () => {
+    const panel = createPanel();
+    const signed = '/api/continuity/asset/0123456789abcdef?owner=user-1&exp=1799999999999&sig=' + 'a'.repeat(64);
+    assert.equal(panel.context.safeThumbUrl(signed), 'https://photo.test' + signed);
+    assert.equal(panel.context.safeThumbUrl('/api/continuity/asset/0123456789abcdef'), '');
+    assert.equal(panel.context.safeThumbUrl('/api/continuity/asset/0123456789abcdef?token=secret'), '');
 });
 
 test('switching plans archives and restores the prior group with its original images', () => {

@@ -25,6 +25,9 @@ AI_STUDIO_ALLOWED_ORIGINS = "https://photo-workflow.pages.dev,https://photo.roni
 [ai]
 binding = "AI"
 
+[images]
+binding = "IMAGES"
+
 # Reference images for continuity groups.
 # KV is the pragmatic choice: R2 needs its own dashboard activation (billing
 # details) before `wrangler r2 bucket create` works, while KV is available

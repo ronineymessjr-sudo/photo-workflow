@@ -6,6 +6,12 @@ import worker from '../api/index.js';
 const BASE = 'https://photoatelier.test';
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 const JWT_SECRET = 'continuity-api-test-secret';
+const testAssets = new Map();
+const TEST_KV = {
+    async put(key, value) { testAssets.set(key, value); },
+    async get(key) { return testAssets.get(key) || null; },
+};
+const PNG_DATA_URL = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
 const tokenPayload = JSON.stringify({ uid: 'continuity-api-test-user', t: Date.now() });
 const AUTH_TOKEN = Buffer.from(JSON.stringify({
     p: tokenPayload,
@@ -17,8 +23,25 @@ async function call(path, body, method = 'POST', env = {}) {
         method,
         headers: { ...JSON_HEADERS, Authorization: `Bearer ${AUTH_TOKEN}` },
         body: method === 'GET' ? undefined : JSON.stringify(body || {}),
-    }), { JWT_SECRET, ...env }, {});
+    }), { JWT_SECRET, CONTINUITY_KV: TEST_KV, ...env }, {});
     return { status: response.status, body: await response.json() };
+}
+
+async function confirmReference(group, role) {
+    if (role === 'scene') {
+        const result = await call('/api/continuity/reference', {
+            group, reference: { role, assetId: 'scene-text-only', status: 'confirmed', textOnly: true },
+        });
+        assert.equal(result.status, 200);
+        return result.body.group;
+    }
+    const { status: uploadStatus, body: uploaded } = await call('/api/continuity/asset', { dataUrl: PNG_DATA_URL, role });
+    assert.equal(uploadStatus, 201);
+    const result = await call('/api/continuity/reference', {
+        group, reference: { role, assetId: uploaded.assetId, path: uploaded.path, status: 'confirmed' },
+    });
+    assert.equal(result.status, 200);
+    return result.body.group;
 }
 
 function sampleInput() {
@@ -245,10 +268,8 @@ test('generation is refused while references are pending, with a contract code',
 test('a vision-only service cannot be used for generation', async () => {
     const { body } = await call('/api/continuity/init', sampleInput());
     let group = body.group;
-    for (const role of ['identity', 'scene', 'style']) {
-        group = (await call('/api/continuity/reference', { group, reference: { role, assetId: `asset-${role}`, status: 'confirmed' } })).body.group;
-    }
-    group = (await call('/api/continuity/master', { group, assetId: 'asset-identity' })).body.group;
+    for (const role of ['identity', 'scene', 'style']) group = await confirmReference(group, role);
+    group = (await call('/api/continuity/master', { group, assetId: group.references.find(reference => reference.role === 'identity').assetId })).body.group;
     const result = await call('/api/continuity/requests', { group, providerId: 'deepseek-vision' });
     assert.equal(result.status, 422);
     assert.equal(result.body.code, 'CONTINUITY_PROVIDER_TEXT_ONLY');
@@ -261,8 +282,8 @@ test('master confirmation requires a human actor and a confirmed identity refere
     assert.equal(early.status, 409);
     assert.equal(early.body.code, 'CONTINUITY_IDENTITY_REQUIRED');
 
-    let group = (await call('/api/continuity/reference', { group: body.group, reference: { role: 'identity', assetId: 'asset-identity', status: 'confirmed' } })).body.group;
-    const machine = await call('/api/continuity/master', { group, assetId: 'asset-identity', actor: 'model' });
+    let group = await confirmReference(body.group, 'identity');
+    const machine = await call('/api/continuity/master', { group, assetId: group.references.find(reference => reference.role === 'identity').assetId, actor: 'model' });
     assert.equal(machine.status, 403);
     assert.equal(machine.body.code, 'CONTINUITY_MASTER_HUMAN_ONLY');
 });
@@ -270,10 +291,8 @@ test('master confirmation requires a human actor and a confirmed identity refere
 test('a ready group produces one request per shot with identical references', async () => {
     const { body } = await call('/api/continuity/init', sampleInput());
     let group = body.group;
-    for (const role of ['identity', 'scene', 'style']) {
-        group = (await call('/api/continuity/reference', { group, reference: { role, assetId: `asset-${role}`, status: 'confirmed' } })).body.group;
-    }
-    group = (await call('/api/continuity/master', { group, assetId: 'asset-identity' })).body.group;
+    for (const role of ['identity', 'scene', 'style']) group = await confirmReference(group, role);
+    group = (await call('/api/continuity/master', { group, assetId: group.references.find(reference => reference.role === 'identity').assetId })).body.group;
     const { status, body: payload } = await call('/api/continuity/requests', { group, providerId: 'gpt-image-2', seedBase: 1000 });
     assert.equal(status, 200);
     assert.equal(payload.count, 2);
@@ -293,10 +312,8 @@ test('a ready group produces one request per shot with identical references', as
 test('tampering with the locked block is rejected before any request', async () => {
     const { body } = await call('/api/continuity/init', sampleInput());
     let group = body.group;
-    for (const role of ['identity', 'scene', 'style']) {
-        group = (await call('/api/continuity/reference', { group, reference: { role, assetId: `asset-${role}`, status: 'confirmed' } })).body.group;
-    }
-    group = (await call('/api/continuity/master', { group, assetId: 'asset-identity' })).body.group;
+    for (const role of ['identity', 'scene', 'style']) group = await confirmReference(group, role);
+    group = (await call('/api/continuity/master', { group, assetId: group.references.find(reference => reference.role === 'identity').assetId })).body.group;
     const tampered = { ...group, locked: { ...group.locked, location: '另一个城市的地下停车场' } };
     const result = await call('/api/continuity/requests', { group: tampered, providerId: 'gpt-image-2' });
     assert.equal(result.status, 409);

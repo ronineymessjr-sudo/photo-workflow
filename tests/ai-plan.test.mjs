@@ -3,11 +3,27 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { runInNewContext } from 'node:vm';
 import { createHmac } from 'node:crypto';
-import { aiPlanProviders, handleAiPlan, extractHardConstraints, validateHardConstraints, validatePhotographerFeasibility } from '../api/ai-plan.mjs';
+import { aiPlanProviders, handleAiPlan, extractHardConstraints, validateHardConstraints, validatePhotographerFeasibility, normalizePlanShot } from '../api/ai-plan.mjs';
 import worker from '../api/index.js';
 
 const key = 'test-private-key-never-log';
 const input = { theme: '雨夜纪实', scene: '斑马线', people: '1', duration: '1小时', extra: '高机位俯拍，人物左下角，完整全身' };
+
+test('deterministic plan normalization repairs camera and crop conflicts before quality retry', () => {
+    const shot = normalizePlanShot({
+        model_pose: '自然站立，重心稳定', photographer_position: '距主体约3米，高机位俯拍',
+        lens: '50mm', model_position: '画面中央', wardrobe_styling: '日常服装',
+        crop_boundary: '从头到脚完整全身入画', must_show: '脸部表情清晰', reject_if: '人物失焦',
+        execution_note: '保持动作舒适', generator_prompt: 'high-angle full-body portrait, 50mm lens',
+        shot_size: 'MS', camera_angle: 'eye_level',
+    });
+    assert.match(shot.crop_boundary, /腰部以上/);
+    assert.match(shot.photographer_position, /距主体约3米.*平视/);
+    assert.match(shot.generator_prompt, /waist-up/);
+    assert.match(shot.generator_prompt, /eye-level camera angle/);
+    assert.doesNotMatch(shot.generator_prompt, /full-body|high-angle/);
+    assert.deepEqual(validatePhotographerFeasibility([shot]), []);
+});
 const request = { provider: 'deepseek', model: 'test-model', apiKey: key, input };
 function output(count = 9) {
     return { shot_plans: Array.from({ length: count }, (_, i) => ({

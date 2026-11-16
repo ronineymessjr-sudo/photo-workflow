@@ -1,5 +1,6 @@
 // Photo Workflow Backend API - Cloudflare Workers
 import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
+import { Buffer } from 'node:buffer';
 import { createDirectorPlan } from './director-plan.mjs';
 import { buildDirectorIdentityWorkflow } from './director-identity-workflow.mjs';
 import { attachJevReview } from './jev-review.mjs';
@@ -8,13 +9,13 @@ import { emailLoginEnabled, handleEmailAuth } from './email-auth.mjs';
 import { aiPlanProviders, handleAiPlan } from './ai-plan.mjs';
 import { handleAiBrief } from './ai-brief.mjs';
 import { generateCloudCandidate, prepareCloudCandidateReferences } from './director-cloud-generation.mjs';
-import { confirmStudioProposal, createStudioProposal, searchStudio, consumeStudioSearchQuota, consumeStudioPlanQuota, consumeStudioImageQuota, AiStudioError } from './ai-studio/service.mjs';
+import { confirmStudioProposal, createStudioProposal, searchStudio, consumeStudioSearchQuota, consumeStudioPlanQuota, refundStudioPlanQuota, consumeStudioImageQuota, refundStudioImageQuota, AiStudioError } from './ai-studio/service.mjs';
 import { checkStudioFeishuConnection, syncStudioPlan } from './ai-studio/feishu-sync.mjs';
 import { workspaceEntryKey } from '../assets/workspace-sync-protocol.mjs';
 export { AiStudioQuota } from './ai-studio/quota.mjs';
 import { createGroup, setReference, confirmMaster, buildShotRequests, recordQc, continuitySummary, continuitySchema, attachResult, handoffFor, setImageProvider, setAnchor, ContinuityError } from './continuity.mjs';
 import { storeAsset, readAsset } from './continuity-assets.mjs';
-import { generateShot, submitModelScope, pollModelScope, isModelScopeModelAllowed } from './continuity-generation.mjs';
+import { generateShot, validateShotGeneration, submitModelScope, pollModelScope, isModelScopeModelAllowed } from './continuity-generation.mjs';
 import { listProviders, recommendProvider, assertGroupProvider } from './continuity-providers.mjs';
 import { groupFromStudio } from './continuity-studio-bridge.mjs';
 import { prescreen, mergeScores, summariseVision } from './continuity-vision.mjs';
@@ -194,6 +195,48 @@ function candidateAssetUrl(owner, assetId, env) {
     const expires = Date.now() + 365 * 24 * 60 * 60 * 1000;
     const signature = candidateAssetSignature(owner, assetId, expires, env);
     return `/api/director/candidates/${assetId}?owner=${encodeURIComponent(owner)}&exp=${expires}&sig=${signature}`;
+}
+
+function continuityAssetSignature(owner, assetId, expires, env) {
+    return createHmac('sha256', env.JWT_SECRET).update(`continuity:${owner}:${assetId}:${expires}`).digest('hex');
+}
+
+function continuityAssetUrl(owner, assetId, env) {
+    const expires = Date.now() + 365 * 24 * 60 * 60 * 1000;
+    const signature = continuityAssetSignature(owner, assetId, expires, env);
+    return `/api/continuity/asset/${assetId}?owner=${encodeURIComponent(owner)}&exp=${expires}&sig=${signature}`;
+}
+
+function validContinuityAssetUrl(url, assetId, env) {
+    const owner = url.searchParams.get('owner') || '';
+    const expires = Number(url.searchParams.get('exp'));
+    const signature = url.searchParams.get('sig') || '';
+    if (!owner || owner.length > 128 || !Number.isSafeInteger(expires) || expires <= Date.now()
+        || expires > Date.now() + 366 * 24 * 60 * 60 * 1000 || !/^[a-f0-9]{64}$/i.test(signature) || !env.JWT_SECRET) return false;
+    const expected = continuityAssetSignature(owner, assetId, expires, env);
+    return timingSafeEqual(new TextEncoder().encode(signature.toLowerCase()), new TextEncoder().encode(expected));
+}
+
+function signContinuityAssetPaths(value, owner, env) {
+    if (typeof value === 'string') {
+        const match = value.match(/^\/api\/continuity\/asset\/([a-f0-9]{16})$/i);
+        return match ? continuityAssetUrl(owner, match[1], env) : value;
+    }
+    if (Array.isArray(value)) return value.map(item => signContinuityAssetPaths(item, owner, env));
+    if (value && typeof value === 'object') return Object.fromEntries(
+        Object.entries(value).map(([key, item]) => [key, signContinuityAssetPaths(item, owner, env)]));
+    return value;
+}
+
+async function readableContinuityLibraryImage(rawUrl) {
+    try {
+        const url = new URL(rawUrl);
+        if (url.origin !== 'https://hruiccc.github.io'
+            || !/^\/RuiC-PoseAtlas\/(?:thumbs\/[A-Za-z0-9_-]+\.jpg|(?:costume|portrait)\/thumbs\/[A-Za-z0-9_-]+\.webp)$/.test(url.pathname)
+            || url.search || url.hash) return false;
+        const response = await fetch(url.href, { redirect: 'manual', signal: AbortSignal.timeout(8000) });
+        return response.ok && /^image\/(?:jpeg|png|webp)(?:;|$)/i.test(response.headers.get('content-type') || '');
+    } catch { return false; }
 }
 
 function validCandidateAssetUrl(url, assetId, env) {
@@ -437,9 +480,11 @@ export default {
 
         try {
             const uid = verifyToken(request.headers.get('authorization'), env);
-            const privateRead = method === 'GET' && path.startsWith('/api/continuity/asset/');
+            const continuityAssetId = method === 'GET' ? path.match(/^\/api\/continuity\/asset\/([a-f0-9]{16})$/i)?.[1] : '';
+            const privateRead = Boolean(continuityAssetId);
 
-            if (!uid && ((method === 'POST' && AUTH_REQUIRED_POST_PATHS.has(path)) || privateRead)) {
+            if (!uid && ((method === 'POST' && AUTH_REQUIRED_POST_PATHS.has(path))
+                || (privateRead && !validContinuityAssetUrl(url, continuityAssetId, env)))) {
                 result = { status: 401, body: { error: 'SIGN_IN_REQUIRED' } };
             }
             // BYOK is stateless: keys are used for one provider request, never saved.
@@ -559,10 +604,21 @@ export default {
                 result = { status: 200, body: { group: createGroup(body || {}) } };
             }
             else if (path === '/api/continuity/reference' && method === 'POST') {
-                result = { status: 200, body: { group: setReference(body?.group, body?.reference || body) } };
+                const reference = body?.reference || body;
+                if (reference?.status === 'confirmed' && !(reference.role === 'scene' && reference.textOnly === true)) {
+                    const asset = reference.assetId && await readAsset(reference.path || `/api/continuity/asset/${reference.assetId}`, { env });
+                    const libraryImage = !asset && reference.referenceImageUrl && await readableContinuityLibraryImage(reference.referenceImageUrl);
+                    if (!asset && !libraryImage) throw new ContinuityError('GENERATION_REFERENCE_MISSING', `参考图读不到：${reference.role || 'unknown'}`, 409);
+                }
+                result = { status: 200, body: { group: setReference(body?.group, reference) } };
             }
             else if (path === '/api/continuity/master' && method === 'POST') {
-                result = { status: 200, body: { group: confirmMaster(body?.group, { assetId: body?.assetId, actor: body?.actor }) } };
+                const confirmedGroup = confirmMaster(body?.group, { assetId: body?.assetId, actor: body?.actor });
+                const identity = confirmedGroup.references.find(reference => reference.role === 'identity');
+                const asset = identity?.assetId && await readAsset(identity.path || `/api/continuity/asset/${identity.assetId}`, { env });
+                const libraryImage = !asset && identity?.referenceImageUrl && await readableContinuityLibraryImage(identity.referenceImageUrl);
+                if (!asset && !libraryImage) throw new ContinuityError('GENERATION_REFERENCE_MISSING', '人物参考图尚未上传或无法读取', 409);
+                result = { status: 200, body: { group: confirmedGroup } };
             }
             else if (path === '/api/continuity/requests' && method === 'POST') {
                 const shots = buildShotRequests(body?.group, {
@@ -632,8 +688,18 @@ export default {
                     result = { status: 400, body: { error: 'MODEL_NOT_ALLOWED', code: 'GENERATION_MODEL_NOT_ALLOWED' } };
                 }
                 else {
-                    const allowed = await consumeStudioImageQuota({ uid, env });
-                    if (allowed === null) result = { status: 503, body: { error: 'IMAGE_QUOTA_NOT_CONFIGURED' } };
+                    try {
+                        await validateShotGeneration({ group: body?.group, shotId: body?.shotId,
+                            providerId: body?.providerId, env, attempt: body?.attempt, modelId: body?.modelId });
+                    } catch (validationError) {
+                        result = { status: validationError.status || 400, body: {
+                            error: String(validationError?.message || validationError).slice(0, 300),
+                            code: validationError?.code || 'GENERATE_VALIDATION_FAILED',
+                        } };
+                    }
+                    const allowed = result ? false : await consumeStudioImageQuota({ uid, env });
+                    if (result) { /* Validation failed before the quota check. */ }
+                    else if (allowed === null) result = { status: 503, body: { error: 'IMAGE_QUOTA_NOT_CONFIGURED' } };
                     else if (allowed === 'global-limit') result = { status: 429, body: { error: 'GLOBAL_IMAGE_DAILY_LIMIT_REACHED' } };
                     else if (!allowed) result = { status: 429, body: { error: 'IMAGE_DAILY_LIMIT_REACHED' } };
                     else {
@@ -651,6 +717,7 @@ export default {
                             });
                             result = { status: isAsync ? 202 : 200, body: generated };
                         } catch (generateError) {
+                            await refundStudioImageQuota({ uid, env });
                             // Surface the real cause instead of a bare Cloudflare
                             // error page; this branch failed silently once.
                             result = { status: generateError.status || 500, body: {
@@ -672,6 +739,9 @@ export default {
                     if (cached?.status === 'succeeded' && cached.image?.assetId) {
                         result = { status: 200, body: { ...cached, shotId: body?.shotId || cached.shotId } };
                     }
+                    if (cached?.status === 'failed' && cached.terminal === true) {
+                        result = { status: cached.httpStatus || 502, body: { ...cached, shotId: body?.shotId || cached.shotId } };
+                    }
                     let polled;
                     if (!result) {
                         try {
@@ -685,11 +755,15 @@ export default {
                                     error: String(error.message || error).slice(0, 300),
                                 } };
                             } else if (['GENERATION_UPSTREAM_FAILED', 'GENERATION_INVALID_RESPONSE', 'GENERATION_TASK_ID_INVALID'].includes(error?.code)) {
-                                result = { status: error.status || 502, body: {
+                                const failure = {
                                     status: 'failed', terminal: true, retryable: error.details?.retryable === true,
                                     shotId: body?.shotId, code: error.code,
                                     error: String(error.message || error).slice(0, 300),
-                                } };
+                                    httpStatus: error.status || 502,
+                                };
+                                await writeContinuityResultCache(env, uid, body?.taskId, failure);
+                                await refundStudioImageQuota({ uid, env });
+                                result = { status: failure.httpStatus, body: failure };
                             } else throw error;
                         }
                     }
@@ -749,7 +823,23 @@ export default {
                 result = { status: 200, body: judged };
             }
             else if (path === '/api/continuity/summary' && method === 'POST') {
-                result = { status: 200, body: continuitySummary(body?.group) };
+                const summary = continuitySummary(body?.group);
+                const missing = [];
+                for (const reference of body?.group?.references || []) {
+                    if (reference.status !== 'confirmed') continue;
+                    if (reference.role === 'scene' && reference.textOnly === true) continue;
+                    const asset = reference.assetId && await readAsset(reference.path || `/api/continuity/asset/${reference.assetId}`, { env });
+                    const libraryImage = !asset && reference.referenceImageUrl && await readableContinuityLibraryImage(reference.referenceImageUrl);
+                    if (!asset && !libraryImage) {
+                        summary.references[reference.role] = 'missing';
+                        missing.push(reference.role);
+                    }
+                }
+                if (missing.length) {
+                    summary.readyToGenerate = false;
+                    summary.blockedReason = `参考图读不到：${[...new Set(missing)].join('、')}`;
+                }
+                result = { status: 200, body: summary };
             }
             // Auth
             else if (path === '/api/director/plan' && method === 'POST') {
@@ -762,17 +852,24 @@ export default {
                         if (allowed === null) result = { status: 503, body: { error: '方案生成额度服务暂不可用，请稍后重试。', code: 'AI_PLAN_QUOTA_NOT_CONFIGURED' } };
                         else if (!allowed) result = { status: 429, body: { error: '今日方案生成额度已用完，请明天再试。', code: 'AI_PLAN_DAILY_LIMIT_REACHED' } };
                         else {
-                            const generated = await handleAiPlan({ provider: 'cloudflare-workers-ai',
-                                model: aiPlanProviders(env).find(provider => provider.id === 'cloudflare-workers-ai')?.suggestedModel,
-                                input: { ...body, requireImageReferences: true } }, env);
-                            if (generated.status !== 200) result = generated;
-                            else {
-                                plan = generated.body;
-                                plan.director = { ...plan.director,
-                                    imageGenerationConnected: cloudImageGenerationEnabled(plan, uid, env),
-                                    imageGenerationMode: cloudImageGenerationEnabled(plan, uid, env)
-                                        ? 'cloud-fal-candidate-review' : 'cloud-image-provider-not-configured',
-                                };
+                            try {
+                                const generated = await handleAiPlan({ provider: 'cloudflare-workers-ai',
+                                    model: aiPlanProviders(env).find(provider => provider.id === 'cloudflare-workers-ai')?.suggestedModel,
+                                    input: { ...body, requireImageReferences: true } }, env);
+                                if (generated.status !== 200) {
+                                    await refundStudioPlanQuota({ uid, env });
+                                    result = generated;
+                                } else {
+                                    plan = generated.body;
+                                    plan.director = { ...plan.director,
+                                        imageGenerationConnected: cloudImageGenerationEnabled(plan, uid, env),
+                                        imageGenerationMode: cloudImageGenerationEnabled(plan, uid, env)
+                                            ? 'cloud-fal-candidate-review' : 'cloud-image-provider-not-configured',
+                                    };
+                                }
+                            } catch (error) {
+                                await refundStudioPlanQuota({ uid, env });
+                                throw error;
                             }
                         }
                     }
@@ -791,13 +888,27 @@ export default {
                 else if (!env.AI || typeof env.AI.run !== 'function') result = { status: 503, body: { error: 'IMAGE_PROVIDER_NOT_CONFIGURED' } };
                 else if (!env.WORKSPACE_SYNC || !env.JWT_SECRET) result = { status: 503, body: { error: 'CANDIDATE_STORAGE_NOT_CONFIGURED' } };
                 else {
-                    const allowed = await consumeStudioImageQuota({ uid, env });
-                    if (allowed === null) result = { status: 503, body: { error: 'IMAGE_QUOTA_NOT_CONFIGURED' } };
+                    let referenceContext;
+                    try { referenceContext = await prepareCloudCandidateReferences(body); }
+                    catch (error) {
+                        const code = ['REFERENCE_IMAGES_REQUIRED', 'REFERENCE_IMAGE_UNAVAILABLE', 'REFERENCE_IMAGE_TOO_LARGE', 'UNTRUSTED_REFERENCE_IMAGE',
+                            'REFERENCE_LIBRARY_UNAVAILABLE', 'INVALID_REFERENCE_SELECTION', 'UNAVAILABLE_REFERENCE',
+                            'POSE_REFERENCE_CONFLICTS_WITH_USER_CONSTRAINTS', 'WARDROBE_REFERENCE_MISMATCH',
+                            'GENERATION_PROVIDER_NOT_ALLOWED', 'GENERATION_BILLING_MODE_NOT_ALLOWED', 'CLOUD_REFERENCE_IMAGE_NOT_CONFIGURED',
+                            'INVALID_GENERATION_REQUEST', 'SHOT_CONTRACT_REQUIRED'].includes(error.message) ? error.message : 'IMAGE_REFERENCE_PREPARATION_FAILED';
+                        const status = code === 'WARDROBE_REFERENCE_MISMATCH' ? 422
+                            : ['POSE_REFERENCE_CONFLICTS_WITH_USER_CONSTRAINTS', 'INVALID_REFERENCE_SELECTION', 'INVALID_GENERATION_REQUEST',
+                                'SHOT_CONTRACT_REQUIRED', 'GENERATION_PROVIDER_NOT_ALLOWED', 'GENERATION_BILLING_MODE_NOT_ALLOWED',
+                                'CLOUD_REFERENCE_IMAGE_NOT_CONFIGURED'].includes(code) ? 400 : 503;
+                        result = { status, body: { error: code } };
+                    }
+                    const allowed = result ? false : await consumeStudioImageQuota({ uid, env });
+                    if (result) { /* Validation failed before the quota check. */ }
+                    else if (allowed === null) result = { status: 503, body: { error: 'IMAGE_QUOTA_NOT_CONFIGURED' } };
                     else if (allowed === 'global-limit') result = { status: 429, body: { error: 'GLOBAL_IMAGE_DAILY_LIMIT_REACHED' } };
                     else if (!allowed) result = { status: 429, body: { error: 'IMAGE_DAILY_LIMIT_REACHED' } };
                     else {
                         try {
-                            const referenceContext = await prepareCloudCandidateReferences(body);
                             const generated = await generateCloudCandidate(body, { ai: env.AI, referenceContext });
                             const assetId = crypto.randomUUID().replace(/-/g, '');
                             const object = env.WORKSPACE_SYNC.get(env.WORKSPACE_SYNC.idFromName(`user:${uid}`));
@@ -812,10 +923,13 @@ export default {
                                     generator_prompt: generated.prompt,
                                     referenceIds: referenceContext.templates.map(template => template.id),
                                     referenceImages: generated.referenceImages,
+                                    referenceWarnings: generated.referenceWarnings,
                                     library: referenceContext.library },
                                 candidateAsset: { id: assetId, url: assetUrl, synthetic: true,
                                     status: 'candidate-awaiting-human-review', source: 'cloudflare-workers-ai',
                                     model: generated.model, poseStatus: 'not-run', poseReasons: [], faceQualityStatus: 'not-run',
+                                    steps: generated.steps, seed: generated.seed,
+                                    referenceWarnings: generated.referenceWarnings,
                                     shotLanguage: generated.shotLanguage, contractSource: 'template-library-shot-contract',
                                     referenceIds: referenceContext.templates.map(template => template.id),
                                     referenceImages: generated.referenceImages,
@@ -823,6 +937,7 @@ export default {
                                     productionRelease: false },
                             } };
                         } catch (error) {
+                            await refundStudioImageQuota({ uid, env });
                             const code = ['REFERENCE_IMAGES_REQUIRED', 'REFERENCE_IMAGE_UNAVAILABLE', 'REFERENCE_IMAGE_TOO_LARGE', 'UNTRUSTED_REFERENCE_IMAGE',
                                 'REFERENCE_LIBRARY_UNAVAILABLE', 'INVALID_REFERENCE_SELECTION', 'UNAVAILABLE_REFERENCE',
                                 'POSE_REFERENCE_CONFLICTS_WITH_USER_CONSTRAINTS', 'WARDROBE_REFERENCE_MISMATCH',
@@ -927,6 +1042,7 @@ export default {
                 result = { status: 404, body: { error: 'Not Found' } };
             }
 
+            if (uid && result?.body) result.body = signContinuityAssetPaths(result.body, uid, env);
             if (isStudio) return studioJson(result.status, result.body, origin);
             const requestId = recordWebRequest(request, result, env, body);
             return new Response(JSON.stringify(result.body), { 

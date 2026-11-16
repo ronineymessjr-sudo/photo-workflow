@@ -253,6 +253,42 @@ function normalizeGeneratorPromptFraming(shot) {
     return { ...shot, generator_prompt: `${alignedPrompt}${alignedPrompt ? ', ' : ''}${generatorFramingBySize[size]}` };
 }
 
+function normalizeShotFramingFields(shot) {
+    const size = shotSizeRank[shot?.shot_size] ? shot.shot_size : '';
+    if (!size || !framingConflictsWithSize(shot.crop_boundary || '', size)
+        || framingConflictsWithSize(shot.must_show || '', size)
+        || (['ECU', 'CU', 'MCU', 'MS'].includes(size) && /全身|从头到脚|脚部|鞋|双腿|腿部|膝盖/.test(String(shot.must_show || '')))) return shot;
+    const cropBySize = {
+        ECU: '极近特写，只呈现指定五官细节', CU: '脸部特写，以面部为画面主体',
+        MCU: '头肩近景，从头顶至肩部入画', MS: '中景，腰部以上入画',
+        MFS: '中全景，膝盖以上入画', FS: '全身，从头到脚完整入画',
+        WS: '环境全身，人物完整入画并保留较多环境', EWS: '环境远景，以场景为主且人物完整入画',
+    };
+    return { ...shot, crop_boundary: cropBySize[size] };
+}
+
+const cameraAngleCanonical = {
+    eye_level: { zh: '摄影师以人物眼睛高度平视拍摄', en: 'eye-level camera angle' },
+    high_angle: { zh: '摄影师站在地面将机位举至人物头部以上向下俯拍', en: 'high-angle camera view' },
+    ground_level: { zh: '摄影师将机位降至接近地面向上仰拍', en: 'ground-level camera view' },
+    overhead: { zh: '摄影师在主体上方垂直向下拍摄', en: 'overhead camera view' },
+    low_angle: { zh: '摄影师将机位降至人物腰部以下向上仰拍', en: 'low-angle camera view' },
+};
+const cameraTextPatterns = /高机位|俯拍|仰拍|低机位|贴地|正上方|平视|眼平|eye[- ]level|high[- ]angle|ground[- ]level|overhead|low[- ]angle/gi;
+
+function normalizeShotCameraFields(shot) {
+    const angle = cameraAngleCanonical[shot?.camera_angle];
+    if (!angle) return shot;
+    const position = String(shot.photographer_position || '');
+    const alignedPosition = position.replace(cameraTextPatterns, ' ').replace(/[，,;；\s]+/g, ' ').trim();
+    const prompt = String(shot.generator_prompt || '').replace(cameraTextPatterns, ' ').replace(/\s+/g, ' ').trim();
+    return { ...shot, photographer_position: `${alignedPosition || '距主体约3米'}，${angle.zh}`, generator_prompt: `${prompt}${prompt ? ', ' : ''}${angle.en}` };
+}
+
+export function normalizePlanShot(shot) {
+    return normalizeGeneratorPromptFraming(normalizeShotCameraFields(normalizeShotFramingFields(shot)));
+}
+
 function parseFocalRange(value) {
     const match = String(value || '').trim().toLowerCase().match(/^(\d{1,3}(?:\.\d)?)(?:-(\d{1,3}(?:\.\d)?))?mm$/);
     if (!match) return null;
@@ -535,7 +571,7 @@ shot_language 是独特的镜头名称；model_pose 写具体动作口令；phot
             }
         // If the executable Chinese framing fields agree, align only the image
         // prompt's framing term with the structured shot size before validation.
-        result.shot_plans = result.shot_plans.map(normalizeGeneratorPromptFraming);
+        result.shot_plans = result.shot_plans.map(normalizePlanShot);
             const hardConstraintViolations = validateHardConstraints(result.shot_plans, body.input);
             if (hardConstraintViolations.length) {
                 const error = new Error('AI_HARD_CONSTRAINTS_FAILED');

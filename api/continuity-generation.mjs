@@ -1,5 +1,54 @@
 // Image-service adapters for one shot at a time.
 const STEPS = 24;
+
+async function prepareFluxReference(source, env) {
+    const buffer = source.buffer instanceof Uint8Array ? source.buffer : new Uint8Array(source.buffer || []);
+    if (!env.IMAGES?.input || typeof env.IMAGES.info !== 'function') return source;
+    try {
+        const info = await env.IMAGES.info(buffer);
+        if (Number(info?.width) <= 768 && Number(info?.height) <= 768 && buffer.byteLength <= 400 * 1024) return source;
+        const transformed = await env.IMAGES.input(buffer)
+            .transform({ width: 768, height: 768, fit: 'scale-down' })
+            .output({ format: 'image/jpeg', quality: 82 });
+        const response = transformed.response();
+        const resized = new Uint8Array(await response.arrayBuffer());
+        if (resized.length && resized.length < buffer.length) return { ...source, buffer: resized, mime: 'image/jpeg' };
+    } catch (error) {
+        console.warn('continuity_reference_resize_failed', String(error?.message || error).slice(0, 200));
+    }
+    return source;
+}
+
+function imageDimensions(bytes, mime) {
+    if (mime === 'image/png' && bytes.length >= 24) {
+        const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+        return { width: view.getUint32(16), height: view.getUint32(20) };
+    }
+    if (mime === 'image/jpeg') {
+        for (let i = 2; i + 9 < bytes.length;) {
+            if (bytes[i] !== 0xff) { i++; continue; }
+            const marker = bytes[i + 1];
+            const length = (bytes[i + 2] << 8) | bytes[i + 3];
+            if ([0xc0, 0xc1, 0xc2, 0xc3, 0xc5, 0xc6, 0xc7, 0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf].includes(marker)) {
+                return { width: (bytes[i + 7] << 8) | bytes[i + 8], height: (bytes[i + 5] << 8) | bytes[i + 6] };
+            }
+            if (length < 2) break;
+            i += 2 + length;
+        }
+    }
+    if (mime === 'image/webp' && bytes.length >= 30 && String.fromCharCode(...bytes.slice(0, 4)) === 'RIFF') {
+        const chunk = String.fromCharCode(...bytes.slice(12, 16));
+        if (chunk === 'VP8X') {
+            const read24 = offset => bytes[offset] | (bytes[offset + 1] << 8) | (bytes[offset + 2] << 16);
+            return { width: read24(24) + 1, height: read24(27) + 1 };
+        }
+        if (chunk === 'VP8 ') return {
+            width: ((bytes[27] << 8) | bytes[26]) & 0x3fff,
+            height: ((bytes[29] << 8) | bytes[28]) & 0x3fff,
+        };
+    }
+    return null;
+}
 //
 // Rules this file enforces:
 //   - no credential -> 503 GENERATION_NOT_CONFIGURED listing the exact env vars,
@@ -898,6 +947,12 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
     // The prompt budget matters: FLUX.2 klein states a ~512 token cap and that
     // longer prompts degrade rather than truncate cleanly. The version below runs
     // ~400 tokens so nothing important falls off the end.
+    const selectedPoseId = String(poseRef?.id || poseRef?.templateId || poseRef?.sourceItemId || poseRef || '');
+    const poseCorrection = /P015/i.test(selectedPoseId)
+        ? "PoseAtlas P015: stand with feet apart in balanced contrapposto; the subject's right hand rests on her hip (viewer's left); keep the sides correct and do not mirror the pose."
+        : /P017/i.test(selectedPoseId)
+            ? 'PoseAtlas P017: stand in a relaxed three-quarter turn and look back over the shoulder, with balanced separated feet; do not mirror the pose.'
+            : '';
     const composed = [
         // Follow the chosen shoot's look instead of imposing one global film or
         // gritty texture on every location. Keep facial information readable.
@@ -906,6 +961,7 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
             ? 'Image 1 is the accepted frame from this shoot. Preserve established identity and group-wide wardrobe continuity except where the current shot contract specifies a change. Follow that contract for pose, action, scene, lighting, camera and framing. Image 2 is the approved visual-style reference.'
             : 'Image 1 supplies the identity reference; Image 2 is the approved visual-style reference.',
         direction ? `Shot: ${stripBannedWords(direction)}.` : '',
+        poseCorrection,
         ...wardrobeCoverageEn,
         directive(variant?.mustShow) ? `Must contain: ${shortList(variant.mustShow)}.` : '',
         directive(variant?.rejectIf) ? `Redo if: ${shortList(variant.rejectIf)}.` : '',
@@ -914,28 +970,40 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
         'Natural skin texture and camera-like tonal transitions; preserve the face from the identity reference without beauty-filter smoothing.',
         'Avoid excessive smoothing, waxy skin, over-sharpening, HDR glow, text, watermark, collage, extra limbs and malformed hands.',
     ].filter(Boolean).join(' ');
-    const form = new FormData();
-    form.append('prompt', composed);
-    form.append('width', String(width));
-    form.append('height', String(height));
-    // 4 steps is the model's "concepting" setting (sub-second previews). For a
-    // frame we intend to keep, the 9B variant wants ~25: texture, skin detail and
-    // fine structure only appear past ~15.
-    form.append('steps', String(STEPS));
-    chosen.forEach((reference, index) => {
-        const source = (index === 0 && anchorBuffer) ? anchorBuffer : reference;
+    // 4 steps is the model's "concepting" setting; use the handoff's production
+    // setting for candidate frames. Rebuild FormData per retry because its body
+    // stream is single-use.
+    const requestImages = [];
+    for (const [index, reference] of chosen.entries()) {
+        const source = await prepareFluxReference((index === 0 && anchorBuffer) ? anchorBuffer : reference, env);
         const bytes = source.buffer instanceof Uint8Array ? source.buffer : new Uint8Array(source.buffer || []);
-        form.append(`input_image_${index}`, new Blob([bytes], { type: source.mime || 'image/png' }), `reference-${index}`);
-    });
-    if (poseBytes) form.append('input_image_2', new Blob([poseBytes.bytes], { type: poseBytes.mime }), 'reference-2');
-    const serialized = new Response(form);
+        requestImages.push({ bytes, mime: source.mime || 'image/png' });
+    }
+    if (poseBytes) requestImages.push({ bytes: poseBytes.bytes, mime: poseBytes.mime });
     let result;
-    try {
-        result = await ai.run('@cf/black-forest-labs/flux-2-klein-9b', {
-            multipart: { body: serialized.body, contentType: serialized.headers.get('content-type') },
-        });
-    } catch (error) {
-        throw new GenerationError('GENERATION_UPSTREAM_FAILED', `Cloudflare 出图失败：${String(error?.message || error).slice(0, 200)}`, 502);
+    for (let retry = 0; retry < 2; retry++) {
+        try {
+            const form = new FormData();
+            form.append('prompt', composed);
+            form.append('width', String(width));
+            form.append('height', String(height));
+            form.append('steps', String(STEPS));
+            if (Number.isSafeInteger(seed)) form.append('seed', String(seed));
+            requestImages.forEach((image, index) => form.append(`input_image_${index}`, new Blob([image.bytes], { type: image.mime }), `reference-${index}`));
+            const serialized = new Response(form);
+            result = await ai.run('@cf/black-forest-labs/flux-2-klein-9b', {
+                multipart: { body: serialized.body, contentType: serialized.headers.get('content-type') },
+            });
+            break;
+        } catch (error) {
+            const message = String(error?.message || error);
+            console.error('continuity_flux_upstream_failure', JSON.stringify({ attempt: retry + 1, code: error?.code || '', message: message.slice(0, 300) }));
+            if (retry === 0 && /\b3043\b|\b502\b|\b503\b|internal server error|temporarily unavailable/i.test(message)) {
+                await new Promise(resolve => setTimeout(resolve, 150));
+                continue;
+            }
+            throw new GenerationError('GENERATION_UPSTREAM_FAILED', `Cloudflare 出图失败：${message.slice(0, 200)}`, 502);
+        }
     }
     if (typeof result?.image !== 'string' || !result.image.length) {
         throw new GenerationError('GENERATION_INVALID_RESPONSE', 'Cloudflare 返回里没有图片数据', 502);
@@ -943,7 +1011,7 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
     const binary = atob(result.image);
     const head = binary.charCodeAt(0);
     const contentType = head === 137 ? 'image/png' : head === 255 ? 'image/jpeg' : 'image/webp';
-    return { contentType, base64: result.image, prompt: composed, referencesSent: chosen.length + (poseBytes ? 1 : 0), anchored: Boolean(anchorBuffer) };
+    return { contentType, base64: result.image, prompt: composed, referencesSent: chosen.length + (poseBytes ? 1 : 0), anchored: Boolean(anchorBuffer), dimensions: imageDimensions(Uint8Array.from(binary, char => char.charCodeAt(0)), contentType) };
 }
 
 /**
@@ -1061,7 +1129,7 @@ export async function generateShot({ group, shotId, providerId = '', env = {}, f
         provider: providerId,
         adapter: adapterName,
         seed: request.seed,
-        size,
+        size: image.dimensions ? `${image.dimensions.width}x${image.dimensions.height}` : synchronousSize,
         lockedHash: request.lockedHash,
         references: request.references,
         image: { assetId: stored.assetId, path: stored.path, bytes: stored.bytes, durable: stored.durable },
@@ -1074,6 +1142,49 @@ export async function generateShot({ group, shotId, providerId = '', env = {}, f
         // QC is deliberately not filled here: the planner never grades itself.
         qc: { verdict: 'pending' },
     };
+}
+
+export async function validateShotGeneration({ group, shotId, providerId = '', env = {}, fetchImpl = fetch, store = null, attempt = 0, modelId = MODELSCOPE_MODEL } = {}) {
+    providerId = providerId || group?.imageProvider || '';
+    if (providerId === 'modelscope-qwen-edit' && !isModelScopeModelAllowed(modelId)) {
+        throw new GenerationError('GENERATION_MODEL_NOT_ALLOWED', '不支持的魔搭图像模型', 400);
+    }
+    if (!shotId) throw new ContinuityError('CONTINUITY_SHOT_REQUIRED', '需要镜头 ID', 400);
+    if (!(group?.shots || []).some(shot => shot.shotId === shotId)) throw new ContinuityError('CONTINUITY_SHOT_UNKNOWN', `没有这个镜头：${shotId}`, 404);
+    const request = buildShotRequests(group, {
+        providerId, shotIds: [shotId],
+        seedBase: 428193 + Math.max(0, Math.min(2, Number(attempt) || 0)) * 10000,
+    })[0];
+    if (!request) throw new ContinuityError('CONTINUITY_SHOT_UNKNOWN', `没有这个镜头：${shotId}`, 404);
+    if (!PROVIDER_ADAPTERS[providerId]) throw new GenerationError('GENERATION_ADAPTER_MISSING', `没有为 ${providerId} 配置生成适配器`, 501);
+    const provider = CONTINUITY_PROVIDERS[providerId];
+    const imageSlots = provider?.imageSlots || provider?.roles || [];
+    const requiredImageSlots = provider?.requiredImageSlots || imageSlots;
+    for (const reference of request.references) {
+        if (!requiredImageSlots.includes(reference.role) || !imageSlots.includes(reference.role)) continue;
+        const definition = (group.references || []).find(item => item.role === reference.role);
+        let asset;
+        if (definition?.path) {
+            try { asset = await readAsset(definition.path, { env, store }); }
+            catch (error) { throw new GenerationError('GENERATION_REFERENCE_INVALID', error.message, 409); }
+        } else if (definition?.referenceImageUrl) {
+            const external = await fetchLibraryImage(definition.referenceImageUrl, fetchImpl);
+            if (external) asset = external;
+        }
+        if (!asset) throw new GenerationError('GENERATION_REFERENCE_MISSING', `参考图读不到：${reference.role}`, 409);
+    }
+    if (request.anchor?.assetId) {
+        let anchor;
+        try { anchor = await readAsset(request.anchor.path || `/api/continuity/asset/${request.anchor.assetId}`, { env, store }); }
+        catch (error) { throw new GenerationError('GENERATION_REFERENCE_INVALID', error.message, 409); }
+        if (!anchor?.buffer?.length) throw new GenerationError('GENERATION_REFERENCE_MISSING', '锚点成片无法读取', 409);
+    }
+    const poseRef = (group.shots || []).find(shot => shot.shotId === shotId)?.poseRef;
+    if (providerId === 'modelscope-qwen-edit' && poseRef && !poseRef.assetId && poseRef.referenceImageUrl) {
+        const pose = await fetchLibraryImage(poseRef.referenceImageUrl, fetchImpl);
+        if (!pose) throw new GenerationError('GENERATION_REFERENCE_MISSING', '姿势参考图无法读取', 409);
+    }
+    return true;
 }
 
 // Translate Chinese guidance so the model receives one language. Constraints are

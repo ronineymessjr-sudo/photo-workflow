@@ -80,11 +80,9 @@ test('cloud image generation blocks guests before any AI binding call', async ()
     assert.equal(aiCalls, 0);
 });
 
-test('continuity image generation blocks guests and applies the user and shared daily limits', async () => {
+test('continuity generation validates reference contracts before charging image quotas', async () => {
     const secret = 'unit-test-secret';
     const actions = [];
-    let userAllowed = false;
-    let globalAllowed = false;
     let aiCalls = 0;
     const env = {
         JWT_SECRET: secret,
@@ -97,7 +95,7 @@ test('continuity image generation blocks guests and applies the user and shared 
                         const request = input instanceof Request ? input : new Request(input, init);
                         const { action } = await request.json();
                         actions.push({ id, action });
-                        return Response.json({ allowed: action === 'image' ? userAllowed : globalAllowed });
+                        return Response.json({ allowed: true });
                     },
                 };
             },
@@ -115,16 +113,10 @@ test('continuity image generation blocks guests and applies the user and shared 
     assert.deepEqual(actions, []);
 
     const authorization = `Bearer ${token('user-1', secret)}`;
-    const userLimited = await worker.fetch(makeRequest(authorization), env);
-    assert.equal(userLimited.status, 429);
-    assert.equal((await userLimited.json()).error, 'IMAGE_DAILY_LIMIT_REACHED');
-    assert.deepEqual(actions.map(item => item.action), ['image']);
-
-    userAllowed = true;
-    const globallyLimited = await worker.fetch(makeRequest(authorization), env);
-    assert.equal(globallyLimited.status, 429);
-    assert.equal((await globallyLimited.json()).error, 'GLOBAL_IMAGE_DAILY_LIMIT_REACHED');
-    assert.deepEqual(actions.map(item => item.action), ['image', 'image', 'image-global']);
+    const invalid = await worker.fetch(makeRequest(authorization), env);
+    assert.equal(invalid.status, 400);
+    assert.equal((await invalid.json()).code, 'CONTINUITY_SHOT_REQUIRED');
+    assert.deepEqual(actions, []);
     assert.equal(aiCalls, 0);
 });
 
@@ -167,7 +159,7 @@ test('continuity collect stops retrying a terminal task-not-found response', asy
         assert.equal(response.status, 502);
         assert.deepEqual(await response.json(), {
             status: 'failed', terminal: true, retryable: false, shotId: 'shot-01',
-            code: 'GENERATION_UPSTREAM_FAILED', error: '魔搭任务失败：task not found',
+            code: 'GENERATION_UPSTREAM_FAILED', error: '魔搭任务失败：task not found', httpStatus: 502,
         });
     } finally {
         globalThis.fetch = originalFetch;
@@ -575,6 +567,75 @@ function token(uid, secret) {
     const s = createHmac('sha256', secret).update(p).digest('hex');
     return Buffer.from(JSON.stringify({ p, s })).toString('base64url');
 }
+
+test('continuity assets require an HMAC URL for img tags and prescreen reads uploaded bytes', async () => {
+    const secret = 'unit-test-secret';
+    const entries = new Map();
+    const env = {
+        JWT_SECRET: secret,
+        DEEPSEEK_API_KEY: 'test-only-vision-key',
+        CONTINUITY_KV: {
+            async put(key, value) { entries.set(key, value); },
+            async get(key) { return entries.get(key) || null; },
+        },
+    };
+    const authorization = `Bearer ${token('user-1', secret)}`;
+    const upload = await worker.fetch(new Request('https://unit.test/api/continuity/asset', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: authorization },
+        body: JSON.stringify({ dataUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', role: 'misc' }),
+    }), env);
+    assert.equal(upload.status, 201);
+    const stored = await upload.json();
+    assert.match(stored.path, /\?owner=user-1&exp=\d{13}&sig=[a-f0-9]{64}/);
+    const unsigned = stored.path.split('?')[0];
+    const denied = await worker.fetch(new Request(`https://unit.test${unsigned}`), env);
+    assert.equal(denied.status, 401);
+    const tampered = await worker.fetch(new Request(`https://unit.test${stored.path.replace(/sig=[a-f0-9]+/, `sig=${'0'.repeat(64)}`)}`), env);
+    assert.equal(tampered.status, 401);
+    const image = await worker.fetch(new Request(`https://unit.test${stored.path}`), env);
+    assert.equal(image.status, 200);
+    assert.equal(image.headers.get('content-type'), 'image/png');
+
+    const originalFetch = globalThis.fetch;
+    let imageDataUrl = '';
+    globalThis.fetch = async (_url, init) => {
+        const payload = JSON.parse(init.body);
+        imageDataUrl = payload.messages[0].content[1].image_url.url;
+        return Response.json({ choices: [{ message: { content: '{"wardrobe":"pass","place-weather":"pass","shot-spec":"pass","notes":"可读"}' } }] });
+    };
+    try {
+        const response = await worker.fetch(new Request('https://unit.test/api/continuity/prescreen', {
+            method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: authorization },
+            body: JSON.stringify({ shotId: 'shot-01', imagePath: stored.path,
+                group: { shots: [{ shotId: 'shot-01', size: 'FS', camera: '平视', lens: '35mm' }],
+                    locked: { subject: '成年人', wardrobe: '外套', location: '公园', weather: '阴天', timeOfDay: '白天' } } }),
+        }), env);
+        assert.equal(response.status, 200);
+        assert.match(imageDataUrl, /^data:image\/png;base64,/);
+        assert.equal((await response.json()).available, true);
+    } finally {
+        globalThis.fetch = originalFetch;
+    }
+});
+
+test('continuity summary does not mark fabricated confirmed asset ids ready', async () => {
+    const secret = 'unit-test-secret';
+    const authorization = `Bearer ${token('user-1', secret)}`;
+    const init = await worker.fetch(new Request('https://unit.test/api/continuity/init', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: authorization },
+        body: JSON.stringify({ input: { theme: '测试', scene: '公园', people: '1', wardrobeNote: '日常服装' } }),
+    }), { JWT_SECRET: secret });
+    const group = (await init.json()).group;
+    group.references = group.references.map(reference => ({ ...reference, status: 'confirmed', assetId: 'badassetid000001' }));
+    group.master = { confirmedBy: 'human' };
+    const response = await worker.fetch(new Request('https://unit.test/api/continuity/summary', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: authorization }, body: JSON.stringify({ group }),
+    }), { JWT_SECRET: secret });
+    assert.equal(response.status, 200);
+    const summary = await response.json();
+    assert.equal(summary.readyToGenerate, false);
+    assert.match(summary.blockedReason, /参考图读不到/);
+});
 
 test('an unavailable reference library returns a recoverable planning error', async () => {
     const originalFetch = globalThis.fetch;

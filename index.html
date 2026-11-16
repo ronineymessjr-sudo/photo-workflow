@@ -6196,7 +6196,7 @@ function inferAspectRatioFromPlan(plan) {
     if (/1\s*[:：]\s*1|方形|正方形/.test(brief)) return 'square';
     if (/16\s*[:：]\s*9|横屏.*宽幅|宽屏|宽画幅/.test(brief)) return 'landscape-wide';
     if (/竖屏|竖构图/.test(brief)) return 'portrait';
-    return 'landscape';
+    return 'portrait';
 }
 
 function renderShotInstructions(shot, showResources = true) {
@@ -6335,6 +6335,7 @@ function renderDirectorCandidatePanel(plan) {
             'camera-angle-not-machine-verified': '当前检查器不能从图像验证俯拍角度，需人工确认机位是否成立。'
         };
         const reviewItems = [
+            ...(Array.isArray(c.referenceWarnings) ? c.referenceWarnings : []),
             ...(Array.isArray(c.poseReasons) ? c.poseReasons.map(reason => reasonLabels[reason] || '构图/背景检查项未通过：' + String(reason)) : []),
             ...(c.poseStatus === 'not-run' || c.faceQualityStatus === 'not-run' ? ['云端未运行自动构图与人脸质量检查，必须人工审核后才能使用。'] : []),
             ...(c.faceQualityStatus === 'blocked' ? ['自动人脸质量评估器尚未接入；这不代表检测到脸部畸形，只表示五官结构、清晰度和皮肤纹理尚未自动验证，需人工复核。'] : [])
@@ -6533,7 +6534,7 @@ async function generateDirectorCandidateForPlan(planId) {
     const modelSelect = $('candidate-model-' + planId);
     const [provider, selectedModel] = String(modelSelect && modelSelect.value || 'cloudflare:@cf/black-forest-labs/flux-2-klein-9b').split(':');
     const aspectSelect = $('candidate-aspect-' + planId);
-    const aspectRatio = aspectSelect && aspectSelect.value || 'landscape';
+    const aspectRatio = aspectSelect && aspectSelect.value || 'portrait';
     const shot = (plan.shotList || [])[shotIndex];
     if (!shot) { toast('没有可用分镜', 'er'); return; }
     if (!window.generateDirectorCandidate) { toast('候选生图接口未加载', 'er'); return; }
@@ -6582,7 +6583,7 @@ async function generateDirectorCandidateForPlan(planId) {
             reference_brief: plan.input,
             judge_mode: 'heuristic',
             billing_mode: 'free-credit-first',
-            steps: 4,
+            steps: 24,
             aspect_ratio: aspectRatio,
             dry_run: false
         };
@@ -6619,7 +6620,9 @@ async function generateDirectorCandidateForPlan(planId) {
         savePlans(plans);
         currentPlanData = plan;
         $('outCnt').innerHTML = renderPlanContent(plan);
-        toast('候选图已生成，等待人工审核', 'ok');
+        toast(result.candidateAsset.referenceWarnings?.length
+            ? `候选图已生成；${result.candidateAsset.referenceWarnings.join(' ')}`
+            : '候选图已生成，等待人工审核', result.candidateAsset.referenceWarnings?.length ? 'warn' : 'ok');
     } catch (error) {
         console.error('候选生图失败:', error);
         const readableError = formatDirectorGenerationError(error);

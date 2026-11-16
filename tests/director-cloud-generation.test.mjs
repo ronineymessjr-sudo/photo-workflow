@@ -38,7 +38,13 @@ test('cloud candidate compiler preserves shot contract, constraints, and framing
     assert.match(compiled.prompt, /Do not include: extra people; flash lighting/);
     assert.match(compiled.prompt, /portrait 3:4 composition/);
     assert.ok(compiled.prompt.length <= 2048);
-    assert.deepEqual([compiled.width, compiled.height, compiled.steps], [768, 1024, 4]);
+    assert.deepEqual([compiled.width, compiled.height, compiled.steps], [768, 1024, 24]);
+});
+
+test('cloud candidate defaults to a portrait frame when no aspect ratio is supplied', () => {
+    const compiled = compileCloudCandidateRequest({ ...request, aspect_ratio: undefined });
+    assert.deepEqual([compiled.width, compiled.height], [768, 1024]);
+    assert.match(compiled.prompt, /portrait 3:4 composition/);
 });
 
 test('a shot-level scene takes priority over unrelated group locations in the free-form brief', () => {
@@ -123,10 +129,10 @@ test('image prompt follows explicit wardrobe text over extras in the outfit imag
     assert.doesNotMatch(imagePrompt, /bag, gold, necklace/);
 });
 
-test('candidate uses the existing Cloudflare AI binding and validates its JPEG output', async () => {
+test('candidate uses the existing Cloudflare AI binding, sends production params and validates its JPEG output', async () => {
     referenceFetchOptions.length = 0;
     const calls = [];
-    const result = await generateCloudCandidate(request, { referenceContext, fetchImpl, ai: { run: async (model, input) => {
+    const result = await generateCloudCandidate({ ...request, seed: 12345 }, { referenceContext, fetchImpl, ai: { run: async (model, input) => {
         calls.push({ model, input });
         if (model.includes('llama')) return { response: '35mm eye-level environmental portrait in an autumn park.' };
         return { image: Buffer.from(jpeg).toString('base64') };
@@ -150,12 +156,27 @@ test('candidate uses the existing Cloudflare AI binding and validates its JPEG o
     assert.equal(form.has('input_image_2'), false);
     assert.equal(form.get('width'), '768');
     assert.equal(form.get('height'), '1024');
+    assert.equal(form.get('steps'), '24');
+    assert.equal(form.get('seed'), '12345');
     assert.deepEqual(result.referenceImages.map(reference => reference.kind), ['pose', 'costume']);
     assert.deepEqual(referenceFetchOptions.map(options => options.cf?.image || null), [null, {
         width: 511, height: 511, fit: 'scale-down', format: 'jpeg',
     }]);
     assert.equal(result.model, '@cf/black-forest-labs/flux-2-klein-9b');
     assert.equal(result.mime, 'image/jpeg');
+    assert.deepEqual(result.bytes, jpeg);
+    assert.deepEqual(result.referenceWarnings, ['未选择人物人脸参考图；本镜需要人工检查跨镜身份一致性。']);
+});
+
+test('director image generation retries one transient Workers AI 3043 failure', async () => {
+    const calls = [];
+    const result = await generateCloudCandidate(request, { referenceContext, fetchImpl, ai: { run: async (model, input) => {
+        calls.push(model);
+        if (model.includes('llama')) return { response: '35mm eye-level environmental portrait in an autumn park.' };
+        if (calls.filter(value => value.includes('flux-2-klein')).length === 1) throw new Error('3043 Internal server error');
+        return { image: Buffer.from(jpeg).toString('base64') };
+    } } });
+    assert.equal(calls.filter(value => value.includes('flux-2-klein')).length, 2);
     assert.deepEqual(result.bytes, jpeg);
 });
 

@@ -119,6 +119,52 @@ test('Cloudflare prompt translation carries the selected PoseAtlas pose and dire
     assert.match(translated, /双脚错开站稳，肩颈放松/);
 });
 
+test('Cloudflare retries one transient 3043 failure and returns the actual output dimensions', async () => {
+    const store = createMemoryStore();
+    const group = await readyGroup(store);
+    let imageCalls = 0;
+    const generated = await generateShot({
+        group, shotId: 'shot-01', providerId: 'cloudflare-flux-klein', store,
+        env: { AI: { run: async (model, input) => {
+            if (model === '@cf/meta/llama-3.1-8b-instruct-fp8-fast') return { response: 'A full-body portrait at a station.' };
+            imageCalls += 1;
+            await new Response(input.multipart.body, { headers: { 'content-type': input.multipart.contentType } }).formData();
+            if (imageCalls === 1) throw new Error('3043 Internal server error');
+            return { image: PNG_1PX.split(',')[1] };
+        } } },
+    });
+    assert.equal(imageCalls, 2);
+    assert.equal(generated.size, '1x1');
+    assert.equal(Number.isSafeInteger(generated.seed), true);
+});
+
+test('large accepted anchors are resized through the Workers Images binding before FLUX', async () => {
+    const store = createMemoryStore();
+    const group = await readyGroup(store);
+    const large = new Uint8Array(500 * 1024);
+    const anchor = await storeAsset({ dataUrl: `data:image/png;base64,${Buffer.from(large).toString('base64')}`, role: 'misc', store });
+    setAnchor(group, { assetId: anchor.assetId, path: anchor.path, shotId: 'shot-01' });
+    const resizedInputBytes = [];
+    const env = {
+        IMAGES: {
+            info: async () => ({ width: 1024, height: 1536 }),
+            input(bytes) {
+                resizedInputBytes.push(bytes.byteLength);
+                return { transform: () => ({ output: async () => ({ response: () => new Response(Buffer.from(PNG_1PX.split(',')[1], 'base64')) }) }) };
+            },
+        },
+        AI: { run: async (model, input) => {
+            if (model === '@cf/meta/llama-3.1-8b-instruct-fp8-fast') return { response: 'A full-body portrait at a station.' };
+            const form = await new Response(input.multipart.body, { headers: { 'content-type': input.multipart.contentType } }).formData();
+            assert.equal(form.get('input_image_0').size, Buffer.from(PNG_1PX.split(',')[1], 'base64').length);
+            return { image: PNG_1PX.split(',')[1] };
+        } },
+    };
+    const generated = await generateShot({ group, shotId: 'shot-01', providerId: 'cloudflare-flux-klein', store, env });
+    assert.ok(resizedInputBytes.includes(large.length));
+    assert.equal(generated.anchored, true);
+});
+
 test('Cloudflare anchor prompt preserves identity while following the current shot contract', async () => {
     const store = createMemoryStore();
     const group = await readyGroup(store, { modelDesc: '两位成年朋友', lockedSubject: '两位成年朋友', mood: '安静而有张力' });

@@ -179,7 +179,9 @@ export function recommendProvider({ needReferences = true, configuredEnv = {}, b
     const configured = candidates.filter(isConfigured);
     const apiReady = configured.filter(provider => provider.adapter !== 'handoff');
     return {
-        recommended: apiReady[0]?.id || configured[0]?.id || '',
+        recommended: apiReady.find(provider => provider.id === 'cloudflare-flux-klein')?.id
+            || apiReady.find(provider => provider.id === 'volcengine-seedream')?.id
+            || apiReady[0]?.id || configured[0]?.id || '',
         candidates,
         configuredIds: configured.map(provider => provider.id),
         apiReadyIds: apiReady.map(provider => provider.id),
