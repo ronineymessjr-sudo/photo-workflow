@@ -24,6 +24,7 @@ node_modules/
 .github/
 .vscode/
 .wrangler/
+.wrangler-dry-run/
 
 # 大体积/无关产物
 experiments/

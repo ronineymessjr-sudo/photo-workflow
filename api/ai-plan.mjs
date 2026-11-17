@@ -489,12 +489,20 @@ shot_language 是独特的镜头名称；model_pose 写具体动作口令；phot
                     ...(provider.id === 'openai' ? { max_completion_tokens: 10000 } : { max_tokens: 8192 }) };
             let payload;
             if (provider.id === 'cloudflare-workers-ai') {
-                const response = await env.AI.run(model, {
-                    messages,
-                    response_format: requestBody.response_format,
-                    temperature: 0.2,
-                    max_tokens: 4096,
-                });
+                let response;
+                try {
+                    response = await env.AI.run(model, {
+                        messages,
+                        response_format: requestBody.response_format,
+                        temperature: 0.2,
+                        max_tokens: 4096,
+                    });
+                } catch (error) {
+                    if (/\b4006\b|you have used up your daily free allocation/i.test(String(error?.message || error))) {
+                        throw new Error('AI_PROVIDER_FREE_QUOTA_EXHAUSTED');
+                    }
+                    throw error;
+                }
                 const rawContent = response?.response;
                 const serialized = (rawContent && typeof rawContent === 'object') ? JSON.stringify(rawContent) : rawContent;
                 if (Array.isArray(response?.choices)) {
@@ -592,7 +600,7 @@ shot_language 是独特的镜头名称；model_pose 写具体动作口令；phot
             validatedShots = result.shot_plans;
             break;
                 } catch (error) {
-                    const safeCode = ['AI_OUTPUT_TRUNCATED', 'AI_COMPLETION_INCOMPLETE', 'AI_INVALID_JSON', 'AI_SHOT_COUNT_MISMATCH', 'AI_SHOT_FIELDS_INVALID', 'AI_HARD_CONSTRAINTS_FAILED', 'AI_PHOTOGRAPHER_FEASIBILITY_FAILED', 'INVALID_OUTPUT', 'PROVIDER_FAILED'].includes(error?.message) ? error.message : 'PROVIDER_OR_NETWORK_ERROR';
+                    const safeCode = ['AI_OUTPUT_TRUNCATED', 'AI_COMPLETION_INCOMPLETE', 'AI_INVALID_JSON', 'AI_SHOT_COUNT_MISMATCH', 'AI_SHOT_FIELDS_INVALID', 'AI_HARD_CONSTRAINTS_FAILED', 'AI_PHOTOGRAPHER_FEASIBILITY_FAILED', 'AI_PROVIDER_FREE_QUOTA_EXHAUSTED', 'INVALID_OUTPUT', 'PROVIDER_FAILED'].includes(error?.message) ? error.message : 'PROVIDER_OR_NETWORK_ERROR';
                     console.error('ai_plan_attempt_failed', JSON.stringify({ provider: provider.id, attempt, code: safeCode, violationCount: error?.violations?.length || 0, firstViolation: error?.violations?.[0]?.slice(0, 80) || '' }));
                     if (attempt < maxRepairAttempts && (provider.requiresKey !== false || provider.id === 'cloudflare-workers-ai') && error.rawShotPlans && error.violations?.length) {
                         qualityRepairAttempted = true;
@@ -613,14 +621,15 @@ shot_language 是独特的镜头名称；model_pose 写具体动作口令；phot
             imageGenerationConnected: false, imageGenerationMode: 'text-only-ai-plan' };
         return { status: 200, body: plan };
     } catch (error) {
-        if (upstreamStatus === 0 && error.message !== 'INVALID_BRIEF' && typeof onNetworkError === 'function') {
+        if (upstreamStatus === 0 && !['INVALID_BRIEF', 'AI_PROVIDER_FREE_QUOTA_EXHAUSTED'].includes(error.message) && typeof onNetworkError === 'function') {
             onNetworkError({ name: error?.name || 'Error', causeCode: error?.cause?.code || '',
                 failureKind: error?.message === 'PROVIDER_FAILED' ? 'provider_response_not_ok' : 'provider_fetch_or_mapping_error' });
         }
         // Never return provider bodies or exception text: they may contain credentials.
         const invalid = error.message === 'INVALID_BRIEF';
         const referenceFailure = ['REFERENCE_LIBRARY_UNAVAILABLE', 'REFERENCE_IMAGES_REQUIRED', 'UNAVAILABLE_REFERENCE', 'INVALID_REFERENCE_SELECTION'].includes(error.message);
-        const status = invalid ? 400 : referenceFailure ? 503 : ['AI_HARD_CONSTRAINTS_FAILED', 'AI_PHOTOGRAPHER_FEASIBILITY_FAILED'].includes(error.message) || [400, 401, 402, 403, 404].includes(upstreamStatus) ? 422 : upstreamStatus === 429 ? 429 : 502;
+        const providerQuotaExhausted = error.message === 'AI_PROVIDER_FREE_QUOTA_EXHAUSTED';
+        const status = invalid ? 400 : referenceFailure ? 503 : providerQuotaExhausted || upstreamStatus === 429 ? 429 : ['AI_HARD_CONSTRAINTS_FAILED', 'AI_PHOTOGRAPHER_FEASIBILITY_FAILED'].includes(error.message) || [400, 401, 402, 403, 404].includes(upstreamStatus) ? 422 : 502;
         const reasons = {
             AI_OUTPUT_TRUNCATED: '模型输出被截断，请减少镜头数量或关闭模型的长推理模式后重试',
             AI_COMPLETION_INCOMPLETE: '模型没有正常完成本次生成，请稍后重试',
@@ -629,6 +638,7 @@ shot_language 是独特的镜头名称；model_pose 写具体动作口令；phot
             AI_SHOT_FIELDS_INVALID: `本次没有保存：${(error.violations || []).join('；') || '分镜字段不完整或格式不正确'}。请重试或更换模型。`,
             AI_HARD_CONSTRAINTS_FAILED: `本次没有保存：硬性拍摄要求未通过。${(error.violations || []).slice(0, 8).join('；')}${error.violations?.length > 8 ? '；还有其他未通过项' : ''}。请调整要求或重新生成。`,
             AI_PHOTOGRAPHER_FEASIBILITY_FAILED: `本次没有保存：动作或镜头字段不适合真实拍摄。${(error.violations || []).slice(0, 8).join('；')}${error.violations?.length > 8 ? '；还有其他未通过项' : ''}。请重新生成或调整动作。`,
+            AI_PROVIDER_FREE_QUOTA_EXHAUSTED: 'Cloudflare Workers AI 免费额度已用尽；本次没有生成或保存方案，请等待额度恢复或配置 Workers Paid。',
         };
         const message = invalid ? '拍摄需求格式不正确或超过长度限制'
             : referenceFailure ? '摄影参考资料暂不可用或不完整，请稍后重试；本次没有使用模板替代'

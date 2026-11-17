@@ -30,9 +30,10 @@ async function call(path, body, method = 'POST', env = {}) {
 async function confirmReference(group, role) {
     if (role === 'scene') {
         const result = await call('/api/continuity/reference', {
-            group, reference: { role, assetId: 'scene-text-only', status: 'confirmed', textOnly: true },
+            group, reference: { role, assetId: '', status: 'confirmed', textOnly: true },
         });
         assert.equal(result.status, 200);
+        assert.equal(result.body.group.references.find(reference => reference.role === 'scene').assetId, '');
         return result.body.group;
     }
     const { status: uploadStatus, body: uploaded } = await call('/api/continuity/asset', { dataUrl: PNG_DATA_URL, role });

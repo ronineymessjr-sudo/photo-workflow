@@ -8,11 +8,19 @@ const panelSource = await readFile(new URL('../assets/continuity-panel.js', impo
 function createPanel({ initialState = {}, fetchImpl } = {}) {
     const storage = new Map([['photoatelier.continuity.v1', JSON.stringify(initialState)]]);
     const elements = new Map();
+    const makeNode = () => ({
+        children: [], handlers: {}, dataset: {},
+        append(...nodes) { this.children.push(...nodes); },
+        replaceChildren(...nodes) { this.children = nodes; },
+        addEventListener(name, handler) { this.handlers[name] = handler; },
+        setAttribute(name, value) { this[name] = value; },
+    });
     const document = {
         getElementById(id) {
-            if (!elements.has(id)) elements.set(id, { value: id === 'f-provider' ? 'modelscope-qwen-edit' : '', textContent: '', dataset: {}, hidden: true });
+            if (!elements.has(id)) elements.set(id, { ...makeNode(), value: id === 'f-provider' ? 'modelscope-qwen-edit' : '', textContent: '', hidden: true });
             return elements.get(id);
         },
+        createElement() { return makeNode(); },
     };
     const context = vm.createContext({
         document,
@@ -30,7 +38,7 @@ function createPanel({ initialState = {}, fetchImpl } = {}) {
         JSON,
         String,
     });
-    vm.runInContext(`${panelSource.replace(/\nboot\(\);\s*$/, '')}\nglobalThis.__readState = () => state;`, context);
+    vm.runInContext(`${panelSource.replace(/\nboot\(\);\s*$/, '')}\nglobalThis.__readState = () => state; globalThis.__renderReferences = renderReferences; globalThis.__renderSummary = renderSummary;`, context);
     context.render = () => {};
     return {
         context,
@@ -196,6 +204,40 @@ test('asset thumbnails accept signed continuity links but reject unsigned asset 
     assert.equal(panel.context.safeThumbUrl(signed), 'https://photo.test' + signed);
     assert.equal(panel.context.safeThumbUrl('/api/continuity/asset/0123456789abcdef'), '');
     assert.equal(panel.context.safeThumbUrl('/api/continuity/asset/0123456789abcdef?token=secret'), '');
+});
+
+test('placeholder scene can be confirmed as text-only without submitting a fake asset id', async () => {
+    const requests = [];
+    const group = {
+        continuityGroupId: 'sample-shoot',
+        references: ['identity', 'scene', 'style'].map(role => ({
+            role, status: 'pending', assetId: role === 'scene' ? 'sample-shoot-scene' : '',
+        })),
+    };
+    const panel = createPanel({ initialState: { group }, fetchImpl: async (path, init) => {
+        const body = JSON.parse(init.body);
+        requests.push({ path, body });
+        return jsonResponse(200, { group: { ...body.group, references: body.group.references.map(reference => reference.role === 'scene' ? { ...reference, ...body.reference } : reference) } });
+    } });
+    panel.context.__renderReferences();
+    const host = panel.elements.get('refs');
+    const card = host.children[1];
+    const actions = card.children.find(node => node.className === 'ref-actions');
+    const confirm = actions.children.find(node => node.textContent === '标记已确认');
+    await confirm.handlers.click();
+    assert.equal(requests[0].body.reference.assetId, '');
+    assert.equal(requests[0].body.reference.textOnly, true);
+});
+
+test('unauthenticated plan summary renders a login notice instead of dereferencing qc', async () => {
+    const panel = createPanel({
+        initialState: { group: { continuityGroupId: 'sample', references: [], shots: [] } },
+        fetchImpl: async () => jsonResponse(401, { error: 'SIGN_IN_REQUIRED' }),
+    });
+    panel.context.__renderSummary();
+    await new Promise(resolve => setImmediate(resolve));
+    const summary = panel.elements.get('summary');
+    assert.equal(summary.children[0].textContent, '请先登录后查看方案状态。');
 });
 
 test('switching plans archives and restores the prior group with its original images', () => {

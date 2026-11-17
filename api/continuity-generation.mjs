@@ -998,6 +998,9 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
         } catch (error) {
             const message = String(error?.message || error);
             console.error('continuity_flux_upstream_failure', JSON.stringify({ attempt: retry + 1, code: error?.code || '', message: message.slice(0, 300) }));
+            if (/\b4006\b|you have used up your daily free allocation/i.test(message)) {
+                throw new GenerationError('IMAGE_PROVIDER_FREE_QUOTA_EXHAUSTED', 'Cloudflare Workers AI 免费额度已用尽，请等待额度恢复或配置 Workers Paid。', 429);
+            }
             if (retry === 0 && /\b3043\b|\b502\b|\b503\b|internal server error|temporarily unavailable/i.test(message)) {
                 await new Promise(resolve => setTimeout(resolve, 150));
                 continue;
@@ -1011,7 +1014,8 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
     const binary = atob(result.image);
     const head = binary.charCodeAt(0);
     const contentType = head === 137 ? 'image/png' : head === 255 ? 'image/jpeg' : 'image/webp';
-    return { contentType, base64: result.image, prompt: composed, referencesSent: chosen.length + (poseBytes ? 1 : 0), anchored: Boolean(anchorBuffer), dimensions: imageDimensions(Uint8Array.from(binary, char => char.charCodeAt(0)), contentType) };
+    const referenceRolesSent = [anchorBuffer ? 'anchor' : 'identity', 'style', ...(poseBytes ? ['pose'] : [])];
+    return { contentType, base64: result.image, prompt: composed, referencesSent: requestImages.length, referenceRolesSent, anchored: Boolean(anchorBuffer), dimensions: imageDimensions(Uint8Array.from(binary, char => char.charCodeAt(0)), contentType) };
 }
 
 /**

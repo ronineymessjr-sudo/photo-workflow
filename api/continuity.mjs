@@ -267,13 +267,14 @@ function requireGroup(group) {
 export function setReference(group, { role, assetId, status = 'confirmed', path = '', referenceImageUrl = '', sourceItemId = '', textOnly = false } = {}) {
     const { group: checked } = requireGroup(group);
     if (!CONTINUITY_ROLES.includes(role)) throw new ContinuityError('CONTINUITY_ROLE_INVALID', `参考角色只能是 ${CONTINUITY_ROLES.join('/')}`, 400);
-    if (!text(assetId)) throw new ContinuityError('CONTINUITY_ASSET_REQUIRED', '需要资产 ID', 400);
     if (!['pending', 'confirmed', 'missing'].includes(status)) throw new ContinuityError('CONTINUITY_STATUS_INVALID', '状态只能是 pending/confirmed/missing', 400);
+    const textOnlyScene = role === 'scene' && status === 'confirmed' && textOnly === true;
+    if (!textOnlyScene && !text(assetId)) throw new ContinuityError('CONTINUITY_ASSET_REQUIRED', '需要资产 ID', 400);
     // referenceImageUrl / sourceItemId record WHICH library entry the operator
     // picked in AI Studio, so the generated frame can be traced back to the
     // template it was supposed to follow instead of an anonymous photo.
     checked.references = checked.references.map(reference => reference.role === role
-        ? { ...reference, assetId, status, path: text(path), referenceImageUrl: text(referenceImageUrl), sourceItemId: text(sourceItemId), textOnly: textOnly === true }
+        ? { ...reference, assetId: textOnlyScene ? '' : text(assetId), status, path: text(path), referenceImageUrl: text(referenceImageUrl), sourceItemId: text(sourceItemId), textOnly: textOnlyScene }
         : reference);
     return checked;
 }

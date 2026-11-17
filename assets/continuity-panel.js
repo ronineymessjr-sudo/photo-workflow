@@ -181,6 +181,8 @@ function renderReferences() {
     if (!state.group) { host.append(el('p', { class: 'muted', text: '先建立或导入一个分组。' })); return; }
     for (const definition of ROLES) {
         const reference = state.group.references.find(item => item.role === definition.role) || {};
+        const textOnlyScene = definition.role === 'scene' && !reference.path && !reference.referenceImageUrl
+            && (reference.textOnly === true || reference.assetId === `${state.group.continuityGroupId}-scene`);
         const status = reference.status || 'pending';
         const badge = status === 'confirmed' ? '已确认' : status === 'missing' ? '缺失' : '待确认';
         const thumb = safeThumbUrl((state.thumbs || {})[definition.role])
@@ -210,7 +212,7 @@ function renderReferences() {
                 }),
                 el('button', {
                     class: 'ghost', text: '标记已确认',
-                    onclick: () => updateReference(definition.role, reference.assetId || '', 'confirmed'),
+                    onclick: () => updateReference(definition.role, textOnlyScene ? '' : reference.assetId || '', 'confirmed'),
                 }),
                 el('button', {
                     class: 'ghost', text: '标记缺失',
@@ -654,13 +656,17 @@ function openQc(shotId) {
 function renderSummary() {
     const host = document.getElementById('summary');
     if (!state.group) { host.textContent = ''; return; }
-    api('/api/continuity/summary', { group: state.group }).then(({ payload }) => {
+    api('/api/continuity/summary', { group: state.group }).then(({ ok, status, payload = {} }) => {
+        if (!ok) {
+            host.replaceChildren(el('p', { class: 'muted', text: status === 401 ? '请先登录后查看方案状态。' : payload.error || '暂时无法读取方案状态。' }));
+            return;
+        }
         host.replaceChildren(
             el('div', { class: 'row' }, [
                 el('span', { text: `锁定版本 ${payload.lockedHash || '—'}` }),
                 el('span', { class: `badge ${payload.readyToGenerate ? 'confirmed' : 'pending'}`, text: payload.readyToGenerate ? '可以生成' : '被门禁拦住' }),
             ]),
-            el('p', { class: 'muted', text: payload.blockedReason || `镜头 ${payload.shots} 个，已通过质检 ${payload.qc.passed} 个` }),
+            el('p', { class: 'muted', text: payload.blockedReason || `镜头 ${payload.shots} 个，已通过质检 ${payload.qc?.passed ?? 0} 个` }),
             ...Object.entries(state.groupArchives || {})
                 .filter(([id]) => id !== state.group?.continuityGroupId)
                 .map(([id, saved]) => el('button', {

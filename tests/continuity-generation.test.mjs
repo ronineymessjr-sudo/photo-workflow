@@ -100,7 +100,7 @@ test('Cloudflare prompt translation carries the selected PoseAtlas pose and dire
         direction: '双脚错开站稳，肩颈放松，右手轻扶衣襟。',
     };
     let translated;
-    await generateShot({
+    const result = await generateShot({
         group, shotId: 'shot-01', providerId: 'cloudflare-flux-klein',
         env: { AI: { run: async (model, input) => {
             if (model === '@cf/meta/llama-3.1-8b-instruct-fp8-fast') {
@@ -117,6 +117,18 @@ test('Cloudflare prompt translation carries the selected PoseAtlas pose and dire
     assert.match(translated, /diagonal/);
     assert.match(translated, /35mm/);
     assert.match(translated, /双脚错开站稳，肩颈放松/);
+    assert.deepEqual(result.referenceRolesSent, ['identity', 'style']);
+});
+
+test('Cloudflare Workers AI free allocation errors map to a non-retryable 429', async () => {
+    const store = createMemoryStore();
+    const group = await readyGroup(store);
+    await assert.rejects(() => generateShot({
+        group, shotId: 'shot-01', providerId: 'cloudflare-flux-klein', env: { AI: { run: async model => {
+            if (model === '@cf/meta/llama-3.1-8b-instruct-fp8-fast') return { response: 'A natural portrait at a station.' };
+            throw new Error('4006: you have used up your daily free allocation of 10,000 neurons');
+        } } }, store,
+    }), error => error.code === 'IMAGE_PROVIDER_FREE_QUOTA_EXHAUSTED' && error.status === 429);
 });
 
 test('Cloudflare retries one transient 3043 failure and returns the actual output dimensions', async () => {

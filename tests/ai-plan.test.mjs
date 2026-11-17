@@ -210,6 +210,19 @@ test('provider quota and network failures never trigger a second model call', as
     assert.doesNotMatch(JSON.stringify(networkFailure), /ECONNRESET|do-not-return/);
 });
 
+test('Cloudflare Workers AI 4006 free allocation errors return a clear 429 without network diagnostics', async () => {
+    let calls = 0;
+    let networkDiagnostic;
+    const result = await handleAiPlan({ ...request, provider: 'cloudflare-workers-ai', model: '@cf/qwen/qwen3-30b-a3b-fp8' }, {
+        AI: { run: async () => { calls++; throw new Error('4006: you have used up your daily free allocation of 10,000 neurons'); } },
+    }, { onNetworkError: detail => { networkDiagnostic = detail; } });
+    assert.equal(calls, 1);
+    assert.equal(result.status, 429);
+    assert.equal(result.body.code, 'AI_PROVIDER_FREE_QUOTA_EXHAUSTED');
+    assert.match(result.body.error, /免费额度已用尽/);
+    assert.equal(networkDiagnostic, undefined);
+});
+
 test('invalid model fields identify the shot and problem without returning raw model content', async () => {
     const bad = output();
     bad.shot_plans[2].shot_size = 'private-CS';
