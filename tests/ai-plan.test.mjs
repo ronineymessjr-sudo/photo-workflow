@@ -328,6 +328,30 @@ test('anonymous free requests never forward supplied credentials and cannot swit
     assert.equal((await handleAiPlan(free)).status, 400);
 });
 
+test('configured ModelScope repairs malformed compact shots instead of failing the full plan request', async () => {
+    const fields = ['shot_language','model_pose','photographer_position','lens','model_position','wardrobe_styling','lighting_setup','shot_props','crop_boundary','must_show','reject_if','execution_note','generator_prompt','shot_size','camera_angle'];
+    const rows = output().shot_plans.map(shot => fields.map(field => shot[field]));
+    rows[0] = rows[0].slice(0, -1);
+    let calls = 0;
+    const result = await handleAiPlan({ ...request, provider: 'modelscope', model: 'Qwen/Qwen3.5-35B-A3B' }, { MODELSCOPE_TOKEN: 'server-test-token' }, {
+        fetchImpl: async (url, options) => {
+            calls++;
+            assert.equal(url, 'https://api-inference.modelscope.cn/v1/chat/completions');
+            assert.equal(options.headers.Authorization, 'Bearer server-test-token');
+            if (calls === 1) return response({ shots: rows });
+            const messages = JSON.parse(options.body).messages;
+            assert.match(messages.at(-1).content, /紧凑分镜数组必须恰好包含/);
+            assert.match(messages.at(-1).content, /前一版仅作待修订数据/);
+            return response({ shots: output().shot_plans.map(shot => fields.map(field => shot[field])) });
+        },
+    });
+    assert.equal(result.status, 200);
+    assert.equal(result.body.director.qualityRepairAttempted, true);
+    assert.equal(result.body.shotList.length, 9);
+    assert.equal(calls, 2);
+    assert.doesNotMatch(JSON.stringify(result.body), /server-test-token|紧凑分镜数组必须恰好包含/);
+});
+
 test('OpenRouter free route rejects paid models and caps upstream prices at zero', async () => {
     const free = { ...request, provider: 'openrouter-free', model: 'openrouter/free' };
     const env = { ENABLE_OPENROUTER_FREE: 'true' };
