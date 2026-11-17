@@ -311,6 +311,35 @@ test('authenticated plan request fails clearly instead of returning a rule draft
     });
 });
 
+test('director plan falls back to configured MiniMax after Cloudflare free neurons are exhausted', async () => {
+    const secret = 'unit-test-secret';
+    const previousFetch = globalThis.fetch;
+    const rows = Array.from({ length: 9 }, (_, index) => [
+        `公园自然人像 ${index + 1}`, '模特自然站立观察树影', '距主体约3米，胸口高度平视', '50mm', '人物位于画面偏左',
+        '素色日常服装，发型自然', '树荫漫反射自然光', '无', '从头顶至脚下完整入画', '人物全身与自然表情',
+        '姿势僵硬或裁掉脚部', '站立不适时暂停休息后再拍', `full body portrait natural standing pose ${index + 1}, 50mm`, 'FS', 'eye_level',
+    ]);
+    globalThis.fetch = async url => {
+        assert.equal(String(url), 'https://api.minimax.cn/v1/chat/completions');
+        return Response.json({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({ shots: rows }) } }] });
+    };
+    try {
+        const response = await worker.fetch(new Request('https://unit.test/api/director/plan', {
+            method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token('user-1', secret)}` },
+            body: JSON.stringify({ theme: '公园自然人像', scene: '公园小径', modelDesc: '一位成年人', people: '1', duration: '1小时' }),
+        }), {
+            JWT_SECRET: secret, MINIMAX_API_KEY: 'server-minimax-key',
+            AI: { run: async () => { throw new Error('4006: you have used up your daily free allocation of 10,000 neurons'); } },
+            AI_STUDIO_QUOTA: { idFromName: value => value, get: () => ({ fetch: async () => Response.json({ allowed: true }) }) },
+        });
+        const plan = await response.json();
+        assert.equal(response.status, 200, JSON.stringify(plan));
+        assert.equal(plan.director.source, 'minimax-plan');
+        assert.equal(plan.director.provider, 'minimax');
+        assert.equal(plan.shotList.length, 9);
+    } finally { globalThis.fetch = previousFetch; }
+});
+
 test('server model plan generation fails closed when its per-user or global quota is unavailable', async () => {
     const secret = 'unit-test-secret';
     let aiCalls = 0;

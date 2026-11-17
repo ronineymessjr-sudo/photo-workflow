@@ -48,6 +48,29 @@ test('provider destinations are fixed or explicitly approved by server admin', (
     assert.deepEqual(ps.map(p => p.id), ['openai', 'deepseek', 'https://gateway.example.com']);
 });
 
+test('configured MiniMax is internal-only, uses its server key, and maps real responses', async () => {
+    const secret = 'server-minimax-secret';
+    const env = { MINIMAX_API_KEY: secret };
+    const minimax = aiPlanProviders(env).find(provider => provider.id === 'minimax');
+    assert.equal(minimax.internalOnly, true);
+    assert.equal(minimax.suggestedModel, 'MiniMax-M3.1-Flash');
+    const r = await handleAiPlan({ provider: 'minimax', model: minimax.suggestedModel, input }, env, { fetchImpl: async (url, options) => {
+        assert.equal(url, 'https://api.minimax.cn/v1/chat/completions');
+        assert.equal(options.headers.Authorization, `Bearer ${secret}`);
+        assert.equal(JSON.parse(options.body).model, minimax.suggestedModel);
+        assert.equal(JSON.parse(options.body).reasoning_effort, 'low');
+        assert.equal(Object.hasOwn(JSON.parse(options.body), 'response_format'), false);
+        const shots = output().shot_plans.map(shot => [shot.shot_language, shot.model_pose, shot.photographer_position, shot.lens,
+            shot.model_position, shot.wardrobe_styling, shot.lighting_setup, '无', shot.crop_boundary, shot.must_show,
+            shot.reject_if, shot.execution_note, shot.generator_prompt, shot.shot_size, shot.camera_angle]);
+        return response({ shots });
+    } });
+    assert.equal(r.status, 200);
+    assert.equal(r.body.director.source, 'minimax-plan');
+    assert.equal(r.body.director.provider, 'minimax');
+    assert.doesNotMatch(JSON.stringify(r), new RegExp(secret));
+});
+
 test('invalid config and brief never call providers', async () => {
     const fetchImpl = () => assert.fail('no external request');
     for (const change of [{ provider: 'https://evil.com' }, { apiKey: '' }, { apiKey: 'key\nheader' }, { model: '' }, { model: 'bad model' }, { input: { theme: 'a'.repeat(3000) } }]) {
@@ -99,11 +122,11 @@ test('partial, duplicated, invalid and truncated model outputs fail instead of p
     const badAngle = output(); badAngle.shot_plans[0].camera_angle = 'unknown';
     for (const value of [output(3), duplicate, missing, badAngle]) {
         const r = await handleAiPlan(request, {}, { fetchImpl: async () => response(value) });
-        assert.equal(r.status, 502);
+        assert.equal(r.status, 422);
         assert.equal(r.body.shotList, undefined);
     }
     const r = await handleAiPlan(request, {}, { fetchImpl: async () => Response.json({ choices: [{ finish_reason: 'length', message: { content: JSON.stringify(output()) } }] }) });
-    assert.equal(r.status, 502);
+    assert.equal(r.status, 422);
 });
 
 test('a conflicting image-prompt framing is aligned only when shot instructions agree', async () => {
@@ -198,7 +221,7 @@ test('provider quota and network failures never trigger a second model call', as
             return new Response('provider unavailable', { status: responseStatus });
         } });
         assert.equal(calls, 1);
-        assert.equal(result.status, responseStatus === 429 ? 429 : 502);
+        assert.equal(result.status, responseStatus === 429 ? 429 : 503);
     }
     let networkDiagnostic;
     const networkFailure = await handleAiPlan(request, {}, {
@@ -227,7 +250,7 @@ test('invalid model fields identify the shot and problem without returning raw m
     const bad = output();
     bad.shot_plans[2].shot_size = 'private-CS';
     const result = await handleAiPlan(request, {}, { fetchImpl: async () => response(bad) });
-    assert.equal(result.status, 502);
+    assert.equal(result.status, 422);
     assert.equal(result.body.code, 'AI_SHOT_FIELDS_INVALID');
     assert.match(result.body.error, /镜头3景别代号不支持/);
     assert.doesNotMatch(JSON.stringify(result), /private-CS/);
@@ -236,20 +259,25 @@ test('invalid model fields identify the shot and problem without returning raw m
 test('provider errors never leak credentials and wrong provider key cannot log out the app account', async () => {
     for (const status of [401, 403, 429, 500]) {
         const r = await handleAiPlan(request, {}, { fetchImpl: async () => new Response(key, { status }) });
-        assert.equal(r.status, [401, 403].includes(status) ? 422 : status === 429 ? 429 : 502);
+        assert.equal(r.status, [401, 403].includes(status) ? 422 : status === 429 ? 429 : 503);
         assert.doesNotMatch(JSON.stringify(r), new RegExp(key));
     }
     const r = await handleAiPlan(request, {}, { fetchImpl: async () => { throw new Error(key); } });
-    assert.equal(r.status, 502);
+    assert.equal(r.status, 503);
     assert.doesNotMatch(JSON.stringify(r), new RegExp(key));
 });
 
 test('authenticated BYOK API needs a caller key, restricts body size and discloses no server secrets', async () => {
     const catalog = await worker.fetch(new Request('https://unit.test/api/ai/providers'), { MINIMAX_API_KEY: key });
-    assert.doesNotMatch(await catalog.text(), new RegExp(key));
+    const catalogBody = await catalog.json();
+    assert.equal(catalogBody.providers.some(provider => provider.id === 'minimax'), false);
+    assert.doesNotMatch(JSON.stringify(catalogBody), new RegExp(key));
     const secret = 'ai-plan-auth-test';
     const anonymous = await worker.fetch(new Request('https://unit.test/api/ai/plan', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }), { JWT_SECRET: secret });
     assert.equal(anonymous.status, 401);
+    const anonymousInternalProvider = await worker.fetch(new Request('https://unit.test/api/ai/plan', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ provider: 'minimax', model: 'MiniMax-M3.1-Flash', input }) }), { JWT_SECRET: secret, MINIMAX_API_KEY: key });
+    assert.equal(anonymousInternalProvider.status, 401);
     const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token('user-1', secret)}` };
     const bad = await worker.fetch(new Request('https://unit.test/api/ai/plan', { method: 'POST', headers, body: '{}' }), { JWT_SECRET: secret });
     assert.equal(bad.status, 400);
@@ -335,7 +363,7 @@ test('unknown provider model is actionable instead of a generic invalid-output e
 test('a single JSON code fence is accepted but surrounding prose and malformed JSON are rejected', async () => {
     for (const content of ['```json\n' + JSON.stringify(output()) + '\n```', '解释文字\n' + JSON.stringify(output()), '{bad json}']) {
         const r = await handleAiPlan(request, {}, { fetchImpl: async () => Response.json({ choices: [{ finish_reason: 'stop', message: { content } }] }) });
-        assert.equal(r.status, content.startsWith('```json') ? 200 : 502);
+        assert.equal(r.status, content.startsWith('```json') ? 200 : 422);
     }
 });
 
@@ -346,7 +374,7 @@ test('provider redirects are not followed and invalid keys are not sent to a sec
         assert.equal(options.redirect, 'manual');
         return new Response('', { status: 302, headers: { Location: 'https://other.example.test' } });
     } });
-    assert.equal(r.status, 502);
+    assert.equal(r.status, 503);
     assert.equal(calls, 1);
 });
 
@@ -382,7 +410,7 @@ test('format-completeness contract: lens format, shooting distance and field sub
         const generated = output(9);
         change(generated.shot_plans[0]);
         const result = await handleAiPlan(request, {}, { fetchImpl: async () => response(generated) });
-        assert.equal(result.status, 502);
+        assert.equal(result.status, 422);
         assert.equal(result.body.code, 'AI_SHOT_FIELDS_INVALID');
         assert.match(result.body.error, expected);
     }
@@ -720,4 +748,26 @@ test('Cloudflare Workers AI structured 4006 error objects also return 429', asyn
     });
     assert.equal(result.status, 429);
     assert.equal(result.body.code, 'AI_PROVIDER_FREE_QUOTA_EXHAUSTED');
+});
+
+test('MiniMax strips <think> blocks, rejects unlisted models, and maps base_resp rate/balance errors', async () => {
+    const secret = 'minimax-test-secret';
+    const env = { MINIMAX_API_KEY: secret };
+    const badModel = await handleAiPlan({ provider: 'minimax', model: 'MiniMax-M2-Other', input }, env);
+    assert.equal(badModel.status, 400);
+
+    const rows = output(9).shot_plans.map(shot => [shot.shot_language, shot.model_pose, shot.photographer_position, shot.lens,
+        shot.model_position, shot.wardrobe_styling, shot.lighting_setup, '无', shot.crop_boundary, shot.must_show,
+        shot.reject_if, shot.execution_note, shot.generator_prompt, shot.shot_size, shot.camera_angle]);
+    const withThink = await handleAiPlan({ provider: 'minimax', model: 'MiniMax-M3.1-Flash', input }, env, {
+        fetchImpl: async () => Response.json({
+            choices: [{ finish_reason: 'stop', message: { content: `<think>internal reasoning</think>\n${JSON.stringify({ shots: rows })}` } }],
+        }),
+    });
+    assert.equal(withThink.status, 200);
+
+    const rateLimited = await handleAiPlan({ provider: 'minimax', model: 'MiniMax-M3.1-Flash', input }, env, {
+        fetchImpl: async () => Response.json({ base_resp: { status_code: 1002, status_msg: 'rate limit' } }),
+    });
+    assert.equal(rateLimited.status, 429);
 });

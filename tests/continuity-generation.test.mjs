@@ -905,3 +905,55 @@ test('Cloudflare Workers AI maps structured 4006 quota error objects to 429', as
         store,
     }), error => error.code === 'IMAGE_PROVIDER_FREE_QUOTA_EXHAUSTED' && error.status === 429);
 });
+
+test('ModelScope CU and WS anchored shots drop conflicting wardrobe/crops and keep zoom/wide overrides', async () => {
+    const store = createMemoryStore();
+    const wardrobe = '橄榄绿裹身长袖针织上衣、焦糖色皮短裙、棕色短靴';
+    const group = await readyGroup(store, { wardrobeNote: wardrobe, lockedSubject: wardrobe });
+    const anchor = await storeAsset({ dataUrl: PNG_1PX, role: 'misc', store });
+    setAnchor(group, { assetId: anchor.assetId, path: anchor.path, shotId: 'shot-01' });
+
+    group.shots = [
+        {
+            shotId: 'shot-cu', size: 'CU', shotType: '特写', aspect: '2:3',
+            camera: 'eye_level，85mm', lens: '85mm', action: '微笑看镜头',
+            crop: '胸口以下完全不在画面内，不出现手臂',
+            prompt: `Close-up portrait. Subject and clothing: ${wardrobe}. User constraints: one person.`,
+            poseRef: { id: 'atlas-pose-p015', title: '站立・对立式平衡・手扶腰', direction: '双脚站稳，右手扶腰。' },
+        },
+        {
+            shotId: 'shot-ws', size: 'WS', shotType: '全景', aspect: '2:3',
+            camera: 'eye_level，24mm', lens: '24mm', action: '沿竹林小径行走',
+            crop: '人物占画面约三分之一，周围竹林小径完整展开',
+            prompt: `Wide environmental portrait in a bamboo grove. Subject and clothing: ${wardrobe}.`,
+        },
+    ];
+
+    let cuPayload;
+    const cuRes = await generateShot({
+        group, shotId: 'shot-cu', providerId: 'modelscope-qwen-edit',
+        env: { MODELSCOPE_TOKEN: 'test-only' }, store, submitOnly: true,
+        fetchImpl: async (_url, options = {}) => {
+            cuPayload = JSON.parse(options.body);
+            return Response.json({ task_id: 'cu-anchored-task' });
+        },
+    });
+    assert.deepEqual(cuRes.referenceRolesSent, ['anchor', 'identity'], 'CU skips full-body style photo');
+    assert.equal(cuPayload.size, '1140x1472', 'CU uses tighter 3:4 portrait ratio');
+    assert.match(cuPayload.prompt, /【景别硬性切换】.*大幅推近/);
+    assert.match(cuPayload.prompt, /胸口以下完全不在画面内/);
+    assert.doesNotMatch(cuPayload.prompt, /焦糖色皮短裙|棕色短靴|右手扶腰/);
+
+    let wsPayload;
+    const wsRes = await generateShot({
+        group, shotId: 'shot-ws', providerId: 'modelscope-qwen-edit',
+        env: { MODELSCOPE_TOKEN: 'test-only' }, store, submitOnly: true,
+        fetchImpl: async (_url, options = {}) => {
+            wsPayload = JSON.parse(options.body);
+            return Response.json({ task_id: 'ws-anchored-task' });
+        },
+    });
+    assert.deepEqual(wsRes.referenceRolesSent, ['anchor', 'identity', 'style']);
+    assert.match(wsPayload.prompt, /【景别硬性切换】.*大幅拉远/);
+    assert.match(wsPayload.prompt, /周围环境与空间纵深是主体/);
+});

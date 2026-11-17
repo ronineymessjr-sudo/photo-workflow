@@ -49,6 +49,7 @@ function archiveCurrentGroup() {
         [groupId]: {
             group: state.group, qc: state.qc || {}, results: state.results || {},
             resultHistory: state.resultHistory || {}, thumbs: state.thumbs || {},
+            pendingJobs: state.pendingJobs || {},
             retryCounts: state.retryCounts || {}, generationErrors: state.generationErrors || {},
         },
     };
@@ -65,6 +66,7 @@ function activateGroup(group, { thumbs = {} } = {}) {
         state.results = archived.results;
         state.resultHistory = archived.resultHistory;
         state.thumbs = archived.thumbs;
+        state.pendingJobs = archived.pendingJobs || {};
         state.retryCounts = archived.retryCounts;
         state.generationErrors = archived.generationErrors;
     } else if (currentId !== nextId) {
@@ -72,6 +74,7 @@ function activateGroup(group, { thumbs = {} } = {}) {
         state.results = {};
         state.resultHistory = {};
         state.thumbs = thumbs;
+        state.pendingJobs = {};
         state.retryCounts = {};
         state.generationErrors = {};
     }
@@ -81,6 +84,7 @@ function restoreGroup(groupId) {
     const archived = state.groupArchives?.[groupId];
     if (archived?.group) activateGroup(archived.group);
     render();
+    if (typeof CustomEvent === 'function') document.dispatchEvent?.(new CustomEvent('continuity:group-changed'));
 }
 function saveShotResult(shotId, result) {
     const previous = state.results?.[shotId];
@@ -91,6 +95,11 @@ function saveShotResult(shotId, result) {
         const qc = { ...(state.qc || {}) };
         delete qc[shotId];
         state.qc = qc;
+        if (state.group?.qc?.[shotId]) {
+            const groupQc = { ...(state.group.qc || {}) };
+            delete groupQc[shotId];
+            state.group = { ...state.group, qc: groupQc };
+        }
     }
     state.results = { ...(state.results || {}), [shotId]: result };
 }
@@ -464,9 +473,9 @@ async function collectShot(shotId, { waitMs = 0, quiet = false } = {}) {
                     if (!quiet) toast(`${payload.error || '上游生成失败'}；任务已结束，可以重新生成。`, 'error');
                     return { status: 'failed', terminal: true, error: payload.error, code: payload.code };
                 }
-                const retryableFailure = payload?.retryable === true || [429, 502, 503, 504].includes(status);
+                const retryableFailure = payload?.retryable === true || [429, 500, 502, 503, 504, 520, 521, 522, 523, 524].includes(status);
                 if (retryableFailure && waitMs > 0 && Date.now() < deadline) continue;
-                if (!quiet) toast(payload?.error || '查询失败，任务仍保留，可稍后再查。', 'error');
+                if (!quiet) toast(payload?.error || `查询失败（HTTP ${status}），任务仍保留，可稍后再查。`, 'error');
                 return null;
             }
             if (payload?.status === 'succeeded' && payload.image?.assetId && payload.shotId === shotId) {
@@ -485,6 +494,7 @@ async function collectShot(shotId, { waitMs = 0, quiet = false } = {}) {
                 return null;
             }
         } while (Date.now() < deadline);
+        if (!waitMs && !quiet) toast(`${shotId} 仍在排队生成中，请稍后继续查询。`, 'info');
         return null;
     } finally {
         collectingTasks.delete(job.taskId);
@@ -583,7 +593,7 @@ async function openHandoff(shotId) {
             const attached = await api('/api/continuity/attach', { group: state.group, shotId, dataUrl, provider: 'chatgpt-web' });
             if (!attached.ok) { toast(attached.payload.error || '回传失败', 'error'); return; }
             state.group = attached.payload.group;
-            state.results = { ...(state.results || {}), [shotId]: { shotId, image: { assetId: attached.payload.asset.assetId, path: attached.payload.asset.path } } };
+            saveShotResult(shotId, { shotId, image: { assetId: attached.payload.asset.assetId, path: attached.payload.asset.path } });
             save();
             render();
             openHandoff(shotId);
@@ -619,7 +629,7 @@ function openQc(shotId) {
     host.replaceChildren(el('h3', { text: `质检 · ${shotId}` }));
     const grid = el('div', { class: 'qc-grid' });
     for (const [id, label] of Object.entries(QC_LABELS)) {
-        const item = schema?.qcItems.find(entry => entry.id === id);
+        const item = schema?.qcItems?.find(entry => entry.id === id);
         const select = el('select', { onchange: event => { scores[id] = event.target.value; } }, [
             el('option', { value: 'unknown', text: '未判定' }),
             el('option', { value: 'pass', text: '通过' }),
@@ -737,46 +747,65 @@ async function boot() {
         link.style.marginLeft = '8px';
         banner.append(link);
     }
-    const schemaResponse = await api('/api/continuity/schema', null, 'GET');
-    schema = schemaResponse.payload;
+    const schemaResponse = await api('/api/continuity/schema', null, 'GET').catch(() => ({ ok: false, payload: {} }));
+    schema = schemaResponse.ok ? schemaResponse.payload : {};
 
     // The brush list comes from the provider catalog, not a hardcoded select:
     // cheap first, reference support stated, and the recommendation explained.
     const provider = document.getElementById('f-provider');
+    const hint = document.getElementById('provider-hint');
+    let catalogPayload = {};
+    const updateProviderHint = () => {
+        if (!hint) return;
+        hint.textContent = provider.value === 'modelscope-qwen-edit'
+            ? '魔搭走异步排队；全身与全景在未禁用配饰时可参考衣装图，紧景与禁配饰镜头以文字为准（约 2–6 分钟完成）。'
+            : catalogPayload.blockedReason || (catalogPayload.recommended ? `推荐：${catalogPayload.recommended}（便宜档且能带参考图）` : '');
+    };
+    const syncProviderUi = () => {
+        const target = state.group?.imageProvider || catalogPayload.recommended;
+        if (target && [...provider.options].some(option => option.value === target)) provider.value = target;
+        updateProviderHint();
+    };
     try {
         const catalog = await api('/api/continuity/providers?needReferences=true', null, 'GET');
+        if (!catalog.ok) throw new Error('catalog failed');
+        catalogPayload = catalog.payload || {};
         provider.replaceChildren();
-        for (const entry of catalog.payload.providers || []) {
-            const ready = (catalog.payload.configuredIds || []).includes(entry.id);
+        for (const entry of catalogPayload.providers || []) {
+            const ready = (catalogPayload.configuredIds || []).includes(entry.id);
             const option = el('option', {
                 value: entry.id,
                 text: `${entry.label}　${entry.priceLabel}${entry.supportsReferences ? '' : '（不支持参考）'}${ready ? '' : '（未配凭据）'}`,
             });
-            if (entry.id === (state.group?.imageProvider || catalog.payload.recommended)) option.selected = true;
             provider.append(option);
         }
-        const hint = document.getElementById('provider-hint');
-        const updateProviderHint = () => {
-            if (!hint) return;
-            hint.textContent = provider.value === 'modelscope-qwen-edit'
-                ? '魔搭走异步排队；衣装参考图不会传给模型，只作为方案文字提示。推荐优先使用 Cloudflare FLUX。'
-                : catalog.payload.blockedReason || `推荐：${catalog.payload.recommended}（便宜档且能带参考图）`;
-        };
-        updateProviderHint();
+        syncProviderUi();
         provider.addEventListener('change', updateProviderHint);
     } catch {
-        provider.replaceChildren(el('option', { value: 'manual-chatgpt-web', text: '手动 · ChatGPT 网页' }));
+        provider.replaceChildren(
+            el('option', { value: 'modelscope-qwen-edit', text: '魔搭 · Qwen-Image-Edit 2511' }),
+            el('option', { value: 'cloudflare-flux-klein', text: 'Cloudflare Workers AI · FLUX.2 Klein' }),
+            el('option', { value: 'manual-chatgpt-web', text: '手动 · ChatGPT 网页' }),
+        );
+        updateProviderHint();
     }
 
     provider.addEventListener('change', async () => {
         if (!state.group) return;
+        const previousProvider = state.group.imageProvider || catalogPayload.recommended || '';
         const { ok, payload } = await api('/api/continuity/provider', { group: state.group, providerId: provider.value });
-        if (!ok) { toast(payload.error || '切换图像服务失败', 'error'); return; }
+        if (!ok) {
+            if (previousProvider) provider.value = previousProvider;
+            updateProviderHint();
+            toast(payload.error || '切换图像服务失败', 'error');
+            return;
+        }
         state.group = payload.group;
         save();
         toast(`已切换到 ${payload.provider.label}`, 'ok');
     });
 
+    document.addEventListener?.('continuity:group-changed', syncProviderUi);
     document.getElementById('create').addEventListener('click', createNewGroup);
     document.getElementById('master').addEventListener('click', confirmMaster);
     document.getElementById('import').addEventListener('change', event => {
@@ -784,7 +813,13 @@ async function boot() {
         if (file) importGroup(file);
     });
     await importStudioPlanFromQuery();
+    syncProviderUi();
     render();
+    for (const [pendingShotId, job] of Object.entries(state.pendingJobs || {})) {
+        if (job?.taskId) {
+            collectShot(pendingShotId, { waitMs: job.providerId === 'modelscope-qwen-edit' ? 270000 : 120000, quiet: true });
+        }
+    }
 }
 
 boot();

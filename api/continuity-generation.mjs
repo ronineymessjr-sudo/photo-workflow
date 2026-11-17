@@ -314,7 +314,7 @@ function directionFields({ prompt, locked, variant, poseRef, framing, film }) {
         // anchors every concrete description that follows it.
         ['realism', realismTextZh(film)],
         ['pose', poseRef?.title ? `摆姿库姿势：${poseRef.title}${poseRef.angle ? `（参考角度 ${poseRef.angle}）` : ''}` : ''],
-        ['poseDirection', poseRef?.direction],
+        ['poseDirection', poseInFrame(poseRef?.direction, variant?.size)],
         ['action', poseInFrame(variant?.action, variant?.size)],
         ['camera', variant?.camera],
         ['lens', variant?.lens],
@@ -327,10 +327,6 @@ function directionFields({ prompt, locked, variant, poseRef, framing, film }) {
         ['faceExposure', '人物面部与眼睛细节清楚；暗部可以有层次，但不能吞没五官。'],
         ['wardrobeShot', wardrobeVisibleInFrame(variant?.wardrobe, variant)],
         ['props', directive(variant?.props)],
-        // The plan's crop_boundary often describes a different framing than
-        // shot_size ("头顶到膝盖入画" on an MCU shot). Passing both hands the
-        // model two contradictory crops, and it resolves them by going wider, so
-        // the clauses that fall outside this frame are dropped the same way.
         ['crop', poseInFrame(directive(variant?.crop), variant?.size)],
         ['mustShow', variant?.mustShow],
         ['rejectIf', variant?.rejectIf],
@@ -372,8 +368,8 @@ const FRAMING_ZH = {
     MS: '中景腰上人像：只显示头部、肩膀、胸部和上腹，画框必须在自然腰线结束；绝不出现裙子、胯部、腿、膝盖、靴子或脚；禁止全身照、七分身照和远景，必要时裁掉手肘以下，人物占画面高度约七成',
     MFS: '中全景：画框下沿切在膝盖上方，膝盖以下完全不在画面内，人物占画面高度约八成',
     FS: '全身：从头到脚完整入画，头顶留约十分之一空间，脚下地面露出，人物不要顶到画框上下边缘',
-    WS: '全景：人物只占画面高度的三分之一到二分之一，环境与建筑是主体，人物明显小于画框',
-    EWS: '远景：人物很小，占画面高度不足五分之一，以空间、建筑和光线为主',
+    WS: '全景：人物只占画面高度的三分之一到二分之一，周围环境与空间纵深是主体，人物明显小于画框',
+    EWS: '远景：人物很小，占画面高度不足五分之一，以空间、环境和光线为主',
 };
 
 // Body parts that cannot appear once the frame cuts higher up. The plan's pose
@@ -384,7 +380,7 @@ const OFF_FRAME = {
     ECU: /手|臂|肩|胸|腰|腹|腿|膝|脚|踝|站立|行走|下行|上行|踏步|扶|踩|full[- ]body|hands?|arms?|shoulders?|chest|waist|abdomen|legs?|knees?|feet|shoes?|standing|walking|stairs?|ground|stepping/i,
     CU: /手|臂|胸|腰|腹|腿|膝|脚|踝|踏步|地面|踩|站立|hands?|arms?|chest|waist|abdomen|legs?|knees?|feet|shoes?|stairs?|ground|stepping|full[- ]body/i,
     MCU: /腰|腹|腿|膝|脚|踝|踏步|地面|踩|下行|上行|waist|abdomen|legs?|knees?|feet|shoes?|stairs?|ground|full[- ]body/i,
-    MS: /腿|膝|脚|踝|踏步|地面|踩/,
+    MS: /腿|膝|脚|踝|踏步|地面|踩|skirt|legs?|knees?|feet|shoes?|boots?|ground|stepping|full[- ]body/i,
     MFS: /地面|踏步|踩/,
 };
 
@@ -394,6 +390,18 @@ function visibleFrame(size) {
 
 function isWaistUp(variant = {}) {
     return /^(MS|中景|MEDIUM)$/i.test(String(variant.size || variant.shotType || '').trim());
+}
+
+function isTightPortrait(variant = {}) {
+    return /^(ECU|CU|极特写|特写)$/i.test(String(variant.size || variant.shotType || '').trim());
+}
+
+function isUpperBodyFrame(variant = {}) {
+    return isWaistUp(variant) || isTightPortrait(variant) || /^(MCU|近景)/i.test(String(variant.size || variant.shotType || '').trim());
+}
+
+function isWideShot(variant = {}) {
+    return /^(WS|EWS|全景|远景|WIDE)/i.test(String(variant.size || variant.shotType || '').trim());
 }
 
 function wardrobeForbidsAccessories(locked, variant) {
@@ -413,7 +421,7 @@ function modelScopeCorrections({ locked, variant, poseRef }) {
         '领口与内搭严格按服装文字描述：不要擅自添加蓝色、白色或未指定的内搭针织/打底衫；若服装参考图含围巾、丝巾或包袋且文字未要求，严禁复制到成片中。',
     ];
     const poseText = [poseRef?.id, poseRef?.title, poseRef?.direction, variant?.action].filter(Boolean).join(' ');
-    if (/P015|右手/i.test(poseText)) {
+    if (/P015|右手/i.test(poseText) && !isTightPortrait(variant)) {
         rules.push('姿势与左右侧方向严格按文字和摆姿参考执行，不得左右镜像翻转：人物右手轻搭自身右侧髋部（位于画面左侧），左手自然下垂。');
     }
     const lightingText = [locked?.weather, locked?.light, variant?.lighting].filter(Boolean).join(' ');
@@ -423,13 +431,48 @@ function modelScopeCorrections({ locked, variant, poseRef }) {
     return rules;
 }
 
+function modelScopePriorityDirective({ anchor, variant, poseRef, visualPoseSent }) {
+    const out = [];
+    if (anchor?.assetId) {
+        if (isUpperBodyFrame(variant)) {
+            out.push('【景别硬性切换】相对参考母图（Image 1）必须大幅推近机位：严格按本镜取景裁切，绝不保持全身构图，绝不露出腰线以下或脚部。');
+        } else if (isWideShot(variant)) {
+            out.push('【景别硬性切换】相对参考母图（Image 1）必须大幅拉远机位：人物缩小至只占画面高度的三分之一到二分之一，完整呈现广阔环境纵深与人物全身。');
+        }
+    }
+    const poseText = [poseRef?.id, poseRef?.title, poseRef?.direction, variant?.action].filter(Boolean).join(' ');
+    if (!isTightPortrait(variant)) {
+        if (/P015/i.test(poseText)) {
+            out.push('【核心动作优先执行】人物严格按摆姿参考摆出不对称对立式站姿：右肘明显向外弯折形成手臂与腰间三角空隙，右手明确扶在人物自身右侧髋部（画面左侧），左臂自然垂在身侧；双脚前后错步重心在后脚；不要双手同时垂在身体两侧。');
+        } else if (visualPoseSent || directive(variant?.action)) {
+            out.push(`【核心动作优先执行】${directive(variant?.action) || directive(poseRef?.direction)}；严格遵循动作方向，不要退化为对称垂手正面证件照站姿。`);
+        }
+    }
+    return out;
+}
+
+function buildModelScopeDirection({ modelId, imageRoles, fields, corrections, priorityDirective, visualPoseSent, imageNotes, frameLocked, framePrompt, variant, poseRef }) {
+    if (modelId === MODELSCOPE_TURBO_MODEL) {
+        return modelScopeDirection({ modelId, prompt: framePrompt, locked: frameLocked, variant, poseRef, size: variant?.size });
+    }
+    return [
+        imageRoleGuidance(imageRoles),
+        ...priorityDirective,
+        ...fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`),
+        ...corrections,
+        ...imageNotes,
+        ...(visualPoseSent ? ['最后一张参考图来自摆姿库，只提取身体动作、肘部角度、肢体关系和重心；不要复制线稿、参考图中的脸、服装、背景、文字或标记。'] : []),
+        subjectRule(frameLocked, framePrompt),
+    ].filter(Boolean).join('\n');
+}
+
 function isAccessoryConflictingOutfitReference(reference) {
     return /AUT-0118/i.test(String(reference?.assetId || reference?.referenceImageUrl || ''));
 }
 
 function wardrobeVisibleInFrame(value, variant = {}) {
     const text = directive(value);
-    if (!isWaistUp(variant) || !text) return text;
+    if (!isUpperBodyFrame(variant) || !text) return text;
     return text.split(/(?<=[，、,；;。])/)
         .filter(part => !/(裙|裤|靴|鞋|袜|下装|skirt|trousers|pants|boots|shoes|socks|lower[- ]body)/i.test(part))
         .join('')
@@ -438,7 +481,7 @@ function wardrobeVisibleInFrame(value, variant = {}) {
 
 function promptVisibleInFrame(prompt, variant = {}) {
     const text = (typeof prompt === 'string' ? prompt : '').replace(/^Reference roles:[^\r\n]*(?:\r?\n|$)/i, '');
-    if (!isWaistUp(variant)) return text;
+    if (!isUpperBodyFrame(variant)) return text;
     const upperWardrobe = wardrobeVisibleInFrame(text.match(/Subject and clothing:\s*(.*?)\. User constraints:/is)?.[1], variant);
     if (!upperWardrobe) return text;
     return text.replace(/Subject and clothing:\s*.*?\. User constraints:/is, `Subject and clothing: ${upperWardrobe}. User constraints:`);
@@ -463,7 +506,7 @@ function poseInFrame(pose, size) {
     const pattern = OFF_FRAME[visibleFrame(size)];
     if (!pattern) return raw;
     const kept = raw.split(/[，,；;。.!?]+/).map(part => part.trim()).filter(Boolean)
-        .filter(part => !pattern.test(part));
+        .filter(part => /(?:完全不在画面内|不入画|不出画|不出现|不得出现|绝不出现|不要出现|画外)/.test(part) || !pattern.test(part));
     // If nothing survives the crop, say so rather than falling back to the whole
     // pose: a pose that only exists below the frame has no bearing on the picture.
     return kept.join('，');
@@ -602,18 +645,19 @@ export async function submitModelScope({ env, prompt, size, seed, references, va
         if (!stored?.buffer?.length) throw new GenerationError('GENERATION_ANCHOR_MISSING', '已锁定的母图读不到；停止生成，不能退回无母图请求', 409);
         images.push(await referenceDataUrl(stored, env));
         imageRoles.push('anchor');
-        imageNotes.push(`Image ${images.length} is the accepted frame; preserve its established look`);
+        imageNotes.push(`Image ${images.length} is the accepted frame; preserve its face, hairstyle and outfit continuity while strictly changing camera distance, framing and pose to match this shot`);
     }
-    const waistUp = isWaistUp(variant);
+    const skipStyleRef = isWaistUp(variant) || isTightPortrait(variant);
+    const upperCrop = isUpperBodyFrame(variant);
     for (const reference of references) {
-        if (reference.role === 'style' && (waistUp || (anchor?.assetId && wardrobeForbidsAccessories(locked, variant) && isAccessoryConflictingOutfitReference(reference)))) continue;
+        if (reference.role === 'style' && (skipStyleRef || (anchor?.assetId && wardrobeForbidsAccessories(locked, variant) && isAccessoryConflictingOutfitReference(reference)))) continue;
         images.push(await referenceDataUrl(reference, env));
         imageRoles.push(reference.role);
         imageNotes.push(reference.role === 'identity'
             ? `Image ${images.length} supplies face identity and hairstyle only; do not copy its clothing, shoulders, pose, lighting, background or crop`
             : `Image ${images.length} is the ${reference.role} reference`);
     }
-    const visualPoseSent = Boolean(poseRef && !waistUp && !anchor?.assetId);
+    const visualPoseSent = Boolean(poseRef && !skipStyleRef && !anchor?.assetId);
     if (visualPoseSent) {
         if (!poseRef.imageUrl) throw new GenerationError('GENERATION_REFERENCE_MISSING', '已选择姿势，但没有可用的姿势参考图', 409);
         const poseImage = await fetchLibraryImage(poseRef.imageUrl, fetchImpl);
@@ -622,13 +666,12 @@ export async function submitModelScope({ env, prompt, size, seed, references, va
         imageRoles.push('pose');
         imageNotes.push(`Image ${images.length} is a PoseAtlas pose sketch: use only its body angle and pose, never its face, clothing or background`);
     }
-    const frameLocked = waistUp ? { ...locked, subject: wardrobeVisibleInFrame(locked?.subject, variant), wardrobe: wardrobeVisibleInFrame(locked?.wardrobe, variant) } : locked;
+    const frameLocked = upperCrop ? { ...locked, subject: wardrobeVisibleInFrame(locked?.subject, variant), wardrobe: wardrobeVisibleInFrame(locked?.wardrobe, variant) } : locked;
     const framePrompt = promptVisibleInFrame(prompt, variant);
     const fields = directionFields({ prompt: framePrompt, locked: frameLocked, variant, poseRef, framing: framingZh(variant) });
     const corrections = modelScopeCorrections({ locked: frameLocked, variant, poseRef });
-    const direction = modelId === MODELSCOPE_TURBO_MODEL
-        ? modelScopeDirection({ modelId, prompt: framePrompt, locked: frameLocked, variant, poseRef, size: variant?.size })
-        : [imageRoleGuidance(imageRoles), ...fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`), ...corrections, ...imageNotes, ...(visualPoseSent ? ['最后一张参考图来自摆姿库，只参考身体动作、肢体关系和重心；不要复制线稿、参考图中的脸、服装、背景、文字或标记。'] : []), subjectRule(frameLocked, framePrompt)].filter(Boolean).join('\n');
+    const priorityDirective = modelScopePriorityDirective({ anchor, variant, poseRef, visualPoseSent });
+    const direction = buildModelScopeDirection({ modelId, imageRoles, fields, corrections, priorityDirective, visualPoseSent, imageNotes, frameLocked, framePrompt, variant, poseRef });
     let response;
     try {
         response = await fetchImpl(MODELSCOPE_ENDPOINT, {
@@ -772,17 +815,18 @@ async function callModelScope({ env, prompt, size, seed, references, variant, po
         const stored = await readAsset(`/api/continuity/asset/${anchor.assetId}`, { env, store });
         if (!stored?.buffer?.length) throw new GenerationError('GENERATION_ANCHOR_MISSING', '已锁定的母图读不到；停止生成，不能退回无母图请求', 409);
         images.push(await referenceDataUrl(stored, env));
-        imageNotes.push(`Image ${images.length} is the accepted frame; preserve its established look`);
+        imageNotes.push(`Image ${images.length} is the accepted frame; preserve its face, hairstyle and outfit continuity while strictly changing camera distance, framing and pose to match this shot`);
         imageRoles.push('anchor');
     }
-    const waistUp = isWaistUp(variant);
+    const skipStyleRef = isWaistUp(variant) || isTightPortrait(variant);
+    const upperCrop = isUpperBodyFrame(variant);
     for (const reference of references) {
         // The selected AUT-0118 library image contains a bag and necklace that
-        // conflict with the locked wardrobe contract. Waist-up shots use its
+        // conflict with the locked wardrobe contract. Waist-up/tight shots use its
         // already-compiled text description instead of copying those props.
         // Anchored full-body shots also skip it when the written contract bans
         // those accessories; the accepted frame carries outfit continuity.
-        if (reference.role === 'style' && (waistUp || (anchor?.assetId && wardrobeForbidsAccessories(locked, variant) && isAccessoryConflictingOutfitReference(reference)))) continue;
+        if (reference.role === 'style' && (skipStyleRef || (anchor?.assetId && wardrobeForbidsAccessories(locked, variant) && isAccessoryConflictingOutfitReference(reference)))) continue;
         images.push(await referenceDataUrl(reference, env));
         imageNotes.push(reference.role === 'identity'
             ? `Image ${images.length} supplies face identity and hairstyle only; do not copy its clothing, shoulders, pose, lighting, background or crop`
@@ -792,7 +836,7 @@ async function callModelScope({ env, prompt, size, seed, references, variant, po
     // Full-body PoseAtlas line art overrides waist-up framing, while the bundled
     // waist-up photo carries clothing and accessories that conflict with outfit locks.
     const visualPoseUrl = poseRef?.imageUrl;
-    const visualPoseSent = Boolean(poseRef && !waistUp && !anchor?.assetId);
+    const visualPoseSent = Boolean(poseRef && !skipStyleRef && !anchor?.assetId);
     if (visualPoseSent) {
         if (!visualPoseUrl) throw new GenerationError('GENERATION_REFERENCE_MISSING', '已选择姿势，但没有可用的姿势参考图', 409);
         const poseImage = await fetchLibraryImage(visualPoseUrl, fetchImpl);
@@ -801,23 +845,12 @@ async function callModelScope({ env, prompt, size, seed, references, variant, po
         imageRoles.push('pose');
     }
 
-    const frameLocked = waistUp ? { ...locked, subject: wardrobeVisibleInFrame(locked?.subject, variant), wardrobe: wardrobeVisibleInFrame(locked?.wardrobe, variant) } : locked;
+    const frameLocked = upperCrop ? { ...locked, subject: wardrobeVisibleInFrame(locked?.subject, variant), wardrobe: wardrobeVisibleInFrame(locked?.wardrobe, variant) } : locked;
     const framePrompt = promptVisibleInFrame(prompt, variant);
     const fields = directionFields({ prompt: framePrompt, locked: frameLocked, variant, poseRef, framing: framingZh(variant) });
     const corrections = modelScopeCorrections({ locked: frameLocked, variant, poseRef });
-    const direction = [
-        imageRoleGuidance(imageRoles),
-        ...fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`),
-        ...corrections,
-        ...(visualPoseSent
-            ? ['最后一张参考图来自摆姿库，只参考身体动作、肢体关系和重心；不要复制线稿、参考图中的脸、服装、背景、文字或标记。']
-            : []),
-        ...imageNotes,
-        subjectRule(frameLocked, framePrompt),
-    ].filter(Boolean).join('\n');
-    const finalDirection = modelId === MODELSCOPE_TURBO_MODEL
-        ? modelScopeDirection({ modelId, prompt: framePrompt, locked: frameLocked, variant, poseRef, size: variant?.size })
-        : direction;
+    const priorityDirective = modelScopePriorityDirective({ anchor, variant, poseRef, visualPoseSent });
+    const finalDirection = buildModelScopeDirection({ modelId, imageRoles, fields, corrections, priorityDirective, visualPoseSent, imageNotes, frameLocked, framePrompt, variant, poseRef });
 
     const submit = await fetchImpl(MODELSCOPE_ENDPOINT, {
         method: 'POST',
@@ -1089,7 +1122,7 @@ export async function generateShot({ group, shotId, providerId = '', env = {}, f
         // ModelScope wardrobe images can override a waist-up crop or add
         // accessories explicitly forbidden by the shot contract.
         if (providerId === 'modelscope-qwen-edit' && reference.role === 'style'
-            && (isWaistUp(request.variant) || wardrobeForbidsAccessories(request.locked, request.variant))) continue;
+            && (isWaistUp(request.variant) || isTightPortrait(request.variant) || wardrobeForbidsAccessories(request.locked, request.variant))) continue;
         const assetPath = definition?.path;
         let asset;
         if (assetPath) {
@@ -1116,7 +1149,7 @@ export async function generateShot({ group, shotId, providerId = '', env = {}, f
         '1:1': '1328x1328', '16:9': '1664x928', '9:16': '928x1664',
         '4:3': '1472x1140', '3:4': '1140x1472', '3:2': '1584x1056', '2:3': '1056x1584',
     };
-    const size = isWaistUp(request.variant)
+    const size = (isWaistUp(request.variant) || isTightPortrait(request.variant))
         ? aspectSizes['3:4']
         : aspectSizes[request.aspect] || '1056x1584';
 

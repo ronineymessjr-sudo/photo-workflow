@@ -297,3 +297,18 @@ test('generateShot keeps polling across transient 503 and network errors for asy
     assert.equal(panel.state().pendingJobs['shot-01'], undefined);
     assert.equal(panel.state().results['shot-01'].image.assetId, '0123456789abcdef');
 });
+
+test('pendingJobs are isolated per group archive and never block another plan', () => {
+    const groupA = { continuityGroupId: 'shoot-a', locked: { theme: 'A' }, shots: [{ shotId: 'shot-01' }] };
+    const groupB = { continuityGroupId: 'shoot-b', locked: { theme: 'B' }, shots: [{ shotId: 'shot-01' }] };
+    const panel = createPanel({
+        initialState: {
+            group: groupA,
+            pendingJobs: { 'shot-01': { taskId: 'task-a' } },
+        },
+    });
+    panel.context.activateGroup(groupB);
+    assert.equal(Object.keys(panel.state().pendingJobs || {}).length, 0);
+    panel.context.activateGroup(groupA);
+    assert.equal(panel.state().pendingJobs['shot-01'].taskId, 'task-a');
+});

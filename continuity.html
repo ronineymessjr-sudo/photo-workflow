@@ -28,8 +28,9 @@
         font: 15px/1.6 -apple-system, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
     }
     main { max-width: 1060px; margin: 0 auto; }
+    a { color: var(--accent); text-underline-offset: 3px; }
     h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: .01em; }
-    h2 { font-size: 15px; margin: 32px 0 12px; color: var(--muted); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+    h2 { font-size: 15px; margin: 32px 0 12px; color: var(--muted); font-weight: 600; letter-spacing: .04em; }
     h3 { font-size: 15px; margin: 0 0 12px; }
     p.muted, .muted { color: var(--muted); }
     .small { font-size: 12px; }
@@ -52,9 +53,9 @@
     button:hover { filter: brightness(1.05); }
     .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 12px; }
     .refs { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
-    .ref-card { border: 1px solid var(--line); border-radius: 12px; padding: 14px; background: var(--panel); }
+    .ref-card { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 12px; padding: 14px; background: var(--panel); }
     .ref-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-    .ref-actions { display: grid; gap: 8px; margin-top: 12px; }
+    .ref-actions { display: grid; gap: 8px; margin-top: auto; padding-top: 12px; }
     .thumb { width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); }
     .shot-thumb { width: 112px; aspect-ratio: 3/4; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); }
     .thumb.empty { display: grid; place-items: center; color: var(--muted); font-size: 12px; }
@@ -66,7 +67,7 @@
     th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
     th { color: var(--muted); font-weight: 600; font-size: 12px; }
     td button { padding: 5px 10px; font-size: 12px; margin-right: 6px; }
-    pre { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 12px; overflow: auto; font-size: 12px; max-height: 360px; }
+    pre { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 12px; overflow: auto; font-size: 12px; max-height: 360px; white-space: pre-wrap; word-break: break-word; }
     #toast {
         position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
         background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
@@ -101,9 +102,9 @@
         </label>
         <div class="row">
             <button id="create">建立分组</button>
-            <label class="inline ghost" style="gap:8px">
-                <span>或导入契约 JSON</span>
-                <input id="import" type="file" accept="application/json" style="width:auto" />
+            <label class="inline ghost" style="gap:8px;flex-wrap:wrap;max-width:100%">
+                <span style="white-space:nowrap">或导入契约 JSON</span>
+                <input id="import" type="file" accept="application/json" style="width:100%;max-width:260px" />
             </label>
         </div>
         <div id="summary" class="row" style="margin-top:10px"></div>
@@ -119,7 +120,7 @@
     <h2>3. 逐镜请求</h2>
     <section class="card">
         <div class="row" style="margin-top:0">
-            <label style="max-width:280px">图像服务
+            <label style="width:100%;max-width:340px">图像服务
                 <select id="f-provider"></select>
             </label>
             <span id="provider-hint" class="muted small"></span>

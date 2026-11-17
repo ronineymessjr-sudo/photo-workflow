@@ -409,6 +409,7 @@ function resourceRepairGuidance(shots, input) {
 export function aiPlanProviders(env = {}) {
     const result = providers.map(p => ({ ...p }));
     if (typeof env.AI?.run === 'function') result.push({ id: 'cloudflare-workers-ai', name: 'Cloudflare Workers AI（网站额度）', endpoint: 'https://workers-ai.internal/chat/completions', suggestedModel: '@cf/qwen/qwen3-30b-a3b-fp8', requiresKey: false, internalOnly: true });
+    if (env.MINIMAX_API_KEY) result.push({ id: 'minimax', name: 'MiniMax（服务器配置）', endpoint: 'https://api.minimax.cn/v1/chat/completions', suggestedModel: 'MiniMax-M3.1-Flash', requiresKey: false, serverKeyEnv: 'MINIMAX_API_KEY', internalOnly: true });
     if (env.ENABLE_OPENROUTER_FREE === 'true') result.push({ id: 'openrouter-free', name: 'OpenRouter 免费模型（待实测）', endpoint: 'https://openrouter.ai/api/v1/chat/completions', suggestedModel: 'openrouter/free', freeOnly: true });
     // Failed live quality checks: anonymous prototype is opt-in for research only.
     if (env.ENABLE_EXPERIMENTAL_FREE_AI === 'true') result.push({ id: 'pollinations-free', name: 'Pollinations 实验接口（未验收）', endpoint: 'https://text.pollinations.ai/openai', requiresKey: false, suggestedModel: 'openai' });
@@ -434,6 +435,7 @@ export async function handleAiPlan(body, env = {}, { fetchImpl = fetch, debugKee
         return { status: 400, body: { error: '请选择允许的服务商，并填写有效的密钥和模型 ID' } };
     }
     if (provider.id === 'pollinations-free' && body.model !== 'openai') return { status: 400, body: { error: '免费试用仅允许预设模型，不会自动切换到收费接口' } };
+    if (provider.id === 'minimax' && body.model !== provider.suggestedModel) return { status: 400, body: { error: '不支持的 MiniMax 模型' } };
     const allowedWorkersModels = new Set([
         provider.suggestedModel,
         '@cf/meta/llama-3.3-70b-instruct-fp8-fast',
@@ -482,8 +484,9 @@ shot_language 是独特的镜头名称；model_pose 写具体动作口令；phot
                 let compactArrayUsed = false;
                 try {
             const requestBody = { model, messages,
-                    response_format: { type: 'json_object' },
+                    ...(provider.id === 'minimax' ? {} : { response_format: { type: 'json_object' } }),
                     ...(provider.id === 'pollinations-free' ? { reasoning_effort: 'low' } : {}),
+                    ...(provider.id === 'minimax' ? { reasoning_effort: 'low', reasoning_split: true } : {}),
                     ...(provider.id === 'deepseek' ? { thinking: { type: 'disabled' } } : {}),
                     ...(provider.freeOnly ? { provider: { max_price: { prompt: 0, completion: 0 }, allow_fallbacks: false } } : {}),
                     ...(provider.id === 'openai' ? { max_completion_tokens: 10000 } : { max_tokens: 8192 }) };
@@ -514,19 +517,36 @@ shot_language 是独特的镜头名称；model_pose 写具体动作口令；phot
             } else {
                 const response = await fetchImpl(provider.endpoint, {
                     method: 'POST', redirect: 'manual',
-                    headers: { 'Content-Type': 'application/json', ...(provider.requiresKey === false ? {} : { Authorization: `Bearer ${body.apiKey}` }) },
+                    headers: { 'Content-Type': 'application/json', ...(provider.serverKeyEnv
+                        ? { Authorization: `Bearer ${env[provider.serverKeyEnv]}` }
+                        : provider.requiresKey === false ? {} : { Authorization: `Bearer ${body.apiKey}` }) },
                     body: JSON.stringify(requestBody), signal: AbortSignal.timeout(90000),
                 });
                 upstreamStatus = response.status;
                 if (!response.ok) throw new Error('PROVIDER_FAILED');
                 payload = await response.json();
             }
+            if (provider.id === 'minimax' && payload?.base_resp?.status_code != null && Number(payload.base_resp.status_code) !== 0) {
+                const code = Number(payload.base_resp.status_code);
+                if ([1002, 1039].includes(code)) upstreamStatus = 429;
+                else if ([1004, 2049].includes(code)) upstreamStatus = 401;
+                else if (code === 1008) upstreamStatus = 402;
+                else upstreamStatus = 502;
+                throw new Error('PROVIDER_FAILED');
+            }
             const choice = payload.choices?.[0];
             if (choice?.finish_reason === 'length') throw new Error('AI_OUTPUT_TRUNCATED');
             if (choice?.finish_reason !== 'stop' || typeof choice.message?.content !== 'string'
-                || choice.message.content.length > 120000) throw new Error('AI_COMPLETION_INCOMPLETE');
+                || choice.message.content.length > 120000) {
+                if (provider.id === 'minimax') console.error('minimax_response_shape', JSON.stringify({
+                    topLevelKeys: Object.keys(payload || {}).slice(0, 12), choiceCount: payload?.choices?.length || 0,
+                    finishReason: choice?.finish_reason || '', contentType: typeof choice?.message?.content,
+                    messageKeys: Object.keys(choice?.message || {}).slice(0, 8),
+                }));
+                throw new Error('AI_COMPLETION_INCOMPLETE');
+            }
             let result;
-            const content = choice.message.content.replace(/^\uFEFF/, '').trim();
+            const content = choice.message.content.replace(/^\uFEFF/, '').replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
             const fenced = content.match(/^```(?:json)?\s*\n([\s\S]*?)\n```$/i);
             try { result = JSON.parse(fenced ? fenced[1] : content); } catch { throw new Error('AI_INVALID_JSON'); }
             if (provider.requiresKey === false && !Array.isArray(result.shot_plans)) {
@@ -603,7 +623,7 @@ shot_language 是独特的镜头名称；model_pose 写具体动作口令；phot
                 } catch (error) {
                     const safeCode = ['AI_OUTPUT_TRUNCATED', 'AI_COMPLETION_INCOMPLETE', 'AI_INVALID_JSON', 'AI_SHOT_COUNT_MISMATCH', 'AI_SHOT_FIELDS_INVALID', 'AI_HARD_CONSTRAINTS_FAILED', 'AI_PHOTOGRAPHER_FEASIBILITY_FAILED', 'AI_PROVIDER_FREE_QUOTA_EXHAUSTED', 'INVALID_OUTPUT', 'PROVIDER_FAILED'].includes(error?.message) ? error.message : 'PROVIDER_OR_NETWORK_ERROR';
                     console.error('ai_plan_attempt_failed', JSON.stringify({ provider: provider.id, attempt, code: safeCode, violationCount: error?.violations?.length || 0, firstViolation: error?.violations?.[0]?.slice(0, 80) || '' }));
-                    if (attempt < maxRepairAttempts && (provider.requiresKey !== false || provider.id === 'cloudflare-workers-ai') && error.rawShotPlans && error.violations?.length) {
+                    if (attempt < maxRepairAttempts && (provider.requiresKey !== false || ['cloudflare-workers-ai', 'minimax'].includes(provider.id)) && error.rawShotPlans && error.violations?.length) {
                         qualityRepairAttempted = true;
                         const fields = [...requiredText, 'shot_size', 'camera_angle'];
                         const prior = compactArrayUsed
@@ -618,7 +638,7 @@ shot_language 是独特的镜头名称；model_pose 写具体动作口令；phot
             }
             return Response.json({ shot_plans: validatedShots });
         } });
-        plan.director = { ...plan.director, source: provider.id === 'cloudflare-workers-ai' ? 'cloudflare-workers-ai-plan' : 'byok-ai-plan', provider: provider.id, model, requestedModel, qualityRepairAttempted,
+        plan.director = { ...plan.director, source: provider.id === 'cloudflare-workers-ai' ? 'cloudflare-workers-ai-plan' : provider.internalOnly ? `${provider.id}-plan` : 'byok-ai-plan', provider: provider.id, model, requestedModel, qualityRepairAttempted,
             imageGenerationConnected: false, imageGenerationMode: 'text-only-ai-plan' };
         return { status: 200, body: plan };
     } catch (error) {
@@ -630,7 +650,8 @@ shot_language 是独特的镜头名称；model_pose 写具体动作口令；phot
         const invalid = error.message === 'INVALID_BRIEF';
         const referenceFailure = ['REFERENCE_LIBRARY_UNAVAILABLE', 'REFERENCE_IMAGES_REQUIRED', 'UNAVAILABLE_REFERENCE', 'INVALID_REFERENCE_SELECTION'].includes(error.message);
         const providerQuotaExhausted = error.message === 'AI_PROVIDER_FREE_QUOTA_EXHAUSTED';
-        const status = invalid ? 400 : referenceFailure ? 503 : providerQuotaExhausted || upstreamStatus === 429 ? 429 : ['AI_HARD_CONSTRAINTS_FAILED', 'AI_PHOTOGRAPHER_FEASIBILITY_FAILED'].includes(error.message) || [400, 401, 402, 403, 404].includes(upstreamStatus) ? 422 : 502;
+        const rejectedOutput = ['AI_OUTPUT_TRUNCATED', 'AI_COMPLETION_INCOMPLETE', 'AI_INVALID_JSON', 'AI_SHOT_COUNT_MISMATCH', 'AI_SHOT_FIELDS_INVALID', 'AI_HARD_CONSTRAINTS_FAILED', 'AI_PHOTOGRAPHER_FEASIBILITY_FAILED', 'INVALID_OUTPUT'].includes(error.message);
+        const status = invalid ? 400 : referenceFailure ? 503 : providerQuotaExhausted || upstreamStatus === 429 ? 429 : rejectedOutput || [400, 401, 402, 403, 404].includes(upstreamStatus) ? 422 : 503;
         const reasons = {
             AI_OUTPUT_TRUNCATED: '模型输出被截断，请减少镜头数量或关闭模型的长推理模式后重试',
             AI_COMPLETION_INCOMPLETE: '模型没有正常完成本次生成，请稍后重试',

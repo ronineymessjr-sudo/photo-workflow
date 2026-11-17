@@ -541,13 +541,24 @@ export default {
                 result = { status: 200, body: { providers: aiPlanProviders(env).filter(provider => !provider.internalOnly) } };
             }
             else if (path === '/api/ai/plan' && method === 'POST') {
-                if (body?.provider === 'cloudflare-workers-ai') {
+                const internalPlanProvider = ['cloudflare-workers-ai', 'minimax'].includes(body?.provider);
+                if (internalPlanProvider) {
                     if (!uid) result = { status: 401, body: { error: '请先登录后再生成摄影方案', code: 'SIGN_IN_REQUIRED' } };
+                    else if (body.provider === 'cloudflare-workers-ai' && (!env.AI || typeof env.AI.run !== 'function')) result = { status: 503, body: { error: '摄影方案 AI 当前未连接。', code: 'PLAN_PROVIDER_NOT_CONFIGURED' } };
+                    else if (body.provider === 'minimax' && !env.MINIMAX_API_KEY) result = { status: 503, body: { error: '摄影方案 AI 当前未连接。', code: 'PLAN_PROVIDER_NOT_CONFIGURED' } };
                     else {
                         const allowed = await consumeStudioPlanQuota({ uid, env });
                         if (allowed === null) result = { status: 503, body: { error: '方案生成额度服务暂不可用，请稍后重试。', code: 'AI_PLAN_QUOTA_NOT_CONFIGURED' } };
                         else if (!allowed) result = { status: 429, body: { error: '今日方案生成额度已用完，请明天再试。', code: 'AI_PLAN_DAILY_LIMIT_REACHED' } };
-                        else result = await handleAiPlan(body, env);
+                        else {
+                            try {
+                                result = await handleAiPlan(body, env);
+                                if (result.status !== 200) await refundStudioPlanQuota({ uid, env });
+                            } catch (error) {
+                                await refundStudioPlanQuota({ uid, env });
+                                throw error;
+                            }
+                        }
                     }
                 } else result = await handleAiPlan(body, env);
                 if (result.status === 200) {
@@ -846,16 +857,25 @@ export default {
                 let plan;
                 if (!uid) result = { status: 401, body: { error: '请先登录后再生成摄影方案', code: 'SIGN_IN_REQUIRED' } };
                 else if (!env.DIRECTOR_API_BASE || !env.DIRECTOR_API_BASE.startsWith('https://')) {
-                    if (!env.AI || typeof env.AI.run !== 'function') result = { status: 503, body: { error: '摄影方案 AI 当前未连接，请稍后重试或在设置中接入自己的 AI。', code: 'PLAN_PROVIDER_NOT_CONFIGURED' } };
+                    const workersAiAvailable = Boolean(env.AI && typeof env.AI.run === 'function');
+                    const planProvider = workersAiAvailable ? aiPlanProviders(env).find(provider => provider.id === 'cloudflare-workers-ai')
+                        : aiPlanProviders(env).find(provider => provider.id === 'minimax');
+                    if (!planProvider) result = { status: 503, body: { error: '摄影方案 AI 当前未连接，请稍后重试或在设置中接入自己的 AI。', code: 'PLAN_PROVIDER_NOT_CONFIGURED' } };
                     else {
                         const allowed = await consumeStudioPlanQuota({ uid, env });
                         if (allowed === null) result = { status: 503, body: { error: '方案生成额度服务暂不可用，请稍后重试。', code: 'AI_PLAN_QUOTA_NOT_CONFIGURED' } };
                         else if (!allowed) result = { status: 429, body: { error: '今日方案生成额度已用完，请明天再试。', code: 'AI_PLAN_DAILY_LIMIT_REACHED' } };
                         else {
                             try {
-                                const generated = await handleAiPlan({ provider: 'cloudflare-workers-ai',
-                                    model: aiPlanProviders(env).find(provider => provider.id === 'cloudflare-workers-ai')?.suggestedModel,
+                                let generated = await handleAiPlan({ provider: planProvider.id,
+                                    model: planProvider.suggestedModel,
                                     input: { ...body, requireImageReferences: true } }, env);
+                                if (generated.status === 429 && generated.body?.code === 'AI_PROVIDER_FREE_QUOTA_EXHAUSTED'
+                                    && env.MINIMAX_API_KEY) {
+                                    const fallback = aiPlanProviders(env).find(provider => provider.id === 'minimax');
+                                    generated = await handleAiPlan({ provider: fallback.id, model: fallback.suggestedModel,
+                                        input: { ...body, requireImageReferences: true } }, env);
+                                }
                                 if (generated.status !== 200) {
                                     await refundStudioPlanQuota({ uid, env });
                                     result = generated;
