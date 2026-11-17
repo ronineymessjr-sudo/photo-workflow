@@ -88,6 +88,18 @@ test('allocates the requested shoot duration across the returned shots', async (
     assert.equal(plan.shotList.reduce((sum, shot) => sum + shot.duration, 0), 60);
 });
 
+test('assigns each shot to the named scene supported by its photographic details', async () => {
+    const plan = await createDirectorPlan({ scene: '公园竹林小径；湖边木栈道；木亭长椅', duration: '1小时' }, {
+        baseUrl: 'http://127.0.0.1:8004',
+        fetchImpl: async () => Response.json({ shot_plans: [
+            { shot_language: '01 湖边回望全身', model_pose: '站在湖边木栈道回望', photographer_position: '距主体约6米', lens: '35mm', model_position: '湖面与木栈道', crop_boundary: '全身' },
+            { shot_language: '02 亭内头肩近景', model_pose: '亭柱旁轻轻回望', photographer_position: '距主体约3米', lens: '35mm', model_position: '木亭长椅与亭柱', crop_boundary: '头肩近景' },
+            { shot_language: '03 竹林全身', model_pose: '在竹林小径自然站立', photographer_position: '距主体约6米', lens: '35mm', model_position: '竹林纵深', crop_boundary: '全身' },
+        ] }),
+    });
+    assert.deepEqual(plan.shotList.map(shot => shot.scene), ['湖边木栈道', '木亭长椅', '公园竹林小径']);
+});
+
 test('theme and style can be omitted while the Director receives safe creative guidance', async () => {
     let submitted;
     const plan = await createDirectorPlan({ scene: '有树荫的公园', duration: '1小时', people: '1' }, {

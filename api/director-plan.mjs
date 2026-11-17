@@ -30,6 +30,33 @@ function suggestShotOptics(shot, description) {
     return { aperture, shutter };
 }
 
+const genericSceneCharacters = new Set('边中外内新旧大小远近高低前后左右上下场地景色光影人像主体位置构图镜头画面摄影自然背景'.split(''));
+
+function resolveShotScene(shot, sceneLocations, fallbackIndex) {
+    if (sceneLocations.length < 2) return sceneLocations[0] || '场地待确认';
+    const corpus = Object.values(shot || {}).filter(value => typeof value === 'string').join(' ').toLocaleLowerCase();
+    const scores = sceneLocations.map((scene, index) => {
+        const compact = scene.replace(/\s+/g, '').toLocaleLowerCase();
+        let score = compact && corpus.includes(compact) ? 20 : 0;
+        const otherScenes = sceneLocations.filter((_, otherIndex) => otherIndex !== index).map(value => value.replace(/\s+/g, '').toLocaleLowerCase());
+        const characters = [...new Set(compact)].filter(char => /[\u4e00-\u9fff]/.test(char)
+            && !genericSceneCharacters.has(char) && !otherScenes.some(other => other.includes(char)));
+        for (const char of characters) if (corpus.includes(char)) score += 1;
+        for (const match of compact.matchAll(/[\u4e00-\u9fff]{2,}/g)) {
+            const phrase = match[0];
+            const bigrams = [...phrase].slice(0, -1).map((char, i) => phrase.slice(i, i + 2));
+            for (const bigram of new Set(bigrams)) {
+                if (otherScenes.some(other => other.includes(bigram))) continue;
+                if (corpus.includes(bigram)) score += 2;
+            }
+        }
+        return { index, score };
+    });
+    scores.sort((a, b) => b.score - a.score);
+    if (scores[0].score > 0 && scores[0].score > scores[1].score) return sceneLocations[scores[0].index];
+    return sceneLocations[fallbackIndex % sceneLocations.length];
+}
+
 // Shared by the local bridge and the authenticated Worker route.
 export async function createDirectorPlan(input, { baseUrl, fetchImpl = fetch, referenceFetchImpl = fetch } = {}) {
     if (!baseUrl) throw new Error('DIRECTOR_NOT_CONFIGURED');
@@ -224,7 +251,7 @@ export async function createDirectorPlan(input, { baseUrl, fetchImpl = fetch, re
             const terms = ['回眸', '回望', '回头', '侧身', '行走', '步行', '迈步', '坐姿', '坐着', '靠墙', '扶腰', '腰侧', '触发丝', '整理头发'];
             return terms.some(term => poseText.includes(term) && hints.includes(term));
         }) || referencePoses[index % referencePoses.length];
-        const shotScene = sceneLocations[index % Math.max(1, sceneLocations.length)] || cleanInput.scene || '场地待确认';
+        const shotScene = resolveShotScene(shot, sceneLocations, index) || cleanInput.scene || '场地待确认';
         const directorContract = { ...shot, shot_language: title, model_pose: description,
             referenceIds: poseRef ? [poseRef.id] : [],
             model_position: safeComposition, photographer_position: method, wardrobe_styling: wardrobe, shot_props: props,
