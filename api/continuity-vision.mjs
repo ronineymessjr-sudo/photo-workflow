@@ -72,7 +72,7 @@ export async function prescreen({ imageDataUrl, shot, locked, env = {}, fetchImp
         : 'https://api-inference.modelscope.cn/v1';
     const model = hasExplicitKey
         ? (env.CONTINUITY_VISION_MODEL || 'deepseek-vl2')
-        : (env.MODELSCOPE_VISION_MODEL || 'OpenGVLab/InternVL3_5-241B-A28B');
+        : (env.MODELSCOPE_VISION_MODEL || 'Qwen/Qwen3.5-35B-A3B');
 
     let response;
     try {
@@ -82,6 +82,7 @@ export async function prescreen({ imageDataUrl, shot, locked, env = {}, fetchImp
             body: JSON.stringify({
                 model,
                 temperature: 0,
+                ...(!hasExplicitKey && /^Qwen\/Qwen3/i.test(model) ? { enable_thinking: false } : {}),
                 messages: [{
                     role: 'user',
                     content: [

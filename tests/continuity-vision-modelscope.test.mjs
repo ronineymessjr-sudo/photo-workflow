@@ -12,7 +12,8 @@ test('vision prescreen falls back to ModelScope VL when DEEPSEEK_API_KEY is abse
         fetchImpl: async (url, init) => {
             assert.equal(url, 'https://api-inference.modelscope.cn/v1/chat/completions');
             assert.equal(init.headers.Authorization, 'Bearer ms-vlm-token');
-            assert.equal(JSON.parse(init.body).model, 'OpenGVLab/InternVL3_5-241B-A28B');
+            assert.equal(JSON.parse(init.body).model, 'Qwen/Qwen3.5-35B-A3B');
+            assert.equal(JSON.parse(init.body).enable_thinking, false);
             return Response.json({ choices: [{ message: { content: '{"wardrobe":"pass","place-weather":"fail","shot-spec":"pass"}' } }] });
         },
     });
