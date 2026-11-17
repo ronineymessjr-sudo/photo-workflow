@@ -75,6 +75,19 @@ test('preserves current input and actual director shots without legacy templates
     assert.equal(plan.shotList[0].directorContract.subjectScale, undefined);
 });
 
+test('allocates the requested shoot duration across the returned shots', async () => {
+    const plan = await createDirectorPlan({ scene: '竹林；湖边；木亭', duration: '1小时' }, {
+        baseUrl: 'http://127.0.0.1:8004',
+        fetchImpl: async () => Response.json({ shot_plans: [
+            { shot_language: '竹林全身', model_pose: '自然站立', photographer_position: '距主体约6米', lens: '35mm', crop_boundary: '全身' },
+            { shot_language: '湖边回望', model_pose: '肩线微转后回望', photographer_position: '距主体约4米', lens: '50mm', crop_boundary: '腰线上方' },
+            { shot_language: '木亭近景', model_pose: '肩颈放松并看向镜头', photographer_position: '距主体约3米', lens: '85mm', crop_boundary: '头肩近景' },
+        ] }),
+    });
+    assert.deepEqual(plan.shotList.map(shot => shot.duration), [20, 20, 20]);
+    assert.equal(plan.shotList.reduce((sum, shot) => sum + shot.duration, 0), 60);
+});
+
 test('theme and style can be omitted while the Director receives safe creative guidance', async () => {
     let submitted;
     const plan = await createDirectorPlan({ scene: '有树荫的公园', duration: '1小时', people: '1' }, {

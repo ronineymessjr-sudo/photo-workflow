@@ -92,12 +92,16 @@ export async function createDirectorPlan(input, { baseUrl, fetchImpl = fetch, re
     });
     // Do not duplicate shots to meet a target that the upstream cannot yet supply.
     const executionShots = [...uniqueShots.values()];
+    const plannedShots = executionShots.slice(0, desiredShotCount);
+    const totalDurationMinutes = Math.max(plannedShots.length, resolveDurationMinutes(cleanInput.duration));
+    const baseShotDuration = Math.floor(totalDurationMinutes / Math.max(1, plannedShots.length));
+    const extraShotMinutes = totalDurationMinutes % Math.max(1, plannedShots.length);
     const text = value => typeof value === 'string' ? value : '';
     const sceneLocations = cleanInput.scene.split(/[;；\n]+/).map(value => value.trim()).filter(Boolean);
     const sceneScale = classifySceneScale(`${cleanInput.theme}\n${cleanInput.extra}`);
     const productActionCounts = new Map();
     const usedProductActions = new Set();
-    const shotList = executionShots.slice(0, desiredShotCount).map((shot, index) => {
+    const shotList = plannedShots.map((shot, index) => {
         const originalTitle = text(shot.shot_language) || text(shot.framing) || text(shot.model_pose);
         const originalPose = text(shot.model_pose);
         const originalPosition = text(shot.model_position);
@@ -236,7 +240,7 @@ export async function createDirectorPlan(input, { baseUrl, fetchImpl = fetch, re
         method, focalLength: text(shot.lens),
         composition: safeComposition, lighting,
         wardrobe, props, angle: ({eye_level:'平视',high_angle:'俯拍',ground_level:'贴地低机位',overhead:'正上方俯拍',low_angle:'仰拍',over_shoulder:'肩后机位'})[shot.camera_angle] || text(shot.camera_angle),
-        mood: cleanInput.mood || '待确认', duration: 0,
+        mood: cleanInput.mood || '待确认', duration: baseShotDuration + (index < extraShotMinutes ? 1 : 0),
         notes: `裁切：${cropBoundary}；必须呈现：${mustShow}；拒绝：${rejectIf}`,
         lightingSetup: lighting, priority: '待人工确认',
         alternative: executionNote, camera: suggestShotOptics(shot, description),
@@ -441,6 +445,14 @@ function resolveShotCount(input) {
     if (/[、，,；;\/]|多场景|转场|室内.*室外|室外.*室内/.test(String(input.scene || ''))) count += 1;
     if (/视频|短片|品牌|产品|封面|横竖|多平台/.test(`${input.theme || ''} ${input.extra || ''}`)) count += 1;
     return Math.max(9, Math.min(16, count));
+}
+
+function resolveDurationMinutes(value) {
+    const match = String(value || '2小时').match(/(\d+(?:\.\d+)?)\s*(小时|h|分钟|min)/i);
+    if (!match) return 120;
+    const amount = Number(match[1]);
+    const minutes = Math.round(amount * (/分钟|min/i.test(match[2]) ? 1 : 60));
+    return Number.isFinite(minutes) && minutes > 0 ? minutes : 120;
 }
 
 export function createGuestPlanDraft(input) {
