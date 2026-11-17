@@ -364,6 +364,8 @@ test('ModelScope uses 3:4 only for waist-up medium shots', async () => {
 test('ModelScope uses the identity photo and keeps clothing constraints in text', async () => {
     const store = createMemoryStore();
     const group = await readyGroup(store);
+    group.shots[0].size = 'MS';
+    group.shots[0].shotType = '中景';
     group.shots[0].prompt = 'A candid waist-up portrait on a lakeside boardwalk.';
     let body;
     await generateShot({
@@ -379,6 +381,24 @@ test('ModelScope uses the identity photo and keeps clothing constraints in text'
     assert.equal(body.model, 'Qwen/Qwen-Image-Edit-2511', '默认生产模型保持不变');
     assert.match(body.prompt, /炭灰大衣/);
     assert.match(body.prompt, /lakeside boardwalk/);
+});
+
+test('ModelScope sends the selected wardrobe reference for full-body frames', async () => {
+    const store = createMemoryStore();
+    const group = await readyGroup(store, { wardrobeNote: '象牙白针织上衣与卡其长裙' });
+    let body;
+    const result = await generateShot({
+        group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit',
+        env: { MODELSCOPE_TOKEN: 'test-only' }, store,
+        fetchImpl: async (_url, options) => {
+            body = JSON.parse(options.body);
+            return Response.json({ task_id: 'wardrobe-reference-task' });
+        },
+        submitOnly: true,
+    });
+    assert.deepEqual(result.referenceRolesSent, ['identity', 'style']);
+    assert.equal(body.image_url.length, 2);
+    assert.match(body.prompt, /Image 2（style）/);
 });
 
 test('ModelScope can select only the allowlisted 2.1 Turbo model for a controlled comparison', async () => {
@@ -426,11 +446,13 @@ test('ModelScope sends the allowlisted PoseAtlas sketch as pose-only guidance', 
         group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit',
         env: { MODELSCOPE_TOKEN: 'test-only' }, store, fetchImpl, submitOnly: true,
     });
-    assert.equal(body.image_url.length, 2, '发送身份图与姿势线稿，不发送目录服装图');
+    assert.equal(body.image_url.length, 3, '发送身份图、服装参考与姿势线稿');
     assert.match(body.image_url[0], /^data:image\/png;base64,/);
-    assert.match(body.image_url[1], /^data:image\/jpeg;base64,/);
+    assert.match(body.image_url[1], /^data:image\/png;base64,/);
+    assert.match(body.image_url[2], /^data:image\/jpeg;base64,/);
     assert.match(body.prompt, /use only its body angle and pose, never its face, clothing or background/);
     assert.equal(result.poseReferenceSent, true);
+    assert.deepEqual(result.referenceRolesSent, ['identity', 'style', 'pose']);
 });
 
 test('ModelScope fails clearly when the selected pose image cannot be loaded', async () => {
@@ -511,8 +533,8 @@ test('anchored ModelScope shots follow PoseAtlas text without mixing the pose ph
         },
     });
 
-    assert.equal(payload.image_url.length, 2, 'the master and identity remain; conflicting outfit accessories are omitted');
-    assert.deepEqual(result.referenceRolesSent, ['anchor', 'identity']);
+    assert.equal(payload.image_url.length, 3, 'accepted anchor, identity and selected wardrobe references are sent');
+    assert.deepEqual(result.referenceRolesSent, ['anchor', 'identity', 'style']);
     assert.ok(!fetchedUrls.includes('https://example.com/pose.jpg'), 'anchored edits do not mix in another person or pose photo');
     assert.match(payload.prompt, /站立・对立式平衡・手扶腰/);
     assert.match(payload.prompt, /一只手轻扶髋部，另一只手自然下垂/);

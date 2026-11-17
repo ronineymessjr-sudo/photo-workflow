@@ -24,12 +24,10 @@ export const CONTINUITY_PROVIDERS = {
         maxReferences: 6,
         supportsSeed: true,
         canGenerate: true,
-        // The catalog's style slot is a flat costume reference, not a real
-        // editorial photograph. Qwen copied its neckline/accessories despite
-        // explicit shot constraints, so keep only the face/identity image and
-        // express wardrobe, scene and pose in the shot contract.
-        imageSlots: ['identity'],
-        requiredImageSlots: ['identity'],
+        // Use the selected wardrobe reference for shots where it fits the crop
+        // and does not conflict with explicit accessory restrictions.
+        imageSlots: ['identity', 'style'],
+        requiredImageSlots: ['identity', 'style'],
     },
     'volcengine-seedream': {
         // The strongest option for one shoot with one face: 14 references, native

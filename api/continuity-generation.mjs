@@ -1052,10 +1052,10 @@ export async function generateShot({ group, shotId, providerId = '', env = {}, f
     for (const reference of request.references) {
         if (!imageSlots.includes(reference.role)) continue;
         const definition = (group.references || []).find(item => item.role === reference.role);
-        // ModelScope waist-up prompts omit the outfit image because its crop
-        // can override framing. Anchored full-body prompts omit AUT-0118 only
-        // when the written wardrobe bans that library image's bag and jewelry.
-        if (providerId === 'modelscope-qwen-edit' && reference.role === 'style' && (isWaistUp(request.variant) || (request.anchor?.assetId && wardrobeForbidsAccessories(request.locked, request.variant) && isAccessoryConflictingOutfitReference({ ...reference, referenceImageUrl: definition?.referenceImageUrl })))) continue;
+        // ModelScope wardrobe images can override a waist-up crop or add
+        // accessories explicitly forbidden by the shot contract.
+        if (providerId === 'modelscope-qwen-edit' && reference.role === 'style'
+            && (isWaistUp(request.variant) || wardrobeForbidsAccessories(request.locked, request.variant))) continue;
         const assetPath = definition?.path;
         let asset;
         if (assetPath) {
