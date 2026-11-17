@@ -38,7 +38,10 @@ export async function prepareCloudCandidateReferences(input, options = {}) {
 
 export function compileCloudCandidateRequest(input, referenceContext) {
     if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('INVALID_GENERATION_REQUEST');
-    if (input.provider !== 'cloudflare' || ![CLOUDFLARE_MODEL, '@cf/black-forest-labs/flux-2-klein-4b', '@cf/black-forest-labs/flux-1-schnell'].includes(input.model)) throw new Error('GENERATION_PROVIDER_NOT_ALLOWED');
+    const cloudflareModel = input.provider === 'cloudflare'
+        && [CLOUDFLARE_MODEL, '@cf/black-forest-labs/flux-2-klein-4b', '@cf/black-forest-labs/flux-1-schnell'].includes(input.model);
+    const modelScopeModel = input.provider === 'modelscope' && ['Qwen/Qwen-Image-Edit-2511', 'Qwen/Qwen-Image-2.1-Turbo'].includes(input.model);
+    if (!cloudflareModel && !modelScopeModel) throw new Error('GENERATION_PROVIDER_NOT_ALLOWED');
     if (input.candidate_count !== 1 || input.billing_mode !== 'free-credit-first') throw new Error('GENERATION_BILLING_MODE_NOT_ALLOWED');
     if (input.reference_image_path || input.reference_image_url || input.reference_asset_ids?.length) throw new Error('CLOUD_REFERENCE_IMAGE_NOT_CONFIGURED');
 
@@ -88,7 +91,7 @@ export function compileCloudCandidateRequest(input, referenceContext) {
     return {
         prompt: compiledPrompt.slice(0, MAX_PROMPT_CHARS), width: dimensions[0], height: dimensions[1],
         steps: 24, seed: Number.isSafeInteger(input.seed) ? input.seed : Math.floor(Math.random() * 2147483647),
-        shotLanguage, model: CLOUDFLARE_MODEL,
+        shotLanguage, model: cloudflareModel ? CLOUDFLARE_MODEL : input.model,
     };
 }
 
@@ -280,7 +283,7 @@ export async function generateCloudCandidate(input, { ai, referenceContext, fetc
     })) };
 }
 
-async function fetchReferenceImage(rawUrl, fetchImpl) {
+export async function fetchReferenceImage(rawUrl, fetchImpl = fetch) {
     const url = new URL(rawUrl);
     if (url.origin !== 'https://hruiccc.github.io' || !/^\/RuiC-PoseAtlas\/(?:thumbs\/[A-Za-z0-9_-]+\.jpg|(?:costume|portrait)\/thumbs\/[A-Za-z0-9_-]+\.webp)$/.test(url.pathname) || url.search || url.hash) throw new Error('UNTRUSTED_REFERENCE_IMAGE');
     const options = { redirect: 'manual', signal: AbortSignal.timeout(15000) };

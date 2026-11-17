@@ -15,14 +15,25 @@
     };
     window.generateDirectorCandidate = async function (input) {
         const local = ['127.0.0.1', 'localhost', '[::1]'].includes(location.hostname);
-        if (!local) return window.api.request('/api/director/generate-candidate', 'POST', input, 130000);
-        const response = await fetch('/api/director/generate-candidate', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(input), signal: AbortSignal.timeout(130000)
-        });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || '候选生图失败');
-        return data;
+        const request = async (path, data, timeout = 28000) => {
+            if (!local) return window.api.request(path, 'POST', data, timeout);
+            const response = await fetch(path, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data), signal: AbortSignal.timeout(timeout),
+            });
+            const payload = await response.json();
+            if (!response.ok) throw new Error(payload.error || '候选生图失败');
+            return payload;
+        };
+        let result = await request('/api/director/generate-candidate', input);
+        if (result.status !== 'pending' || !result.taskId) return result;
+        const deadline = Date.now() + 7 * 60 * 1000;
+        while (Date.now() < deadline) {
+            await new Promise(resolve => setTimeout(resolve, 4000));
+            result = await request('/api/director/collect-candidate', { taskId: result.taskId });
+            if (result.status !== 'pending') return result;
+        }
+        throw new Error('魔搭仍在生成；任务已保留，可稍后重试查询同一任务。');
     };
     window.buildDirectorIdentityWorkflow = async function (input) {
         const local = ['127.0.0.1', 'localhost', '[::1]'].includes(location.hostname);

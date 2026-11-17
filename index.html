@@ -6315,9 +6315,11 @@ function renderDirectorCandidatePanel(plan) {
     const localCandidateModels = ['127.0.0.1', 'localhost', '[::1]'].includes(window.location.hostname);
     const configuredLocalModel = localCandidateModels && state.imageGenerationProvider && state.imageGenerationModel
         ? `${state.imageGenerationProvider}:${state.imageGenerationModel}` : '';
-    const model = state.selectedCandidateModel || configuredLocalModel || 'cloudflare:@cf/black-forest-labs/flux-2-klein-9b';
+    const model = state.selectedCandidateModel || configuredLocalModel || 'modelscope:Qwen/Qwen-Image-2.1-Turbo';
     const aspect = state.selectedCandidateAspect || inferAspectRatioFromPlan(plan);
-    const models = [['cloudflare:@cf/black-forest-labs/flux-2-klein-9b','FLUX.2 klein 9B · 脸部 / 服装图参考 + PoseAtlas 姿势文本'],
+    const models = [['modelscope:Qwen/Qwen-Image-2.1-Turbo','魔搭 Qwen Image 2.1 Turbo · 人脸 / 服装 / 姿势参考图'],
+        ['modelscope:Qwen/Qwen-Image-Edit-2511','魔搭 Qwen Image Edit 2511 · 人脸 / 服装 / 姿势参考图'],
+        ['cloudflare:@cf/black-forest-labs/flux-2-klein-9b','FLUX.2 klein 9B · Cloudflare Workers AI'],
         ...(localCandidateModels ? [['pollinations:flux','Flux'],['pollinations:krea','Krea'],['pollinations:sana','Sana']] : [])];
     if (configuredLocalModel && !models.some(([value]) => value === configuredLocalModel)) {
         models.unshift([configuredLocalModel, `${state.imageGenerationModel} · 本机已配置`]);
@@ -6532,7 +6534,7 @@ async function generateDirectorCandidateForPlan(planId) {
     const shotSelect = $('candidate-shot-' + planId);
     const shotIndex = Number(shotSelect && shotSelect.value || 0);
     const modelSelect = $('candidate-model-' + planId);
-    const [provider, selectedModel] = String(modelSelect && modelSelect.value || 'cloudflare:@cf/black-forest-labs/flux-2-klein-9b').split(':');
+    const [provider, selectedModel] = String(modelSelect && modelSelect.value || 'modelscope:Qwen/Qwen-Image-2.1-Turbo').split(':');
     const aspectSelect = $('candidate-aspect-' + planId);
     const aspectRatio = aspectSelect && aspectSelect.value || 'portrait';
     const shot = (plan.shotList || [])[shotIndex];

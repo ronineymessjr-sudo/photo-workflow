@@ -268,6 +268,72 @@ test('authenticated production candidates retrieve templates before Cloudflare A
     assert.equal((await worker.fetch(new Request(imageUrl), env)).status, 404);
 });
 
+test('ModelScope candidate submits asynchronously, collects once, persists privately, and never calls Workers AI', async t => {
+    const sourceCalls = [];
+    const modelScopeCalls = [];
+    const taskCache = new Map();
+    const jpeg = new Uint8Array([255, 216, 255, 0]);
+    t.mock.method(globalThis, 'fetch', async (input, options = {}) => {
+        const url = String(input);
+        if (url.includes('api-inference.modelscope.cn/v1/images/generations')) {
+            modelScopeCalls.push(JSON.parse(options.body));
+            return Response.json({ task_id: 'candidate-task-1' });
+        }
+        if (url.includes('api-inference.modelscope.cn/v1/tasks/candidate-task-1')) {
+            return Response.json({ task_status: 'SUCCEED', output_images: ['https://images.test/candidate.jpg'] });
+        }
+        if (url === 'https://images.test/candidate.jpg') return new Response(jpeg, { headers: { 'Content-Type': 'image/jpeg' } });
+        sourceCalls.push(url);
+        if (url.endsWith('poses.json')) return Response.json({ poses: [{ id: 'full_single_P019', names: { zh: '安静坐姿' }, category: '坐姿', variants: [{ angle: 'front', thumb: 'thumbs/full_single_P019_front.jpg' }] }] });
+        if (url.endsWith('costumes.json')) return Response.json({ costumes: [{ id: 'AUT-0001', cat: 'autumn', main: 'knit', color: 'brown', thumb: 'costume/thumbs/AUT-0001.webp' }] });
+        if (url.endsWith('faces.json')) return Response.json({ images: [{ id: 'face001', sec: 'face', thumb: 'portrait/thumbs/face001.webp' }] });
+        if (/\/thumbs\//.test(url)) return new Response(jpeg, { headers: { 'Content-Type': 'image/jpeg' } });
+        throw new Error(`Unexpected template source ${url}`);
+    });
+    const env = {
+        ...environment(), POSEATLAS_ENABLED: 'true', MODELSCOPE_TOKEN: 'test-token',
+        CONTINUITY_KV: {
+            get: async key => taskCache.has(key) ? taskCache.get(key) : null,
+            put: async (key, value) => taskCache.set(key, JSON.parse(value)),
+        },
+        AI: { run: async () => assert.fail('ModelScope route must not call Cloudflare Workers AI') },
+    };
+    const response = await call(env, '/api/director/generate-candidate', {
+        request_id: 'modelscope-smoke-test', provider: 'modelscope', model: 'Qwen/Qwen-Image-2.1-Turbo',
+        candidate_count: 1, billing_mode: 'free-credit-first', aspect_ratio: 'portrait',
+        brief: '秋日公园坐姿人像，成年女性穿棕色针织衫。', scene_brief: '公园长椅，自然光。', style_direction: '真实纪实摄影',
+        reference_ids: ['atlas-pose-full_single_p019'],
+        shot_contract: { shot_language: '公园坐姿人像', generator_prompt: '平视中全身人像，双手自然放在膝上，双脚完整入镜',
+            shot_size: '全身', model_pose: '安静坐在长椅上，双脚着地', wardrobe_styling: '棕色针织衫、卡其色半身裙、棕色短靴',
+            referenceIds: ['atlas-pose-full_single_p019'], must_show: '长椅和完整双脚', reject_if: '闪光灯或裁切脚部' },
+    });
+    assert.equal(response.status, 202, await response.clone().text());
+    const submitted = await response.json();
+    assert.equal(submitted.taskId, 'candidate-task-1');
+    assert.equal(modelScopeCalls.length, 1);
+    assert.match(modelScopeCalls[0].prompt, /卡其色半身裙/);
+    assert.match(modelScopeCalls[0].prompt, /Image 1（pose）/);
+    assert.match(modelScopeCalls[0].prompt, /公园长椅/);
+    assert.equal(modelScopeCalls[0].model, 'Qwen/Qwen-Image-2.1-Turbo');
+    assert.equal(modelScopeCalls[0].image_url.length, 1);
+    assert.equal(sourceCalls.length, 4);
+
+    const collected = await call(env, '/api/director/collect-candidate', { taskId: submitted.taskId });
+    assert.equal(collected.status, 201, await collected.clone().text());
+    const candidate = await collected.json();
+    assert.equal(candidate.candidateAsset.source, 'modelscope');
+    assert.equal(candidate.candidateAsset.status, 'candidate-awaiting-human-review');
+    assert.deepEqual(candidate.candidateAsset.referenceRolesSent, ['pose']);
+    assert.match(candidate.candidateAsset.url, /[?&]sig=[a-f0-9]{64}/);
+    const replay = await call(env, '/api/director/collect-candidate', { taskId: submitted.taskId });
+    assert.equal(replay.status, 201);
+    assert.equal((await replay.json()).candidateAsset.id, candidate.candidateAsset.id);
+    const image = await worker.fetch(new Request(candidate.candidateAsset.url, { headers: { Origin: origin } }), env);
+    assert.equal(image.status, 200);
+    assert.equal(image.headers.get('Content-Type'), 'image/jpeg');
+    assert.deepEqual(new Uint8Array(await image.arrayBuffer()), jpeg);
+});
+
 async function bridge(t, options = {}) {
     const server = createServer({ studioEnvironment: { POSEATLAS_ENABLED: 'false' }, ...options });
     await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
