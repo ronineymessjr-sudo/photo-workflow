@@ -355,7 +355,7 @@ test('ModelScope waist-up candidates apply the contract crop before private stor
         CONTINUITY_KV: { get: async key => taskCache.get(key) || null, put: async (key, value) => taskCache.set(key, JSON.parse(value)) },
         IMAGES: { input: () => ({ transform: options => ({ output: () => ({ response: () => {
             crops++;
-            assert.deepEqual(options.trim, { top: 0, left: 0.14, width: 0.72, height: 0.75 });
+            assert.deepEqual(options.trim, { top: 0, left: 0.14, width: 0.72, height: 0.68 });
             return new Response(croppedPng, { headers: { 'Content-Type': 'image/png' } });
         } }) }) }) },
         AI: { run: async () => assert.fail('ModelScope route must not call Cloudflare Workers AI') },

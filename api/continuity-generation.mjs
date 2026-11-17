@@ -455,7 +455,7 @@ export async function cropWaistUpImage(image, env) {
     try {
         const source = Uint8Array.from(Buffer.from(image.base64, 'base64'));
         const transformed = await env.IMAGES.input(source)
-            .transform({ trim: { top: 0, left: 0.14, width: 0.72, height: 0.75 } })
+            .transform({ trim: { top: 0, left: 0.14, width: 0.72, height: 0.68 } })
             .output({ format: 'image/png' });
         const response = transformed.response();
         if (!response.ok) throw new Error(`Images binding returned ${response.status}`);
