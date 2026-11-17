@@ -72,7 +72,7 @@ export async function prescreen({ imageDataUrl, shot, locked, env = {}, fetchImp
         : 'https://api-inference.modelscope.cn/v1';
     const model = hasExplicitKey
         ? (env.CONTINUITY_VISION_MODEL || 'deepseek-vl2')
-        : (env.MODELSCOPE_VISION_MODEL || 'Qwen/Qwen2.5-VL-72B-Instruct');
+        : (env.MODELSCOPE_VISION_MODEL || 'OpenGVLab/InternVL3_5-241B-A28B');
 
     let response;
     try {

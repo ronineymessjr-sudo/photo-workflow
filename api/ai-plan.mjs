@@ -410,7 +410,7 @@ export function aiPlanProviders(env = {}) {
     const result = providers.map(p => ({ ...p }));
     if (typeof env.AI?.run === 'function') result.push({ id: 'cloudflare-workers-ai', name: 'Cloudflare Workers AI（网站额度）', endpoint: 'https://workers-ai.internal/chat/completions', suggestedModel: '@cf/qwen/qwen3-30b-a3b-fp8', requiresKey: false, internalOnly: true });
     if (env.DEEPSEEK_API_KEY) result.push({ id: 'deepseek-server', name: 'DeepSeek（服务器配置）', endpoint: 'https://api.deepseek.com/chat/completions', suggestedModel: 'deepseek-chat', requiresKey: false, serverKeyEnv: 'DEEPSEEK_API_KEY', internalOnly: true });
-    if (env.MODELSCOPE_TOKEN) result.push({ id: 'modelscope', name: 'ModelScope 魔搭（服务器配置）', endpoint: 'https://api-inference.modelscope.cn/v1/chat/completions', suggestedModel: 'Qwen/Qwen2.5-72B-Instruct', requiresKey: false, serverKeyEnv: 'MODELSCOPE_TOKEN', internalOnly: true });
+    if (env.MODELSCOPE_TOKEN) result.push({ id: 'modelscope', name: 'ModelScope 魔搭（服务器配置）', endpoint: 'https://api-inference.modelscope.cn/v1/chat/completions', suggestedModel: 'Qwen/Qwen3.5-35B-A3B', requiresKey: false, serverKeyEnv: 'MODELSCOPE_TOKEN', internalOnly: true });
     if (env.MINIMAX_API_KEY) result.push({ id: 'minimax', name: 'MiniMax（服务器配置）', endpoint: 'https://api.minimax.cn/v1/chat/completions', suggestedModel: 'MiniMax-M3.1-Flash', requiresKey: false, serverKeyEnv: 'MINIMAX_API_KEY', internalOnly: true });
     if (env.ENABLE_OPENROUTER_FREE === 'true') result.push({ id: 'openrouter-free', name: 'OpenRouter 免费模型（待实测）', endpoint: 'https://openrouter.ai/api/v1/chat/completions', suggestedModel: 'openrouter/free', freeOnly: true });
     // Failed live quality checks: anonymous prototype is opt-in for research only.
@@ -439,7 +439,13 @@ export async function handleAiPlan(body, env = {}, { fetchImpl = fetch, debugKee
     if (provider.id === 'pollinations-free' && body.model !== 'openai') return { status: 400, body: { error: '免费试用仅允许预设模型，不会自动切换到收费接口' } };
     if (provider.id === 'minimax' && body.model !== provider.suggestedModel) return { status: 400, body: { error: '不支持的 MiniMax 模型' } };
     if (provider.id === 'deepseek-server' && !['deepseek-chat', 'deepseek-reasoner'].includes(body.model)) return { status: 400, body: { error: '不支持的 DeepSeek 模型' } };
-    const allowedModelScopeModels = new Set(['Qwen/Qwen2.5-72B-Instruct', 'Qwen/Qwen3-32B', 'deepseek-ai/DeepSeek-V3']);
+    const allowedModelScopeModels = new Set([
+        'Qwen/Qwen3.5-35B-A3B',
+        'Qwen/Qwen3.8-Flash-Next',
+        'Qwen/Qwen3.5-122B-A10B',
+        'deepseek-ai/DeepSeek-V4.1-Flash',
+        'deepseek-ai/DeepSeek-V4-Flash-0731',
+    ]);
     if (provider.id === 'modelscope' && !allowedModelScopeModels.has(body.model)) return { status: 400, body: { error: '不支持的 ModelScope 文本模型' } };
     const allowedWorkersModels = new Set([
         provider.suggestedModel,

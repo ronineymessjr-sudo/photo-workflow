@@ -782,7 +782,7 @@ test('ModelScope and server DeepSeek internal plan providers use server secrets 
     const rows = output(9).shot_plans.map(shot => [shot.shot_language, shot.model_pose, shot.photographer_position, shot.lens,
         shot.model_position, shot.wardrobe_styling, shot.lighting_setup, '无', shot.crop_boundary, shot.must_show,
         shot.reject_if, shot.execution_note, shot.generator_prompt, shot.shot_size, shot.camera_angle]);
-    const msRes = await handleAiPlan({ provider: 'modelscope', model: 'Qwen/Qwen2.5-72B-Instruct', input }, env, {
+    const msRes = await handleAiPlan({ provider: 'modelscope', model: 'Qwen/Qwen3.5-35B-A3B', input }, env, {
         fetchImpl: async (url, options) => {
             assert.equal(url, 'https://api-inference.modelscope.cn/v1/chat/completions');
             assert.equal(options.headers.Authorization, `Bearer ${msToken}`);
