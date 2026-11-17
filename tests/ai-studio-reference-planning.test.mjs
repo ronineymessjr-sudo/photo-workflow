@@ -532,3 +532,39 @@ test('a signed-in plan is not reported as account-saved when workspace sync fail
     await assert.rejects(context.savePlan({ id: 'unsynced-plan', title: '暂存方案' }), /账户云端保存未确认/);
     assert.equal(plans[0].id, 'unsynced-plan');
 });
+
+test('negative prop phrases like 不携带/不佩戴 with multiple clauses are stripped from allowed props', async () => {
+    let sentBrief = '';
+    const fetchImpl = async (_url, options) => {
+        sentBrief = JSON.parse(options.body).brief;
+        return Response.json({
+            shot_plans: [{
+                shot_language: '平视中景人像 1',
+                framing: '中景',
+                camera_angle: '平视',
+                lens: '35mm',
+                model_pose: '自然站立看镜头',
+                model_position: '公园小径',
+                photographer_position: '平视正面 2 米',
+                crop_boundary: '腰部以上，双手可见',
+                must_show: '短发、上衣、半身裙',
+                lighting_setup: '阴天散射光，不使用闪光灯',
+                execution_note: '构图克制，无额外道具',
+                wardrobe: '白色上衣、卡其半身裙',
+                shot_props: '无',
+            }],
+        });
+    };
+    await createDirectorPlan({
+        theme: '秋日人像',
+        style: '电影感',
+        modelDesc: '短发女性，白色上衣、卡其半身裙',
+        scene: '公园小径',
+        mood: '安静松弛',
+        duration: '1小时',
+        people: '1',
+        extra: '阴天散射光，不使用闪光灯；不携带额外包袋或首饰',
+    }, { baseUrl: 'http://director.test', fetchImpl });
+    assert.match(sentBrief, /道具限制为硬约束：只允许用户明确提供的物品；当前未指定物品/);
+    assert.doesNotMatch(sentBrief, /只允许用户明确提供的物品（包袋/);
+});

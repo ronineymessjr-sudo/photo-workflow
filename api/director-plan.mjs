@@ -84,11 +84,11 @@ export async function createDirectorPlan(input, { baseUrl, fetchImpl = fetch, re
     const wardrobeNote = wardrobeMentioned ? '' : '用户未指定服装、发型或妆容：将其标为待确认，不得推荐具体款式、颜色或造型，也不得把未选择的服装/人像参考当作用户要求。';
     const userText = `${cleanInput.theme} ${cleanInput.style} ${cleanInput.modelDesc} ${cleanInput.scene} ${cleanInput.extra}`;
     const productSubject = /产品|商品/.test(userText);
-    const explicitlyNoNewProps = /(?:不新增|不要|不使用|不出现|禁止)[^。\n；;]{0,20}(?:道具|物品|随身物)/i.test(`${cleanInput.extra} ${cleanInput.modelDesc}`);
+    const negativePropClausePattern = /(?:不新增|不要|不使用|不出现|不携带|不佩戴|不配戴|不拿|不带|禁止|不能新增|不得出现|不能携带|不得携带|别带|勿带)[^。\n；;，,]*/g;
+    const explicitlyNoNewProps = /(?:不新增|不要|不使用|不出现|不携带|不佩戴|不配戴|不拿|不带|禁止|不能新增|不得出现|不能携带|不得携带)[^。\n；;]{0,20}(?:道具|物品|随身物|包袋|配饰|首饰)/i.test(`${cleanInput.extra} ${cleanInput.modelDesc}`);
     const propsOpenEnded = /(?:允许|可以|可)[^。\n；;]{0,12}(?:自由添加|自行选择|自由发挥).{0,8}(?:道具|物品)/i.test(cleanInput.extra);
     const noNewProps = explicitlyNoNewProps || !propsOpenEnded;
-    const explicitlyBannedText = (userText.match(/(?:不新增|不要|不使用|不出现|禁止|不能新增|不得出现)[^。\n；;]*/g) || []).join(' ');
-    const allowedPropText = userText.replace(explicitlyBannedText, '');
+    const allowedPropText = userText.replace(negativePropClausePattern, ' ');
     const specificProductNames = ['陶瓷杯', '保温杯', '水杯', '香水瓶', '护肤品', '口红', '手机', '耳机', '手表', '相机', '运动鞋', '手提包'];
     const productName = specificProductNames.find(name => allowedPropText.includes(name));
     const productLabel = productName || '用户指定产品（品类待确认）';
