@@ -409,6 +409,8 @@ function resourceRepairGuidance(shots, input) {
 export function aiPlanProviders(env = {}) {
     const result = providers.map(p => ({ ...p }));
     if (typeof env.AI?.run === 'function') result.push({ id: 'cloudflare-workers-ai', name: 'Cloudflare Workers AI（网站额度）', endpoint: 'https://workers-ai.internal/chat/completions', suggestedModel: '@cf/qwen/qwen3-30b-a3b-fp8', requiresKey: false, internalOnly: true });
+    if (env.DEEPSEEK_API_KEY) result.push({ id: 'deepseek-server', name: 'DeepSeek（服务器配置）', endpoint: 'https://api.deepseek.com/chat/completions', suggestedModel: 'deepseek-chat', requiresKey: false, serverKeyEnv: 'DEEPSEEK_API_KEY', internalOnly: true });
+    if (env.MODELSCOPE_TOKEN) result.push({ id: 'modelscope', name: 'ModelScope 魔搭（服务器配置）', endpoint: 'https://api-inference.modelscope.cn/v1/chat/completions', suggestedModel: 'Qwen/Qwen2.5-72B-Instruct', requiresKey: false, serverKeyEnv: 'MODELSCOPE_TOKEN', internalOnly: true });
     if (env.MINIMAX_API_KEY) result.push({ id: 'minimax', name: 'MiniMax（服务器配置）', endpoint: 'https://api.minimax.cn/v1/chat/completions', suggestedModel: 'MiniMax-M3.1-Flash', requiresKey: false, serverKeyEnv: 'MINIMAX_API_KEY', internalOnly: true });
     if (env.ENABLE_OPENROUTER_FREE === 'true') result.push({ id: 'openrouter-free', name: 'OpenRouter 免费模型（待实测）', endpoint: 'https://openrouter.ai/api/v1/chat/completions', suggestedModel: 'openrouter/free', freeOnly: true });
     // Failed live quality checks: anonymous prototype is opt-in for research only.
@@ -436,6 +438,9 @@ export async function handleAiPlan(body, env = {}, { fetchImpl = fetch, debugKee
     }
     if (provider.id === 'pollinations-free' && body.model !== 'openai') return { status: 400, body: { error: '免费试用仅允许预设模型，不会自动切换到收费接口' } };
     if (provider.id === 'minimax' && body.model !== provider.suggestedModel) return { status: 400, body: { error: '不支持的 MiniMax 模型' } };
+    if (provider.id === 'deepseek-server' && !['deepseek-chat', 'deepseek-reasoner'].includes(body.model)) return { status: 400, body: { error: '不支持的 DeepSeek 模型' } };
+    const allowedModelScopeModels = new Set(['Qwen/Qwen2.5-72B-Instruct', 'Qwen/Qwen3-32B', 'deepseek-ai/DeepSeek-V3']);
+    if (provider.id === 'modelscope' && !allowedModelScopeModels.has(body.model)) return { status: 400, body: { error: '不支持的 ModelScope 文本模型' } };
     const allowedWorkersModels = new Set([
         provider.suggestedModel,
         '@cf/meta/llama-3.3-70b-instruct-fp8-fast',
@@ -487,9 +492,10 @@ shot_language 是独特的镜头名称；model_pose 写具体动作口令；phot
                     ...(provider.id === 'minimax' ? {} : { response_format: { type: 'json_object' } }),
                     ...(provider.id === 'pollinations-free' ? { reasoning_effort: 'low' } : {}),
                     ...(provider.id === 'minimax' ? { reasoning_effort: 'low', reasoning_split: true } : {}),
-                    ...(provider.id === 'deepseek' ? { thinking: { type: 'disabled' } } : {}),
+                    ...(provider.id === 'modelscope' && /^Qwen\/Qwen3/i.test(model) ? { enable_thinking: false } : {}),
+                    ...(['deepseek', 'deepseek-server'].includes(provider.id) ? { thinking: { type: 'disabled' } } : {}),
                     ...(provider.freeOnly ? { provider: { max_price: { prompt: 0, completion: 0 }, allow_fallbacks: false } } : {}),
-                    ...(provider.id === 'openai' ? { max_completion_tokens: 10000 } : { max_tokens: 8192 }) };
+                    ...(provider.id === 'openai' ? { max_completion_tokens: 10000 } : { max_tokens: provider.id === 'modelscope' ? 4096 : 8192 }) };
             let payload;
             if (provider.id === 'cloudflare-workers-ai') {
                 let response;
@@ -623,7 +629,7 @@ shot_language 是独特的镜头名称；model_pose 写具体动作口令；phot
                 } catch (error) {
                     const safeCode = ['AI_OUTPUT_TRUNCATED', 'AI_COMPLETION_INCOMPLETE', 'AI_INVALID_JSON', 'AI_SHOT_COUNT_MISMATCH', 'AI_SHOT_FIELDS_INVALID', 'AI_HARD_CONSTRAINTS_FAILED', 'AI_PHOTOGRAPHER_FEASIBILITY_FAILED', 'AI_PROVIDER_FREE_QUOTA_EXHAUSTED', 'INVALID_OUTPUT', 'PROVIDER_FAILED'].includes(error?.message) ? error.message : 'PROVIDER_OR_NETWORK_ERROR';
                     console.error('ai_plan_attempt_failed', JSON.stringify({ provider: provider.id, attempt, code: safeCode, violationCount: error?.violations?.length || 0, firstViolation: error?.violations?.[0]?.slice(0, 80) || '' }));
-                    if (attempt < maxRepairAttempts && (provider.requiresKey !== false || ['cloudflare-workers-ai', 'minimax'].includes(provider.id)) && error.rawShotPlans && error.violations?.length) {
+                    if (attempt < maxRepairAttempts && (provider.requiresKey !== false || ['cloudflare-workers-ai', 'deepseek-server', 'modelscope', 'minimax'].includes(provider.id)) && error.rawShotPlans && error.violations?.length) {
                         qualityRepairAttempted = true;
                         const fields = [...requiredText, 'shot_size', 'camera_angle'];
                         const prior = compactArrayUsed

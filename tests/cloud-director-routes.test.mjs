@@ -714,3 +714,34 @@ test('new plan form does not prefill unrelated sensitive demo content', async ()
     assert.equal(scene, '');
     assert.equal(extra, '');
 });
+
+test('director plan falls back to ModelScope when Cloudflare 4006 quota and MiniMax balance are unavailable', async () => {
+    const secret = 'unit-test-secret';
+    const previousFetch = globalThis.fetch;
+    const rows = Array.from({ length: 9 }, (_, index) => [
+        `竹林自然人像 ${index + 1}`, '模特自然站立微微笑', '距主体约3米，胸口高度平视', '50mm', '人物位于画面偏左',
+        '素色日常服装，发型自然', '树荫漫反射自然光', '无', '从头顶至脚下完整入画', '人物全身与自然表情',
+        '姿势僵硬或裁掉脚部', '站立不适时暂停休息后再拍', `full body portrait natural standing pose ${index + 1}, 50mm`, 'FS', 'eye_level',
+    ]);
+    const calls = [];
+    globalThis.fetch = async url => {
+        calls.push(String(url));
+        return Response.json({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({ shots: rows }) } }] });
+    };
+    try {
+        const response = await worker.fetch(new Request('https://unit.test/api/director/plan', {
+            method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token('user-1', secret)}` },
+            body: JSON.stringify({ theme: '竹林自然人像', scene: '公园竹林小径', modelDesc: '一位成年人', people: '1', duration: '1小时' }),
+        }), {
+            JWT_SECRET: secret, MODELSCOPE_TOKEN: 'ms-server-token', MINIMAX_API_KEY: 'minimax-key',
+            AI: { run: async () => { throw new Error('4006: you have used up your daily free allocation of 10,000 neurons'); } },
+            AI_STUDIO_QUOTA: { idFromName: value => value, get: () => ({ fetch: async () => Response.json({ allowed: true }) }) },
+        });
+        const plan = await response.json();
+        assert.equal(response.status, 200, JSON.stringify(plan));
+        assert.equal(plan.director.source, 'modelscope-plan');
+        assert.equal(plan.director.provider, 'modelscope');
+        assert.deepEqual(calls, ['https://api-inference.modelscope.cn/v1/chat/completions']);
+        assert.equal(plan.shotList.length, 9);
+    } finally { globalThis.fetch = previousFetch; }
+});

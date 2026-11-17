@@ -541,10 +541,12 @@ export default {
                 result = { status: 200, body: { providers: aiPlanProviders(env).filter(provider => !provider.internalOnly) } };
             }
             else if (path === '/api/ai/plan' && method === 'POST') {
-                const internalPlanProvider = ['cloudflare-workers-ai', 'minimax'].includes(body?.provider);
+                const internalPlanProvider = ['cloudflare-workers-ai', 'deepseek-server', 'modelscope', 'minimax'].includes(body?.provider);
                 if (internalPlanProvider) {
                     if (!uid) result = { status: 401, body: { error: '请先登录后再生成摄影方案', code: 'SIGN_IN_REQUIRED' } };
                     else if (body.provider === 'cloudflare-workers-ai' && (!env.AI || typeof env.AI.run !== 'function')) result = { status: 503, body: { error: '摄影方案 AI 当前未连接。', code: 'PLAN_PROVIDER_NOT_CONFIGURED' } };
+                    else if (body.provider === 'deepseek-server' && !env.DEEPSEEK_API_KEY) result = { status: 503, body: { error: '摄影方案 AI 当前未连接。', code: 'PLAN_PROVIDER_NOT_CONFIGURED' } };
+                    else if (body.provider === 'modelscope' && !env.MODELSCOPE_TOKEN) result = { status: 503, body: { error: '摄影方案 AI 当前未连接。', code: 'PLAN_PROVIDER_NOT_CONFIGURED' } };
                     else if (body.provider === 'minimax' && !env.MINIMAX_API_KEY) result = { status: 503, body: { error: '摄影方案 AI 当前未连接。', code: 'PLAN_PROVIDER_NOT_CONFIGURED' } };
                     else {
                         const allowed = await consumeStudioPlanQuota({ uid, env });
@@ -857,24 +859,27 @@ export default {
                 let plan;
                 if (!uid) result = { status: 401, body: { error: '请先登录后再生成摄影方案', code: 'SIGN_IN_REQUIRED' } };
                 else if (!env.DIRECTOR_API_BASE || !env.DIRECTOR_API_BASE.startsWith('https://')) {
-                    const workersAiAvailable = Boolean(env.AI && typeof env.AI.run === 'function');
-                    const planProvider = workersAiAvailable ? aiPlanProviders(env).find(provider => provider.id === 'cloudflare-workers-ai')
-                        : aiPlanProviders(env).find(provider => provider.id === 'minimax');
-                    if (!planProvider) result = { status: 503, body: { error: '摄影方案 AI 当前未连接，请稍后重试或在设置中接入自己的 AI。', code: 'PLAN_PROVIDER_NOT_CONFIGURED' } };
+                    const availableProviders = aiPlanProviders(env);
+                    const planCandidates = ['cloudflare-workers-ai', 'deepseek-server', 'modelscope', 'minimax']
+                        .map(id => availableProviders.find(provider => provider.id === id))
+                        .filter(Boolean);
+                    if (!planCandidates.length) result = { status: 503, body: { error: '摄影方案 AI 当前未连接，请稍后重试或在设置中接入自己的 AI。', code: 'PLAN_PROVIDER_NOT_CONFIGURED' } };
                     else {
                         const allowed = await consumeStudioPlanQuota({ uid, env });
                         if (allowed === null) result = { status: 503, body: { error: '方案生成额度服务暂不可用，请稍后重试。', code: 'AI_PLAN_QUOTA_NOT_CONFIGURED' } };
                         else if (!allowed) result = { status: 429, body: { error: '今日方案生成额度已用完，请明天再试。', code: 'AI_PLAN_DAILY_LIMIT_REACHED' } };
                         else {
                             try {
-                                let generated = await handleAiPlan({ provider: planProvider.id,
-                                    model: planProvider.suggestedModel,
-                                    input: { ...body, requireImageReferences: true } }, env);
-                                if (generated.status === 429 && generated.body?.code === 'AI_PROVIDER_FREE_QUOTA_EXHAUSTED'
-                                    && env.MINIMAX_API_KEY) {
-                                    const fallback = aiPlanProviders(env).find(provider => provider.id === 'minimax');
-                                    generated = await handleAiPlan({ provider: fallback.id, model: fallback.suggestedModel,
+                                let generated = null;
+                                for (let i = 0; i < planCandidates.length; i++) {
+                                    const candidate = planCandidates[i];
+                                    generated = await handleAiPlan({ provider: candidate.id,
+                                        model: candidate.suggestedModel,
                                         input: { ...body, requireImageReferences: true } }, env);
+                                    if (generated.status === 200) break;
+                                    const retryNextProvider = [429, 502, 503].includes(generated.status)
+                                        || ['AI_PROVIDER_FREE_QUOTA_EXHAUSTED', 'AI_UPSTREAM_HTTP_402'].includes(generated.body?.code);
+                                    if (!retryNextProvider) break;
                                 }
                                 if (generated.status !== 200) {
                                     await refundStudioPlanQuota({ uid, env });

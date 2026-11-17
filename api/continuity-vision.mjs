@@ -63,11 +63,16 @@ function parseScores(text) {
  * @returns {{available: boolean, scores: Record<string,string>, reason?: string}}
  */
 export async function prescreen({ imageDataUrl, shot, locked, env = {}, fetchImpl = fetch } = {}) {
-    const apiKey = env.DEEPSEEK_API_KEY || env.CONTINUITY_VISION_KEY;
+    const hasExplicitKey = Boolean(env.DEEPSEEK_API_KEY || env.CONTINUITY_VISION_KEY);
+    const apiKey = env.DEEPSEEK_API_KEY || env.CONTINUITY_VISION_KEY || env.MODELSCOPE_TOKEN;
     if (!apiKey) return { available: false, scores: {}, reason: '未配置视觉模型：缺少 DEEPSEEK_API_KEY' };
     if (!imageDataUrl) return { available: false, scores: {}, reason: '没有可检查的图片' };
-    const base = (env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com').replace(/\/$/, '');
-    const model = env.CONTINUITY_VISION_MODEL || 'deepseek-vl2';
+    const base = hasExplicitKey
+        ? (env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com').replace(/\/$/, '')
+        : 'https://api-inference.modelscope.cn/v1';
+    const model = hasExplicitKey
+        ? (env.CONTINUITY_VISION_MODEL || 'deepseek-vl2')
+        : (env.MODELSCOPE_VISION_MODEL || 'Qwen/Qwen2.5-VL-72B-Instruct');
 
     let response;
     try {

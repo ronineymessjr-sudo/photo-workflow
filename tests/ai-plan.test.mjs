@@ -771,3 +771,36 @@ test('MiniMax strips <think> blocks, rejects unlisted models, and maps base_resp
     });
     assert.equal(rateLimited.status, 429);
 });
+
+test('ModelScope and server DeepSeek internal plan providers use server secrets without leaking credentials', async () => {
+    const msToken = 'ms-secret-token';
+    const dsKey = 'ds-secret-key';
+    const env = { MODELSCOPE_TOKEN: msToken, DEEPSEEK_API_KEY: dsKey };
+    assert.ok(aiPlanProviders(env).some(p => p.id === 'modelscope' && p.internalOnly === true));
+    assert.ok(aiPlanProviders(env).some(p => p.id === 'deepseek-server' && p.internalOnly === true));
+
+    const rows = output(9).shot_plans.map(shot => [shot.shot_language, shot.model_pose, shot.photographer_position, shot.lens,
+        shot.model_position, shot.wardrobe_styling, shot.lighting_setup, '无', shot.crop_boundary, shot.must_show,
+        shot.reject_if, shot.execution_note, shot.generator_prompt, shot.shot_size, shot.camera_angle]);
+    const msRes = await handleAiPlan({ provider: 'modelscope', model: 'Qwen/Qwen2.5-72B-Instruct', input }, env, {
+        fetchImpl: async (url, options) => {
+            assert.equal(url, 'https://api-inference.modelscope.cn/v1/chat/completions');
+            assert.equal(options.headers.Authorization, `Bearer ${msToken}`);
+            return Response.json({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({ shots: rows }) } }] });
+        },
+    });
+    assert.equal(msRes.status, 200);
+    assert.equal(msRes.body.director.source, 'modelscope-plan');
+    assert.doesNotMatch(JSON.stringify(msRes), new RegExp(msToken));
+
+    const dsRes = await handleAiPlan({ provider: 'deepseek-server', model: 'deepseek-chat', input }, env, {
+        fetchImpl: async (url, options) => {
+            assert.equal(url, 'https://api.deepseek.com/chat/completions');
+            assert.equal(options.headers.Authorization, `Bearer ${dsKey}`);
+            return Response.json({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({ shots: rows }) } }] });
+        },
+    });
+    assert.equal(dsRes.status, 200);
+    assert.equal(dsRes.body.director.source, 'deepseek-server-plan');
+    assert.doesNotMatch(JSON.stringify(dsRes), new RegExp(dsKey));
+});
