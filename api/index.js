@@ -15,7 +15,7 @@ import { workspaceEntryKey } from '../assets/workspace-sync-protocol.mjs';
 export { AiStudioQuota } from './ai-studio/quota.mjs';
 import { createGroup, setReference, confirmMaster, buildShotRequests, recordQc, continuitySummary, continuitySchema, attachResult, handoffFor, setImageProvider, setAnchor, ContinuityError } from './continuity.mjs';
 import { storeAsset, readAsset } from './continuity-assets.mjs';
-import { generateShot, validateShotGeneration, submitModelScope, pollModelScope, isModelScopeModelAllowed } from './continuity-generation.mjs';
+import { generateShot, validateShotGeneration, submitModelScope, pollModelScope, isModelScopeModelAllowed, isNearPortrait, cropNearPortraitImage } from './continuity-generation.mjs';
 import { listProviders, recommendProvider, assertGroupProvider } from './continuity-providers.mjs';
 import { groupFromStudio } from './continuity-studio-bridge.mjs';
 import { prescreen, mergeScores, summariseVision } from './continuity-vision.mjs';
@@ -728,6 +728,12 @@ export default {
                                 attempt: body?.attempt,
                                 modelId: body?.modelId,
                             });
+                            if (isAsync && generated.taskId) {
+                                const shot = (body?.group?.shots || []).find(item => item.shotId === body?.shotId);
+                                if (isNearPortrait(shot)) await writeContinuityResultCache(env, uid, generated.taskId, {
+                                    status: 'pending', shotId: body.shotId, frameSize: shot.size || shot.shotType,
+                                });
+                            }
                             result = { status: isAsync ? 202 : 200, body: generated };
                         } catch (generateError) {
                             await refundStudioImageQuota({ uid, env });
@@ -788,8 +794,11 @@ export default {
                             } };
                         } else {
                             try {
+                                const framed = isNearPortrait({ size: cached?.frameSize })
+                                    ? await cropNearPortraitImage(polled, env)
+                                    : polled;
                                 const stored = await storeAsset({
-                                    dataUrl: `data:${polled.contentType};base64,${polled.base64}`,
+                                    dataUrl: `data:${framed.contentType};base64,${framed.base64}`,
                                     role: 'misc', env,
                                 });
                                 result = { status: 200, body: {
@@ -797,6 +806,7 @@ export default {
                                     shotId: body?.shotId,
                                     provider: 'modelscope-qwen-edit',
                                     seed: body?.seed,
+                                    ...(framed.frameCrop ? { frameCrop: framed.frameCrop, size: framed.dimensions ? `${framed.dimensions.width}x${framed.dimensions.height}` : '' } : {}),
                                     image: { assetId: stored.assetId, path: stored.path, bytes: stored.bytes, durable: stored.durable },
                                     qc: { verdict: 'pending' },
                                 } };

@@ -555,7 +555,7 @@ test('modelscope adapter: submits, polls the task, and sends identity plus selec
     });
 
     assert.equal(submitted.model, 'Qwen/Qwen-Image-Edit-2511');
-    assert.deepEqual(submitted.image_url?.length, 2, '魔搭接收人物身份图与选中的服装参考；场景以文字约束');
+    assert.deepEqual(submitted.image_url?.length, 1, '头肩近景只发送身份参考，服装和构图按文字约束');
     assert.ok(submitted.image_url[0].startsWith('data:image/'), '身份参考图是 data URL');
     // Chinese native: the direction should not have been translated.
     assert.match(submitted.prompt, /[\u4e00-\u9fa5]/);
@@ -564,8 +564,8 @@ test('modelscope adapter: submits, polls the task, and sends identity plus selec
     // Submit then poll.
     assert.ok(calls.some(url => url.includes('/v1/tasks/')), '必须轮询任务');
     assert.equal(result.provider, 'modelscope-qwen-edit');
-    assert.equal(result.referencesSent, 2);
-    assert.deepEqual(result.referenceRolesSent, ['identity', 'style']);
+    assert.equal(result.referencesSent, 1);
+    assert.deepEqual(result.referenceRolesSent, ['identity']);
 });
 
 test('modelscope poll accepts the SUCCEED spelling and reads output_images', async () => {

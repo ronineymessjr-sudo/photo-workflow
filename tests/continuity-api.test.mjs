@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createHmac } from 'node:crypto';
+import { createHash, createHmac } from 'node:crypto';
 import worker from '../api/index.js';
 
 const BASE = 'https://photoatelier.test';
@@ -97,6 +97,48 @@ test('continuity collect returns a stored image for a succeeded async task', asy
         assert.equal(body.shotId, 'shot-01');
         assert.ok(body.image.assetId);
         assert.equal(body.qc.verdict, 'pending');
+    } finally {
+        globalThis.fetch = originalFetch;
+    }
+});
+
+test('continuity collect applies the saved shoulder-up crop contract before storing a near portrait', async () => {
+    const originalFetch = globalThis.fetch;
+    const values = new Map();
+    const taskId = 'task-near-portrait';
+    const cacheKey = `continuity-result-cache/${createHash('sha256').update(`continuity-api-test-user\0${taskId}`).digest('hex')}`;
+    values.set(cacheKey, JSON.stringify({ status: 'pending', shotId: 'shot-near', frameSize: '近景' }));
+    let trim;
+    const kv = {
+        async get(key, type) {
+            const value = values.get(key);
+            return value && type === 'json' ? JSON.parse(value) : value || null;
+        },
+        async put(key, value) { values.set(key, value); },
+    };
+    const images = {
+        input(bytes) {
+            assert.ok(bytes.length > 0);
+            return {
+                transform(options) { trim = options.trim; return this; },
+                output(options) {
+                    assert.equal(options.format, 'image/png');
+                    return { response: () => new Response(Buffer.from(PNG_DATA_URL.split(',')[1], 'base64'), { headers: { 'Content-Type': 'image/png' } }) };
+                },
+            };
+        },
+    };
+    globalThis.fetch = async input => {
+        if (String(input).includes('/v1/tasks/')) return Response.json({ task_status: 'SUCCEED', output_images: ['https://cdn.example.test/result.png'] });
+        return new Response(Buffer.from(PNG_DATA_URL.split(',')[1], 'base64'), { headers: { 'Content-Type': 'image/png' } });
+    };
+    try {
+        const { status, body } = await call('/api/continuity/collect', { taskId, shotId: 'shot-near' }, 'POST', { MODELSCOPE_TOKEN: 'test-only', CONTINUITY_KV: kv, IMAGES: images });
+        assert.equal(status, 200);
+        assert.equal(body.status, 'succeeded');
+        assert.equal(body.frameCrop, 'near-portrait-shoulders-up');
+        assert.deepEqual(trim, { top: 0, left: 0.18, width: 0.64, height: 0.7 });
+        assert.ok(body.image.assetId);
     } finally {
         globalThis.fetch = originalFetch;
     }
@@ -242,6 +284,59 @@ test('the Studio bridge imports plan shots and retains selected library referenc
     assert.equal(body.group.shots.length, 2);
     assert.deepEqual(body.group.shots.map(shot => shot.scene), ['公园', '咖啡馆']);
     assert.deepEqual(body.group.references.map(reference => reference.status), ['confirmed', 'confirmed', 'confirmed']);
+});
+
+test('near-portrait ModelScope submissions retain the shot crop metadata for async collect', async () => {
+    const originalFetch = globalThis.fetch;
+    const values = new Map();
+    globalThis.fetch = async input => {
+        if (String(input).includes('/v1/images/generations')) return Response.json({ task_id: 'task-near-metadata' });
+        return new Response(Buffer.from(PNG_DATA_URL.split(',')[1], 'base64'), { headers: { 'Content-Type': 'image/png' } });
+    };
+    const kv = {
+        async get(key, type) {
+            const value = values.get(key);
+            return value && type === 'json' ? JSON.parse(value) : value || null;
+        },
+        async put(key, value) { values.set(key, value); },
+    };
+    try {
+        const imported = await call('/api/continuity/from-studio', {
+            planId: 'near-plan', planRevision: 1,
+            input: { theme: '木亭肖像', modelDesc: '成年东亚女性', style: '自然纪实' },
+            templates: [
+                { id: 'face-near', kind: 'portrait', section: 'face', title: '短发人像', referenceImageUrl: 'https://hruiccc.github.io/RuiC-PoseAtlas/portrait/thumbs/f001.webp' },
+                { id: 'costume-near', kind: 'costume', title: '象牙白针织', referenceImageUrl: 'https://hruiccc.github.io/RuiC-PoseAtlas/costume/thumbs/c001.webp' },
+                { id: 'pose-near', kind: 'pose', title: '肩颈放松', referenceImageUrl: 'https://hruiccc.github.io/RuiC-PoseAtlas/thumbs/P017_front.jpg', angles: ['front'] },
+            ],
+            guidance: { suggestions: [{ sourceItemId: 'pose-near', direction: '肩颈放松，头部微微侧转。' }] },
+            shots: [{ id: 'near', shotSize: '近景', directorContract: {
+                shot_size: '近景', scene: '木亭长椅', referenceIds: ['pose-near'],
+                generator_prompt: 'Head-and-shoulders portrait by a wooden pavilion bench.',
+                wardrobe_styling: '象牙白长袖针织上衣，不添加首饰。',
+                crop_boundary: '只保留头部与双肩。', must_show: '完整面部与自然肩姿。',
+            } }],
+        });
+        assert.equal(imported.status, 200);
+        const identity = imported.body.group.references.find(reference => reference.role === 'identity');
+        const confirmed = await call('/api/continuity/master', { group: imported.body.group, assetId: identity.assetId, actor: 'human' });
+        assert.equal(confirmed.status, 200);
+        const submitted = await call('/api/continuity/generate', {
+            group: confirmed.body.group, shotId: confirmed.body.group.shots[0].shotId,
+            providerId: 'modelscope-qwen-edit', modelId: 'Qwen/Qwen-Image-2.1-Turbo',
+        }, 'POST', {
+            MODELSCOPE_TOKEN: 'test-only',
+            STUDIO_IMAGE_TEST_UNLIMITED_USER_ID: 'continuity-api-test-user',
+            CONTINUITY_KV: kv,
+        });
+        assert.equal(submitted.status, 202);
+        assert.equal(submitted.body.status, 'pending');
+        const digest = createHash('sha256').update(`continuity-api-test-user\0task-near-metadata`).digest('hex');
+        const metadata = JSON.parse(values.get(`continuity-result-cache/${digest}`));
+        assert.deepEqual(metadata, { status: 'pending', shotId: confirmed.body.group.shots[0].shotId, frameSize: '近景' });
+    } finally {
+        globalThis.fetch = originalFetch;
+    }
 });
 
 test('an initialised group starts blocked with three pending references', async () => {

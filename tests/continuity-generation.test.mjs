@@ -54,6 +54,22 @@ test('waist-up framing locks the full outfit without naming lower-body garments'
     assert.match(direction, /浅棕色齐肩短发/);
 });
 
+test('long-sleeved knit and low-saturation outdoor plans keep garment coverage and natural foliage', () => {
+    const direction = directionText({
+        prompt: '竹林全身人像，成年东亚女性穿米白色针织裹身上衣（宽袖、腰前交叠系结）和卡其长半身裙。',
+        locked: {
+            subject: '成年东亚女性，米白色针织裹身上衣（宽袖、腰前交叠系结），卡其色长半身裙；全组固定服装。',
+            wardrobe: '米白色针织裹身上衣（宽袖、腰前交叠系结），卡其色长半身裙',
+            styleProfile: '自然纪实，低饱和胶片色', location: '公园竹林小径',
+        },
+        variant: { size: 'FS', scene: '公园竹林小径' },
+    });
+    assert.match(direction, /上衣下摆覆盖至腰线，腹部皮肤完全遮挡/);
+    assert.match(direction, /不做露肩、挖肩或滑肩造型/);
+    assert.match(direction, /全图保持低饱和、自然的胶片色彩/);
+    assert.match(direction, /竹叶、树叶与草地尤其不得呈荧光绿/);
+});
+
 test('a shot-specific scene wins over the group scene without leaking other shot locations', () => {
     const direction = directionText({
         prompt: '单人回眸人像',
@@ -64,9 +80,9 @@ test('a shot-specific scene wins over the group scene without leaking other shot
     assert.doesNotMatch(direction, /公园竹林小径/);
 });
 
-async function readyGroup(store, { modelDesc = '一名成年人', lockedSubject = '', mood = '', wardrobeNote = '炭灰大衣' } = {}) {
+async function readyGroup(store, { modelDesc = '一名成年人', lockedSubject = '', mood = '', wardrobeNote = '炭灰大衣', styleProfile = '纪实' } = {}) {
     let group = createGroup({
-        input: { theme: '雨夜旧车站', scene: '旧车站月台', style: '纪实', modelDesc, wardrobeNote, mood },
+        input: { theme: '雨夜旧车站', scene: '旧车站月台', style: styleProfile, modelDesc, wardrobeNote, mood },
         lockedHints: lockedSubject ? { subject: lockedSubject } : {},
         shots: [{ shotId: 'shot-01', size: 'WS', camera_angle: 'eye_level', lens: '35mm', model_pose: '沿月台行走', model_position: '画面右侧', generator_prompt: 'wide shot of a figure walking along a wet platform' }],
     });
@@ -403,9 +419,11 @@ test('ModelScope sends the selected wardrobe reference for full-body frames', as
 
 test('ModelScope can select only the allowlisted 2.1 Turbo model for a controlled comparison', async () => {
     const store = createMemoryStore();
-    const group = await readyGroup(store);
+    const wardrobe = '米白色针织裹身上衣（宽袖、腰前交叠系结），卡其色长半身裙；不添加包袋、项链、首饰或帽子。';
+    const group = await readyGroup(store, { wardrobeNote: wardrobe, lockedSubject: wardrobe, styleProfile: '自然纪实，低饱和胶片色' });
+    group.shots[0].scene = '公园竹林小径';
     let body;
-    await generateShot({
+    const result = await generateShot({
         group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit', modelId: 'Qwen/Qwen-Image-2.1-Turbo',
         env: { MODELSCOPE_TOKEN: 'test-only' }, store,
         fetchImpl: async (_url, options) => {
@@ -415,8 +433,10 @@ test('ModelScope can select only the allowlisted 2.1 Turbo model for a controlle
         submitOnly: true,
     });
     assert.equal(body.model, 'Qwen/Qwen-Image-2.1-Turbo');
-    assert.match(body.prompt, /景别与画框边界：/);
+    assert.match(body.prompt, /景别最高优先级：/);
     assert.match(body.prompt, /场景：/);
+    assert.match(body.prompt, /腹部皮肤完全遮挡/);
+    assert.match(body.prompt, /竹叶、树叶与草地尤其不得呈荧光绿/);
     assert.doesNotMatch(body.prompt, /内容与摄影分层规则|成像质感：真实摄影成像/);
     await assert.rejects(generateShot({
         group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit', modelId: 'unlisted/model',
@@ -424,6 +444,58 @@ test('ModelScope can select only the allowlisted 2.1 Turbo model for a controlle
         fetchImpl: async () => assert.fail('unlisted model must be rejected before any provider request'),
         submitOnly: true,
     }), error => error.code === 'GENERATION_MODEL_NOT_ALLOWED');
+});
+
+test('waist-up Turbo shots omit the full-body anchor and keep the shot scene and crop', async () => {
+    const store = createMemoryStore();
+    const wardrobe = '米白色针织裹身上衣（宽袖、腰前交叠系结），卡其色长半身裙；不添加包袋、项链、首饰或帽子。';
+    const group = await readyGroup(store, { wardrobeNote: wardrobe, lockedSubject: wardrobe, styleProfile: '自然纪实，低饱和胶片色' });
+    Object.assign(group.shots[0], {
+        size: '中景', shotType: '中景', scene: '湖边木栈道',
+        crop: '画面从头顶至自然腰线，下缘切在腰线；髋部以下、腿和鞋不入画。',
+        action: '上身转离镜头约四十五度，再回头看向镜头附近，肩颈放松。',
+        poseRef: { id: 'atlas-pose-full_single_p017', title: '站立・回眸顾盼', direction: '上身转离镜头约四十五度，再回头看向镜头附近。' },
+    });
+    const identity = group.references.find(reference => reference.role === 'identity');
+    setAnchor(group, { assetId: identity.assetId, path: identity.path, shotId: 'shot-00' });
+    let body;
+    const result = await generateShot({
+        group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit', modelId: 'Qwen/Qwen-Image-2.1-Turbo',
+        env: { MODELSCOPE_TOKEN: 'test-only' }, store, submitOnly: true,
+        fetchImpl: async (_url, options = {}) => { body = JSON.parse(options.body); return Response.json({ task_id: 'turbo-anchor-crop-task' }); },
+    });
+    assert.deepEqual(result.referenceRolesSent, ['identity']);
+    assert.equal(body.image_url.length, 1);
+    assert.doesNotMatch(body.prompt, /母图|Image 1（anchor）/);
+    assert.match(body.prompt, /场景：湖边木栈道/);
+    assert.match(body.prompt, /景别最高优先级：画面从头顶至自然腰线，下缘切在腰线/);
+    assert.match(body.prompt, /腰线以下不在画面内/);
+    assert.match(body.prompt, /全图保持低饱和、自然的胶片色彩/);
+});
+
+test('near-portrait Turbo shots force shoulders-up framing and remove out-of-frame pose clauses', async () => {
+    const store = createMemoryStore();
+    const wardrobe = '米白色针织裹身上衣（宽袖、腰前交叠系结），卡其色长半身裙；不添加包袋、项链、首饰或帽子。';
+    const group = await readyGroup(store, { wardrobeNote: wardrobe, lockedSubject: wardrobe, styleProfile: '自然纪实，低饱和胶片色' });
+    Object.assign(group.shots[0], {
+        size: '近景', shotType: '近景', scene: '木亭长椅',
+        crop: '肩部以上近景，完整保留面部与发顶。',
+        action: '肩颈放松，头部微微侧转看向镜头；双脚稳定着地，膝盖自然放松，双手垂在身体两侧。',
+        mustShow: '肩部姿态自然；双脚稳定着地，腿部与脚步完整入画。',
+    });
+    let body;
+    const result = await generateShot({
+        group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit', modelId: 'Qwen/Qwen-Image-2.1-Turbo',
+        env: { MODELSCOPE_TOKEN: 'test-only' }, store, submitOnly: true,
+        fetchImpl: async (_url, options = {}) => { body = JSON.parse(options.body); return Response.json({ task_id: 'turbo-near-crop-task' }); },
+    });
+    assert.deepEqual(result.referenceRolesSent, ['identity'], '肩部近景不发送会拉宽画幅的全身摆姿或穿搭图');
+    assert.match(body.prompt, /场景：木亭长椅/);
+    assert.equal(body.size, '1328x1328', '近景头肩肖像使用方形画幅约束取景');
+    assert.match(body.prompt, /紧凑头肩肖像（tight head-and-shoulders portrait）/);
+    assert.ok(body.prompt.indexOf('景别最高优先级') < body.prompt.indexOf('场景：木亭长椅'));
+    assert.match(body.prompt, /肩部姿态自然/);
+    assert.doesNotMatch(body.prompt, /双脚稳定着地|膝盖自然放松|腿部与脚步完整入画/);
 });
 
 test('ModelScope sends the allowlisted PoseAtlas sketch as pose-only guidance', async () => {
@@ -504,6 +576,7 @@ test('ModelScope receives the selected PoseAtlas image as a pose-only reference'
     assert.match(payload.prompt, /最后一张参考图来自摆姿库/);
     assert.match(payload.prompt, /不要复制线稿/);
     assert.match(payload.prompt, /针织宽袖上衣肩缝保持在双肩自然位置，领口覆盖双肩/);
+    assert.match(payload.prompt, /上衣下摆覆盖至腰线，腹部皮肤完全遮挡/);
     assert.match(payload.prompt, /人物全组不佩戴首饰/);
     assert.equal(result.referencesSent, 2);
     assert.equal(result.status, 'pending');
@@ -906,7 +979,7 @@ test('Cloudflare Workers AI maps structured 4006 quota error objects to 429', as
     }), error => error.code === 'IMAGE_PROVIDER_FREE_QUOTA_EXHAUSTED' && error.status === 429);
 });
 
-test('ModelScope CU and WS anchored shots drop conflicting wardrobe/crops and keep zoom/wide overrides', async () => {
+test('ModelScope CU drops a full-body anchor while WS keeps its zoom override', async () => {
     const store = createMemoryStore();
     const wardrobe = '橄榄绿裹身长袖针织上衣、焦糖色皮短裙、棕色短靴';
     const group = await readyGroup(store, { wardrobeNote: wardrobe, lockedSubject: wardrobe });
@@ -938,9 +1011,9 @@ test('ModelScope CU and WS anchored shots drop conflicting wardrobe/crops and ke
             return Response.json({ task_id: 'cu-anchored-task' });
         },
     });
-    assert.deepEqual(cuRes.referenceRolesSent, ['anchor', 'identity'], 'CU skips full-body style photo');
+    assert.deepEqual(cuRes.referenceRolesSent, ['identity'], 'CU skips the full-body anchor and style photo');
     assert.equal(cuPayload.size, '1140x1472', 'CU uses tighter 3:4 portrait ratio');
-    assert.match(cuPayload.prompt, /【景别硬性切换】.*大幅推近/);
+    assert.doesNotMatch(cuPayload.prompt, /【景别硬性切换】/);
     assert.match(cuPayload.prompt, /胸口以下完全不在画面内/);
     assert.doesNotMatch(cuPayload.prompt, /焦糖色皮短裙|棕色短靴|右手扶腰/);
 
