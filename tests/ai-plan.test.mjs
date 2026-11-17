@@ -709,3 +709,15 @@ test('any Chinese window mention (靠窗/窗外) marks a window as provided by t
     const shots = [{ shot_language: '玻璃水痕', model_pose: '静坐望向窗外', photographer_position: '室内贴玻璃平视，距主体约40厘米', lens: '50mm', model_position: '画面中央', wardrobe_styling: '针织衫', lighting_setup: '窗边夜灯与窗外霓虹双色温', shot_props: '无', crop_boundary: '半身', must_show: '玻璃水痕', reject_if: '无水痕', execution_note: '雨停改拍残留水珠', generator_prompt: 'rain glass portrait', shot_size: 'MS', camera_angle: 'eye_level' }];
     assert.deepEqual(validateHardConstraints(shots, input), []);
 });
+
+test('Cloudflare Workers AI structured 4006 error objects also return 429', async () => {
+    const result = await handleAiPlan({
+        provider: 'cloudflare-workers-ai',
+        model: '@cf/qwen/qwen3-30b-a3b-fp8',
+        input: { theme: '车站人像', duration: '1小时', count: 9 },
+    }, {
+        AI: { run: async () => { const e = new Error('Inference upstream error'); e.code = 4006; throw e; } },
+    });
+    assert.equal(result.status, 429);
+    assert.equal(result.body.code, 'AI_PROVIDER_FREE_QUOTA_EXHAUSTED');
+});

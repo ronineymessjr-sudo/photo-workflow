@@ -837,3 +837,71 @@ test('ModelScope removes render-look adjectives but keeps physical photo constra
     assert.doesNotMatch(body.prompt, /photorealistic|cinematic lighting|masterpiece/i);
     assert.match(body.prompt, /visible natural skin texture and soft side light/i);
 });
+
+test('ModelScope compresses large accepted anchors via IMAGES and catches 不携带/rejectIf accessory bans', async () => {
+    const store = createMemoryStore();
+    const wardrobe = '橄榄绿裹身长袖针织上衣、焦糖色皮短裙；不携带额外包袋、帽饰或首饰';
+    const group = await readyGroup(store, { wardrobeNote: wardrobe, lockedSubject: `成年女性模特，${wardrobe}` });
+    group.shots[0].size = 'FS';
+    group.shots[0].shotType = '全身';
+    group.shots[0].action = '右手轻搭右侧髋部自然平视';
+    group.shots[0].rejectIf = '截脚或出现额外道具与包袋';
+    group.shots[0].poseRef = {
+        id: 'atlas-pose-p015', title: '站立・对立式平衡・手扶腰',
+        direction: '右手轻搭右侧髋部，左手自然垂落。',
+        imageUrl: 'https://hruiccc.github.io/RuiC-PoseAtlas/thumbs/p015.jpg',
+    };
+    const large = new Uint8Array(500 * 1024);
+    const anchor = await storeAsset({ dataUrl: `data:image/png;base64,${Buffer.from(large).toString('base64')}`, role: 'misc', store });
+    setAnchor(group, { assetId: anchor.assetId, path: anchor.path, shotId: 'shot-01' });
+
+    const resizedBytes = [];
+    const env = {
+        MODELSCOPE_TOKEN: 'test-only',
+        IMAGES: {
+            async info() { return { width: 1056, height: 1584 }; },
+            input(bytes) {
+                resizedBytes.push(bytes.byteLength);
+                return {
+                    transform() {
+                        return {
+                            output() {
+                                return { response: () => new Response(Uint8Array.from([0xff, 0xd8, 0xff, 0xd9])) };
+                            },
+                        };
+                    },
+                };
+            },
+        },
+    };
+    let payload;
+    const result = await generateShot({
+        group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit',
+        env, store, submitOnly: true,
+        fetchImpl: async (_url, options = {}) => {
+            payload = JSON.parse(options.body);
+            return Response.json({ task_id: 'compressed-anchor-task' });
+        },
+    });
+    assert.ok(resizedBytes.some(size => size >= 500 * 1024));
+    assert.match(payload.image_url[0], /^data:image\/jpeg;base64,/);
+    assert.deepEqual(result.referenceRolesSent, ['anchor', 'identity']);
+    assert.match(payload.prompt, /不要擅自添加蓝色、白色或未指定的内搭/);
+    assert.match(payload.prompt, /不得左右镜像翻转/);
+    assert.match(payload.prompt, /阴天散射光影调/);
+});
+
+test('Cloudflare Workers AI maps structured 4006 quota error objects to 429', async () => {
+    const store = createMemoryStore();
+    const group = await readyGroup(store);
+    await assert.rejects(() => generateShot({
+        group, shotId: 'shot-01', providerId: 'cloudflare-flux-klein',
+        env: { AI: { run: async model => {
+            if (model === '@cf/meta/llama-3.1-8b-instruct-fp8-fast') return { response: 'A natural portrait at a station.' };
+            const err = new Error('Inference upstream failed');
+            err.code = 4006;
+            throw err;
+        } } },
+        store,
+    }), error => error.code === 'IMAGE_PROVIDER_FREE_QUOTA_EXHAUSTED' && error.status === 429);
+});

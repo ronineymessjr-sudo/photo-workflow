@@ -498,7 +498,8 @@ shot_language 是独特的镜头名称；model_pose 写具体动作口令；phot
                         max_tokens: 4096,
                     });
                 } catch (error) {
-                    if (/\b4006\b|you have used up your daily free allocation/i.test(String(error?.message || error))) {
+                    const detail = `${error?.code || ''} ${error?.message || error || ''} ${(() => { try { return JSON.stringify(error); } catch { return ''; } })()}`;
+                    if (/\b4006\b|you have used up your daily free allocation|free allocation.*neurons/i.test(detail)) {
                         throw new Error('AI_PROVIDER_FREE_QUOTA_EXHAUSTED');
                     }
                     throw error;

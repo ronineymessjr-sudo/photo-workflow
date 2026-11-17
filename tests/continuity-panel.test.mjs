@@ -274,3 +274,26 @@ test('regenerating a shot keeps the previous image as a selectable history versi
     assert.equal(panel.state().resultHistory['shot-01'][0].qcReview.verdict, 'pass');
     assert.equal(panel.state().qc['shot-01'], undefined);
 });
+
+test('generateShot keeps polling across transient 503 and network errors for async ModelScope tasks', async () => {
+    let collectAttempt = 0;
+    const panel = createPanel({
+        initialState: { group: { shots: [{ shotId: 'shot-01' }] }, retryCounts: { 'shot-01': 0 } },
+        fetchImpl: async path => {
+            if (path === '/api/continuity/requests') return jsonResponse(200, { requests: [{ shotId: 'shot-01', seed: 428601 }] });
+            if (path === '/api/continuity/generate') return jsonResponse(202, { status: 'pending', taskId: 'task-resilient', seed: 428601 });
+            collectAttempt += 1;
+            if (collectAttempt === 1) throw new TypeError('fetch failed');
+            if (collectAttempt === 2) return jsonResponse(503, { status: 'pending', terminal: false, retryable: true, code: 'GENERATION_POLL_RETRYABLE' });
+            return jsonResponse(200, {
+                status: 'succeeded', shotId: 'shot-01', provider: 'modelscope-qwen-edit',
+                image: { assetId: '0123456789abcdef', path: '/api/continuity/asset/0123456789abcdef' },
+            });
+        },
+    });
+
+    await panel.context.generateShot('shot-01', true);
+    assert.equal(collectAttempt, 3);
+    assert.equal(panel.state().pendingJobs['shot-01'], undefined);
+    assert.equal(panel.state().results['shot-01'].image.assetId, '0123456789abcdef');
+});

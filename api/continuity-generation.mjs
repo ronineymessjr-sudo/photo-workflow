@@ -92,6 +92,14 @@ function dataUrlFor(buffer, mime) {
     return `data:${mime};base64,${Buffer.from(buffer).toString('base64')}`;
 }
 
+async function referenceDataUrl(source, env) {
+    if (source?.buffer) {
+        const prepared = await prepareFluxReference(source, env);
+        return dataUrlFor(prepared.buffer, prepared.mime || 'image/png');
+    }
+    return typeof source?.dataUrl === 'string' ? source.dataUrl : '';
+}
+
 function pickBase64(payload) {
     const entry = payload?.data?.[0] || payload?.images?.[0] || payload;
     const encoded = entry?.b64_json || entry?.image_base64 || entry?.base64 || (typeof entry?.image === 'string' ? entry.image : '');
@@ -389,8 +397,30 @@ function isWaistUp(variant = {}) {
 }
 
 function wardrobeForbidsAccessories(locked, variant) {
-    const text = [locked?.subject, locked?.wardrobe, variant?.wardrobe].filter(Boolean).join(' ');
-    return /(?:不添加|不要|不得|禁止|严禁).{0,24}(?:包袋|背包|手提包|项链|首饰|耳饰|饰品|帽子|jewelry|necklace|bag|accessor)/i.test(text);
+    const text = [
+        locked?.subject,
+        locked?.wardrobe,
+        variant?.wardrobe,
+        variant?.rejectIf,
+        ...(Array.isArray(locked?.mustAvoid) ? locked.mustAvoid : []),
+        ...(Array.isArray(variant?.mustAvoid) ? variant.mustAvoid : []),
+    ].filter(Boolean).join(' ');
+    return /(?:不添加|不携带|不佩戴|不配戴|不戴|不背|不要|不得|禁止|严禁|不出现|不复制|不带|不可|勿|without|no\s+).{0,28}(?:包袋|背包|挎包|斜挎包|单肩包|手提包|手包|项链|首饰|耳饰|耳环|手链|手镯|戒指|饰品|配饰|帽子|帽饰|围巾|丝巾|jewelry|necklace|earring|scarf|hat|bag|handbag|accessor)|(?:^|[\s，、,；;。：:])无(?:额外)?(?:包袋|背包|挎包|斜挎包|单肩包|手提包|项链|首饰|耳饰|配饰|饰品|帽子|帽饰|围巾|丝巾)|未指定.{0,12}(?:包袋|首饰|配饰|饰品|帽子|帽饰|围巾).{0,12}(?:不添加|不要|不戴|不携带)/i.test(text);
+}
+
+function modelScopeCorrections({ locked, variant, poseRef }) {
+    const rules = [
+        '领口与内搭严格按服装文字描述：不要擅自添加蓝色、白色或未指定的内搭针织/打底衫；若服装参考图含围巾、丝巾或包袋且文字未要求，严禁复制到成片中。',
+    ];
+    const poseText = [poseRef?.id, poseRef?.title, poseRef?.direction, variant?.action].filter(Boolean).join(' ');
+    if (/P015|右手/i.test(poseText)) {
+        rules.push('姿势与左右侧方向严格按文字和摆姿参考执行，不得左右镜像翻转：人物右手轻搭自身右侧髋部（位于画面左侧），左手自然下垂。');
+    }
+    const lightingText = [locked?.weather, locked?.light, variant?.lighting].filter(Boolean).join(' ');
+    if (/阴天|漫反射|柔顺自然光|overcast|diffused/i.test(lightingText)) {
+        rules.push('阴天散射光影调：画面保持克制自然的低对比度阴天柔和光线，地面不得出现直射阳光光斑或亮斑，植被绿色保持自然沉稳，不得高饱和荧光绿或高光过曝。');
+    }
+    return rules;
 }
 
 function isAccessoryConflictingOutfitReference(reference) {
@@ -570,14 +600,14 @@ export async function submitModelScope({ env, prompt, size, seed, references, va
     if (anchor?.assetId) {
         const stored = await readAsset(`/api/continuity/asset/${anchor.assetId}`, { env, store });
         if (!stored?.buffer?.length) throw new GenerationError('GENERATION_ANCHOR_MISSING', '已锁定的母图读不到；停止生成，不能退回无母图请求', 409);
-        images.push(dataUrlFor(stored.buffer, stored.mime));
+        images.push(await referenceDataUrl(stored, env));
         imageRoles.push('anchor');
         imageNotes.push(`Image ${images.length} is the accepted frame; preserve its established look`);
     }
     const waistUp = isWaistUp(variant);
     for (const reference of references) {
         if (reference.role === 'style' && (waistUp || (anchor?.assetId && wardrobeForbidsAccessories(locked, variant) && isAccessoryConflictingOutfitReference(reference)))) continue;
-        images.push(reference.dataUrl);
+        images.push(await referenceDataUrl(reference, env));
         imageRoles.push(reference.role);
         imageNotes.push(reference.role === 'identity'
             ? `Image ${images.length} supplies face identity and hairstyle only; do not copy its clothing, shoulders, pose, lighting, background or crop`
@@ -588,16 +618,17 @@ export async function submitModelScope({ env, prompt, size, seed, references, va
         if (!poseRef.imageUrl) throw new GenerationError('GENERATION_REFERENCE_MISSING', '已选择姿势，但没有可用的姿势参考图', 409);
         const poseImage = await fetchLibraryImage(poseRef.imageUrl, fetchImpl);
         if (!poseImage) throw new GenerationError('GENERATION_REFERENCE_MISSING', '姿势参考图无法读取；已停止生成，没有退化为纯文字姿势', 409);
-        images.push(dataUrlFor(poseImage.bytes, poseImage.mime));
+        images.push(await referenceDataUrl({ buffer: poseImage.bytes, mime: poseImage.mime }, env));
         imageRoles.push('pose');
         imageNotes.push(`Image ${images.length} is a PoseAtlas pose sketch: use only its body angle and pose, never its face, clothing or background`);
     }
     const frameLocked = waistUp ? { ...locked, subject: wardrobeVisibleInFrame(locked?.subject, variant), wardrobe: wardrobeVisibleInFrame(locked?.wardrobe, variant) } : locked;
     const framePrompt = promptVisibleInFrame(prompt, variant);
     const fields = directionFields({ prompt: framePrompt, locked: frameLocked, variant, poseRef, framing: framingZh(variant) });
+    const corrections = modelScopeCorrections({ locked: frameLocked, variant, poseRef });
     const direction = modelId === MODELSCOPE_TURBO_MODEL
         ? modelScopeDirection({ modelId, prompt: framePrompt, locked: frameLocked, variant, poseRef, size: variant?.size })
-        : [imageRoleGuidance(imageRoles), ...fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`), ...imageNotes, ...(visualPoseSent ? ['最后一张参考图来自摆姿库，只参考身体动作、肢体关系和重心；不要复制线稿、参考图中的脸、服装、背景、文字或标记。'] : []), subjectRule(frameLocked, framePrompt)].filter(Boolean).join('\n');
+        : [imageRoleGuidance(imageRoles), ...fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`), ...corrections, ...imageNotes, ...(visualPoseSent ? ['最后一张参考图来自摆姿库，只参考身体动作、肢体关系和重心；不要复制线稿、参考图中的脸、服装、背景、文字或标记。'] : []), subjectRule(frameLocked, framePrompt)].filter(Boolean).join('\n');
     let response;
     try {
         response = await fetchImpl(MODELSCOPE_ENDPOINT, {
@@ -740,7 +771,7 @@ async function callModelScope({ env, prompt, size, seed, references, variant, po
     if (anchor?.assetId) {
         const stored = await readAsset(`/api/continuity/asset/${anchor.assetId}`, { env, store });
         if (!stored?.buffer?.length) throw new GenerationError('GENERATION_ANCHOR_MISSING', '已锁定的母图读不到；停止生成，不能退回无母图请求', 409);
-        images.push(dataUrlFor(stored.buffer, stored.mime));
+        images.push(await referenceDataUrl(stored, env));
         imageNotes.push(`Image ${images.length} is the accepted frame; preserve its established look`);
         imageRoles.push('anchor');
     }
@@ -752,7 +783,7 @@ async function callModelScope({ env, prompt, size, seed, references, variant, po
         // Anchored full-body shots also skip it when the written contract bans
         // those accessories; the accepted frame carries outfit continuity.
         if (reference.role === 'style' && (waistUp || (anchor?.assetId && wardrobeForbidsAccessories(locked, variant) && isAccessoryConflictingOutfitReference(reference)))) continue;
-        images.push(reference.dataUrl);
+        images.push(await referenceDataUrl(reference, env));
         imageNotes.push(reference.role === 'identity'
             ? `Image ${images.length} supplies face identity and hairstyle only; do not copy its clothing, shoulders, pose, lighting, background or crop`
             : `Image ${images.length} is the ${reference.role} reference`);
@@ -766,16 +797,18 @@ async function callModelScope({ env, prompt, size, seed, references, variant, po
         if (!visualPoseUrl) throw new GenerationError('GENERATION_REFERENCE_MISSING', '已选择姿势，但没有可用的姿势参考图', 409);
         const poseImage = await fetchLibraryImage(visualPoseUrl, fetchImpl);
         if (!poseImage) throw new GenerationError('GENERATION_REFERENCE_MISSING', 'PoseAtlas 姿势参考图无法读取；已停止生成，没有退化为纯文字姿势', 409);
-        images.push(dataUrlFor(poseImage.bytes, poseImage.mime));
+        images.push(await referenceDataUrl({ buffer: poseImage.bytes, mime: poseImage.mime }, env));
         imageRoles.push('pose');
     }
 
     const frameLocked = waistUp ? { ...locked, subject: wardrobeVisibleInFrame(locked?.subject, variant), wardrobe: wardrobeVisibleInFrame(locked?.wardrobe, variant) } : locked;
     const framePrompt = promptVisibleInFrame(prompt, variant);
     const fields = directionFields({ prompt: framePrompt, locked: frameLocked, variant, poseRef, framing: framingZh(variant) });
+    const corrections = modelScopeCorrections({ locked: frameLocked, variant, poseRef });
     const direction = [
         imageRoleGuidance(imageRoles),
         ...fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`),
+        ...corrections,
         ...(visualPoseSent
             ? ['最后一张参考图来自摆姿库，只参考身体动作、肢体关系和重心；不要复制线稿、参考图中的脸、服装、背景、文字或标记。']
             : []),
@@ -997,8 +1030,9 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
             break;
         } catch (error) {
             const message = String(error?.message || error);
+            const detail = `${error?.code || ''} ${message} ${(() => { try { return JSON.stringify(error); } catch { return ''; } })()}`;
             console.error('continuity_flux_upstream_failure', JSON.stringify({ attempt: retry + 1, code: error?.code || '', message: message.slice(0, 300) }));
-            if (/\b4006\b|you have used up your daily free allocation/i.test(message)) {
+            if (/\b4006\b|you have used up your daily free allocation|free allocation.*neurons/i.test(detail)) {
                 throw new GenerationError('IMAGE_PROVIDER_FREE_QUOTA_EXHAUSTED', 'Cloudflare Workers AI 免费额度已用尽，请等待额度恢复或配置 Workers Paid。', 429);
             }
             if (retry === 0 && /\b3043\b|\b502\b|\b503\b|internal server error|temporarily unavailable/i.test(message)) {

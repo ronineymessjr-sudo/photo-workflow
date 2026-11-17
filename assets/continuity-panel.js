@@ -407,7 +407,7 @@ async function generateShot(shotId, retry = false) {
             } };
             save();
             render();
-            completed = await collectShot(shotId, { waitMs: 120000, quiet: true });
+            completed = await collectShot(shotId, { waitMs: providerId === 'modelscope-qwen-edit' ? 270000 : 120000, quiet: true });
             if (completed?.status === 'failed' && completed?.terminal === true) {
                 output.textContent = `${payload.taskId} 已失败：${completed.error || completed.code || '生成失败'}；可以重新生成。`;
                 toast(`${completed.error || '生成失败'}；任务已结束，可以重新生成。`, 'error');
@@ -448,10 +448,11 @@ async function collectShot(shotId, { waitMs = 0, quiet = false } = {}) {
             try {
                 response = await api('/api/continuity/collect', { taskId: job.taskId, shotId, ...(Number.isSafeInteger(job.seed) ? { seed: job.seed } : {}) });
             } catch (error) {
+                if (waitMs > 0 && Date.now() < deadline) continue;
                 if (!quiet) toast(`查询失败：${String(error?.message || error)}；任务仍保留，可稍后再查。`, 'error');
                 return null;
             }
-            const { ok, payload } = response;
+            const { ok, status, payload } = response;
             if (!ok) {
                 if (payload?.terminal === true) {
                     const pendingJobs = { ...(state.pendingJobs || {}) };
@@ -463,6 +464,8 @@ async function collectShot(shotId, { waitMs = 0, quiet = false } = {}) {
                     if (!quiet) toast(`${payload.error || '上游生成失败'}；任务已结束，可以重新生成。`, 'error');
                     return { status: 'failed', terminal: true, error: payload.error, code: payload.code };
                 }
+                const retryableFailure = payload?.retryable === true || [429, 502, 503, 504].includes(status);
+                if (retryableFailure && waitMs > 0 && Date.now() < deadline) continue;
                 if (!quiet) toast(payload?.error || '查询失败，任务仍保留，可稍后再查。', 'error');
                 return null;
             }
