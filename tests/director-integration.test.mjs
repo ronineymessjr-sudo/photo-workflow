@@ -98,6 +98,7 @@ test('assigns each shot to the named scene supported by its photographic details
         ] }),
     });
     assert.deepEqual(plan.shotList.map(shot => shot.scene), ['湖边木栈道', '木亭长椅', '公园竹林小径']);
+    assert.deepEqual(plan.shotList.map(shot => shot.directorContract.scene), ['湖边木栈道', '木亭长椅', '公园竹林小径']);
 });
 
 test('theme and style can be omitted while the Director receives safe creative guidance', async () => {

@@ -253,6 +253,7 @@ export async function createDirectorPlan(input, { baseUrl, fetchImpl = fetch, re
         }) || referencePoses[index % referencePoses.length];
         const shotScene = resolveShotScene(shot, sceneLocations, index) || cleanInput.scene || '场地待确认';
         const directorContract = { ...shot, shot_language: title, model_pose: description,
+            scene: shotScene,
             referenceIds: poseRef ? [poseRef.id] : [],
             model_position: safeComposition, photographer_position: method, wardrobe_styling: wardrobe, shot_props: props,
             lighting_setup: lighting, generator_prompt: generatorPrompt,
