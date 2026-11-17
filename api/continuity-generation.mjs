@@ -237,6 +237,21 @@ export function directionText({ prompt, locked, variant, poseRef, size }) {
     return stripBannedWords(`${body}\n${subjectRule(locked, prompt)}`);
 }
 
+function sceneVisualGuidance(scene) {
+    const value = directive(scene);
+    if (!value) return '';
+    const anchors = [];
+    if (/竹/.test(value)) anchors.push('竹竿与竹叶');
+    if (/小径|步道|路径/.test(value)) anchors.push('可见的小径或步道地面');
+    if (/湖/.test(value)) anchors.push('可见的湖水');
+    else if (/河|水岸|水边/.test(value)) anchors.push('可见的水面');
+    if (/栈道/.test(value)) anchors.push('木栈道木板');
+    if (/亭/.test(value)) anchors.push('木亭立柱、横梁或屋顶结构');
+    if (/长椅|长凳/.test(value)) anchors.push('长椅结构');
+    const featureText = anchors.length ? `重点显示${[...new Set(anchors)].join('、')}。` : '';
+    return `场景必须清楚可辨并符合“${value}”；${featureText}忽略人像身份参考图中的背景，不得把它带入本镜，也不得用摄影棚、纯色或其他场景替代。按指定景别自然呈现场景，不要因此拉远或改变裁切。`;
+}
+
 function modelScopeDirection({ modelId, prompt, locked, variant, poseRef, size, anchor, priorityDirective = [], imageRoles = [] }) {
     if (modelId !== MODELSCOPE_TURBO_MODEL) {
         return directionText({ prompt, locked, variant, poseRef, size });
@@ -258,6 +273,7 @@ function modelScopeDirection({ modelId, prompt, locked, variant, poseRef, size, 
         ['母图使用范围', anchor?.assetId ? '母图只用于保持同一人物的脸、发型和方案服装；完全替换母图背景与场景，不保留母图的竹林、路径、光线方向或空间结构。' : ''],
         ['人物身份', subjectDirectionForFrame(locked?.subject, { ...variant, size: size || variant?.size }) || directive(locked?.subject)],
         ['场景', variant?.scene || locked?.location],
+        ['场景可辨识度', sceneVisualGuidance(variant?.scene || locked?.location)],
         ['场景替换约束', anchor?.assetId && variant?.scene ? `本镜场景必须完全替换参考母图背景，严格改为${variant.scene}；只延续人物身份与服装，不延续旧场景。` : ''],
         ['镜头变化硬约束', priorityDirective.join(' ')],
         ['动作与构图', poseInFrame(directive(variant?.mustShow) || directive(variant?.action) || directive(poseRef?.direction), size || variant?.size)],
@@ -573,7 +589,7 @@ function promptVisibleInFrame(prompt, variant = {}) {
 function imageRoleGuidance(roles = []) {
     const instructions = {
         anchor: '仅用于保持同一人物的身份和发型；服装以服装参考图和文字为准，不复制锚点中的姿势、取景或背景。',
-        identity: '仅用于人物面部身份和发型。',
+        identity: '仅用于人物面部身份和发型；忽略参考图中的背景、场景、姿势、服装、光线和裁切。',
         style: '仅用于服装款式、层次、颜色和材质；忽略文字未要求的配饰。',
         scene: '仅用于场景环境。',
         pose: '仅用于身体动作、肢体关系和重心；不复制参考图中的脸、服装、背景、线稿或标记。',

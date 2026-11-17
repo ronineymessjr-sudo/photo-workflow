@@ -193,6 +193,7 @@ const framingContracts = [
     { min: 7, max: 7, chinese: /全身远景|环境全身远景|全身加环境/gi, english: /\bwide[- ]full[- ]body\b/gi },
     { min: 8, max: 8, chinese: /环境远景|场景全景|大远景/gi, english: /\b(?:environmental[- ]wide[- ]shot|establishing[- ]shot|extreme[- ]wide[- ]shot)\b/gi },
     { min: 5, max: 5, chinese: /膝(?:盖)?(?:以上|上)/gi, english: /\b(?:knee[- ]up|above the knees)\b/gi },
+    { min: 5, max: 5, chinese: /(?:大腿|腿部)(?:中部|中段|上部|以上)|七分身/gi, english: /\b(?:mid[- ]thigh|thigh[- ]up|three[- ]quarter(?:[- ]length)?)\b/gi },
     { min: 4, max: 4, chinese: /腰(?:部)?以上|腰上|半身/gi, english: /\b(?:waist[- ]up|half[- ]body)\b/gi },
     { min: 3, max: 3, chinese: /头肩|肩部以上|胸像|近景/gi, english: /\b(?:head[- ]and[- ]shoulders|shoulders[- ]up|chest[- ]up|medium[- ]close[- ]up)\b/gi },
     { min: 1, max: 2, chinese: /面部特写|脸部特写|五官特写|特写/gi, english: /\b(?:close[- ]up|tight[- ]close[- ]up)\b/gi },

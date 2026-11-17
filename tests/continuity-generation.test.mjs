@@ -435,6 +435,9 @@ test('ModelScope can select only the allowlisted 2.1 Turbo model for a controlle
     assert.equal(body.model, 'Qwen/Qwen-Image-2.1-Turbo');
     assert.match(body.prompt, /景别最高优先级：/);
     assert.match(body.prompt, /场景：/);
+    assert.match(body.prompt, /场景可辨识度：/);
+    assert.match(body.prompt, /竹竿与竹叶/);
+    assert.match(body.prompt, /忽略人像身份参考图中的背景/);
     assert.match(body.prompt, /腹部皮肤完全遮挡/);
     assert.match(body.prompt, /竹叶、树叶与草地尤其不得呈荧光绿/);
     assert.doesNotMatch(body.prompt, /内容与摄影分层规则|成像质感：真实摄影成像/);
@@ -470,6 +473,9 @@ test('waist-up Turbo shots omit the full-body anchor and keep the shot scene and
     assert.match(body.prompt, /场景：湖边木栈道/);
     assert.match(body.prompt, /景别最高优先级：画面从头顶至自然腰线，下缘切在腰线/);
     assert.match(body.prompt, /腰线以下不在画面内/);
+    assert.match(body.prompt, /湖水/);
+    assert.match(body.prompt, /木栈道木板/);
+    assert.match(body.prompt, /忽略人像身份参考图中的背景/);
     assert.match(body.prompt, /全图保持低饱和、自然的胶片色彩/);
 });
 

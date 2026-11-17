@@ -24,6 +24,20 @@ test('deterministic plan normalization repairs camera and crop conflicts before 
     assert.doesNotMatch(shot.generator_prompt, /full-body|high-angle/);
     assert.deepEqual(validatePhotographerFeasibility([shot]), []);
 });
+
+test('normalizes mid-thigh crop wording to the selected waist-up shot size', () => {
+    const shot = normalizePlanShot({
+        shot_language: '亭内坐姿正面', model_pose: '坐在长椅上，双手轻放膝上',
+        photographer_position: '距主体约4米，平视拍摄', lens: '35mm', model_position: '画面正中',
+        wardrobe_styling: '米白针织上衣', lighting_setup: '亭内散射光', shot_props: '无',
+        crop_boundary: '裁切至大腿中部', must_show: '人物上半身与长椅结构', reject_if: '人物僵硬',
+        execution_note: '不适用时改为自然坐姿', generator_prompt: 'Waist-up portrait of a woman seated on a bench, 35mm',
+        shot_size: 'MS', camera_angle: 'eye_level',
+    });
+    assert.match(shot.crop_boundary, /腰部以上入画/);
+    assert.doesNotMatch(shot.crop_boundary, /大腿中部/);
+    assert.deepEqual(validatePhotographerFeasibility([shot]), []);
+});
 const request = { provider: 'deepseek', model: 'test-model', apiKey: key, input };
 function output(count = 9) {
     return { shot_plans: Array.from({ length: count }, (_, i) => ({
