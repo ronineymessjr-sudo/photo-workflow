@@ -15,7 +15,7 @@ import { workspaceEntryKey } from '../assets/workspace-sync-protocol.mjs';
 export { AiStudioQuota } from './ai-studio/quota.mjs';
 import { createGroup, setReference, confirmMaster, buildShotRequests, recordQc, continuitySummary, continuitySchema, attachResult, handoffFor, setImageProvider, setAnchor, ContinuityError } from './continuity.mjs';
 import { storeAsset, readAsset } from './continuity-assets.mjs';
-import { generateShot, validateShotGeneration, submitModelScope, pollModelScope, isModelScopeModelAllowed, isNearPortrait, cropNearPortraitImage } from './continuity-generation.mjs';
+import { generateShot, validateShotGeneration, submitModelScope, pollModelScope, isModelScopeModelAllowed, isNearPortrait, isWaistUp, cropNearPortraitImage, cropWaistUpImage } from './continuity-generation.mjs';
 import { listProviders, recommendProvider, assertGroupProvider } from './continuity-providers.mjs';
 import { groupFromStudio } from './continuity-studio-bridge.mjs';
 import { prescreen, mergeScores, summariseVision } from './continuity-vision.mjs';
@@ -1090,9 +1090,10 @@ export default {
                             const polled = await pollModelScope({ env, taskId: body.taskId });
                             if (polled.status !== 'succeeded') result = { status: 200, body: { status: 'pending', taskId: body.taskId, providerStatus: polled.upstream || 'PENDING' } };
                             else {
-                                const framed = isNearPortrait({ size: cached.frameSize })
+                                const frameVariant = { size: cached.frameSize };
+                                const framed = isNearPortrait(frameVariant)
                                     ? await cropNearPortraitImage(polled, env)
-                                    : polled;
+                                    : isWaistUp(frameVariant) ? await cropWaistUpImage(polled, env) : polled;
                                 const assetId = crypto.randomUUID().replace(/-/g, '');
                                 const object = env.WORKSPACE_SYNC.get(env.WORKSPACE_SYNC.idFromName(`user:${uid}`));
                                 const mime = framed.contentType || 'image/png';

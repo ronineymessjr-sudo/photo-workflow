@@ -334,7 +334,7 @@ test('ModelScope candidate submits asynchronously, collects once, persists priva
     assert.deepEqual(new Uint8Array(await image.arrayBuffer()), jpeg);
 });
 
-test('ModelScope near candidates apply the continuity crop before private storage', async t => {
+test('ModelScope waist-up candidates apply the contract crop before private storage', async t => {
     const taskCache = new Map();
     const jpeg = new Uint8Array([255, 216, 255, 0]);
     const croppedPng = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, ...new Array(16).fill(0)]);
@@ -353,8 +353,9 @@ test('ModelScope near candidates apply the continuity crop before private storag
     const env = {
         ...environment(), POSEATLAS_ENABLED: 'true', MODELSCOPE_TOKEN: 'test-token',
         CONTINUITY_KV: { get: async key => taskCache.get(key) || null, put: async (key, value) => taskCache.set(key, JSON.parse(value)) },
-        IMAGES: { input: () => ({ transform: () => ({ output: () => ({ response: () => {
+        IMAGES: { input: () => ({ transform: options => ({ output: () => ({ response: () => {
             crops++;
+            assert.deepEqual(options.trim, { top: 0, left: 0.14, width: 0.72, height: 0.62 });
             return new Response(croppedPng, { headers: { 'Content-Type': 'image/png' } });
         } }) }) }) },
         AI: { run: async () => assert.fail('ModelScope route must not call Cloudflare Workers AI') },
@@ -364,7 +365,7 @@ test('ModelScope near candidates apply the continuity crop before private storag
         candidate_count: 1, billing_mode: 'free-credit-first', aspect_ratio: 'portrait',
         brief: '湖边人像，面向镜头自然微笑。', scene_brief: '湖边木栈道。', style_direction: '自然纪实。',
         reference_ids: ['atlas-pose-full_single_p019', 'atlas-portrait-face001'], reference_brief: { modelDesc: '成年模特' },
-        shot_contract: { shot_language: '近景人像', shot_size: '近景', generator_prompt: '从头部到肩部以上的紧凑近景取景',
+        shot_contract: { shot_language: '腰上人像', shot_size: '中景', generator_prompt: '从头顶到自然腰线的腰上人像取景',
             model_pose: '肩线放松，直视镜头', wardrobe_styling: '米白色针织上衣',
             referenceIds: ['atlas-pose-full_single_p019'], must_show: '肩部以上', reject_if: '全身构图' },
     });
@@ -375,7 +376,7 @@ test('ModelScope near candidates apply the continuity crop before private storag
     assert.equal(response.status, 201);
     const candidate = await response.json();
     assert.equal(crops, 1);
-    assert.equal(candidate.candidateAsset.frameCrop, 'near-portrait-shoulders-up');
+    assert.equal(candidate.candidateAsset.frameCrop, 'waist-up-contract');
     assert.equal(candidate.candidateAsset.referenceRolesSent.includes('identity'), true);
 });
 

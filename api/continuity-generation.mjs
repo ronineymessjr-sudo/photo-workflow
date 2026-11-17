@@ -414,7 +414,7 @@ function visibleFrame(size) {
     return /^(?:近景|MEDIUM[- ]?CLOSE[- ]?UP)$/.test(value) ? 'MCU' : value;
 }
 
-function isWaistUp(variant = {}) {
+export function isWaistUp(variant = {}) {
     return /^(MS|中景|MEDIUM)$/i.test(String(variant.size || variant.shotType || '').trim());
 }
 
@@ -445,6 +445,32 @@ export async function cropNearPortraitImage(image, env) {
     } catch (error) {
         if (error instanceof GenerationError) throw error;
         throw new GenerationError('GENERATION_FRAME_CROP_FAILED', `近景成片裁切失败：${String(error?.message || error).slice(0, 180)}`, 502);
+    }
+}
+
+export async function cropWaistUpImage(image, env) {
+    if (!env?.IMAGES?.input || !image?.base64) {
+        throw new GenerationError('GENERATION_FRAME_CROP_UNAVAILABLE', '中景成片裁切服务未连接', 503);
+    }
+    try {
+        const source = Uint8Array.from(Buffer.from(image.base64, 'base64'));
+        const transformed = await env.IMAGES.input(source)
+            .transform({ trim: { top: 0, left: 0.14, width: 0.72, height: 0.62 } })
+            .output({ format: 'image/png' });
+        const response = transformed.response();
+        if (!response.ok) throw new Error(`Images binding returned ${response.status}`);
+        const bytes = new Uint8Array(await response.arrayBuffer());
+        if (!bytes.length) throw new Error('Images binding returned an empty image');
+        return {
+            ...image,
+            contentType: 'image/png',
+            base64: Buffer.from(bytes).toString('base64'),
+            dimensions: imageDimensions(bytes, 'image/png'),
+            frameCrop: 'waist-up-contract',
+        };
+    } catch (error) {
+        if (error instanceof GenerationError) throw error;
+        throw new GenerationError('GENERATION_FRAME_CROP_FAILED', `中景成片裁切失败：${String(error?.message || error).slice(0, 180)}`, 502);
     }
 }
 
