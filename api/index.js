@@ -1007,6 +1007,7 @@ export default {
                                 const metadata = {
                                     status: 'pending', requestId: typeof body.request_id === 'string' ? body.request_id.slice(0, 128) : '',
                                     model: body.model, seed: compiled.seed, prompt: submitted.prompt,
+                                    frameSize: contract.shot_size || '',
                                     shotLanguage: compiled.shotLanguage,
                                     referenceIds: referenceContext.templates.map(template => template.id),
                                     referenceImages: references.map(({ template }, imageIndex) => ({
@@ -1089,17 +1090,21 @@ export default {
                             const polled = await pollModelScope({ env, taskId: body.taskId });
                             if (polled.status !== 'succeeded') result = { status: 200, body: { status: 'pending', taskId: body.taskId, providerStatus: polled.upstream || 'PENDING' } };
                             else {
+                                const framed = isNearPortrait({ size: cached.frameSize })
+                                    ? await cropNearPortraitImage(polled, env)
+                                    : polled;
                                 const assetId = crypto.randomUUID().replace(/-/g, '');
                                 const object = env.WORKSPACE_SYNC.get(env.WORKSPACE_SYNC.idFromName(`user:${uid}`));
-                                const mime = polled.contentType || 'image/png';
+                                const mime = framed.contentType || 'image/png';
                                 const stored = await object.fetch(new Request(`https://workspace.internal/candidate-assets/${assetId}`, {
-                                    method: 'PUT', headers: { 'Content-Type': mime }, body: Uint8Array.from(atob(polled.base64), char => char.charCodeAt(0)),
+                                    method: 'PUT', headers: { 'Content-Type': mime }, body: Uint8Array.from(atob(framed.base64), char => char.charCodeAt(0)),
                                 }));
                                 if (!stored.ok) throw new Error('CANDIDATE_ASSET_STORE_FAILED');
                                 const candidateAsset = {
                                     id: assetId, url: new URL(candidateAssetUrl(uid, assetId, env), url.origin).href,
                                     synthetic: true, status: 'candidate-awaiting-human-review', source: 'modelscope', model: cached.model,
                                     poseStatus: 'not-run', poseReasons: [], faceQualityStatus: 'not-run', steps: 24, seed: cached.seed,
+                                    ...(framed.frameCrop ? { frameCrop: framed.frameCrop } : {}),
                                     referenceWarnings: cached.referenceWarnings, shotLanguage: cached.shotLanguage,
                                     contractSource: 'template-library-shot-contract', referenceIds: cached.referenceIds,
                                     referenceImages: cached.referenceImages, referenceRolesSent: cached.referenceRolesSent,

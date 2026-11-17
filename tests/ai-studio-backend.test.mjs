@@ -334,6 +334,51 @@ test('ModelScope candidate submits asynchronously, collects once, persists priva
     assert.deepEqual(new Uint8Array(await image.arrayBuffer()), jpeg);
 });
 
+test('ModelScope near candidates apply the continuity crop before private storage', async t => {
+    const taskCache = new Map();
+    const jpeg = new Uint8Array([255, 216, 255, 0]);
+    const croppedPng = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, ...new Array(16).fill(0)]);
+    t.mock.method(globalThis, 'fetch', async (input, options = {}) => {
+        const url = String(input);
+        if (url.includes('api-inference.modelscope.cn/v1/images/generations')) return Response.json({ task_id: 'near-candidate-task' });
+        if (url.includes('api-inference.modelscope.cn/v1/tasks/near-candidate-task')) return Response.json({ task_status: 'SUCCEED', output_images: ['https://images.test/near.jpg'] });
+        if (url === 'https://images.test/near.jpg') return new Response(jpeg, { headers: { 'Content-Type': 'image/jpeg' } });
+        if (url.endsWith('poses.json')) return Response.json({ poses: [{ id: 'full_single_P019', names: { zh: '安静坐姿' }, category: '坐姿', variants: [{ angle: 'front', thumb: 'thumbs/full_single_P019_front.jpg' }] }] });
+        if (url.endsWith('costumes.json')) return Response.json({ costumes: [] });
+        if (url.endsWith('faces.json')) return Response.json({ images: [{ id: 'face001', sec: 'face', thumb: 'portrait/thumbs/face001.webp' }] });
+        if (/\/thumbs\//.test(url)) return new Response(jpeg, { headers: { 'Content-Type': 'image/jpeg' } });
+        throw new Error('Unexpected template source');
+    });
+    let crops = 0;
+    const env = {
+        ...environment(), POSEATLAS_ENABLED: 'true', MODELSCOPE_TOKEN: 'test-token',
+        CONTINUITY_KV: { get: async key => taskCache.get(key) || null, put: async (key, value) => taskCache.set(key, JSON.parse(value)) },
+        IMAGES: { input: () => ({ transform: () => ({ output: () => ({ response: () => {
+            crops++;
+            return new Response(croppedPng, { headers: { 'Content-Type': 'image/png' } });
+        } }) }) }) },
+        AI: { run: async () => assert.fail('ModelScope route must not call Cloudflare Workers AI') },
+    };
+    const submitResponse = await call(env, '/api/director/generate-candidate', {
+        request_id: 'near-candidate-test', provider: 'modelscope', model: 'Qwen/Qwen-Image-2.1-Turbo',
+        candidate_count: 1, billing_mode: 'free-credit-first', aspect_ratio: 'portrait',
+        brief: '湖边人像，面向镜头自然微笑。', scene_brief: '湖边木栈道。', style_direction: '自然纪实。',
+        reference_ids: ['atlas-pose-full_single_p019', 'atlas-portrait-face001'], reference_brief: { modelDesc: '成年模特' },
+        shot_contract: { shot_language: '近景人像', shot_size: '近景', generator_prompt: '从头部到肩部以上的紧凑近景取景',
+            model_pose: '肩线放松，直视镜头', wardrobe_styling: '米白色针织上衣',
+            referenceIds: ['atlas-pose-full_single_p019'], must_show: '肩部以上', reject_if: '全身构图' },
+    });
+    const submitted = await submitResponse.json();
+    assert.equal(submitResponse.status, 202, JSON.stringify(submitted));
+    assert.equal(submitted.status, 'pending');
+    const response = await call(env, '/api/director/collect-candidate', { taskId: submitted.taskId });
+    assert.equal(response.status, 201);
+    const candidate = await response.json();
+    assert.equal(crops, 1);
+    assert.equal(candidate.candidateAsset.frameCrop, 'near-portrait-shoulders-up');
+    assert.equal(candidate.candidateAsset.referenceRolesSent.includes('identity'), true);
+});
+
 async function bridge(t, options = {}) {
     const server = createServer({ studioEnvironment: { POSEATLAS_ENABLED: 'false' }, ...options });
     await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
