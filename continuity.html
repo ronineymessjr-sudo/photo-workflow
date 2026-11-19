@@ -64,9 +64,20 @@
     .badge.pending, .badge.needs-human { color: var(--warn); border-color: var(--warn); }
     .badge.retry, .badge.missing { color: var(--danger); border-color: var(--danger); }
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
     th { color: var(--muted); font-weight: 600; font-size: 12px; }
-    td button { padding: 5px 10px; font-size: 12px; margin-right: 6px; }
+    td button { padding: 5px 10px; font-size: 12px; margin: 0 6px 6px 0; }
+    #shots { max-width: 100%; overflow-x: auto; }
+    @media (max-width: 720px) {
+        body { padding: 18px 14px 64px; }
+        .card { padding: 14px; }
+        #shots table, #shots tbody, #shots tr, #shots td { display: block; width: 100%; }
+        #shots thead { display: none; }
+        #shots tr { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; background: var(--bg); }
+        #shots td { border-bottom: 0; padding: 4px 0; }
+        #shots td button { padding: 7px 11px; }
+        .shot-thumb { width: 100%; max-width: 220px; }
+    }
     pre { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 12px; overflow: auto; font-size: 12px; max-height: 360px; white-space: pre-wrap; word-break: break-word; }
     #toast {
         position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);

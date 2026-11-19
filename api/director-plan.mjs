@@ -89,7 +89,11 @@ export async function createDirectorPlan(input, { baseUrl, fetchImpl = fetch, re
     const propsOpenEnded = /(?:允许|可以|可)[^。\n；;]{0,12}(?:自由添加|自行选择|自由发挥).{0,8}(?:道具|物品)/i.test(cleanInput.extra);
     const noNewProps = explicitlyNoNewProps || !propsOpenEnded;
     const allowedPropText = userText.replace(negativePropClausePattern, ' ');
-    const specificProductNames = ['陶瓷杯', '保温杯', '水杯', '香水瓶', '护肤品', '口红', '手机', '耳机', '手表', '相机', '运动鞋', '手提包'];
+    const specificProductNames = [
+        '护肤精华瓶', '精华瓶', '护肤精华', '精华液', '护肤品', '面霜', '乳液', '防晒霜', '香水瓶', '口红',
+        '陶瓷杯', '保温杯', '咖啡杯', '拿铁杯', '玻璃杯', '茶杯', '水杯', '玻璃瓶',
+        '手机', '耳机', '手表', '相机', '运动鞋', '手提包',
+    ];
     const productName = specificProductNames.find(name => allowedPropText.includes(name));
     const productLabel = productName || '用户指定产品（品类待确认）';
     const userAllowedProps = [

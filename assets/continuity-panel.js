@@ -114,13 +114,23 @@ function el(tag, attrs = {}, children = []) {
     for (const child of [].concat(children)) if (child) node.append(child);
     return node;
 }
-async function api(path, body, method = 'POST') {
-    const token = localStorage.getItem('pw_token');
+const LONG_API_PATHS = new Set([
+    '/api/continuity/generate',
+    '/api/continuity/requests',
+    '/api/continuity/from-studio',
+    '/api/continuity/collect',
+    '/api/continuity/prescreen',
+]);
+
+async function api(path, body, method = 'POST', { timeoutMs } = {}) {
+    let token = '';
+    try { token = localStorage.getItem('pw_token') || ''; } catch { }
+    const effectiveTimeout = timeoutMs || (LONG_API_PATHS.has(path) ? 90000 : 60000);
     const init = {
         method,
         headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: method === 'GET' ? undefined : JSON.stringify(body || {}),
-        signal: AbortSignal.timeout(28000),
+        signal: AbortSignal.timeout(effectiveTimeout),
     };
     const response = await fetch(path, init);
     const payload = await response.json().catch(() => ({}));
@@ -416,7 +426,7 @@ async function generateShot(shotId, retry = false) {
             } };
             save();
             render();
-            completed = await collectShot(shotId, { waitMs: providerId === 'modelscope-qwen-edit' ? 270000 : 120000, quiet: true });
+            completed = await collectShot(shotId, { waitMs: providerId === 'modelscope-qwen-edit' ? 420000 : 120000, quiet: true });
             if (completed?.status === 'failed' && completed?.terminal === true) {
                 output.textContent = `${payload.taskId} 已失败：${completed.error || completed.code || '生成失败'}；可以重新生成。`;
                 toast(`${completed.error || '生成失败'}；任务已结束，可以重新生成。`, 'error');
@@ -691,7 +701,28 @@ function renderSummary() {
     });
 }
 
+function syncGroupInputsFromState() {
+    const locked = state.group?.locked;
+    if (!locked) return;
+    const mapping = [
+        ['f-theme', locked.theme || ''],
+        ['f-scene', locked.location || locked.scene || ''],
+        ['f-person', locked.character || ''],
+        ['f-wardrobe', locked.wardrobe || ''],
+        ['f-style', locked.style || ''],
+        ['f-extra', locked.lighting || locked.extra || ''],
+    ];
+    for (const [id, value] of mapping) {
+        const input = document.getElementById(id);
+        if (input && value && (!input.value || input.dataset.syncedGroupId !== state.group.continuityGroupId)) {
+            input.value = value;
+            input.dataset.syncedGroupId = state.group.continuityGroupId;
+        }
+    }
+}
+
 function render() {
+    syncGroupInputsFromState();
     renderReferences();
     renderShots();
     renderSummary();
@@ -817,7 +848,7 @@ async function boot() {
     render();
     for (const [pendingShotId, job] of Object.entries(state.pendingJobs || {})) {
         if (job?.taskId) {
-            collectShot(pendingShotId, { waitMs: job.providerId === 'modelscope-qwen-edit' ? 270000 : 120000, quiet: true });
+            collectShot(pendingShotId, { waitMs: job.providerId === 'modelscope-qwen-edit' ? 420000 : 120000, quiet: true });
         }
     }
 }

@@ -568,3 +568,40 @@ test('negative prop phrases like 不携带/不佩戴 with multiple clauses are s
     assert.match(sentBrief, /道具限制为硬约束：只允许用户明确提供的物品；当前未指定物品/);
     assert.doesNotMatch(sentBrief, /只允许用户明确提供的物品（包袋/);
 });
+
+test('skincare serum bottle product brief preserves specific product label instead of generic placeholder', async () => {
+    let sentBrief = '';
+    const fetchImpl = async (_url, options) => {
+        sentBrief = JSON.parse(options.body).brief;
+        return Response.json({
+            shot_plans: [{
+                shot_language: '桌边精华瓶特写 1',
+                framing: '近景',
+                camera_angle: '平视',
+                lens: '50mm',
+                model_pose: '手部轻托护肤精华瓶',
+                model_position: '桌面中心',
+                photographer_position: '平视正面 1 米',
+                crop_boundary: '手部与桌面',
+                must_show: '护肤精华瓶',
+                lighting_setup: '窗边自然柔光',
+                execution_note: '只展示产品',
+                wardrobe: '米白亚麻衬衫',
+                shot_props: '护肤精华瓶',
+            }],
+        });
+    };
+    const plan = await createDirectorPlan({
+        theme: '护肤精华商业展示',
+        style: '',
+        modelDesc: '自然妆发女性手模，米白亚麻衬衫',
+        scene: '室内浅色大理石桌面窗边',
+        mood: '',
+        duration: '1小时',
+        people: '1',
+        extra: '手持透明玻璃护肤精华瓶产品展示，窗边自然柔光，不要鲜花或首饰，不使用闪光灯',
+    }, { baseUrl: 'http://director.test', fetchImpl });
+    assert.match(sentBrief, /只允许用户明确提供的物品/);
+    assert.match(plan.shotList[0].props, /护肤精华瓶/);
+    assert.doesNotMatch(plan.shotList[0].props, /品类待确认/);
+});

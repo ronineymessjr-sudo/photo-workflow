@@ -9504,6 +9504,7 @@ async function handleSubmit(e){
     let generatedPlan=null;
     try{
         const plan=generatedPlan=await window.generateDirectorPlan(input);
+        window.__paStoryboardOrder='story';
         await savePlan(plan);
         currentPlanData=plan;
         $('tplSavePanel').style.display='block';
