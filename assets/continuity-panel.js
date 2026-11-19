@@ -255,7 +255,21 @@ async function uploadReference(role, dataUrl, fileName) {
         reference: { role, assetId: payload.assetId, status: 'confirmed', path: payload.path },
     });
     if (!updated.ok) { toast(updated.payload.error || '写入契约失败', 'error'); return; }
-    state.group = updated.payload.group;
+    const latestGroup = state.group;
+    const nextGroup = updated.payload.group;
+    if (latestGroup && nextGroup && latestGroup.continuityGroupId === nextGroup.continuityGroupId) {
+        if (latestGroup.master && !nextGroup.master) nextGroup.master = latestGroup.master;
+        if (latestGroup.anchor && !nextGroup.anchor) nextGroup.anchor = latestGroup.anchor;
+        if (latestGroup.imageProvider && !nextGroup.imageProvider) nextGroup.imageProvider = latestGroup.imageProvider;
+        if (Array.isArray(latestGroup.references) && Array.isArray(nextGroup.references)) {
+            nextGroup.references = nextGroup.references.map(ref => {
+                if (ref.role === role) return ref;
+                const newer = latestGroup.references.find(item => item.role === ref.role);
+                return newer?.status === 'confirmed' && ref.status !== 'confirmed' ? newer : ref;
+            });
+        }
+    }
+    state.group = nextGroup;
     state.assets = { ...(state.assets || {}), [role]: { ...payload, fileName } };
     save();
     render();
@@ -460,6 +474,7 @@ async function collectShot(shotId, { waitMs = 0, quiet = false } = {}) {
     collectingTasks.add(job.taskId);
     render();
     const deadline = Date.now() + waitMs;
+    let consecutiveGatewayFailures = 0;
     try {
         do {
             if (waitMs) await new Promise(resolve => setTimeout(resolve, 3000));
@@ -483,11 +498,27 @@ async function collectShot(shotId, { waitMs = 0, quiet = false } = {}) {
                     if (!quiet) toast(`${payload.error || '上游生成失败'}；任务已结束，可以重新生成。`, 'error');
                     return { status: 'failed', terminal: true, error: payload.error, code: payload.code };
                 }
+                if ([500, 502, 503, 504].includes(status) && !payload?.code) {
+                    consecutiveGatewayFailures += 1;
+                    if (consecutiveGatewayFailures === 3) {
+                        const out = document.getElementById('request-output');
+                        if (out) out.textContent = `${shotId} 网关暂时返回 HTTP ${status}，仍在自动重试（${job.taskId}）…`;
+                    }
+                    if (status === 502 && consecutiveGatewayFailures >= 8) {
+                        const out = document.getElementById('request-output');
+                        if (out) out.textContent = `${shotId} 连续遇到 ${consecutiveGatewayFailures} 次 502 网关异常，已暂停自动轮询；任务仍保留，可稍后点击“继续查询生成任务”（${job.taskId}）。`;
+                        toast('上游网关连续返回 502，已暂停自动轮询；任务仍保留，可稍后恢复查询。', 'warn');
+                        return null;
+                    }
+                } else {
+                    consecutiveGatewayFailures = 0;
+                }
                 const retryableFailure = payload?.retryable === true || [429, 500, 502, 503, 504, 520, 521, 522, 523, 524].includes(status);
                 if (retryableFailure && waitMs > 0 && Date.now() < deadline) continue;
                 if (!quiet) toast(payload?.error || `查询失败（HTTP ${status}），任务仍保留，可稍后再查。`, 'error');
                 return null;
             }
+            consecutiveGatewayFailures = 0;
             if (payload?.status === 'succeeded' && payload.image?.assetId && payload.shotId === shotId) {
                 const pendingJobs = { ...(state.pendingJobs || {}) };
                 delete pendingJobs[shotId];
@@ -704,13 +735,20 @@ function renderSummary() {
 function syncGroupInputsFromState() {
     const locked = state.group?.locked;
     if (!locked) return;
+    const derivedTheme = state.group.theme
+        || locked.theme
+        || String(state.group.continuityGroupId || '').replace(/-[a-z0-9]{6,}$/i, '');
+    const derivedExtra = [locked.weather, locked.timeOfDay, locked.light].filter(Boolean).join('；')
+        || locked.lighting
+        || locked.extra
+        || '';
     const mapping = [
-        ['f-theme', locked.theme || ''],
+        ['f-theme', derivedTheme],
         ['f-scene', locked.location || locked.scene || ''],
-        ['f-person', locked.character || ''],
+        ['f-person', locked.subject || locked.character || ''],
         ['f-wardrobe', locked.wardrobe || ''],
-        ['f-style', locked.style || ''],
-        ['f-extra', locked.lighting || locked.extra || ''],
+        ['f-style', locked.colorGrade || locked.style || locked.styleProfile || ''],
+        ['f-extra', derivedExtra],
     ];
     for (const [id, value] of mapping) {
         const input = document.getElementById(id);
