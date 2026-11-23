@@ -95,10 +95,11 @@ test('assigns each shot to the named scene supported by its photographic details
             { shot_language: '01 湖边回望全身', model_pose: '站在湖边木栈道回望', photographer_position: '距主体约6米', lens: '35mm', model_position: '湖面与木栈道', crop_boundary: '全身' },
             { shot_language: '02 亭内头肩近景', model_pose: '亭柱旁轻轻回望', photographer_position: '距主体约3米', lens: '35mm', model_position: '木亭长椅与亭柱', crop_boundary: '头肩近景' },
             { shot_language: '03 竹林全身', model_pose: '在竹林小径自然站立', photographer_position: '距主体约6米', lens: '35mm', model_position: '竹林纵深', crop_boundary: '全身' },
+            { shot_language: '04 亭内半身近景', model_pose: '模特坐姿，视线看向斜下方', lighting_setup: '利用亭内漫反射光营造柔和氛围', generator_prompt: 'woman sitting looking down autumn park close up portrait' },
         ] }),
     });
-    assert.deepEqual(plan.shotList.map(shot => shot.scene), ['湖边木栈道', '木亭长椅', '公园竹林小径']);
-    assert.deepEqual(plan.shotList.map(shot => shot.directorContract.scene), ['湖边木栈道', '木亭长椅', '公园竹林小径']);
+    assert.deepEqual(plan.shotList.map(shot => shot.scene), ['湖边木栈道', '木亭长椅', '公园竹林小径', '木亭长椅']);
+    assert.deepEqual(plan.shotList.map(shot => shot.directorContract.scene), ['湖边木栈道', '木亭长椅', '公园竹林小径', '木亭长椅']);
 });
 
 test('theme and style can be omitted while the Director receives safe creative guidance', async () => {

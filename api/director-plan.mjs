@@ -35,6 +35,13 @@ const genericSceneCharacters = new Set('边中外内新旧大小远近高低前�
 
 function resolveShotScene(shot, sceneLocations, fallbackIndex) {
     if (sceneLocations.length < 2) return sceneLocations[0] || '场地待确认';
+    const direction = [shot?.shot_language, shot?.model_pose, shot?.lighting_setup].join(' ');
+    // 亭内/亭柱 can be the only venue cue for a tight frame; generic park
+    // wording elsewhere in the shot should not move it away from the pavilion.
+    if (/亭内|亭下|亭顶|亭柱|亭中|\bpavilion\b/i.test(direction)) {
+        const pavilions = sceneLocations.filter(scene => /亭|\bpavilion\b/i.test(scene));
+        if (pavilions.length === 1) return pavilions[0];
+    }
     const corpus = Object.values(shot || {}).filter(value => typeof value === 'string').join(' ').toLocaleLowerCase();
     const scores = sceneLocations.map((scene, index) => {
         const compact = scene.replace(/\s+/g, '').toLocaleLowerCase();
@@ -85,8 +92,8 @@ export async function createDirectorPlan(input, { baseUrl, fetchImpl = fetch, re
     const wardrobeNote = wardrobeMentioned ? '' : '用户未指定服装、发型或妆容：将其标为待确认，不得推荐具体款式、颜色或造型，也不得把未选择的服装/人像参考当作用户要求。';
     const userText = `${cleanInput.theme} ${cleanInput.style} ${cleanInput.modelDesc} ${cleanInput.scene} ${cleanInput.extra}`;
     const productSubject = /产品|商品/.test(userText);
-    const negativePropClausePattern = /(?:不新增|不要|不使用|不出现|不携带|不佩戴|不配戴|不拿|不带|禁止|不能新增|不得出现|不能携带|不得携带|别带|勿带)[^。\n；;，,]*/g;
-    const explicitlyNoNewProps = /(?:不新增|不要|不使用|不出现|不携带|不佩戴|不配戴|不拿|不带|禁止|不能新增|不得出现|不能携带|不得携带)[^。\n；;]{0,20}(?:道具|物品|随身物|包袋|配饰|首饰)/i.test(`${cleanInput.extra} ${cleanInput.modelDesc}`);
+    const negativePropClausePattern = /(?:不新增|不添加|不要|不使用|不出现|不携带|不佩戴|不配戴|不拿|不带|禁止|不能新增|不得出现|不能携带|不得携带|别带|勿带)[^。\n；;，,]*/g;
+    const explicitlyNoNewProps = /(?:不新增|不添加|不要|不使用|不出现|不携带|不佩戴|不配戴|不拿|不带|禁止|不能新增|不得出现|不能携带|不得携带)[^。\n；;]{0,20}(?:道具|物品|随身物|包袋|配饰|首饰)/i.test(`${cleanInput.extra} ${cleanInput.modelDesc}`);
     const propsOpenEnded = /(?:允许|可以|可)[^。\n；;]{0,12}(?:自由添加|自行选择|自由发挥).{0,8}(?:道具|物品)/i.test(cleanInput.extra);
     const noNewProps = explicitlyNoNewProps || !propsOpenEnded;
     const allowedPropText = userText.replace(negativePropClausePattern, ' ');

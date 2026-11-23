@@ -1,5 +1,4 @@
 // Image-service adapters for one shot at a time.
-const STEPS = 24;
 
 async function prepareFluxReference(source, env) {
     const buffer = source.buffer instanceof Uint8Array ? source.buffer : new Uint8Array(source.buffer || []);
@@ -1233,9 +1232,7 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
         'Natural skin texture and camera-like tonal transitions; preserve the face from the identity reference without beauty-filter smoothing.',
         'Avoid excessive smoothing, waxy skin, over-sharpening, HDR glow, text, watermark, collage, extra limbs and malformed hands.',
     ].filter(Boolean).join(' ');
-    // 4 steps is the model's "concepting" setting; use the handoff's production
-    // setting for candidate frames. Rebuild FormData per retry because its body
-    // stream is single-use.
+    // Klein runs a fixed four steps. Rebuild the single-use multipart body on retry.
     const requestImages = [];
     for (const [index, reference] of chosen.entries()) {
         const source = await prepareFluxReference((index === 0 && anchorBuffer) ? anchorBuffer : reference, env);
@@ -1250,7 +1247,6 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
             form.append('prompt', composed);
             form.append('width', String(width));
             form.append('height', String(height));
-            form.append('steps', String(STEPS));
             if (Number.isSafeInteger(seed)) form.append('seed', String(seed));
             requestImages.forEach((image, index) => form.append(`input_image_${index}`, new Blob([image.bytes], { type: image.mime }), `reference-${index}`));
             const serialized = new Response(form);

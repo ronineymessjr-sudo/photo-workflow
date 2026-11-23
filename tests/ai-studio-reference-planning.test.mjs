@@ -563,7 +563,7 @@ test('negative prop phrases like 不携带/不佩戴 with multiple clauses are s
         mood: '安静松弛',
         duration: '1小时',
         people: '1',
-        extra: '阴天散射光，不使用闪光灯；不携带额外包袋或首饰',
+        extra: '阴天散射光，不使用闪光灯；不携带额外包袋或首饰；不添加包袋、项链、首饰或帽子',
     }, { baseUrl: 'http://director.test', fetchImpl });
     assert.match(sentBrief, /道具限制为硬约束：只允许用户明确提供的物品；当前未指定物品/);
     assert.doesNotMatch(sentBrief, /只允许用户明确提供的物品（包袋/);

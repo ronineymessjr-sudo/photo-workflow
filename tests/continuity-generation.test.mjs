@@ -166,7 +166,9 @@ test('Cloudflare retries one transient 3043 failure and returns the actual outpu
         env: { AI: { run: async (model, input) => {
             if (model === '@cf/meta/llama-3.1-8b-instruct-fp8-fast') return { response: 'A full-body portrait at a station.' };
             imageCalls += 1;
-            await new Response(input.multipart.body, { headers: { 'content-type': input.multipart.contentType } }).formData();
+            const form = await new Response(input.multipart.body, { headers: { 'content-type': input.multipart.contentType } }).formData();
+            assert.equal(form.has('steps'), false);
+            assert.match(form.get('seed'), /^\d+$/);
             if (imageCalls === 1) throw new Error('3043 Internal server error');
             return { image: PNG_1PX.split(',')[1] };
         } } },

@@ -60,6 +60,20 @@ test('cloud candidate defaults to a portrait frame when no aspect ratio is suppl
     assert.match(compiled.prompt, /portrait 3:4 composition/);
 });
 
+test('FLUX.2 dev receives the portrait dimensions, 24 steps and requested seed', async () => {
+    const model = '@cf/black-forest-labs/flux-2-dev';
+    const result = await generateCloudCandidate({ ...request, model, aspect_ratio: undefined, seed: 12345 }, {
+        referenceContext, fetchImpl, ai: { run: async (id, input) => {
+            if (id.includes('llama')) return { response: 'A soft natural-light portrait.' };
+            assert.equal(id, model);
+            const form = await new Response(input.multipart.body, { headers: { 'content-type': input.multipart.contentType } }).formData();
+            assert.deepEqual(['width', 'height', 'steps', 'seed'].map(key => form.get(key)), ['768', '1024', '24', '12345']);
+            return { image: Buffer.from(jpeg).toString('base64') };
+        } },
+    });
+    assert.equal(result.steps, 24);
+});
+
 test('a shot-level scene takes priority over unrelated group locations in the free-form brief', () => {
     const compiled = compileCloudCandidateRequest({
         ...request,
