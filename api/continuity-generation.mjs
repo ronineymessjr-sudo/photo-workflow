@@ -264,11 +264,13 @@ function modelScopeDirection({ modelId, prompt, locked, variant, poseRef, size, 
     const frameVariant = { ...variant, size: size || variant?.size };
     const nearPortrait = /^(?:近景|MCU|MEDIUM[- ]?CLOSE[- ]?UP)$/i.test(String(frameVariant.size || frameVariant.shotType || '').trim());
     const explicitWaistKnot = isWaistUp(frameVariant) && requiresWaistKnotInFrame(variant?.mustShow);
+    const cropText = directive(variant?.crop);
     const crop = nearPortrait
         ? '紧凑头肩肖像（tight head-and-shoulders portrait）：画面只包含完整头部、双肩和上胸；人物面部占画面高度约一半，下边缘裁切在上胸，绝不延伸至腰部。'
         : explicitWaistKnot
             ? '中景腰上人像：从头顶拍至自然腰间系结完整入画；以画面顶端为0%，系结中心置于画面高度约80%–84%，画框下沿在系结下方并保留约8%–12%可见上衣余量；系结和垂带都不得触底或贴边。仍保持腰上构图，不出现髋部、裙装、腿、膝盖、靴子或脚。'
-        : directive(variant?.crop) || framingZh(frameVariant);
+        : Object.hasOwn(FRAMING_ZH, cropText.toUpperCase()) ? framingZh(frameVariant)
+        : cropText || framingZh(frameVariant);
     const wardrobeCoverage = wardrobeCoverageRules({
         subject: locked?.subject,
         wardrobe: locked?.wardrobe,
@@ -291,7 +293,7 @@ function modelScopeDirection({ modelId, prompt, locked, variant, poseRef, size, 
         ['动作与构图', poseInFrame([directive(variant?.mustShow), actionAndPose].filter(Boolean).join('；'), size || variant?.size)],
         ['机位', directive(variant?.camera)],
         ['构图', directive(variant?.subjectPlacement)],
-        ['服装', directive(variant?.wardrobe) || directive(locked?.wardrobe)],
+        ['服装', wardrobeVisibleInFrame(variant?.wardrobe, frameVariant) || wardrobeVisibleInFrame(locked?.wardrobe, frameVariant)],
         ['服装覆盖约束', wardrobeCoverage],
         ['光线', resolveLighting(variant, locked)],
         ['风格质感', directive(locked?.styleProfile) || realismTextZh()],
@@ -324,7 +326,7 @@ function wardrobeDirectionForFrame(lockedWardrobe, variant) {
 function subjectDirectionForFrame(subject, variant) {
     const crop = [variant?.crop, variant?.size, variant?.shotType]
         .filter(value => typeof value === 'string').join(' ');
-    if (!/(?:腰上|腰线|腰部以上|waist[- ]?up|above (?:the )?waist)/i.test(crop)) return directive(subject);
+    if (!isWaistUp(variant) && !/(?:腰上|腰线|腰部以上|waist[- ]?up|above (?:the )?waist)/i.test(crop)) return directive(subject);
     const visibleIdentity = String(subject || '').split(/[；;。]/)
         .map(part => part.trim())
         .filter(part => part && !/(?:裙|裤|靴|鞋|袜|下装|裙摆|skirt|pants|boots|shoes|trousers|lower body)/i.test(part));
@@ -1142,15 +1144,15 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
         Array.isArray(variant?.mustAvoid) && variant.mustAvoid.length ? `本镜禁止：${clamp(variant.mustAvoid.join('、'), 60)}` : '',
         Array.isArray(variant?.mustKeep) && variant.mustKeep.length ? `本镜必须保留：${clamp(variant.mustKeep.join('、'), 70)}` : '',
         Array.isArray(variant?.mustAvoid) && variant.mustAvoid.length ? `本镜禁止：${clamp(variant.mustAvoid.join('、'), 60)}` : '',
-        clamp(poseInFrame(prompt, variant?.size), 220),
-        locked?.subject ? `人物范围：${clamp(locked.subject, 80)}` : '',
+        clamp(poseInFrame(promptVisibleInFrame(prompt, variant), variant?.size), 220),
+        locked?.subject ? `人物范围：${clamp(wardrobeVisibleInFrame(locked.subject, variant), 80)}` : '',
         poseRef ? `摆姿库约束：${[
             poseRef.title ? `指定姿势${clamp(poseRef.title, 36)}` : '',
             poseRef.angle ? `参考方向${clamp(poseRef.angle, 20)}` : '',
             poseRef.direction ? clamp(poseRef.direction, 90) : '',
         ].filter(Boolean).join('；')}` : '',
         variant?.scene ? `本镜场景：${clamp(variant.scene, 80)}` : '',
-        locked?.wardrobe ? `全组服装保持：${clamp(locked.wardrobe, 80)}` : '',
+        locked?.wardrobe ? `全组服装保持：${clamp(wardrobeVisibleInFrame(locked.wardrobe, variant), 80)}` : '',
         ...wardrobeCoverageRules({ subject: locked?.subject, wardrobe: locked?.wardrobe, shotWardrobe: variant?.wardrobe }),
         locked?.styleProfile ? `整体风格：${clamp(locked.styleProfile, 60)}` : '',
         (variant?.mood || locked?.mood) ? `情绪氛围：${clamp(variant?.mood || locked.mood, 48)}` : '',
@@ -1158,15 +1160,14 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
         locked?.weather ? `天气：${clamp(locked.weather, 24)}` : '',
         locked?.timeOfDay ? `时间：${clamp(locked.timeOfDay, 24)}` : '',
         '人物曝光：面部与眼睛细节必须清楚，暗部不能吞没五官。',
-        variant?.action ? `姿势与动作：${clamp(variant.action, 70)}` : '',
-        directive(variant?.wardrobe) ? `本镜服装：${clamp(directive(variant.wardrobe), 70)}` : '',
+        variant?.action ? `姿势与动作：${clamp(poseInFrame(variant.action, variant?.size), 70)}` : '',
+        directive(variant?.wardrobe) ? `本镜服装：${clamp(wardrobeVisibleInFrame(variant.wardrobe, variant), 70)}` : '',
         variant?.camera ? `机位：${clamp(variant.camera, 26)}` : '',
         variant?.lens ? `焦段：${clamp(variant.lens, 18)}` : '',
         variant?.subjectPlacement ? `人物在画面中的位置：${clamp(variant.subjectPlacement, 40)}` : '',
         // The plan names the light. Not sending it is why frames came back with
         // generic studio lighting no matter what the shot called for.
         `现场光线：${clamp(resolveLighting(variant, locked), 80)}`,
-        directive(variant?.wardrobe) ? `服装与妆发：${directive(variant.wardrobe)}` : '',
         directive(variant?.props) ? `道具：${directive(variant.props)}` : '画面不额外添加道具',
         // Crop is already expressed by the framing line, and "16mm f/8 1/1000s"
         // is not something a diffusion model can act on as text - it becomes a
@@ -1216,6 +1217,7 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
             ? 'PoseAtlas P017: stand in a relaxed three-quarter turn and look back over the shoulder, with balanced separated feet; do not mirror the pose.'
             : '';
     const composed = [
+        framingLine(variant),
         // Follow the chosen shoot's look instead of imposing one global film or
         // gritty texture on every location. Keep facial information readable.
         'Photographic texture: natural skin and highlight rolloff, directional but balanced shadows with facial details preserved; follow the specified style, lighting and location without forced film grain, grime, dust, water stains or wear. Follow the subject brief for who appears in the frame; do not add people.',
@@ -1227,7 +1229,6 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
         ...wardrobeCoverageEn,
         directive(variant?.mustShow) ? `Must contain: ${shortList(variant.mustShow)}.` : '',
         directive(variant?.rejectIf) ? `Redo if: ${shortList(variant.rejectIf)}.` : '',
-        framingLine(variant),
         depthOfField(variant?.cameraSettings),
         'Natural skin texture and camera-like tonal transitions; preserve the face from the identity reference without beauty-filter smoothing.',
         'Avoid excessive smoothing, waxy skin, over-sharpening, HDR glow, text, watermark, collage, extra limbs and malformed hands.',
@@ -1539,7 +1540,7 @@ function framingLine(variant) {
         [/全身|^FS$/i, 'Head-to-toe framing: both shoes and the ground under them are visible, with margin above the head.'],
         [/近景|^MCU$/i, 'Head-and-shoulders framing: crop below the shoulders, face fully in frame.'],
         [/特写|^E?CU$/i, 'Tight close-up: face fills most of the frame. Do not invent hands or props.'],
-        [/中景|^MS$/i, 'Waist-up framing: crop below the waist, hands visible when they are in frame.'],
+        [/中景|^MS$/i, 'Waist-up framing: frame from the top of the head to the natural waistline. The bottom edge ends at the waistline. The hips, skirt, legs, knees, boots and feet are completely out of frame.'],
     ];
     return rules.find(([pattern]) => pattern.test(raw))?.[1] || 'Frame the subject according to the shot contract, with the face clearly visible.';
 }

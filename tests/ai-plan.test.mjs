@@ -38,6 +38,14 @@ test('normalizes mid-thigh crop wording to the selected waist-up shot size', () 
     assert.doesNotMatch(shot.crop_boundary, /大腿中部/);
     assert.deepEqual(validatePhotographerFeasibility([shot]), []);
 });
+
+test('expands a crop size code into a photographer-readable direction', () => {
+    const shot = normalizePlanShot({
+        shot_size: 'MS', crop_boundary: 'MS', must_show: '人物上半身与长椅边缘',
+        generator_prompt: 'A seated waist-up portrait on a wooden bench.',
+    });
+    assert.equal(shot.crop_boundary, '中景，腰部以上入画');
+});
 const request = { provider: 'deepseek', model: 'test-model', apiKey: key, input };
 function output(count = 9) {
     return { shot_plans: Array.from({ length: count }, (_, i) => ({

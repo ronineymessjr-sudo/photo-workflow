@@ -614,13 +614,13 @@ test('ModelScope FLUX.2 Klein community tasks poll through the matching API host
     assert.deepEqual(result, { status: 'pending', upstream: 'RUNNING' });
 });
 
-test('waist-up Turbo shots omit the full-body anchor and keep the shot scene and crop', async () => {
+test('waist-up Turbo shots expand legacy crop codes and omit out-of-frame wardrobe', async () => {
     const store = createMemoryStore();
     const wardrobe = '米白色针织裹身上衣（宽袖、腰前交叠系结），卡其色长半身裙；不添加包袋、项链、首饰或帽子。';
     const group = await readyGroup(store, { wardrobeNote: wardrobe, lockedSubject: wardrobe, styleProfile: '自然纪实，低饱和胶片色' });
     Object.assign(group.shots[0], {
-        size: '中景', shotType: '中景', scene: '湖边木栈道',
-        crop: '画面从头顶至自然腰线，下缘切在腰线；髋部以下、腿和鞋不入画。',
+        size: 'MS', shotType: 'MS', scene: '湖边木栈道',
+        crop: 'MS', wardrobe: '米白色针织裹身上衣，棕色及膝靴',
         action: '上身转离镜头约四十五度，再回头看向镜头附近，肩颈放松。',
         poseRef: { id: 'atlas-pose-full_single_p017', title: '站立・回眸顾盼', direction: '上身转离镜头约四十五度，再回头看向镜头附近。' },
     });
@@ -636,7 +636,9 @@ test('waist-up Turbo shots omit the full-body anchor and keep the shot scene and
     assert.equal(body.image_url.length, 1);
     assert.doesNotMatch(body.prompt, /母图|Image 1（anchor）/);
     assert.match(body.prompt, /场景：湖边木栈道/);
-    assert.match(body.prompt, /景别最高优先级：画面从头顶至自然腰线，下缘切在腰线/);
+    assert.match(body.prompt, /景别最高优先级：中景腰上人像.*自然腰线结束/);
+    assert.match(body.prompt, /^服装：米白色针织裹身上衣$/m);
+    assert.doesNotMatch(body.prompt, /棕色及膝靴/);
     assert.match(body.prompt, /腰线以下不在画面内/);
     assert.match(body.prompt, /湖水/);
     assert.match(body.prompt, /木栈道木板/);

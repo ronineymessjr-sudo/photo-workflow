@@ -256,15 +256,18 @@ function normalizeGeneratorPromptFraming(shot) {
 
 function normalizeShotFramingFields(shot) {
     const size = shotSizeRank[shot?.shot_size] ? shot.shot_size : '';
-    if (!size || !framingConflictsWithSize(shot.crop_boundary || '', size)
-        || framingConflictsWithSize(shot.must_show || '', size)
-        || (['ECU', 'CU', 'MCU', 'MS'].includes(size) && /全身|从头到脚|脚部|鞋|双腿|腿部|膝盖/.test(String(shot.must_show || '')))) return shot;
+    if (!size) return shot;
     const cropBySize = {
         ECU: '极近特写，只呈现指定五官细节', CU: '脸部特写，以面部为画面主体',
         MCU: '头肩近景，从头顶至肩部入画', MS: '中景，腰部以上入画',
         MFS: '中全景，膝盖以上入画', FS: '全身，从头到脚完整入画',
         WS: '环境全身，人物完整入画并保留较多环境', EWS: '环境远景，以场景为主且人物完整入画',
     };
+    const crop = String(shot.crop_boundary || '').trim().toUpperCase();
+    if (Object.hasOwn(cropBySize, crop)) return { ...shot, crop_boundary: cropBySize[size] };
+    if (!framingConflictsWithSize(shot.crop_boundary || '', size)
+        || framingConflictsWithSize(shot.must_show || '', size)
+        || (['ECU', 'CU', 'MCU', 'MS'].includes(size) && /全身|从头到脚|脚部|鞋|双腿|腿部|膝盖/.test(String(shot.must_show || '')))) return shot;
     return { ...shot, crop_boundary: cropBySize[size] };
 }
 
