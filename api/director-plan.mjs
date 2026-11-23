@@ -1,4 +1,5 @@
 import { prepareReferenceContext, referencePlanFields } from './ai-studio/reference-brief.mjs';
+import { poseMatchesShotAction } from './ai-studio/pose-suitability.mjs';
 
 const shotTitleLabels = {
     'long-lens-profile': '长焦侧身人像', 'high-angle-geometry': '俯拍几何构图',
@@ -246,7 +247,8 @@ export async function createDirectorPlan(input, { baseUrl, fetchImpl = fetch, re
         const rejectIf = safeRewrite ? safeReject : text(shot.reject_if);
         const executionNote = safeRewrite ? safeExecutionNote : text(shot.execution_note);
         const clothingDetail = /服装细节|衣料细节/.test(title);
-        const referencePoses = (referenceContext?.templates || []).filter(template => template.kind === 'pose');
+        const referencePoses = (referenceContext?.templates || [])
+            .filter(template => template.kind === 'pose' && poseMatchesShotAction(template, description));
         const poseText = `${title} ${description}`;
         const poseRef = clothingDetail || !referencePoses.length ? null : referencePoses.find(template => {
             const hints = [template.title, template.description, ...(template.tags || []),

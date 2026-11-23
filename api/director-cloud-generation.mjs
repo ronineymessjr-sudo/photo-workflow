@@ -1,4 +1,5 @@
 import { prepareReferenceContext } from './ai-studio/reference-brief.mjs';
+import { poseMatchesShotAction } from './ai-studio/pose-suitability.mjs';
 import { loadStudioRegistry } from './ai-studio/registry.mjs';
 import { BUNDLED_PEXELS_WAIST_POSE } from './continuity-studio-bridge.mjs';
 import { requiresWaistKnotInFrame } from './continuity-prompt-rules.mjs';
@@ -27,8 +28,10 @@ export async function prepareCloudCandidateReferences(input, options = {}) {
     const { registry, library } = await loadStudioRegistry(options);
     const requestedIds = [...new Set([...(input.shot_contract?.referenceIds || []), ...(input.reference_ids || [])])];
     const clothingDetail = /服装细节|衣料细节/.test(input.shot_contract?.shot_language || '');
-    const selectedPoseIds = new Set(clothingDetail ? []
-        : (input.shot_contract?.referenceIds || []).filter(id => registry.find(id)?.kind === 'pose'));
+    const selectedPoseIds = new Set(clothingDetail ? [] : (input.shot_contract?.referenceIds || []).filter(id => {
+        const template = registry.find(id);
+        return template?.kind === 'pose' && poseMatchesShotAction(template, input.shot_contract.model_pose);
+    }));
     const referenceIds = requestedIds.filter(id => {
         const template = registry.find(id);
         return !template || template.kind !== 'pose' || selectedPoseIds.has(id);

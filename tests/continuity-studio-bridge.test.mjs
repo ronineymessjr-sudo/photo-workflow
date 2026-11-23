@@ -154,8 +154,8 @@ test('a real Studio plan keeps per-shot scenes and pose selections in the contin
     assert.equal(result.group.shots[0].colorGrade, '低饱和青灰');
     assert.equal(result.group.shots[0].lighting, '阴天柔光');
     assert.equal(result.group.shots[1].scene, '窗边咖啡馆');
-    assert.equal(result.group.shots[0].poseRef.id, pose.id);
-    assert.equal(result.group.shots[0].poseRef.direction, '双脚稳定站立，肩颈放松。');
+    assert.equal(result.group.shots[0].poseRef, null, '行走镜头不使用坐姿参考图');
+    assert.equal(result.group.shots[0].action, '自然行走');
 
     const ready = confirmMaster(result.group, { assetId: result.group.references.find(reference => reference.role === 'identity').assetId });
     assert.equal(ready.master.confirmedBy, 'human');

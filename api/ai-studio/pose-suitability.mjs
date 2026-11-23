@@ -67,6 +67,18 @@ function poseFamilyFor(template) {
   return 'unclassified';
 }
 
+function supportedAction(text) {
+  if (/行走|步行|迈步|缓步|走路|走姿|走动|走过|\bwalk(?:s|ing)?\b|\bstride\b/i.test(text)) return 'walking';
+  if (/坐姿|坐在|坐于|坐着|坐稳|坐下|静坐|\bsit(?:ting)?\b|\bseated\b/i.test(text)) return 'seated';
+  if (/倚靠|靠墙|靠在|\blean(?:ing)? against\b/i.test(text)) return 'leaning';
+  return '';
+}
+
+export function poseMatchesShotAction(template, action) {
+  const required = supportedAction(String(action || ''));
+  return !required || supportedAction(poseText(template)) === required;
+}
+
 export function classifyPose(template) {
   if (template?.kind && template.kind !== 'pose') return null;
   const text = poseText(template);

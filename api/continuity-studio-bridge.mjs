@@ -13,6 +13,7 @@
 //   pose               -> shot constraint plus a provider-scoped pose image (how it is framed)
 
 import { createGroup } from './continuity.mjs';
+import { poseMatchesShotAction } from './ai-studio/pose-suitability.mjs';
 
 const STYLE_KINDS = ['costume'];
 export const BUNDLED_PEXELS_WAIST_POSE = 'https://photo-workflow.pages.dev/assets/pose-references/pose-02.jpg';
@@ -84,9 +85,11 @@ function toContinuityShot(shot, index, poseTemplates, guidance = {}) {
     const contract = shot?.directorContract && typeof shot.directorContract === 'object' ? shot.directorContract : {};
     const referenceIds = Array.isArray(contract.referenceIds) ? contract.referenceIds : [];
     const hasExplicitPoseSelection = Array.isArray(contract.referenceIds);
-    const pose = hasExplicitPoseSelection
+    const selectedPose = hasExplicitPoseSelection
         ? poseTemplates.find(template => referenceIds.includes(template.id)) || null
         : poseTemplates[index % Math.max(1, poseTemplates.length)] || null;
+    const action = contract.model_pose || shot?.description || shot?.action || '';
+    const pose = selectedPose && poseMatchesShotAction(selectedPose, action) ? selectedPose : null;
     const suggestion = pose && (guidance.suggestions || []).find(item => item.sourceItemId === pose.id)?.direction || '';
     const angle = poseAngleForShot(pose, shot, contract);
     const poseUpstreamId = String(pose?.upstreamId || pose?.sourceItemId || pose?.id || '');
@@ -110,7 +113,7 @@ function toContinuityShot(shot, index, poseTemplates, guidance = {}) {
         camera: [contract.camera_angle || shot?.angle || shot?.camera, shot?.method].filter(Boolean).join('，'),
         lens: contract.lens || shot?.focalLength || shot?.lens || '',
         distance: contract.distance || shot?.distance || '',
-        action: contract.model_pose || shot?.description || shot?.action || '',
+        action,
         subjectPlacement: contract.model_position || shot?.composition || shot?.subjectPlacement || '',
         scene: contract.scene || shot?.scene || '',
         prompt: contract.generator_prompt || shot?.prompt || shot?.generator_prompt || shot?.description || '',
