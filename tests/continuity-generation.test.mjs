@@ -794,7 +794,7 @@ test('ModelScope walking shots keep the face reference without a standing anchor
     const group = await readyGroup(store);
     Object.assign(group.shots[0], {
         size: 'MFS', shotType: 'MFS', action: '模特沿木栈道缓慢前行，手臂自然摆动。',
-        scene: '湖边木栈道', crop: '膝盖以上入画', poseRef: null,
+        scene: '湖边木栈道', crop: '人物主体完整清晰；按当前景别保留必要的画面空间。', poseRef: null,
     });
     group.shots.push({ ...group.shots[0], shotId: 'anchor-standing', action: '模特站立扶髋。' });
     setAnchor(group, { assetId: group.references.find(reference => reference.role === 'identity').assetId, shotId: 'anchor-standing' });
@@ -806,7 +806,7 @@ test('ModelScope walking shots keep the face reference without a standing anchor
     assert.ok(result.referenceRolesSent.includes('identity'));
     assert.ok(!result.referenceRolesSent.includes('anchor'));
     assert.match(result.sentPrompt, /缓慢前行/);
-    assert.match(result.sentPrompt, /膝盖以上入画/);
+    assert.match(result.sentPrompt, /景别最高优先级：中全景：画框下沿切在膝盖上方/);
 });
 
 test('ModelScope waist-up frames crop an angle-specific PoseAtlas sketch and exclude wardrobe refs', async () => {

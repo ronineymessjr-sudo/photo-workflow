@@ -270,13 +270,13 @@ function modelScopeDirection({ modelId, prompt, locked, variant, poseRef, size, 
         ? '紧凑头肩肖像（tight head-and-shoulders portrait）：画面只包含完整头部、双肩和上胸；人物面部占画面高度约一半，下边缘裁切在上胸，绝不延伸至腰部。'
         : explicitWaistKnot
             ? '中景腰上人像：从头顶拍至自然腰间系结完整入画；以画面顶端为0%，系结中心置于画面高度约80%–84%，画框下沿在系结下方并保留约8%–12%可见上衣余量；系结和垂带都不得触底或贴边。仍保持腰上构图，不出现髋部、裙装、腿、膝盖、靴子或脚。'
-        : Object.hasOwn(FRAMING_ZH, cropText.toUpperCase()) ? framingZh(frameVariant)
-        : cropText || framingZh(frameVariant);
+        : [framingZh(frameVariant), Object.hasOwn(FRAMING_ZH, cropText.toUpperCase()) ? '' : cropText]
+            .filter(Boolean).join('；');
     const wardrobeCoverage = wardrobeCoverageRules({
         subject: locked?.subject,
         wardrobe: locked?.wardrobe,
         shotWardrobe: variant?.wardrobe,
-    }).join(' ');
+    }).filter(rule => (!nearPortrait && !isTightPortrait(frameVariant)) || !/下摆|腹部/.test(rule)).join(' ');
     const actionAndPose = [
         directive(variant?.action),
         poseRef?.direction && `选定摆姿${poseRef.title ? `“${directive(poseRef.title)}”` : ''}：与本镜动作兼容的方向为${directive(poseRef.direction)}；冲突时以本镜动作优先`,

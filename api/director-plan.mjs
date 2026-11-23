@@ -243,8 +243,15 @@ export async function createDirectorPlan(input, { baseUrl, fetchImpl = fetch, re
             : generatorPromptSource;
         const safeFraming = productSubject ? `${angleLabel || '自然机位'}${sizeLabel || '产品'}取景，呈现${productLabel}与人物的关系`
             : `${angleLabel || '自然机位'}${sizeLabel || '人物'}取景，呈现人物姿态与已确认场地的空间关系`;
+        const portraitCrop = {
+            ECU: '局部特写，只保留指定细节', CU: '面部特写，画框下沿到锁骨',
+            MCU: '头肩近景，下沿到上胸', MS: '中景，从头顶到自然腰线',
+            MFS: '中全景，从头顶到膝盖以上', FS: '全身，头顶、双脚及脚下地面完整入画',
+            WS: '环境全景，全身完整，留出明显的场地空间',
+            EWS: '环境远景，场地为主，人物完整且可辨',
+        }[shot.shot_size];
         const safeCrop = productSubject ? `${productLabel}主体与人物动作保持清晰；具体产品边界与细节范围按实物确认。`
-            : '人物主体完整清晰；按当前景别保留必要的头部、肢体和画面边界空间。';
+            : portraitCrop || '人物主体完整清晰；按当前景别保留必要的头部、肢体和画面边界空间。';
         const safeMustShow = productSubject ? `${productLabel}与人物展示或使用关系` : '人物姿态、视线方向与已确认场地';
         const safeReject = productSubject ? '产品类型或使用方式未经确认；出现未提供的辅助物品' : '新增未提供的物品、人物关系或物件互动';
         const safeExecutionNote = productSubject ? '先确认产品品类与实际功能，再按当前景别安排展示或真实使用动作；不补造辅助物品。'
