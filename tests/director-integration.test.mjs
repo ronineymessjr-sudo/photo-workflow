@@ -348,7 +348,8 @@ test('minimal briefs replace ambiguous alternative actions and number every shot
         baseUrl: 'http://127.0.0.1:8004',
         fetchImpl: async () => Response.json({ shot_plans: [
             { shot_language: '环境远景人像', model_pose: '完整站姿或沿横向路径缓慢行走，不看镜头，动作与环境发生关系', shot_size: 'EWS' },
-            { shot_language: '表情特写', model_pose: '先闭眼呼吸再缓慢睁眼', shot_size: 'CU' },
+            { shot_language: '表情特写', model_pose: '先闭眼呼吸再缓慢睁眼', shot_size: 'CU',
+                photographer_position: '摄影师平视，距主体约1.5米', execution_note: '光线不足时调高感光度或向光侧微移' },
         ] }),
     });
 
@@ -357,6 +358,9 @@ test('minimal briefs replace ambiguous alternative actions and number every shot
     assert.match(plan.shotList[0].description, /模特/);
     assert.doesNotMatch(plan.shotList[0].description, /或|动作与环境发生关系/);
     assert.match(plan.shotList[1].title, /2$/);
+    assert.equal(plan.shotList[1].description, '先闭眼呼吸再缓慢睁眼');
+    assert.equal(plan.shotList[1].method, '摄影师平视，距主体约1.5米');
+    assert.match(plan.shotList[1].alternative, /调高感光度或向光侧微移/);
 });
 
 test('sixteen-shot minimal portrait plans use distinct location-neutral fallback actions', async () => {

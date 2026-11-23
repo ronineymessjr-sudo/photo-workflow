@@ -153,7 +153,7 @@ export async function createDirectorPlan(input, { baseUrl, fetchImpl = fetch, re
         const sceneMentionsProduct = /产品|商品|\bproduct\b|\bitem\b/i.test(sceneActionText)
             || productName && new RegExp(productName).test(sceneActionText);
         const productShotNeedsRewrite = productSubject && (unrequestedPropAction || !sceneMentionsProduct);
-        const ambiguousPortraitAction = !productSubject && /(?:或|或者|任选其一|根据现场|动作与环境发生关系|与环境产生互动|自由发挥|适时)/.test(sceneActionText);
+        const ambiguousPortraitAction = !productSubject && /(?:或|或者|任选其一|根据现场|动作与环境发生关系|与环境产生互动|自由发挥|适时)/.test(originalPose);
         const safeRewrite = unrequestedPropAction || productShotNeedsRewrite || ambiguousPortraitAction;
         const safeActions = [
             '模特自然站立，重心轻移，并将视线从画外缓慢转向镜头。',
