@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createHmac } from 'node:crypto';
 import worker from '../api/index.js';
 import { WorkspaceSync } from '../api/workspace-state.mjs';
+import { DirectorCandidateSubmissions } from '../api/director-candidate-submissions.mjs';
 import { AiStudioQuota } from '../api/ai-studio/quota.mjs';
 import { consumeStudioImageQuota } from '../api/ai-studio/service.mjs';
 import { applyStudioCommit, applyStudioSyncResult } from '../api/ai-studio/plan-commit.mjs';
@@ -16,6 +17,34 @@ const sampleCommit = {
     references: [{ id: 'reference-1', sourceItemId: 'pa-pose-natural-seat', title: '自然放松坐姿' }],
     guidance: { style: '松弛的电影感' }, conversation: [{ role: 'user', content: '自然坐姿' }],
 };
+
+test('durable ModelScope submission keeps a safe provider error code for polling', async t => {
+    t.mock.method(globalThis, 'fetch', async input => {
+        assert.match(String(input), /api-inference\.modelscope\.cn\/v1\/images\/generations/);
+        return Response.json({ message: 'email verification required' }, { status: 403 });
+    });
+    const records = new Map();
+    const actor = new DirectorCandidateSubmissions({ storage: {
+        get: async key => records.get(key),
+        put: async (key, value) => records.set(key, value),
+        list: async ({ prefix = '' } = {}) => new Map([...records].filter(([key]) => key.startsWith(prefix))),
+        setAlarm: async () => {},
+    } }, { MODELSCOPE_TOKEN: 'test-token' });
+    const taskId = 'a'.repeat(32);
+    const queued = await actor.fetch(new Request(`https://candidate.internal/candidate-submissions/${taskId}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payload: { prompt: 'editorial portrait', size: '768x1024', modelId: 'Qwen/Qwen-Image-Edit-2511', references: [], variant: {}, locked: {} } }),
+    }));
+    assert.equal(queued.status, 202);
+    await actor.alarm();
+    const status = await actor.fetch(new Request(`https://candidate.internal/candidate-submissions/${taskId}/status`));
+    const record = await status.json();
+    assert.equal(record.status, 'failed');
+    assert.equal(record.taskId, taskId);
+    assert.equal(record.error, 'GENERATION_ACCOUNT_UNVERIFIED');
+    assert.equal(record.upstreamStatus, 403);
+    assert.equal(Object.hasOwn(record, 'payload'), false);
+});
 
 function storage() {
     const values = new Map();
@@ -59,14 +88,42 @@ function token(uid, env) {
     return Buffer.from(JSON.stringify({ p, s: createHmac('sha256', env.JWT_SECRET).update(p).digest('hex') })).toString('base64url');
 }
 
-function call(env, path, body, uid = 'user-1', extra = {}) {
+function call(env, path, body, uid = 'user-1', extra = {}, ctx) {
     return worker.fetch(new Request(`https://worker.example${path}`, {
         method: body === undefined ? 'GET' : 'POST',
         headers: { Origin: origin, 'Content-Type': 'application/json',
             ...(uid ? { Authorization: `Bearer ${token(uid, env)}` } : {}), ...extra },
         ...(body === undefined ? {} : { body: JSON.stringify(body) }),
-    }), env);
+    }), env, ctx);
 }
+
+test('ModelScope balance endpoint is authenticated and returns only sanitized balance data', async t => {
+    let upstreamMode = 'success';
+    t.mock.method(globalThis, 'fetch', async (input, options = {}) => {
+        assert.equal(String(input), 'https://modelscope.cn/openapi/v1/magicubes/balance');
+        assert.equal(options.headers.Authorization, 'Bearer test-modelscope-token');
+        if (upstreamMode === 'unauthorized') return Response.json({ error: 'token must never be forwarded' }, { status: 401 });
+        return Response.json({ success: true, data: { available_balance: 180, total_balance: 250, frozen_amount: 70 }, request_id: 'provider-request' });
+    });
+    const env = { ...environment(), MODELSCOPE_TOKEN: 'test-modelscope-token' };
+
+    const guest = await call(env, '/api/director/modelscope-balance', undefined, null);
+    assert.equal(guest.status, 401);
+
+    const response = await call(env, '/api/director/modelscope-balance');
+    assert.equal(response.status, 200);
+    const balance = await response.json();
+    assert.deepEqual(Object.keys(balance).sort(), ['availableBalance', 'checkedAt', 'frozenAmount', 'provider', 'totalBalance', 'unit'].sort());
+    assert.deepEqual({ ...balance, checkedAt: undefined }, {
+        provider: 'modelscope', unit: 'magicube', availableBalance: 180, totalBalance: 250, frozenAmount: 70, checkedAt: undefined,
+    });
+    assert.doesNotMatch(JSON.stringify(balance), /test-modelscope-token|provider-request/);
+
+    upstreamMode = 'unauthorized';
+    const rejected = await call(env, '/api/director/modelscope-balance');
+    assert.equal(rejected.status, 502);
+    assert.deepEqual(await rejected.json(), { error: 'MODELSCOPE_CREDENTIAL_REJECTED' });
+});
 
 test('signed commits preserve legacy plans, reject stale revisions, and deduplicate a replay', () => {
     const legacy = { ...samplePlan }; delete legacy.revision;
@@ -245,7 +302,7 @@ test('authenticated production candidates retrieve templates before Cloudflare A
     assert.equal(sourceCalls.length, 4);
     assert.match(aiCalls[0].input.messages[1].content, /自然光/);
     assert.deepEqual(result.candidateAsset.referenceImages.map(image => image.kind), ['pose']);
-    assert.equal(aiCalls[1].model, '@cf/black-forest-labs/flux-2-klein-9b');
+    assert.equal(aiCalls[1].model, '@cf/black-forest-labs/flux-1-schnell');
     const form = await new Response(aiCalls[1].input.multipart.body, { headers: { 'Content-Type': aiCalls[1].input.multipart.contentType } }).formData();
     assert.match(form.get('prompt'), /seated steadily on a park bench/);
     assert.ok(form.get('input_image_0'));
@@ -271,12 +328,15 @@ test('authenticated production candidates retrieve templates before Cloudflare A
 test('ModelScope candidate submits asynchronously, collects once, persists privately, and never calls Workers AI', async t => {
     const sourceCalls = [];
     const modelScopeCalls = [];
+    let releaseModelScope;
+    const modelScopeGate = new Promise(resolve => { releaseModelScope = resolve; });
     const taskCache = new Map();
     const jpeg = new Uint8Array([255, 216, 255, 0]);
     t.mock.method(globalThis, 'fetch', async (input, options = {}) => {
         const url = String(input);
         if (url.includes('api-inference.modelscope.cn/v1/images/generations')) {
             modelScopeCalls.push(JSON.parse(options.body));
+            await modelScopeGate;
             return Response.json({ task_id: 'candidate-task-1' });
         }
         if (url.includes('api-inference.modelscope.cn/v1/tasks/candidate-task-1')) {
@@ -298,7 +358,7 @@ test('ModelScope candidate submits asynchronously, collects once, persists priva
         },
         AI: { run: async () => assert.fail('ModelScope route must not call Cloudflare Workers AI') },
     };
-    const response = await call(env, '/api/director/generate-candidate', {
+    const requestBody = {
         request_id: 'modelscope-smoke-test', provider: 'modelscope', model: 'Qwen/Qwen-Image-2.1-Turbo',
         candidate_count: 1, billing_mode: 'free-credit-first', aspect_ratio: 'portrait',
         brief: '秋日公园坐姿人像，成年女性穿棕色针织衫。', scene_brief: '公园长椅，自然光。', style_direction: '真实纪实摄影',
@@ -306,10 +366,25 @@ test('ModelScope candidate submits asynchronously, collects once, persists priva
         shot_contract: { shot_language: '公园坐姿人像', generator_prompt: '平视中全身人像，双手自然放在膝上，双脚完整入镜',
             shot_size: '全身', model_pose: '安静坐在长椅上，双脚着地', wardrobe_styling: '棕色针织衫、卡其色半身裙、棕色短靴',
             referenceIds: ['atlas-pose-full_single_p019'], must_show: '长椅和完整双脚', reject_if: '闪光灯或裁切脚部' },
-    });
+    };
+    const submissionStorage = new Map();
+    const submissionActor = new DirectorCandidateSubmissions({ storage: {
+        get: async key => structuredClone(submissionStorage.get(key)),
+        put: async (key, value) => submissionStorage.set(key, structuredClone(value)),
+        list: async ({ prefix = '' } = {}) => new Map([...submissionStorage].filter(([key]) => key.startsWith(prefix))),
+        setAlarm: async () => {},
+    } }, env);
+    env.CANDIDATE_SUBMISSIONS = { idFromName: name => name, get: () => ({ fetch: input => submissionActor.fetch(input) }) };
+    const response = await call(env, '/api/director/generate-candidate', requestBody);
     assert.equal(response.status, 202, await response.clone().text());
     const submitted = await response.json();
-    assert.equal(submitted.taskId, 'candidate-task-1');
+    assert.match(submitted.taskId, /^[a-f0-9]{32}$/);
+    assert.equal(submitted.request_id, 'modelscope-smoke-test');
+    assert.equal(submitted.status, 'pending');
+    assert.equal(modelScopeCalls.length, 0, 'the request returns before provider submission starts');
+    assert.ok([...taskCache.values()].some(value => value.status === 'submitting'), 'the local task must be pollable before upstream submission finishes');
+    releaseModelScope();
+    await submissionActor.alarm();
     assert.equal(modelScopeCalls.length, 1);
     assert.match(modelScopeCalls[0].prompt, /卡其色半身裙/);
     assert.match(modelScopeCalls[0].prompt, /Image 1（pose）/);
@@ -317,6 +392,11 @@ test('ModelScope candidate submits asynchronously, collects once, persists priva
     assert.equal(modelScopeCalls[0].model, 'Qwen/Qwen-Image-2.1-Turbo');
     assert.equal(modelScopeCalls[0].image_url.length, 1);
     assert.equal(sourceCalls.length, 4);
+
+    const replaySubmission = await call(env, '/api/director/generate-candidate', requestBody);
+    assert.equal(replaySubmission.status, 202);
+    assert.equal((await replaySubmission.json()).taskId, submitted.taskId);
+    assert.equal(modelScopeCalls.length, 1, 'replaying a request id must not submit or bill twice');
 
     const collected = await call(env, '/api/director/collect-candidate', { taskId: submitted.taskId });
     assert.equal(collected.status, 201, await collected.clone().text());
@@ -334,50 +414,111 @@ test('ModelScope candidate submits asynchronously, collects once, persists priva
     assert.deepEqual(new Uint8Array(await image.arrayBuffer()), jpeg);
 });
 
-test('ModelScope waist-up candidates apply the contract crop before private storage', async t => {
+test('ModelScope waist-up P017 candidates crop the diagonal PoseAtlas guide and preserve the contract crop', async t => {
     const taskCache = new Map();
+    const storedPhotographyAssets = new Map();
     const jpeg = new Uint8Array([255, 216, 255, 0]);
+    const photographyJpeg = new Uint8Array([255, 216, 255, 42, 43, 44]);
     const croppedPng = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, ...new Array(16).fill(0)]);
-    t.mock.method(globalThis, 'fetch', async (input, options = {}) => {
-        const url = String(input);
-        if (url.includes('api-inference.modelscope.cn/v1/images/generations')) return Response.json({ task_id: 'near-candidate-task' });
-        if (url.includes('api-inference.modelscope.cn/v1/tasks/near-candidate-task')) return Response.json({ task_status: 'SUCCEED', output_images: ['https://images.test/near.jpg'] });
-        if (url === 'https://images.test/near.jpg') return new Response(jpeg, { headers: { 'Content-Type': 'image/jpeg' } });
-        if (url.endsWith('poses.json')) return Response.json({ poses: [{ id: 'full_single_P019', names: { zh: '安静坐姿' }, category: '坐姿', variants: [{ angle: 'front', thumb: 'thumbs/full_single_P019_front.jpg' }] }] });
-        if (url.endsWith('costumes.json')) return Response.json({ costumes: [] });
-        if (url.endsWith('faces.json')) return Response.json({ images: [{ id: 'face001', sec: 'face', thumb: 'portrait/thumbs/face001.webp' }] });
-        if (/\/thumbs\//.test(url)) return new Response(jpeg, { headers: { 'Content-Type': 'image/jpeg' } });
-        throw new Error('Unexpected template source');
-    });
-    let crops = 0;
+    new DataView(croppedPng.buffer).setUint32(16, 700);
+    new DataView(croppedPng.buffer).setUint32(20, 900);
+    const crops = [];
+    const poseFetches = [];
     const env = {
         ...environment(), POSEATLAS_ENABLED: 'true', MODELSCOPE_TOKEN: 'test-token',
         CONTINUITY_KV: { get: async key => taskCache.get(key) || null, put: async (key, value) => taskCache.set(key, JSON.parse(value)) },
+        CONTINUITY_ASSETS: {
+            async get(key) {
+                const entry = storedPhotographyAssets.get(key);
+                if (!entry) return null;
+                return { arrayBuffer: async () => entry.bytes.slice().buffer, customMetadata: entry.metadata };
+            },
+            async put(key, bytes, options = {}) { storedPhotographyAssets.set(key, { bytes: new Uint8Array(bytes), metadata: options.customMetadata || {} }); },
+        },
         IMAGES: { input: () => ({ transform: options => ({ output: () => ({ response: () => {
-            crops++;
-            assert.deepEqual(options.trim, { top: 0, left: 0.14, width: 0.72, height: 0.68 });
+            crops.push(options.trim);
             return new Response(croppedPng, { headers: { 'Content-Type': 'image/png' } });
         } }) }) }) },
         AI: { run: async () => assert.fail('ModelScope route must not call Cloudflare Workers AI') },
     };
+    const submissionStorage = new Map();
+    const submissionActor = new DirectorCandidateSubmissions({ storage: {
+        get: async key => structuredClone(submissionStorage.get(key)),
+        put: async (key, value) => submissionStorage.set(key, structuredClone(value)),
+        list: async ({ prefix = '' } = {}) => new Map([...submissionStorage].filter(([key]) => key.startsWith(prefix))),
+        setAlarm: async () => {},
+    } }, env);
+    env.CANDIDATE_SUBMISSIONS = { idFromName: name => name, get: () => ({ fetch: input => submissionActor.fetch(input) }) };
+    let submittedBody;
+    t.mock.method(globalThis, 'fetch', async (input, options = {}) => {
+        const url = String(input);
+        if (url.includes('api-inference.modelscope.cn/v1/images/generations')) {
+            submittedBody = JSON.parse(options.body);
+            return Response.json({ task_id: 'near-candidate-task' });
+        }
+        if (url.includes('api-inference.modelscope.cn/v1/tasks/near-candidate-task')) return Response.json({ task_status: 'SUCCEED', output_images: ['https://images.test/near.jpg'] });
+        if (url === 'https://images.test/near.jpg') return new Response(jpeg, { headers: { 'Content-Type': 'image/jpeg' } });
+        if (url === 'https://hruiccc.github.io/RuiC-PoseAtlas/thumbs/full_single_P017_diag.jpg') {
+            poseFetches.push(url);
+            return new Response(jpeg, { headers: { 'Content-Type': 'image/jpeg' } });
+        }
+        if (url.endsWith('poses.json')) return Response.json({ poses: [{ id: 'full_single_P017', no: 'P017', names: { zh: '站立回眸' }, category: '站姿', variants: [{ angle: 'front', thumb: 'thumbs/full_single_P017_front.jpg' }] }] });
+        if (url.endsWith('costumes.json')) return Response.json({ costumes: [] });
+        if (url.endsWith('faces.json')) return Response.json({ images: [{ id: 'face001', sec: 'face', thumb: 'portrait/thumbs/face001.webp' }] });
+        if (/\/thumbs\//.test(url)) return new Response(jpeg, { headers: { 'Content-Type': 'image/jpeg' } });
+        throw new Error(`Unexpected template source ${url}`);
+    });
+    const photographyUpload = await call(env, '/api/continuity/asset', {
+        dataUrl: `data:image/jpeg;base64,${Buffer.from(photographyJpeg).toString('base64')}`, role: 'misc',
+    });
+    assert.equal(photographyUpload.status, 201);
+    const photographyAsset = await photographyUpload.json();
     const submitResponse = await call(env, '/api/director/generate-candidate', {
         request_id: 'near-candidate-test', provider: 'modelscope', model: 'Qwen/Qwen-Image-2.1-Turbo',
         candidate_count: 1, billing_mode: 'free-credit-first', aspect_ratio: 'portrait',
-        brief: '湖边人像，面向镜头自然微笑。', scene_brief: '湖边木栈道。', style_direction: '自然纪实。',
-        reference_ids: ['atlas-pose-full_single_p019', 'atlas-portrait-face001'], reference_brief: { modelDesc: '成年模特' },
-        shot_contract: { shot_language: '腰上人像', shot_size: '中景', generator_prompt: '从头顶到自然腰线的腰上人像取景',
-            model_pose: '肩线放松，直视镜头', wardrobe_styling: '米白色针织上衣',
-            referenceIds: ['atlas-pose-full_single_p019'], must_show: '肩部以上', reject_if: '全身构图' },
+        photography_reference_asset_id: photographyAsset.assetId,
+        brief: '秋日开放湖边的真实人物摄影，成年东亚女性，自然纪实质感。',
+        scene_brief: '无遮挡的湖边木栈道，水面清晰可见，不出现亭子、屋檐、长椅或建筑。',
+        style_direction: '自然纪实，低饱和胶片色，克制，不做电影剧照式摆拍。',
+        reference_ids: ['atlas-pose-full_single_p017', 'atlas-portrait-face001'],
+        reference_brief: { modelDesc: '成年东亚女性模特，浅棕色齐肩短发、自然妆容。' },
+        shot_contract: { shot_language: '湖边木栈道腰上人像', shot_size: '中景',
+            generator_prompt: 'Photograph the same adult East Asian woman on the open lakeside wooden pier. Compose a waist-up portrait from crown to the natural waistline; keep the woman slightly right of center. Turn her torso three-quarter away from camera, the near shoulder closer and larger, the far shoulder receding; she turns her head back toward frame-left and looks just past the camera, not into the lens. Keep the lake and diagonal pier boards readable.',
+            model_pose: '上半身转离镜头约四十五度，再回头看向画面左侧，肩颈放松。',
+            wardrobe_styling: '米白色长袖针织裹身上衣，标准合肩剪裁，覆盖双肩、上胸至自然腰线；不加首饰、包或肩带。',
+            referenceIds: ['atlas-pose-full_single_p017'],
+            must_show: '面部与眼睛清晰；肩线明显斜向画面；人物占画面约70%；下缘贴自然腰线；湖面与木栈道斜线可辨。',
+            reject_if: '正面证件照式站姿、双肩平行正对镜头、直视镜头、全身、露腹或肩部裸露、塑料皮肤、过度磨皮、额外人物、亭子或建筑' },
     });
     const submitted = await submitResponse.json();
     assert.equal(submitResponse.status, 202, JSON.stringify(submitted));
     assert.equal(submitted.status, 'pending');
+    await submissionActor.alarm();
+    assert.equal(submittedBody.image_url.length, 3, 'waist-up submits identity, photography aesthetic and pose-only references');
+    assert.match(submittedBody.prompt, /Image 2（photography）/);
+    assert.match(submittedBody.prompt, /Image 3（pose）/);
+    assert.match(submittedBody.prompt, /仅用于摄影审美/);
+    assert.match(submittedBody.prompt, /发生冲突时以文字方案为准/);
+    assert.match(submittedBody.prompt, /仅用于身体动作、肢体关系、肩线、头部朝向和重心/);
+    assert.match(submittedBody.prompt, /上半身转离镜头约四十五度/);
+    assert.match(submittedBody.prompt, /无遮挡的湖边木栈道/);
+    assert.doesNotMatch(submittedBody.prompt, /竹叶|树叶与草地/);
+    assert.deepEqual(poseFetches, ['https://hruiccc.github.io/RuiC-PoseAtlas/thumbs/full_single_P017_diag.jpg']);
+    assert.match(submittedBody.image_url[1], /data:image\/jpeg;base64,/);
+    assert.ok(submittedBody.image_url[1].endsWith(Buffer.from(photographyJpeg).toString('base64')));
+    assert.match(submittedBody.image_url[2], /data:image\/png;base64,/);
+    assert.ok(submittedBody.image_url[2].endsWith(Buffer.from(croppedPng).toString('base64')));
     const response = await call(env, '/api/director/collect-candidate', { taskId: submitted.taskId });
     assert.equal(response.status, 201);
     const candidate = await response.json();
-    assert.equal(crops, 1);
+    assert.deepEqual(crops, [
+        { top: 0, left: 0.12, width: 0.76, height: 0.60 },
+        { top: 0, left: 0.04, width: 0.92, height: 0.92 },
+    ]);
     assert.equal(candidate.candidateAsset.frameCrop, 'waist-up-contract');
     assert.equal(candidate.candidateAsset.referenceRolesSent.includes('identity'), true);
+    assert.equal(candidate.candidateAsset.referenceRolesSent.includes('photography'), true);
+    assert.equal(candidate.candidateAsset.referenceRolesSent.includes('pose'), true);
 });
 
 async function bridge(t, options = {}) {

@@ -142,6 +142,7 @@ export function safeCard(t) {
     poseNumber,
     poseSuitability,
     poseReasonTags,
+    referenceImagesByAngle,
   } = t;
   const poseClassification = t.kind === 'pose' ? classifyPose(t) : null;
   return {
@@ -165,6 +166,7 @@ export function safeCard(t) {
     assetUrl: canDisplay(t) && asset ? `/${asset}` : null,
     sourceUrl: source?.type === "poseatlas" ? source.url : null,
     referenceImageUrl: source?.type === "poseatlas" ? source.referenceImageUrl || null : null,
+    ...(kind === "pose" ? { referenceImagesByAngle: referenceImagesByAngle || {} } : {}),
     rightsStatus: t.rights.status,
   };
 }

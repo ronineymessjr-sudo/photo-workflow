@@ -55,6 +55,14 @@ class_name = "AiStudioQuota"
 tag = "ai-studio-quota-v1"
 new_sqlite_classes = ["AiStudioQuota"]
 
+[[durable_objects.bindings]]
+name = "CANDIDATE_SUBMISSIONS"
+class_name = "DirectorCandidateSubmissions"
+
+[[migrations]]
+tag = "director-candidate-submissions-v1"
+new_sqlite_classes = ["DirectorCandidateSubmissions"]
+
 [observability]
 enabled = true
 head_sampling_rate = 1

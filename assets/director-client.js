@@ -22,18 +22,31 @@
                 body: JSON.stringify(data), signal: AbortSignal.timeout(timeout),
             });
             const payload = await response.json();
-            if (!response.ok) throw new Error(payload.error || '候选生图失败');
+            if (!response.ok) {
+                const error = new Error(payload.error || '候选生图失败');
+                if (payload.code) error.code = payload.code;
+                throw error;
+            }
             return payload;
         };
+        const rejectFailedResult = result => {
+            if (result?.status !== 'failed') return result;
+            const error = new Error(result.error || '候选生图失败');
+            if (result.code) error.code = result.code;
+            throw error;
+        };
         let result = await request('/api/director/generate-candidate', input);
+        rejectFailedResult(result);
         if (result.status !== 'pending' || !result.taskId) return result;
+        const taskId = result.taskId;
         const deadline = Date.now() + 7 * 60 * 1000;
         while (Date.now() < deadline) {
             await new Promise(resolve => setTimeout(resolve, 4000));
-            result = await request('/api/director/collect-candidate', { taskId: result.taskId });
+            result = await request('/api/director/collect-candidate', { taskId });
+            rejectFailedResult(result);
             if (result.status !== 'pending') return result;
         }
-        throw new Error('魔搭仍在生成；任务已保留，可稍后重试查询同一任务。');
+        throw new Error(`生图仍在运行，任务 ${taskId} 已保留；稍后可重试查询。`);
     };
     window.buildDirectorIdentityWorkflow = async function (input) {
         const local = ['127.0.0.1', 'localhost', '[::1]'].includes(location.hostname);

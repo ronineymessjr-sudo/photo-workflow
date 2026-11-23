@@ -104,12 +104,13 @@ test('legacy Studio shots without pose selection metadata retain their positiona
     assert.equal(result.group.shots[0].poseRef.id, pose.id);
 });
 
-test('waist-up P017 plans use the bundled licensed pose-only photograph', () => {
+test('waist-up P017 plans use the angle-specific PoseAtlas sketch for diagonal turns', () => {
     const result = groupFromStudio({
         templates: [portrait, costume, { ...pose, id: 'atlas-pose-full_single_p017', upstreamId: 'full_single_p017', title: '站立・回眸顾盼' }],
-        shots: [{ id: 'plan-shot-waist', directorContract: { shot_size: '中景', referenceIds: ['atlas-pose-full_single_p017'] } }],
+        shots: [{ id: 'plan-shot-waist', directorContract: { shot_size: '中景', model_pose: '躯干三分之四侧转，回头看向画面左侧', referenceIds: ['atlas-pose-full_single_p017'] } }],
     });
-    assert.equal(result.group.shots[0].poseRef.imageUrl, 'https://photo-workflow.pages.dev/assets/pose-references/pose-02.jpg');
+    assert.equal(result.group.shots[0].poseRef.angle, 'diagonal');
+    assert.equal(result.group.shots[0].poseRef.imageUrl, 'https://hruiccc.github.io/RuiC-PoseAtlas/thumbs/full_single_P017_diag.jpg');
 });
 
 test('the converter reports import blockers when a shot list is missing', () => {

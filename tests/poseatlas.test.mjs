@@ -46,6 +46,20 @@ test('normalization preserves source identity and precise entry links without im
     }
 });
 
+test('pose cards retain only safe, angle-specific PoseAtlas reference thumbnails', () => {
+    const item = normalizePoseAtlasDataset('pose', { poses: [{
+        id: 'full_single_P017', series: 'full_std', category: '站姿', no: 'P017', names: { zh: '站立・回眸顾盼' },
+        variants: [
+            { angle: 'front', thumb: 'thumbs/full_single_P017_front.jpg' },
+            { angle: 'diagonal', thumb: 'thumbs/full_single_P017_diag.jpg' },
+            { angle: 'side', thumb: 'https://evil.example/pose.jpg' },
+        ],
+    }] })[0];
+    assert.equal(item.referenceImagesByAngle.front, 'https://hruiccc.github.io/RuiC-PoseAtlas/thumbs/full_single_P017_front.jpg');
+    assert.equal(item.referenceImagesByAngle.diagonal, 'https://hruiccc.github.io/RuiC-PoseAtlas/thumbs/full_single_P017_diag.jpg');
+    assert.equal(item.referenceImagesByAngle.side, undefined);
+});
+
 test('normalization preserves source categories while excluding malformed IDs and duplicate records', () => {
     const pose = fixtures().pose.poses[0];
     const items = normalizePoseAtlasDataset('pose', { poses: [pose, pose, { ...pose, id: '../unsafe' }, { ...pose, id: 123 }, { ...pose, id: 'adult1', series: 'full_sexy' }] });

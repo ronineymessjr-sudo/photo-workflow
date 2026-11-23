@@ -24,11 +24,11 @@ export const IMAGE_PROVIDERS = [
         watermark: false,
         env: ['MODELSCOPE_TOKEN'],
         supportsSeed: true,
-        // 2000 free calls per day after real-name verification: at our test
-        // volume the marginal cost is zero.
-        pricingNote: '实名后每日 2000 次免费；支持多图参考，中文原生',
+        // ModelScope's free allowance and credit rules can change; do not promise
+        // unlimited or zero-cost use based on a stale quota snapshot.
+        pricingNote: '使用魔搭 API-Inference 额度；免费额度与并发限制以平台当前账户状态为准，不保证无限或零成本',
         console: 'https://www.modelscope.cn/my/myaccesstoken',
-        bestFor: '大批量测试与同脸组图：免费额度 + 参考图条件，唯一四项全满足的通道',
+        bestFor: '小规模试用与评估：支持参考图；提交前确认平台额度，异步任务可能排队',
     },
     {
         id: 'cloudflare-flux-klein',

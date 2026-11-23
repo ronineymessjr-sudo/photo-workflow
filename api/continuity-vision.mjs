@@ -36,10 +36,13 @@ function buildPrompt({ shot, locked }) {
         `- 天气：${locked.weather}`,
         `- 时间：${locked.timeOfDay}`,
         `本镜要求：景别 ${shot.size}；机位 ${shot.camera}；焦段 ${shot.lens}；人物位置 ${shot.subjectPlacement || '未指定'}。`,
+        shot.action && `- 本镜动作：${shot.action}`,
+        shot.mustShow && `- 本镜必见：${shot.mustShow}`,
+        shot.rejectIf && `- 本镜拒绝条件：${shot.rejectIf}`,
         '请只输出严格 JSON，不要解释、不要代码块：',
         '{"wardrobe":"pass|fail","place-weather":"pass|fail","shot-spec":"pass|fail","notes":"一句话，指出最明显的问题"}',
-        '判定标准：服装颜色/材质/版型与锁定条件明显不符才 fail；地点或天气明显不符才 fail；景别/角度/焦段明显不符才 fail。不确定时给 pass。',
-    ].join('\n');
+        '判定标准：服装颜色/材质/版型与锁定条件明显不符才 fail；地点或天气明显不符才 fail；景别、角度、位置、动作、构图边界或本镜明确的必见/拒绝条件有可见违背时，shot-spec 给 fail。分别检查头部朝向、肩线与躯干朝向；只转头不等于躯干侧转。无法从图像确认时，不判 fail。',
+    ].filter(Boolean).join('\n');
 }
 
 function parseScores(text) {

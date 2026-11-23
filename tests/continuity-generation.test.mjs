@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { generateShot, GenerationError, directionText } from '../api/continuity-generation.mjs';
+import { generateShot, pollModelScope, GenerationError, directionText, cropWaistUpImage } from '../api/continuity-generation.mjs';
 import { prescreen, mergeScores, summariseVision, PRE_SCREEN_ITEMS } from '../api/continuity-vision.mjs';
 import { buildLocked, createGroup, setReference, confirmMaster, setAnchor } from '../api/continuity.mjs';
 import { storeAsset, createMemoryStore } from '../api/continuity-assets.mjs';
@@ -68,6 +68,16 @@ test('long-sleeved knit and low-saturation outdoor plans keep garment coverage a
     assert.match(direction, /不做露肩、挖肩或滑肩造型/);
     assert.match(direction, /全图保持低饱和、自然的胶片色彩/);
     assert.match(direction, /竹叶、树叶与草地尤其不得呈荧光绿/);
+});
+
+test('low-saturation lake-pier shots do not inject bamboo or grass absent from the scene', () => {
+    const direction = directionText({
+        prompt: 'Waist-up portrait on an open lakeside wooden pier with clear water.',
+        locked: { subject: '成年女性模特', styleProfile: '自然纪实，低饱和胶片色', location: '湖边木栈道' },
+        variant: { size: 'MS', scene: '无遮挡的湖边木栈道，水面清晰可见' },
+    });
+    assert.match(direction, /全图保持低饱和、自然的胶片色彩/);
+    assert.doesNotMatch(direction, /竹叶|树叶与草地|荧光绿/);
 });
 
 test('a shot-specific scene wins over the group scene without leaking other shot locations', () => {
@@ -439,14 +449,167 @@ test('ModelScope can select only the allowlisted 2.1 Turbo model for a controlle
     assert.match(body.prompt, /竹竿与竹叶/);
     assert.match(body.prompt, /忽略人像身份参考图中的背景/);
     assert.match(body.prompt, /腹部皮肤完全遮挡/);
+    assert.match(body.prompt, /真实摄影质感：真实摄影成像/);
+    assert.match(body.prompt, /肤质自然，保留真实纹理，不重磨皮、不塑料/);
     assert.match(body.prompt, /竹叶、树叶与草地尤其不得呈荧光绿/);
     assert.doesNotMatch(body.prompt, /内容与摄影分层规则|成像质感：真实摄影成像/);
+
+    group.shots[0].scene = '无遮挡的湖边木栈道，水面清晰可见，不出现亭子、屋檐、长椅或建筑。';
+    group.shots[0].rejectIf = '亭子、屋檐、长椅或建筑';
+    let conflictingScenePrompt;
+    await generateShot({
+        group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit', modelId: 'Qwen/Qwen-Image-2.1-Turbo',
+        env: { MODELSCOPE_TOKEN: 'test-only' }, store,
+        fetchImpl: async (_url, options) => {
+            conflictingScenePrompt = JSON.parse(options.body).prompt;
+            return Response.json({ task_id: 'turbo-scene-conflict-task' });
+        },
+        submitOnly: true,
+    });
+    assert.match(conflictingScenePrompt, /可见的湖水/);
+    assert.match(conflictingScenePrompt, /木栈道木板/);
+    assert.doesNotMatch(conflictingScenePrompt, /木亭立柱|长椅结构/);
+
     await assert.rejects(generateShot({
         group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit', modelId: 'unlisted/model',
         env: { MODELSCOPE_TOKEN: 'test-only' }, store,
         fetchImpl: async () => assert.fail('unlisted model must be rejected before any provider request'),
         submitOnly: true,
     }), error => error.code === 'GENERATION_MODEL_NOT_ALLOWED');
+});
+
+test('ModelScope full Qwen-Image-2.1 is an opt-in model with the same structured photo constraints', async () => {
+    const store = createMemoryStore();
+    const group = await readyGroup(store, { styleProfile: '自然纪实，低饱和胶片色' });
+    Object.assign(group.shots[0], {
+        size: '中景', shotType: '中景', scene: '无遮挡的湖边木栈道，水面清晰可见，不出现亭子、长椅或建筑。',
+        crop: '严格头顶至自然腰线的腰上像，腰线以下不入画。',
+        action: '躯干四分之三侧转，头部回望画面左侧，不直视镜头。',
+        mustShow: '面部清楚，肩线斜向画面，湖面与木栈道可辨。',
+        rejectIf: '正面证件照、亭子、长椅或建筑、塑料皮肤。',
+    });
+    let body;
+    const result = await generateShot({
+        group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit', modelId: 'Qwen/Qwen-Image-2.1',
+        env: { MODELSCOPE_TOKEN: 'test-only' }, store,
+        fetchImpl: async (_url, options) => {
+            body = JSON.parse(options.body);
+            return Response.json({ task_id: 'qwen-image-21-full-task' });
+        },
+        submitOnly: true,
+    });
+    assert.equal(body.model, 'Qwen/Qwen-Image-2.1');
+    assert.equal(result.taskId, 'qwen-image-21-full-task');
+    assert.match(body.prompt, /景别最高优先级：/);
+    assert.match(body.prompt, /动作与构图：/);
+    assert.match(body.prompt, /躯干四分之三侧转/);
+    assert.match(body.prompt, /肤质自然，保留真实纹理，不重磨皮、不塑料/);
+    assert.match(body.prompt, /场景可辨识度：.*可见的湖水.*木栈道木板/s);
+    assert.doesNotMatch(body.prompt, /木亭立柱|长椅结构/);
+});
+
+test('ModelScope Qwen-Image base is an opt-in larger-model comparison with identity references', async () => {
+    const store = createMemoryStore();
+    const group = await readyGroup(store, { styleProfile: '自然纪实，低饱和胶片色' });
+    Object.assign(group.shots[0], {
+        size: '中景', shotType: '中景', scene: '无遮挡湖边木栈道，湖水与斜向木板清楚可辨。',
+        action: '躯干三分之四侧转，头部回望画面左侧。',
+        crop: '头顶至腰间系结下方，保留少量衣料余量。',
+        mustShow: '面部清楚、肩线明显斜向、完整腰结、自然肤质。',
+    });
+    group.shots[0].poseRef = {
+        id: 'atlas-pose-full_single_p017', title: '站立・回眸顾盼',
+        direction: '身体斜侧转离镜头，头部回望画面左侧。',
+        imageUrl: 'https://hruiccc.github.io/RuiC-PoseAtlas/thumbs/full_single_P017_diag.jpg',
+    };
+    const referenceCrop = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
+    let body;
+    const result = await generateShot({
+        group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit', modelId: 'Qwen/Qwen-Image',
+        env: {
+            MODELSCOPE_TOKEN: 'test-only',
+            IMAGES: { input: bytes => ({ transform: () => ({ output: async () => ({ response: () => new Response(referenceCrop) }) }) }) },
+        }, store,
+        fetchImpl: async (url, options = {}) => {
+            if (String(url).includes('full_single_P017_diag.jpg')) return new Response(Uint8Array.from([1, 2, 3]), { headers: { 'Content-Type': 'image/jpeg' } });
+            body = JSON.parse(options.body);
+            return Response.json({ task_id: 'qwen-image-base-task' });
+        },
+        submitOnly: true,
+    });
+    assert.equal(body.model, 'Qwen/Qwen-Image');
+    assert.equal(result.taskId, 'qwen-image-base-task');
+    assert.deepEqual(result.referenceRolesSent, ['identity', 'pose']);
+    assert.equal(body.image_url.length, 2);
+    assert.match(body.prompt, /湖边木栈道/);
+    assert.match(body.prompt, /完整腰结/);
+    assert.match(body.prompt, /自然肤质/);
+});
+
+test('ModelScope FLUX.2 Klein variants are opt-in and receive the shot contract plus identity reference', async () => {
+    const store = createMemoryStore();
+    const group = await readyGroup(store, { styleProfile: '自然纪实，低饱和胶片色' });
+    Object.assign(group.shots[0], {
+        size: '中景', shotType: '中景', scene: '湖边木栈道，水面清晰可见。',
+        crop: '腰上构图，腰部系结完整入画。',
+        action: '躯干四分之三侧转，头部回望画面左侧。',
+        mustShow: '面部清楚，肩线斜向画面，湖面与木栈道可辨。',
+        rejectIf: '正面证件照、塑料皮肤、腰部系结被裁切。',
+    });
+    let body;
+    const result = await generateShot({
+        group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit', modelId: 'black-forest-labs/FLUX.2-klein-base-4B',
+        env: { MODELSCOPE_TOKEN: 'test-only' }, store,
+        fetchImpl: async (_url, options) => {
+            body = JSON.parse(options.body);
+            return Response.json({ task_id: 'flux-klein-contract-task' });
+        },
+        submitOnly: true,
+    });
+    assert.equal(body.model, 'black-forest-labs/FLUX.2-klein-base-4B');
+    assert.equal(body.size, '1140x1472');
+    assert.equal(result.taskId, 'flux-klein-contract-task');
+    assert.ok(body.image_url?.length, 'FLUX submission should retain the selected reference images');
+    assert.match(body.prompt, /腰上构图/);
+    assert.match(body.prompt, /四分之三侧转/);
+    assert.match(body.prompt, /面部清楚/);
+    assert.match(body.prompt, /湖边木栈道/);
+    assert.match(body.prompt, /塑料皮肤/);
+});
+
+test('ModelScope FLUX.2 Klein community API model is allowlisted as opt-in', async () => {
+    const store = createMemoryStore();
+    const group = await readyGroup(store);
+    let body;
+    let submittedUrl;
+    const result = await generateShot({
+        group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit', modelId: 'flux-community/FLUX.2-klein-4B',
+        env: { MODELSCOPE_TOKEN: 'test-only' }, store,
+        fetchImpl: async (url, options) => {
+            submittedUrl = String(url);
+            body = JSON.parse(options.body);
+            return Response.json({ task_id: 'flux-klein-community-task' });
+        },
+        submitOnly: true,
+    });
+    assert.equal(submittedUrl, 'https://api-inference.modelscope.ai/v1/images/generations');
+    assert.equal(body.model, 'flux-community/FLUX.2-klein-4B');
+    assert.equal(result.taskId, 'flux-klein-community-task');
+});
+
+test('ModelScope FLUX.2 Klein community tasks poll through the matching API host', async () => {
+    let polledUrl;
+    const result = await pollModelScope({
+        env: { MODELSCOPE_TOKEN: 'test-only' },
+        modelId: 'flux-community/FLUX.2-klein-4B',
+        taskId: 'flux-klein-community-task',
+        fetchImpl: async url => {
+            polledUrl = String(url);
+            return Response.json({ task_status: 'RUNNING' });
+        },
+    });
+    assert.equal(polledUrl, 'https://api-inference.modelscope.ai/v1/tasks/flux-klein-community-task');
+    assert.deepEqual(result, { status: 'pending', upstream: 'RUNNING' });
 });
 
 test('waist-up Turbo shots omit the full-body anchor and keep the shot scene and crop', async () => {
@@ -620,7 +783,7 @@ test('anchored ModelScope shots follow PoseAtlas text without mixing the pose ph
     assert.doesNotMatch(payload.prompt, /最后一张参考图来自摆姿库/);
 });
 
-test('ModelScope waist-up frames keep pose text and omit references that can override crop or wardrobe', async () => {
+test('ModelScope waist-up frames crop an angle-specific PoseAtlas sketch and exclude wardrobe refs', async () => {
     const store = createMemoryStore();
     const wardrobe = '米白色针织裹身上衣（宽袖、腰前交叠系结），卡其色层叠长半身裙至脚踝，棕色及膝长靴；不添加包袋、项链、首饰或帽子。';
     const group = await readyGroup(store, { wardrobeNote: wardrobe, lockedSubject: `成年东亚女性模特；${wardrobe}` });
@@ -635,19 +798,24 @@ test('ModelScope waist-up frames keep pose text and omit references that can ove
     group.shots[0].poseRef = {
         id: 'atlas-pose-full_single_p017', title: '站立・回眸顾盼',
         direction: '上身转开再回头，肩颈放松。',
-        imageUrl: 'https://photo-workflow.pages.dev/assets/pose-references/pose-02.jpg',
+        imageUrl: 'https://hruiccc.github.io/RuiC-PoseAtlas/thumbs/full_single_P017_diag.jpg',
     };
     let payload;
     let submissionHeaders;
     let poseReferenceFetched = false;
+    let cropOptions;
     const fetchedUrls = [];
     const result = await generateShot({
-        group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit',
-        env: { MODELSCOPE_TOKEN: 'test-only' }, store, submitOnly: true,
+        group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit', modelId: 'Qwen/Qwen-Image-2.1-Turbo',
+        env: {
+            MODELSCOPE_TOKEN: 'test-only',
+            IMAGES: { input: bytes => ({
+                transform: options => { cropOptions = options; return { output: async () => ({ response: () => new Response(bytes, { headers: { 'Content-Type': 'image/png' } }) }) }; },
+            }) },
+        }, store, submitOnly: true,
         fetchImpl: async (url, options = {}) => {
             fetchedUrls.push(String(url));
-            assert.doesNotMatch(String(url), /^https:\/\/hruiccc\.github\.io\//, 'waist-up must not fetch the full-body pose image');
-            if (String(url) === 'https://photo-workflow.pages.dev/assets/pose-references/pose-02.jpg') {
+            if (String(url) === 'https://hruiccc.github.io/RuiC-PoseAtlas/thumbs/full_single_P017_diag.jpg') {
                 poseReferenceFetched = true;
                 return new Response(Uint8Array.from([1, 2, 3]), { headers: { 'Content-Type': 'image/jpeg' } });
             }
@@ -658,8 +826,9 @@ test('ModelScope waist-up frames keep pose text and omit references that can ove
     });
 
     assert.equal(submissionHeaders['X-ModelScope-Task-Type'], 'image_generation');
-    assert.equal(poseReferenceFetched, false, `fetches: ${fetchedUrls.join(', ')}; pose: ${payload.prompt.match(/姿势[^\n]*/)?.[0] || ''}`);
-    assert.equal(payload.image_url.length, 1, 'only identity is sent; costume and pose images can override the wardrobe or waist-up crop');
+    assert.equal(poseReferenceFetched, true, `fetches: ${fetchedUrls.join(', ')}; pose: ${payload.prompt.match(/姿势[^\n]*/)?.[0] || ''}`);
+    assert.deepEqual(cropOptions, { trim: { top: 0, left: 0.12, width: 0.76, height: 0.60 } }, 'the full-body sketch is cropped to its upper-body geometry before submission');
+    assert.equal(payload.image_url.length, 2, 'identity and cropped pose geometry are sent; costume refs are excluded');
     assert.ok(assetReads.length > 0);
     const styleAssetId = group.references.find(reference => reference.role === 'style')?.assetId;
     assert.ok(styleAssetId);
@@ -671,14 +840,18 @@ test('ModelScope waist-up frames keep pose text and omit references that can ove
     assert.match(payload.prompt, /人物全组不佩戴首饰：耳朵、颈部、手腕和手指均无耳饰、项链、手链或戒指/);
     assert.match(payload.prompt, /像摄影师现场抓拍，不像广告硬照/);
     assert.match(payload.prompt, /站立・回眸顾盼/);
-    const clothingClause = payload.prompt.match(/Subject and clothing:\s*(.*?)\. User constraints:/is)?.[1] || '';
-    assert.match(clothingClause, /米白色针织裹身上衣/);
-    assert.doesNotMatch(clothingClause, /半身裙|长靴|boots|skirt/i);
     const wardrobeLines = payload.prompt.split('\n').filter(line => /^(?:人物|全组服装|服装)：/.test(line));
     assert.ok(wardrobeLines.length > 0);
+    assert.ok(wardrobeLines.some(line => /米白色针织裹身上衣/.test(line)));
     assert.ok(wardrobeLines.every(line => !/半身裙|长靴|boots|skirt/i.test(line)), 'all waist-up wardrobe fields must exclude garments below the crop');
-    assert.equal(result.referencesSent, 1);
-    assert.deepEqual(result.referenceRolesSent, ['identity']);
+    assert.equal(result.referencesSent, 2);
+    assert.equal(result.poseReferenceSent, true);
+    assert.deepEqual(result.referenceRolesSent, ['identity', 'pose']);
+    assert.match(payload.prompt, /参考图角色按发送顺序对应：Image 1（identity）.*Image 2（pose）/);
+    assert.match(payload.prompt, /Image 2（pose）：仅用于身体动作、肢体关系、肩线、头部朝向和重心；不复制参考图中的脸、服装、配饰、光线、背景/);
+    assert.match(payload.prompt, /中景腰上人像/);
+    assert.match(payload.prompt, /选定摆姿“站立・回眸顾盼”：与本镜动作兼容的方向为上身转开再回头，肩颈放松/);
+    assert.match(payload.prompt, /冲突时以本镜动作优先/);
 });
 
 test('anchored full-body frames omit outfit references when the wardrobe contract bans their accessories', async () => {
@@ -1035,4 +1208,51 @@ test('ModelScope CU drops a full-body anchor while WS keeps its zoom override', 
     assert.deepEqual(wsRes.referenceRolesSent, ['anchor', 'identity', 'style']);
     assert.match(wsPayload.prompt, /【景别硬性切换】.*大幅拉远/);
     assert.match(wsPayload.prompt, /周围环境与空间纵深是主体/);
+});
+
+test('an explicitly required waist knot overrides the generic waistline crop and keeps the lower edge', async () => {
+    const store = createMemoryStore();
+    const wardrobe = '米白色长袖针织裹身上衣，前襟在自然腰间系结；不添加首饰。';
+    const group = await readyGroup(store, { wardrobeNote: wardrobe, lockedSubject: `成年东亚女性模特；${wardrobe}` });
+    group.shots[0].size = '中景';
+    group.shots[0].shotType = '中景';
+    group.shots[0].mustShow = '自然腰间系结必须完整入画；画框下缘落在系结下方一小段衣料处。';
+    group.shots[0].prompt = `Waist-up editorial portrait. Subject and clothing: ${wardrobe}. User constraints: one person.`;
+    group.shots[0].poseRef = {
+        id: 'atlas-pose-full_single_p017', title: '站立・回眸顾盼',
+        direction: '上身三分之四侧转，头部回望画面左侧。',
+        imageUrl: 'https://photo-workflow.pages.dev/assets/pose-references/pose-02.jpg',
+    };
+    let payload;
+    await generateShot({
+        group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit', modelId: 'Qwen/Qwen-Image-2.1',
+        env: { MODELSCOPE_TOKEN: 'test-only' }, store, submitOnly: true,
+        fetchImpl: async (url, options = {}) => {
+            if (String(url).endsWith('/pose-02.jpg')) return new Response(Uint8Array.from([1, 2, 3]), { headers: { 'Content-Type': 'image/jpeg' } });
+            payload = JSON.parse(options.body);
+            return Response.json({ task_id: 'task-waist-knot' });
+        },
+    });
+    assert.match(payload.prompt, /自然腰间系结完整入画/);
+    assert.match(payload.prompt, /系结中心置于画面高度约80%–84%/);
+    assert.match(payload.prompt, /保留约8%–12%可见上衣余量/);
+    assert.match(payload.prompt, /系结和垂带都不得触底或贴边/);
+    assert.doesNotMatch(payload.prompt, /画框必须在自然腰线结束|腰线以下不在画面内/);
+
+    let trim;
+    const croppedPng = new Uint8Array(24);
+    croppedPng.set([137, 80, 78, 71, 13, 10, 26, 10]);
+    new DataView(croppedPng.buffer).setUint32(16, 707);
+    new DataView(croppedPng.buffer).setUint32(20, 1014);
+    const crop = await cropWaistUpImage({ base64: 'AQID', contentType: 'image/png' }, {
+        IMAGES: { input: () => ({ transform: value => { trim = value.trim; return { output: async () => ({ response: () => new Response(croppedPng) }) }; } }) },
+    }, { preserveBottom: true });
+    assert.deepEqual(trim, { top: 0, left: 0.04, width: 0.92 });
+    assert.equal(crop.frameCrop, 'waist-up-preserve-required-knot');
+
+    const invalidPng = croppedPng.slice();
+    new DataView(invalidPng.buffer).setUint32(20, 1);
+    await assert.rejects(cropWaistUpImage({ base64: 'AQID', contentType: 'image/png' }, {
+        IMAGES: { input: () => ({ transform: () => ({ output: async () => ({ response: () => new Response(invalidPng) }) }) }) },
+    }, { preserveBottom: true }), error => error.code === 'GENERATION_FRAME_CROP_FAILED');
 });

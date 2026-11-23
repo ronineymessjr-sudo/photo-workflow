@@ -41,6 +41,19 @@ test('cloud candidate compiler preserves shot contract, constraints, and framing
     assert.deepEqual([compiled.width, compiled.height, compiled.steps], [768, 1024, 24]);
 });
 
+test('ModelScope allowlist accepts approved Qwen and FLUX.2 Klein API models', () => {
+    for (const model of ['Qwen/Qwen-Image-2.1', 'Qwen/Qwen-Image-2.1-Turbo', 'Qwen/Qwen-Image-Edit-2511', 'Qwen/Qwen-Image', 'black-forest-labs/FLUX.2-klein-base-4B', 'flux-community/FLUX.2-klein-4B']) {
+        assert.doesNotThrow(() => compileCloudCandidateRequest({ ...request, provider: 'modelscope', model }));
+    }
+    assert.throws(() => compileCloudCandidateRequest({ ...request, provider: 'modelscope', model: 'Qwen/unknown' }), /GENERATION_PROVIDER_NOT_ALLOWED/);
+});
+
+test('Cloudflare allowlist keeps FLUX.2 dev opt-in for high-fidelity comparison tests', () => {
+    const compiled = compileCloudCandidateRequest({ ...request, model: '@cf/black-forest-labs/flux-2-dev' });
+    assert.equal(compiled.model, '@cf/black-forest-labs/flux-2-dev');
+    assert.throws(() => compileCloudCandidateRequest({ ...request, model: '@cf/black-forest-labs/flux-2-max' }), /GENERATION_PROVIDER_NOT_ALLOWED/);
+});
+
 test('cloud candidate defaults to a portrait frame when no aspect ratio is supplied', () => {
     const compiled = compileCloudCandidateRequest({ ...request, aspect_ratio: undefined });
     assert.deepEqual([compiled.width, compiled.height], [768, 1024]);
@@ -71,7 +84,7 @@ test('the final image-model prompt keeps only the active shot scene and camera c
     await generateCloudCandidate(input, { referenceContext, fetchImpl, ai: { run: async (model, payload) => {
         if (model.includes('llama')) {
             translationInput = payload.messages[1].content;
-            return { response: '35mm photorealistic full-body portrait at a wooden lakeside pavilion, relaxed standing turn and gentle over-shoulder glance, soft rim light.' };
+            return { response: '35mm photorealistic full-body portrait at a wooden lakeside pavilion, relaxed standing turn and gentle over-shoulder glance, soft rim light. Required visible shot details: full hands and feet. Do not include: extra people; flash lighting; cropped feet.' };
         }
         const form = await new Response(payload.multipart.body, { headers: { 'Content-Type': payload.multipart.contentType } }).formData();
         imagePrompt = String(form.get('prompt'));
@@ -85,6 +98,7 @@ test('the final image-model prompt keeps only the active shot scene and camera c
     assert.match(imagePrompt, /Fit the complete figure within 80% of the image height/);
     assert.match(imagePrompt, /Required visible shot details: full hands and feet/);
     assert.match(imagePrompt, /Do not include: extra people; flash lighting; cropped feet/);
+    assert.equal((imagePrompt.match(/Required camera framing:/g) || []).length, 1);
     assert.doesNotMatch(imagePrompt, /公园竹林小径|湖边木栈道/);
 });
 
@@ -139,7 +153,7 @@ test('candidate uses the existing Cloudflare AI binding, sends production params
     } } });
     assert.equal(calls.length, 2);
     assert.doesNotMatch(calls[0].input.messages[1].content, /Retrieved template direction|pose-1|costume-1|black, tights/);
-    assert.equal(calls[1].model, '@cf/black-forest-labs/flux-2-klein-9b');
+    assert.equal(calls[1].model, request.model);
     const form = await new Response(calls[1].input.multipart.body, { headers: { 'Content-Type': calls[1].input.multipart.contentType } }).formData();
     assert.match(form.get('prompt'), /35mm eye-level environmental portrait/);
     assert.match(form.get('prompt'), /Exactly one hand rests on the hip/);
@@ -156,16 +170,30 @@ test('candidate uses the existing Cloudflare AI binding, sends production params
     assert.equal(form.has('input_image_2'), false);
     assert.equal(form.get('width'), '768');
     assert.equal(form.get('height'), '1024');
-    assert.equal(form.get('steps'), '24');
+    assert.equal(form.has('steps'), false);
+    assert.equal(result.steps, 4);
     assert.equal(form.get('seed'), '12345');
     assert.deepEqual(result.referenceImages.map(reference => reference.kind), ['pose', 'costume']);
     assert.deepEqual(referenceFetchOptions.map(options => options.cf?.image || null), [null, {
         width: 511, height: 511, fit: 'scale-down', format: 'jpeg',
     }]);
-    assert.equal(result.model, '@cf/black-forest-labs/flux-2-klein-9b');
+    assert.equal(result.model, request.model);
     assert.equal(result.mime, 'image/jpeg');
     assert.deepEqual(result.bytes, jpeg);
     assert.deepEqual(result.referenceWarnings, ['未选择人物人脸参考图；本镜需要人工检查跨镜身份一致性。']);
+});
+
+test('FLUX.2 Klein 9B omits the unsupported steps field because inference is fixed at four steps', async () => {
+    let submittedForm;
+    const generated = await generateCloudCandidate({ ...request, model: '@cf/black-forest-labs/flux-2-klein-9b' }, {
+        referenceContext, fetchImpl, ai: { run: async (model, payload) => {
+            if (model.includes('llama')) return { response: 'A natural portrait in an autumn park.' };
+            submittedForm = await new Response(payload.multipart.body, { headers: { 'Content-Type': payload.multipart.contentType } }).formData();
+            return { image: Buffer.from(jpeg).toString('base64') };
+        } },
+    });
+    assert.equal(submittedForm.has('steps'), false);
+    assert.equal(generated.steps, 4);
 });
 
 test('director image generation retries one transient Workers AI 3043 failure', async () => {
@@ -173,10 +201,10 @@ test('director image generation retries one transient Workers AI 3043 failure', 
     const result = await generateCloudCandidate(request, { referenceContext, fetchImpl, ai: { run: async (model, input) => {
         calls.push(model);
         if (model.includes('llama')) return { response: '35mm eye-level environmental portrait in an autumn park.' };
-        if (calls.filter(value => value.includes('flux-2-klein')).length === 1) throw new Error('3043 Internal server error');
+        if (calls.filter(value => value.includes('flux-1-schnell')).length === 1) throw new Error('3043 Internal server error');
         return { image: Buffer.from(jpeg).toString('base64') };
     } } });
-    assert.equal(calls.filter(value => value.includes('flux-2-klein')).length, 2);
+    assert.equal(calls.filter(value => value.includes('flux-1-schnell')).length, 2);
     assert.deepEqual(result.bytes, jpeg);
 });
 
@@ -224,6 +252,111 @@ test('only the selected PoseAtlas drawing is supplied as pose geometry', async (
     assert.match(imagePrompt, /input_image_1 is secondary guidance for outfit material and palette only/);
 });
 
+test('cloud candidate sends the angle-specific PoseAtlas thumbnail required by the shot', async () => {
+    const requestedUrls = [];
+    const poseUrl = 'https://hruiccc.github.io/RuiC-PoseAtlas/thumbs/pose-diagonal.jpg';
+    const angleContext = { ...referenceContext, templates: referenceContext.templates.map(template => template.kind === 'pose'
+        ? { ...template, referenceImagesByAngle: { diagonal: poseUrl } }
+        : template) };
+    const input = { ...request, shot_contract: { ...contract, pose_angle: 'diagonal',
+        generator_prompt: 'Waist-up portrait, distinct three-quarter diagonal torso turn.', referenceIds: ['pose-1'] } };
+    const generated = await generateCloudCandidate(input, { referenceContext: angleContext, fetchImpl: async url => {
+        requestedUrls.push(String(url));
+        return new Response(jpeg, { headers: { 'Content-Type': 'image/jpeg' } });
+    }, ai: { run: async model => {
+        if (model.includes('llama')) return { response: 'Waist-up portrait with a distinct three-quarter diagonal torso turn.' };
+        return { image: Buffer.from(jpeg).toString('base64') };
+    } } });
+    assert.ok(requestedUrls.includes(poseUrl));
+    assert.ok(!requestedUrls.includes('https://hruiccc.github.io/RuiC-PoseAtlas/thumbs/pose.jpg'));
+    assert.equal(generated.referenceImages.find(reference => reference.kind === 'pose')?.referenceImageUrl, poseUrl);
+});
+
+test('opt-in upper-body reference trim changes only the pose image', async () => {
+    const input = { ...request, seed: 42617, model: '@cf/black-forest-labs/flux-2-klein-9b',
+        reference_ids: ['face-1'], shot_contract: { ...contract,
+        shot_size: 'MS', pose_reference_mode: 'upper-body-crop' } };
+    const png = Uint8Array.from([137, 80, 78, 71, 13, 10, 26, 10]);
+    let transforms = 0;
+    const imageRequests = [];
+    const ai = { run: async (model, payload) => {
+        if (model.includes('llama')) return { response: 'Waist-up portrait from the head to the natural waistline.' };
+        const form = await new Response(payload.multipart.body, { headers: { 'Content-Type': payload.multipart.contentType } }).formData();
+        imageRequests.push({
+            model, params: [...form.entries()].filter(([, value]) => typeof value === 'string'),
+            identity: new Uint8Array(await form.get('input_image_0').arrayBuffer()),
+            pose: new Uint8Array(await form.get('input_image_1').arrayBuffer()),
+        });
+        return { image: Buffer.from(jpeg).toString('base64') };
+    } };
+    const result = await generateCloudCandidate(input, { referenceContext, fetchImpl,
+        imageBinding: { input: stream => {
+            assert.ok(stream instanceof ReadableStream);
+            return { transform: options => {
+                transforms++;
+                assert.deepEqual(options.trim, { left: '12p', top: '0p', width: '76p', height: '45p' });
+                return { output: () => ({ response: () => new Response(png) }) };
+            } };
+        } },
+        ai });
+    const { pose_reference_mode, ...originalContract } = input.shot_contract;
+    await generateCloudCandidate({ ...input, shot_contract: originalContract }, { referenceContext, fetchImpl, ai });
+    const [cropped, original] = imageRequests;
+    assert.deepEqual(cropped, { ...original, pose: png });
+    assert.deepEqual(original.identity, jpeg);
+    assert.deepEqual(original.pose, jpeg);
+    assert.equal(Object.fromEntries(original.params).seed, '42617');
+    assert.equal(transforms, 1);
+    assert.equal(result.referenceImages[0].transform, undefined);
+    assert.equal(result.referenceImages[1].transform, 'upper-body-crop');
+    await assert.rejects(generateCloudCandidate(input, { referenceContext, fetchImpl,
+        ai: { run: () => assert.fail('must not generate without the requested crop') } }), /POSE_REFERENCE_CROP_UNAVAILABLE/);
+});
+
+test('photographic waist-up pose mode sends only the approved Pexels pose photo and ignores its identity', async () => {
+    const poseUrl = 'https://photo-workflow.pages.dev/assets/pose-references/pose-02.jpg';
+    const sourceUrl = 'https://www.pexels.com/photo/close-up-photo-of-a-beautiful-woman-standing-near-street-13631460/';
+    const requested = [];
+    const photoContext = { ...referenceContext, templates: referenceContext.templates.map(template => template.kind === 'pose'
+        ? { ...template, upstreamId: 'full_single_P017' }
+        : template) };
+    const input = { ...request, reference_ids: ['face-1'], shot_contract: { ...contract,
+        shot_size: '中景', pose_angle: 'diagonal', pose_reference_mode: 'photographic',
+        generator_prompt: 'Waist-up photo on a lakeside pier with a distinct three-quarter torso turn.',
+        must_show: '脸部清晰，视线朝画面右侧。', reject_if: '身体正对镜头。',
+        guidance_scale: 7, model_pose: '躯干明显三分之四侧转，脸部回望画面右侧。', referenceIds: ['pose-1'] } };
+    let imagePrompt = '';
+    let translationPrompt = '';
+    let submittedGuidance = '';
+    const generated = await generateCloudCandidate(input, { referenceContext: photoContext, fetchImpl: async (url, options) => {
+        requested.push({ url: String(url), image: options?.cf?.image });
+        return new Response(jpeg, { headers: { 'Content-Type': 'image/jpeg' } });
+    }, ai: { run: async (model, payload) => {
+        if (model.includes('llama')) {
+            translationPrompt = payload.messages.map(message => message.content).join('\n');
+            return { response: 'Waist-up portrait, three-quarter torso turn, looking toward frame-right.' };
+        }
+        const form = await new Response(payload.multipart.body, { headers: { 'Content-Type': payload.multipart.contentType } }).formData();
+        imagePrompt = String(form.get('prompt'));
+        submittedGuidance = String(form.get('guidance'));
+        return { image: Buffer.from(jpeg).toString('base64') };
+    } } });
+
+    const poseFetch = requested.find(item => item.url === poseUrl);
+    assert.deepEqual(poseFetch?.image, { width: 511, height: 511, fit: 'cover', format: 'jpeg' });
+    assert.match(imagePrompt, /licensed photographic pose reference/);
+    assert.match(imagePrompt, /Transfer its body pose to the person in input_image_0/);
+    assert.match(translationPrompt, /回望画面右侧/);
+    assert.match(imagePrompt, /toward frame-right/);
+    assert.doesNotMatch(translationPrompt, /frame-left/);
+    assert.doesNotMatch(imagePrompt, /frame-left/);
+    assert.match(imagePrompt, /Do not copy the pictured person's identity, face, hair, clothing/);
+    assert.equal(submittedGuidance, '7');
+    assert.equal(generated.referenceImages.find(reference => reference.kind === 'pose')?.referenceImageUrl, poseUrl);
+    assert.equal(generated.referenceImages.find(reference => reference.kind === 'pose')?.sourceUrl, sourceUrl);
+    assert.ok(requested.some(item => item.url === 'https://hruiccc.github.io/RuiC-PoseAtlas/portrait/thumbs/face.webp'));
+});
+
 test('free neuron exhaustion returns a distinct non-paid retry code', async () => {
     await assert.rejects(generateCloudCandidate(request, { referenceContext, fetchImpl, ai: { run: async model => {
         if (model.includes('llama')) return { response: 'A natural portrait in an autumn park.' };
@@ -265,11 +398,12 @@ test('actual image payload preserves a close-up contract without forcing full-bo
 
 test('MS waist-up framing stays at the waist when the wardrobe lists a full skirt and shoes', async () => {
     const wardrobe = '象牙白宽袖衬衫、藏青色及踝长裙、黑色皮鞋';
-    const input = { ...request, brief: '自然公园肖像，人物坐在长椅上', scene_brief: '秋日公园，自然光',
+    const input = { ...request, brief: '自然公园肖像，人物坐在长椅上',
+        scene_brief: `SUBJECT AND CLOTHING: ${wardrobe}\nLOCATION WEATHER AND TIME: 秋日公园，自然光\nUSER CONSTRAINTS: 不加道具`,
         reference_brief: { modelDesc: wardrobe },
         shot_contract: {
             shot_language: '公园中景人像', shot_size: '中景', referenceIds: ['pose-1'],
-            generator_prompt: 'Waist-up portrait. Crop below the waist and keep the face visible.',
+            generator_prompt: `Waist-up portrait. Crop below the waist and keep the face visible. Subject and clothing: ${wardrobe}. User constraints: 不加道具. Style: 自然纪实.`,
             model_pose: '自然坐姿，肩颈放松', wardrobe_styling: wardrobe,
         } };
     let translationSystem;
@@ -301,7 +435,9 @@ test('MS waist-up framing stays at the waist when the wardrobe lists a full skir
     assert.doesNotMatch(translationInput, /Crop below the waist/);
     assert.match(translationInput, /Exclude the hips and everything below, including skirt below the waist, legs and shoes/);
     assert.match(translationInput, /Written wardrobe contract: 象牙白宽袖衬衫/);
-    assert.doesNotMatch(translationInput, /Written wardrobe contract: [^\n]*(?:长裙|皮鞋)/);
+    assert.doesNotMatch(translationInput, /藏青色及踝长裙|黑色皮鞋/);
+    assert.match(translationInput, /秋日公园，自然光/);
+    assert.match(translationInput, /不加道具/);
     assert.match(imagePrompt, /Required camera framing: Waist-up portrait from the top of the head through the natural waistline/);
     assert.match(imagePrompt, /The written wardrobe contract identifies the outfit, but only clothing visible inside this waist-up crop should appear/);
     assert.match(imagePrompt, /Keep the long or wide sleeves fully covering both shoulders/);
@@ -373,4 +509,41 @@ test('compiled shot includes only its selected pose from a multi-pose plan', () 
     const compiled = compileCloudCandidateRequest({ ...request, shot_contract: { ...contract, referenceIds: ['pose-1'] } }, context);
     assert.match(compiled.prompt, /pose-1/);
     assert.doesNotMatch(compiled.prompt, /Other seated pose|pose-2/);
+});
+
+test('an explicit waist-knot must-show boundary overrides the generic waistline crop', async () => {
+    const mustShow = 'Show the complete natural-waist wrap knot; the lower frame edge sits just below the knot with a narrow blouse strip visible.';
+    const input = {
+        ...request,
+        scene_brief: 'Open lakeside wooden pier with readable water and diagonal boards.',
+        shot_contract: {
+            ...contract,
+            shot_size: '中景',
+            generator_prompt: 'Waist-up portrait on the pier; show the complete wrap knot at the natural waist.',
+            wardrobe_styling: 'Ivory long-sleeved wrap blouse with a front tie at the natural waist.',
+            must_show: mustShow,
+        },
+    };
+    let translationSystem = '';
+    let imagePrompt = '';
+    await generateCloudCandidate(input, { referenceContext, fetchImpl, ai: { run: async (model, payload) => {
+        if (model.includes('llama')) {
+            translationSystem = payload.messages[0].content;
+            return { response: 'Waist-up portrait through the full waist knot, with a narrow blouse strip below.' };
+        }
+        const form = await new Response(payload.multipart.body, { headers: { 'Content-Type': payload.multipart.contentType } }).formData();
+        imagePrompt = String(form.get('prompt'));
+        return { image: Buffer.from(jpeg).toString('base64') };
+    } } });
+
+    assert.match(translationSystem, /complete natural-waist knot/);
+    assert.match(translationSystem, /place its center at about 80–84% of image height/);
+    assert.match(translationSystem, /preserve an 8–12% blouse margin beneath it/);
+    assert.match(translationSystem, /knot and tie ends must not touch the lower edge/);
+    assert.doesNotMatch(translationSystem, /lower edge at the waistline|cuts at the waistline/);
+    assert.match(imagePrompt, /complete natural-waist wrap knot/);
+    assert.match(imagePrompt, /knot center at about 80–84% of image height/);
+    assert.match(imagePrompt, /leave a clearly visible 8–12% blouse margin below it/);
+    assert.match(imagePrompt, /neither knot nor tie ends may touch the bottom edge/);
+    assert.doesNotMatch(imagePrompt, /lower edge cuts at the waistline|cuts at the waistline/);
 });

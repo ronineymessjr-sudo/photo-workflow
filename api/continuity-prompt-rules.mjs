@@ -19,3 +19,8 @@ export function wardrobeCoverageRules({ subject, wardrobe, shotWardrobe, languag
         : '';
     return [shouldersCovered, torsoCovered, jewelryExcluded].filter(Boolean);
 }
+
+export function requiresWaistKnotInFrame(mustShow) {
+    const text = Array.isArray(mustShow) ? mustShow.join(' ') : String(mustShow || '');
+    return /(?:腰间|自然腰|腰线|腰部|waist).{0,18}(?:系结|打结|腰带结|wrap[- ]?knot|waist[- ]?tie|tie|knot)|(?:系结|打结|腰带结|wrap[- ]?knot|waist[- ]?tie|tie|knot).{0,18}(?:腰间|自然腰|腰线|腰部|waist)/i.test(text);
+}

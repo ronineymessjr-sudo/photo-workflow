@@ -15,7 +15,7 @@
 import { createGroup } from './continuity.mjs';
 
 const STYLE_KINDS = ['costume'];
-const BUNDLED_PEXELS_WAIST_POSE = 'https://photo-workflow.pages.dev/assets/pose-references/pose-02.jpg';
+export const BUNDLED_PEXELS_WAIST_POSE = 'https://photo-workflow.pages.dev/assets/pose-references/pose-02.jpg';
 
 function isWaistUpShot(value) {
     return /腰上|半身|中景|近景|胸像|waist.?up|medium/i.test(String(value || ''));
@@ -92,11 +92,14 @@ function toContinuityShot(shot, index, poseTemplates, guidance = {}) {
     const poseUpstreamId = String(pose?.upstreamId || pose?.sourceItemId || pose?.id || '');
     const waistUpPose = pose && isWaistUpShot(contract.shot_size || shot?.shotSize || shot?.shotType || shot?.size)
         && /(?:^|[_-])p017$/i.test(poseUpstreamId);
+    const p017AngleImage = waistUpPose && ['diagonal', 'side'].includes(angle)
+        ? `https://hruiccc.github.io/RuiC-PoseAtlas/thumbs/full_single_P017_${angle === 'diagonal' ? 'diag' : 'side'}.jpg`
+        : '';
     const poseRef = pose ? {
         id: pose.id,
         title: pose.title || pose.id,
         imageUrl: waistUpPose
-            ? BUNDLED_PEXELS_WAIST_POSE
+            ? p017AngleImage || BUNDLED_PEXELS_WAIST_POSE
             : allowedPoseAtlasImage(pose.referenceImageUrl) ? pose.referenceImageUrl : '',
         angle,
         direction: poseDirectionForShot(pose, shot, contract, angle, suggestion),

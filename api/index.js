@@ -15,9 +15,10 @@ import { workspaceEntryKey } from '../assets/workspace-sync-protocol.mjs';
 export { AiStudioQuota } from './ai-studio/quota.mjs';
 import { createGroup, setReference, confirmMaster, buildShotRequests, recordQc, continuitySummary, continuitySchema, attachResult, handoffFor, setImageProvider, setAnchor, ContinuityError } from './continuity.mjs';
 import { storeAsset, readAsset } from './continuity-assets.mjs';
-import { generateShot, validateShotGeneration, submitModelScope, pollModelScope, isModelScopeModelAllowed, isNearPortrait, isWaistUp, cropNearPortraitImage, cropWaistUpImage } from './continuity-generation.mjs';
+import { generateShot, validateShotGeneration, pollModelScope, isModelScopeModelAllowed, isNearPortrait, isWaistUp, cropNearPortraitImage, cropWaistUpImage } from './continuity-generation.mjs';
+import { requiresWaistKnotInFrame } from './continuity-prompt-rules.mjs';
 import { listProviders, recommendProvider, assertGroupProvider } from './continuity-providers.mjs';
-import { groupFromStudio } from './continuity-studio-bridge.mjs';
+import { BUNDLED_PEXELS_WAIST_POSE, groupFromStudio } from './continuity-studio-bridge.mjs';
 import { prescreen, mergeScores, summariseVision } from './continuity-vision.mjs';
 
 // Reads a stored reference/result image back as a data URL for the vision call.
@@ -55,6 +56,11 @@ function directorCandidateTaskKey(uid, taskId) {
     return `director-candidate-task/${digest}`;
 }
 
+function directorCandidateRequestKey(uid, requestId) {
+    const digest = createHash('sha256').update(`${uid}\0${requestId}`).digest('hex');
+    return `director-candidate-request/${digest}`;
+}
+
 async function readDirectorCandidateTask(env, uid, taskId) {
     if (!env.CONTINUITY_KV || typeof taskId !== 'string') return null;
     try { return await env.CONTINUITY_KV.get(directorCandidateTaskKey(uid, taskId), 'json'); }
@@ -65,7 +71,23 @@ async function writeDirectorCandidateTask(env, uid, taskId, value) {
     if (!env.CONTINUITY_KV || typeof taskId !== 'string') throw new Error('CANDIDATE_TASK_STORAGE_NOT_CONFIGURED');
     await env.CONTINUITY_KV.put(directorCandidateTaskKey(uid, taskId), JSON.stringify(value), { expirationTtl: 86400 });
 }
+
+async function readDirectorCandidateRequest(env, uid, requestId) {
+    if (!env.CONTINUITY_KV || typeof requestId !== 'string') return null;
+    try {
+        const value = await env.CONTINUITY_KV.get(directorCandidateRequestKey(uid, requestId));
+        if (typeof value !== 'string') return null;
+        try { return JSON.parse(value); } catch { return /^[a-f0-9]{32}$/.test(value) ? value : null; }
+    }
+    catch { return null; }
+}
+
+async function writeDirectorCandidateRequest(env, uid, requestId, taskId) {
+    if (!env.CONTINUITY_KV || typeof requestId !== 'string') return;
+    await env.CONTINUITY_KV.put(directorCandidateRequestKey(uid, requestId), JSON.stringify(taskId), { expirationTtl: 86400 });
+}
 export { WorkspaceSync } from './workspace-state.mjs';
+export { DirectorCandidateSubmissions } from './director-candidate-submissions.mjs';
 
 // Cloudflare Workers 环境中 Buffer 不可用，使用替代方案
 function base64UrlEncode(str) {
@@ -680,6 +702,36 @@ export default {
                     },
                 };
             }
+            else if (path === '/api/director/modelscope-balance' && method === 'GET') {
+                if (!uid) result = { status: 401, body: { error: 'SIGN_IN_REQUIRED' } };
+                else if (!env.MODELSCOPE_TOKEN) result = { status: 503, body: { error: 'MODELSCOPE_NOT_CONFIGURED' } };
+                else {
+                    try {
+                        const response = await fetch('https://modelscope.cn/openapi/v1/magicubes/balance', {
+                            headers: { Authorization: `Bearer ${env.MODELSCOPE_TOKEN}` },
+                            signal: AbortSignal.timeout(10000),
+                        });
+                        const payload = await response.json().catch(() => null);
+                        const balance = payload?.data;
+                        if (response.status === 401 || response.status === 403) {
+                            result = { status: 502, body: { error: 'MODELSCOPE_CREDENTIAL_REJECTED' } };
+                        } else if (!response.ok || payload?.success !== true
+                            || ![balance?.available_balance, balance?.total_balance, balance?.frozen_amount].every(Number.isFinite)) {
+                            result = { status: 502, body: { error: 'MODELSCOPE_BALANCE_UNAVAILABLE' } };
+                        } else {
+                            result = { status: 200, body: {
+                                provider: 'modelscope', unit: 'magicube',
+                                availableBalance: balance.available_balance,
+                                totalBalance: balance.total_balance,
+                                frozenAmount: balance.frozen_amount,
+                                checkedAt: new Date().toISOString(),
+                            } };
+                        }
+                    } catch {
+                        result = { status: 502, body: { error: 'MODELSCOPE_BALANCE_UNAVAILABLE' } };
+                    }
+                }
+            }
             else if (path === '/api/continuity/anchor' && method === 'POST') {
                 // Pin an accepted frame so later shots are edited from it rather
                 // than regenerated from noise.
@@ -937,22 +989,58 @@ export default {
             else if (path === '/api/director/generate-candidate' && method === 'POST') {
                 if (!uid) result = { status: 401, body: { error: 'SIGN_IN_REQUIRED' } };
                 else if (!env.WORKSPACE_SYNC || !env.JWT_SECRET) result = { status: 503, body: { error: 'CANDIDATE_STORAGE_NOT_CONFIGURED' } };
-                else if (body.provider === 'modelscope' && (!env.MODELSCOPE_TOKEN || !env.CONTINUITY_KV)) result = { status: 503, body: { error: !env.MODELSCOPE_TOKEN ? 'IMAGE_PROVIDER_NOT_CONFIGURED' : 'CANDIDATE_TASK_STORAGE_NOT_CONFIGURED' } };
+                else if (body.provider === 'modelscope' && (!env.MODELSCOPE_TOKEN || !env.CONTINUITY_KV || !env.CANDIDATE_SUBMISSIONS)) {
+                    result = { status: 503, body: { error: !env.MODELSCOPE_TOKEN ? 'IMAGE_PROVIDER_NOT_CONFIGURED'
+                        : !env.CONTINUITY_KV ? 'CANDIDATE_TASK_STORAGE_NOT_CONFIGURED' : 'CANDIDATE_SUBMISSION_QUEUE_NOT_CONFIGURED' } };
+                }
                 else if (body.provider !== 'modelscope' && (!env.AI || typeof env.AI.run !== 'function')) result = { status: 503, body: { error: 'IMAGE_PROVIDER_NOT_CONFIGURED' } };
                 else {
                     let referenceContext;
+                    let photographyReference = null;
                     try { referenceContext = await prepareCloudCandidateReferences(body); }
                     catch (error) {
                         const code = ['REFERENCE_IMAGES_REQUIRED', 'REFERENCE_IMAGE_UNAVAILABLE', 'REFERENCE_IMAGE_TOO_LARGE', 'UNTRUSTED_REFERENCE_IMAGE',
                             'REFERENCE_LIBRARY_UNAVAILABLE', 'INVALID_REFERENCE_SELECTION', 'UNAVAILABLE_REFERENCE',
                             'POSE_REFERENCE_CONFLICTS_WITH_USER_CONSTRAINTS', 'WARDROBE_REFERENCE_MISMATCH',
                             'GENERATION_PROVIDER_NOT_ALLOWED', 'GENERATION_BILLING_MODE_NOT_ALLOWED', 'CLOUD_REFERENCE_IMAGE_NOT_CONFIGURED',
-                            'INVALID_GENERATION_REQUEST', 'SHOT_CONTRACT_REQUIRED'].includes(error.message) ? error.message : 'IMAGE_REFERENCE_PREPARATION_FAILED';
+                            'INVALID_GENERATION_REQUEST', 'SHOT_CONTRACT_REQUIRED', 'POSE_REFERENCE_CROP_INVALID'].includes(error.message) ? error.message : 'IMAGE_REFERENCE_PREPARATION_FAILED';
                         const status = code === 'WARDROBE_REFERENCE_MISMATCH' ? 422
                             : ['POSE_REFERENCE_CONFLICTS_WITH_USER_CONSTRAINTS', 'INVALID_REFERENCE_SELECTION', 'INVALID_GENERATION_REQUEST',
-                                'SHOT_CONTRACT_REQUIRED', 'GENERATION_PROVIDER_NOT_ALLOWED', 'GENERATION_BILLING_MODE_NOT_ALLOWED',
+                                'SHOT_CONTRACT_REQUIRED', 'POSE_REFERENCE_CROP_INVALID', 'GENERATION_PROVIDER_NOT_ALLOWED', 'GENERATION_BILLING_MODE_NOT_ALLOWED',
                                 'CLOUD_REFERENCE_IMAGE_NOT_CONFIGURED'].includes(code) ? 400 : 503;
                         result = { status, body: { error: code } };
+                    }
+                    if (!result && body.photography_reference_asset_id !== undefined) {
+                        if (body.provider !== 'modelscope') {
+                            result = { status: 400, body: { error: 'PHOTOGRAPHY_REFERENCE_PROVIDER_UNSUPPORTED' } };
+                        } else if (typeof body.photography_reference_asset_id !== 'string' || !/^[a-f0-9]{16}$/i.test(body.photography_reference_asset_id)) {
+                            result = { status: 400, body: { error: 'PHOTOGRAPHY_REFERENCE_ID_INVALID' } };
+                        } else {
+                            photographyReference = await readAsset(`/api/continuity/asset/${body.photography_reference_asset_id}`, { env });
+                            if (!photographyReference?.buffer?.length || !/^image\/(?:jpeg|png|webp)$/.test(photographyReference.mime || '')) {
+                                result = { status: 409, body: { error: 'PHOTOGRAPHY_REFERENCE_UNAVAILABLE' } };
+                            } else if (photographyReference.buffer.length > 3 * 1024 * 1024) {
+                                result = { status: 413, body: { error: 'PHOTOGRAPHY_REFERENCE_TOO_LARGE' } };
+                            }
+                        }
+                    }
+                    const generationRequestId = typeof body.request_id === 'string' && /^[A-Za-z0-9_-]{1,128}$/.test(body.request_id)
+                        ? body.request_id : '';
+                    if (!result && body.provider === 'modelscope' && body.request_id !== undefined && !generationRequestId) {
+                        result = { status: 400, body: { error: 'GENERATION_REQUEST_ID_INVALID' } };
+                    }
+                    if (!result && body.provider === 'modelscope' && generationRequestId) {
+                        const existingTaskId = await readDirectorCandidateRequest(env, uid, generationRequestId);
+                        if (existingTaskId) {
+                            const existing = await readDirectorCandidateTask(env, uid, existingTaskId);
+                            if (!existing) result = { status: 503, body: { error: 'CANDIDATE_REQUEST_STATE_UNAVAILABLE' } };
+                            else if (existing.status === 'succeeded' || existing.status === 'failed') result = existing.response;
+                            else result = { status: 202, body: { request_id: existing.requestId || generationRequestId,
+                                status: 'pending', taskId: existingTaskId,
+                                selected_shot_contract: { source: 'template-library-shot-contract',
+                                    generator_prompt: existing.prompt || '', referenceIds: existing.referenceIds || [],
+                                    referenceImages: existing.referenceImages || [], library: existing.library || {} } } };
+                        }
                     }
                     const allowed = result ? false : await consumeStudioImageQuota({ uid, env });
                     if (result) { /* Validation failed before the quota check. */ }
@@ -978,9 +1066,20 @@ export default {
                                     const image = await fetchReferenceImage(template.referenceImageUrl);
                                     return { role, buffer: new Uint8Array(await image.arrayBuffer()), mime: image.type.split(';')[0] || 'image/jpeg' };
                                 }));
+                                if (photographyReference) preparedReferences.push({
+                                    role: 'photography',
+                                    buffer: new Uint8Array(photographyReference.buffer),
+                                    mime: photographyReference.mime,
+                                });
+                                const waistPoseText = [contract.shot_language, contract.model_pose, contract.generator_prompt]
+                                    .filter(value => typeof value === 'string').join(' ');
                                 const poseRef = selectedPose ? {
                                     id: selectedPose.id, title: selectedPose.title || selectedPose.id,
-                                    imageUrl: selectedPose.referenceImageUrl,
+                                    imageUrl: isWaistUp({ size: contract.shot_size }) && /P017/i.test(selectedPose.id)
+                                        ? /(?:45\s*(?:°|度|degree)?|四十五度|三分之四|斜侧|回眸|回头|转身回望|over[- ]the[- ]shoulder)/i.test(waistPoseText)
+                                            ? 'https://hruiccc.github.io/RuiC-PoseAtlas/thumbs/full_single_P017_diag.jpg'
+                                            : BUNDLED_PEXELS_WAIST_POSE
+                                        : selectedPose.referenceImageUrl,
                                 } : null;
                                 const prompt = [
                                     compiled.prompt,
@@ -989,9 +1088,33 @@ export default {
                                     `镜头景别：${contract.shot_size || ''}。` ,
                                     '输出为真实摄影作品，人物自然、比例正确，避免僵硬姿势和明显生成痕迹。',
                                 ].filter(Boolean).join('\n');
-                                const submitted = await submitModelScope({
-                                    env, prompt, size: `${compiled.width}x${compiled.height}`, seed: compiled.seed,
-                                    references: preparedReferences, variant: {
+                                const taskId = crypto.randomUUID().replace(/-/g, '');
+                                const requestId = generationRequestId || taskId;
+                                const metadata = {
+                                    status: 'submitting', requestId,
+                                    model: body.model, seed: compiled.seed, prompt,
+                                    frameSize: contract.shot_size || '',
+                                    mustShow: contract.master_must_show || contract.must_show || '',
+                                    shotLanguage: compiled.shotLanguage,
+                                    referenceIds: referenceContext.templates.map(template => template.id),
+                                    referenceImages: references.map(({ template }, imageIndex) => ({
+                                        kind: template.kind, sourceItemId: template.id, imageIndex,
+                                        sourceUrl: template.sourceUrl, referenceImageUrl: template.referenceImageUrl,
+                                    })).concat(photographyReference ? [{
+                                        kind: 'photography', sourceItemId: body.photography_reference_asset_id,
+                                        imageIndex: preparedReferences.length - 1, sourceUrl: '', referenceImageUrl: '',
+                                    }] : []),
+                                    referenceWarnings: portrait ? [] : ['未选择人物人脸参考图；本镜需要人工检查跨镜身份一致性。'],
+                                    library: referenceContext.library,
+                                };
+                                await writeDirectorCandidateTask(env, uid, taskId, metadata);
+                                if (generationRequestId) await writeDirectorCandidateRequest(env, uid, generationRequestId, taskId);
+                                const submission = env.CANDIDATE_SUBMISSIONS.get(env.CANDIDATE_SUBMISSIONS.idFromName(`user:${uid}`));
+                                const submissionPayload = {
+                                    prompt, size: `${compiled.width}x${compiled.height}`, seed: compiled.seed,
+                                    references: preparedReferences.map(reference => ({ role: reference.role,
+                                        dataUrl: `data:${reference.mime};base64,${Buffer.from(reference.buffer).toString('base64')}` })),
+                                    variant: {
                                         size: contract.shot_size || '', scene: body.scene_brief || '',
                                         camera: contract.generator_prompt || '', lens: body.available_lenses?.[0] || '',
                                         action: contract.model_pose || contract.pose || '',
@@ -1002,31 +1125,20 @@ export default {
                                     locked: { subject: body.reference_brief?.modelDesc || body.brief,
                                         wardrobe: contract.wardrobe_styling || '', styleProfile: body.style_direction || '',
                                         location: body.scene_brief || '' },
-                                    modelId: body.model, fetchImpl: fetch,
-                                });
-                                const metadata = {
-                                    status: 'pending', requestId: typeof body.request_id === 'string' ? body.request_id.slice(0, 128) : '',
-                                    model: body.model, seed: compiled.seed, prompt: submitted.prompt,
-                                    frameSize: contract.shot_size || '',
-                                    shotLanguage: compiled.shotLanguage,
-                                    referenceIds: referenceContext.templates.map(template => template.id),
-                                    referenceImages: references.map(({ template }, imageIndex) => ({
-                                        kind: template.kind, sourceItemId: template.id, imageIndex,
-                                        sourceUrl: template.sourceUrl, referenceImageUrl: template.referenceImageUrl,
-                                    })),
-                                    referenceWarnings: portrait ? [] : ['未选择人物人脸参考图；本镜需要人工检查跨镜身份一致性。'],
-                                    library: referenceContext.library,
-                                    referenceRolesSent: submitted.referenceRolesSent,
+                                    modelId: body.model,
                                 };
-                                await writeDirectorCandidateTask(env, uid, submitted.taskId, metadata);
+                                const queued = await submission.fetch(new Request(`https://candidate.internal/candidate-submissions/${taskId}`, {
+                                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ payload: submissionPayload }),
+                                }));
+                                if (!queued.ok) throw new Error('CANDIDATE_SUBMISSION_QUEUE_FAILED');
                                 result = { status: 202, body: {
-                                    request_id: metadata.requestId || submitted.taskId,
-                                    status: 'pending', taskId: submitted.taskId,
-                                    selected_shot_contract: { source: 'template-library-shot-contract', generator_prompt: submitted.prompt,
+                                    request_id: requestId, status: 'pending', taskId,
+                                    selected_shot_contract: { source: 'template-library-shot-contract', generator_prompt: prompt,
                                         referenceIds: metadata.referenceIds, referenceImages: metadata.referenceImages, library: metadata.library },
                                 } };
                             } else {
-                            const generated = await generateCloudCandidate(body, { ai: env.AI, referenceContext });
+                            const generated = await generateCloudCandidate(body, { ai: env.AI, imageBinding: env.IMAGES, referenceContext });
                             const assetId = crypto.randomUUID().replace(/-/g, '');
                             const object = env.WORKSPACE_SYNC.get(env.WORKSPACE_SYNC.idFromName(`user:${uid}`));
                             const stored = await object.fetch(new Request(`https://workspace.internal/candidate-assets/${assetId}`, {
@@ -1061,6 +1173,7 @@ export default {
                                 'POSE_REFERENCE_CONFLICTS_WITH_USER_CONSTRAINTS', 'WARDROBE_REFERENCE_MISMATCH',
                                 'IMAGE_PROVIDER_NOT_CONFIGURED', 'IMAGE_PROVIDER_GENERATION_FAILED', 'IMAGE_PROVIDER_FREE_QUOTA_EXHAUSTED',
                                 'IMAGE_PROVIDER_INVALID_RESPONSE', 'IMAGE_PROVIDER_INVALID_IMAGE_TYPE', 'IMAGE_PROVIDER_IMAGE_SIZE_INVALID',
+                                'POSE_REFERENCE_CROP_INVALID', 'POSE_REFERENCE_CROP_UNAVAILABLE', 'POSE_REFERENCE_CROP_FAILED',
                                 'GENERATION_PROVIDER_NOT_ALLOWED', 'GENERATION_BILLING_MODE_NOT_ALLOWED', 'CLOUD_REFERENCE_IMAGE_NOT_CONFIGURED',
                                 'GENERATION_NOT_CONFIGURED', 'GENERATION_ACCOUNT_UNVERIFIED', 'GENERATION_UPSTREAM_FAILED',
                                 'GENERATION_INVALID_RESPONSE', 'GENERATION_TASK_ID_INVALID', 'CANDIDATE_TASK_STORAGE_NOT_CONFIGURED',
@@ -1068,7 +1181,8 @@ export default {
                                 ? error.message : 'IMAGE_GENERATION_FAILED';
                             const status = code === 'IMAGE_PROVIDER_FREE_QUOTA_EXHAUSTED' ? 429
                                 : code === 'WARDROBE_REFERENCE_MISMATCH' ? 422
-                                    : code === 'POSE_REFERENCE_CONFLICTS_WITH_USER_CONSTRAINTS' || code === 'INVALID_REFERENCE_SELECTION' ? 400
+                                    : code === 'POSE_REFERENCE_CONFLICTS_WITH_USER_CONSTRAINTS' || code === 'INVALID_REFERENCE_SELECTION' || code === 'POSE_REFERENCE_CROP_INVALID' ? 400
+                                    : code === 'POSE_REFERENCE_CROP_UNAVAILABLE' ? 503
                                     : code === 'REFERENCE_LIBRARY_UNAVAILABLE' || code === 'IMAGE_PROVIDER_NOT_CONFIGURED' || code === 'IMAGE_PROVIDER_GENERATION_FAILED' || code === 'GENERATION_NOT_CONFIGURED' || code === 'CANDIDATE_TASK_STORAGE_NOT_CONFIGURED' ? 503
                                         : code === 'GENERATION_PROVIDER_NOT_ALLOWED' || code === 'GENERATION_BILLING_MODE_NOT_ALLOWED'
                                             || code === 'CLOUD_REFERENCE_IMAGE_NOT_CONFIGURED' || code === 'INVALID_GENERATION_REQUEST'
@@ -1082,18 +1196,56 @@ export default {
                 if (!uid) result = { status: 401, body: { error: 'SIGN_IN_REQUIRED' } };
                 else if (typeof body.taskId !== 'string' || !/^[A-Za-z0-9_-]{1,128}$/.test(body.taskId)) result = { status: 400, body: { error: 'GENERATION_TASK_ID_INVALID' } };
                 else {
-                    const cached = await readDirectorCandidateTask(env, uid, body.taskId);
+                    let cached = await readDirectorCandidateTask(env, uid, body.taskId);
                     if (!cached) result = { status: 404, body: { error: 'CANDIDATE_TASK_NOT_FOUND' } };
-                    else if (cached.status === 'succeeded' || cached.status === 'failed') result = cached.response;
                     else {
+                        if (cached.status === 'submitting') {
+                            try {
+                                const submission = env.CANDIDATE_SUBMISSIONS.get(env.CANDIDATE_SUBMISSIONS.idFromName(`user:${uid}`));
+                                const statusResponse = await submission.fetch(new Request(`https://candidate.internal/candidate-submissions/${body.taskId}/status`));
+                                const submitted = statusResponse.ok ? await statusResponse.json() : null;
+                                if (submitted?.status === 'submitted' && submitted.providerTaskId) {
+                                    cached = { ...cached, status: 'pending', providerTaskId: submitted.providerTaskId,
+                                        prompt: submitted.prompt || cached.prompt, referenceRolesSent: submitted.referenceRolesSent || [] };
+                                    await writeDirectorCandidateTask(env, uid, body.taskId, cached);
+                                } else if (submitted?.status === 'failed') {
+                                    await refundStudioImageQuota({ uid, env });
+                                    const response = { status: 200, body: { status: 'failed', error: submitted.error || 'IMAGE_GENERATION_FAILED',
+                                        ...(Number.isInteger(submitted.upstreamStatus) ? { upstreamStatus: submitted.upstreamStatus } : {}) } };
+                                    cached = { ...cached, status: 'failed', response };
+                                    await writeDirectorCandidateTask(env, uid, body.taskId, cached);
+                                    result = response;
+                                } else if (!statusResponse.ok) {
+                                    await refundStudioImageQuota({ uid, env });
+                                    const response = { status: 200, body: { status: 'failed', error: 'CANDIDATE_SUBMISSION_NOT_FOUND' } };
+                                    cached = { ...cached, status: 'failed', response };
+                                    await writeDirectorCandidateTask(env, uid, body.taskId, cached);
+                                    result = response;
+                                }
+                            } catch {
+                                result = { status: 200, body: { status: 'pending', taskId: body.taskId, providerStatus: 'SUBMITTING' } };
+                            }
+                        }
+                        if (!result && cached.status === 'succeeded') result = cached.response;
+                        else if (!result && cached.status === 'failed') {
+                            result = cached.response?.status >= 500
+                                ? { status: 200, body: { ...cached.response.body, status: 'failed' } }
+                                : cached.response;
+                        }
+                        else if (!result && cached.status === 'submitting') {
+                            result = { status: 200, body: { status: 'pending', taskId: body.taskId, providerStatus: 'SUBMITTING' } };
+                        }
+                        else if (!result) {
                         try {
-                            const polled = await pollModelScope({ env, taskId: body.taskId });
+                            const polled = await pollModelScope({ env, taskId: cached.providerTaskId || body.taskId, modelId: cached.model });
                             if (polled.status !== 'succeeded') result = { status: 200, body: { status: 'pending', taskId: body.taskId, providerStatus: polled.upstream || 'PENDING' } };
                             else {
-                                const frameVariant = { size: cached.frameSize };
+                                const frameVariant = { size: cached.frameSize, mustShow: cached.mustShow };
                                 const framed = isNearPortrait(frameVariant)
                                     ? await cropNearPortraitImage(polled, env)
-                                    : isWaistUp(frameVariant) ? await cropWaistUpImage(polled, env) : polled;
+                                    : isWaistUp(frameVariant) ? await cropWaistUpImage(polled, env, {
+                                        preserveBottom: requiresWaistKnotInFrame(cached.mustShow),
+                                    }) : polled;
                                 const assetId = crypto.randomUUID().replace(/-/g, '');
                                 const object = env.WORKSPACE_SYNC.get(env.WORKSPACE_SYNC.idFromName(`user:${uid}`));
                                 const mime = framed.contentType || 'image/png';
@@ -1126,10 +1278,11 @@ export default {
                                 result = { status: 200, body: { status: 'pending', taskId: body.taskId, retryable: true, error: message.slice(0, 300) } };
                             } else {
                                 await refundStudioImageQuota({ uid, env });
-                                const response = { status: error?.status || 502, body: { status: 'failed', error: message.slice(0, 300), code: error?.code || 'CANDIDATE_COLLECTION_FAILED' } };
+                                const response = { status: 200, body: { status: 'failed', error: message.slice(0, 300), code: error?.code || 'CANDIDATE_COLLECTION_FAILED' } };
                                 await writeDirectorCandidateTask(env, uid, body.taskId, { ...cached, status: 'failed', response });
                                 result = response;
                             }
+                        }
                         }
                     }
                 }

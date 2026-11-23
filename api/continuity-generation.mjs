@@ -61,9 +61,10 @@ function imageDimensions(bytes, mime) {
 // Provider -> adapter mapping lives in PROVIDER_ADAPTERS; unknown providers fail.
 
 import { assertReadyToGenerate, buildShotRequests, ContinuityError, CONTINUITY_PROVIDERS } from './continuity.mjs';
-import { wardrobeCoverageRules } from './continuity-prompt-rules.mjs';
+import { requiresWaistKnotInFrame, wardrobeCoverageRules } from './continuity-prompt-rules.mjs';
 import { storeAsset, readAsset, AssetError } from './continuity-assets.mjs';
 import { pickLightKit } from './light-kit.mjs';
+import { BUNDLED_PEXELS_WAIST_POSE } from './continuity-studio-bridge.mjs';
 // Workers on compatibility_date 2024-01-01 does not inject a global Buffer.
 // Import it explicitly instead of raising the compat date, which would change
 // unrelated fetch/crypto behaviour across the whole Worker.
@@ -237,35 +238,47 @@ export function directionText({ prompt, locked, variant, poseRef, size }) {
     return stripBannedWords(`${body}\n${subjectRule(locked, prompt)}`);
 }
 
-function sceneVisualGuidance(scene) {
+function sceneVisualGuidance(scene, rejectIf = '') {
     const value = directive(scene);
     if (!value) return '';
+    const excluded = directive(rejectIf);
+    const positiveScene = value.split(/[，,；;。！？!?]+/)
+        .filter(part => !/(?:不出现|不要|不得|不含|禁止|避免|没有|无(?:亭|长椅|长凳|建筑|屋檐))/i.test(part))
+        .join(' ');
+    const isRejected = pattern => pattern.test(excluded);
     const anchors = [];
-    if (/竹/.test(value)) anchors.push('竹竿与竹叶');
-    if (/小径|步道|路径/.test(value)) anchors.push('可见的小径或步道地面');
-    if (/湖/.test(value)) anchors.push('可见的湖水');
-    else if (/河|水岸|水边/.test(value)) anchors.push('可见的水面');
-    if (/栈道/.test(value)) anchors.push('木栈道木板');
-    if (/亭/.test(value)) anchors.push('木亭立柱、横梁或屋顶结构');
-    if (/长椅|长凳/.test(value)) anchors.push('长椅结构');
+    if (/竹/.test(positiveScene) && !isRejected(/竹/)) anchors.push('竹竿与竹叶');
+    if (/小径|步道|路径/.test(positiveScene) && !isRejected(/小径|步道|路径/)) anchors.push('可见的小径或步道地面');
+    if (/湖/.test(positiveScene) && !isRejected(/湖/)) anchors.push('可见的湖水');
+    else if (/河|水岸|水边/.test(positiveScene) && !isRejected(/河|水岸|水边|水面/)) anchors.push('可见的水面');
+    if (/栈道/.test(positiveScene) && !isRejected(/栈道/)) anchors.push('木栈道木板');
+    if (/亭/.test(positiveScene) && !isRejected(/亭|建筑|屋檐/)) anchors.push('木亭立柱、横梁或屋顶结构');
+    if (/长椅|长凳/.test(positiveScene) && !isRejected(/长椅|长凳/)) anchors.push('长椅结构');
     const featureText = anchors.length ? `重点显示${[...new Set(anchors)].join('、')}。` : '';
     return `场景必须清楚可辨并符合“${value}”；${featureText}忽略人像身份参考图中的背景，不得把它带入本镜，也不得用摄影棚、纯色或其他场景替代。按指定景别自然呈现场景，不要因此拉远或改变裁切。`;
 }
 
 function modelScopeDirection({ modelId, prompt, locked, variant, poseRef, size, anchor, priorityDirective = [], imageRoles = [] }) {
-    if (modelId !== MODELSCOPE_TURBO_MODEL) {
+    if (modelId !== MODELSCOPE_TURBO_MODEL && modelId !== MODELSCOPE_QWEN_IMAGE_21_MODEL) {
         return directionText({ prompt, locked, variant, poseRef, size });
     }
     const frameVariant = { ...variant, size: size || variant?.size };
     const nearPortrait = /^(?:近景|MCU|MEDIUM[- ]?CLOSE[- ]?UP)$/i.test(String(frameVariant.size || frameVariant.shotType || '').trim());
+    const explicitWaistKnot = isWaistUp(frameVariant) && requiresWaistKnotInFrame(variant?.mustShow);
     const crop = nearPortrait
         ? '紧凑头肩肖像（tight head-and-shoulders portrait）：画面只包含完整头部、双肩和上胸；人物面部占画面高度约一半，下边缘裁切在上胸，绝不延伸至腰部。'
+        : explicitWaistKnot
+            ? '中景腰上人像：从头顶拍至自然腰间系结完整入画；以画面顶端为0%，系结中心置于画面高度约80%–84%，画框下沿在系结下方并保留约8%–12%可见上衣余量；系结和垂带都不得触底或贴边。仍保持腰上构图，不出现髋部、裙装、腿、膝盖、靴子或脚。'
         : directive(variant?.crop) || framingZh(frameVariant);
     const wardrobeCoverage = wardrobeCoverageRules({
         subject: locked?.subject,
         wardrobe: locked?.wardrobe,
         shotWardrobe: variant?.wardrobe,
     }).join(' ');
+    const actionAndPose = [
+        directive(variant?.action),
+        poseRef?.direction && `选定摆姿${poseRef.title ? `“${directive(poseRef.title)}”` : ''}：与本镜动作兼容的方向为${directive(poseRef.direction)}；冲突时以本镜动作优先`,
+    ].filter(Boolean).join('；');
     const fields = [
         ['任务', '生成一张真实摄影成片，单张照片，不是拼图或插画。'],
         ['景别最高优先级', crop],
@@ -273,16 +286,17 @@ function modelScopeDirection({ modelId, prompt, locked, variant, poseRef, size, 
         ['母图使用范围', anchor?.assetId ? '母图只用于保持同一人物的脸、发型和方案服装；完全替换母图背景与场景，不保留母图的竹林、路径、光线方向或空间结构。' : ''],
         ['人物身份', subjectDirectionForFrame(locked?.subject, { ...variant, size: size || variant?.size }) || directive(locked?.subject)],
         ['场景', variant?.scene || locked?.location],
-        ['场景可辨识度', sceneVisualGuidance(variant?.scene || locked?.location)],
+        ['场景可辨识度', sceneVisualGuidance(variant?.scene || locked?.location, variant?.rejectIf)],
         ['场景替换约束', anchor?.assetId && variant?.scene ? `本镜场景必须完全替换参考母图背景，严格改为${variant.scene}；只延续人物身份与服装，不延续旧场景。` : ''],
         ['镜头变化硬约束', priorityDirective.join(' ')],
-        ['动作与构图', poseInFrame(directive(variant?.mustShow) || directive(variant?.action) || directive(poseRef?.direction), size || variant?.size)],
+        ['动作与构图', poseInFrame([directive(variant?.mustShow), actionAndPose].filter(Boolean).join('；'), size || variant?.size)],
         ['机位', directive(variant?.camera)],
         ['构图', directive(variant?.subjectPlacement)],
         ['服装', directive(variant?.wardrobe) || directive(locked?.wardrobe)],
         ['服装覆盖约束', wardrobeCoverage],
         ['光线', resolveLighting(variant, locked)],
         ['风格质感', directive(locked?.styleProfile) || realismTextZh()],
+        ['真实摄影质感', realismTextZh(directive(locked?.filmStock) || directive(variant?.filmStock) || '')],
         ['色彩控制', colorDisciplineText({ locked, variant, prompt })],
         ['禁止出现', directive(variant?.rejectIf)],
     ].filter(([, value]) => typeof value === 'string' && value.trim());
@@ -293,8 +307,10 @@ function colorDisciplineText({ locked, variant, prompt } = {}) {
     const colorContext = [locked?.styleProfile, locked?.colorGrade, variant?.colorGrade].filter(Boolean).join(' ');
     if (!/低饱和|low[- ]saturation|desaturated|muted/i.test(colorContext)) return '';
     const sceneContext = [variant?.scene, locked?.location, prompt].filter(Boolean).join(' ');
-    const greenOutdoor = /竹|树林|公园|绿地|湖边|植物|forest|park|green/i.test(sceneContext);
-    return `全图保持低饱和、自然的胶片色彩，肤色真实；避免高饱和荧光色${greenOutdoor ? '，竹叶、树叶与草地尤其不得呈荧光绿' : ''}。`;
+    const foliage = /竹|bamboo/i.test(sceneContext) ? '竹叶、树叶与草地'
+        : /树林|森林|树木|树叶|草地|绿地|植被|公园|植物|forest|woods|trees?|grass|vegetation|park/i.test(sceneContext) ? '树叶与草地'
+            : '';
+    return `全图保持低饱和、自然的胶片色彩，肤色真实；避免高饱和荧光色${foliage ? `，${foliage}尤其不得呈荧光绿` : ''}。`;
 }
 
 function wardrobeDirectionForFrame(lockedWardrobe, variant) {
@@ -313,7 +329,10 @@ function subjectDirectionForFrame(subject, variant) {
     const visibleIdentity = String(subject || '').split(/[；;。]/)
         .map(part => part.trim())
         .filter(part => part && !/(?:裙|裤|靴|鞋|袜|下装|裙摆|skirt|pants|boots|shoes|trousers|lower body)/i.test(part));
-    return [...visibleIdentity, '人物数量、脸部身份、年龄与发型按参考锁定；腰线以下不在画面内。'].join('；');
+    const boundary = requiresWaistKnotInFrame(variant?.mustShow)
+        ? '人物数量、脸部身份、年龄与发型按参考锁定；本镜腰间系结完整入画，系结中心在画面高度约80%–84%，其下保留约8%–12%上衣余量且系结与垂带不触底；髋部、裙腿和鞋仍不入画。'
+        : '人物数量、脸部身份、年龄与发型按参考锁定；腰线以下不在画面内。';
+    return [...visibleIdentity, boundary].join('；');
 }
 
 // One field list shared by every adapter.
@@ -451,11 +470,15 @@ export async function cropNearPortraitImage(image, env) {
         if (!response.ok) throw new Error(`Images binding returned ${response.status}`);
         const bytes = new Uint8Array(await response.arrayBuffer());
         if (!bytes.length) throw new Error('Images binding returned an empty image');
+        const dimensions = imageDimensions(bytes, 'image/png');
+        if (!dimensions) {
+            throw new GenerationError('GENERATION_FRAME_CROP_FAILED', '近景裁切结果尺寸无效，已阻止返回损坏图片', 502);
+        }
         return {
             ...image,
             contentType: 'image/png',
             base64: Buffer.from(bytes).toString('base64'),
-            dimensions: imageDimensions(bytes, 'image/png'),
+            dimensions,
             frameCrop: 'near-portrait-shoulders-up',
         };
     } catch (error) {
@@ -464,25 +487,35 @@ export async function cropNearPortraitImage(image, env) {
     }
 }
 
-export async function cropWaistUpImage(image, env) {
+export async function cropWaistUpImage(image, env, { preserveBottom = false } = {}) {
     if (!env?.IMAGES?.input || !image?.base64) {
         throw new GenerationError('GENERATION_FRAME_CROP_UNAVAILABLE', '中景成片裁切服务未连接', 503);
     }
     try {
         const source = Uint8Array.from(Buffer.from(image.base64, 'base64'));
+        const trim = { top: 0, left: 0.04, width: 0.92 };
+        // Omitting height preserves the complete source height. In the Images
+        // binding an integer 1 means one pixel, not a 100% fractional trim.
+        if (!preserveBottom) trim.height = 0.92;
         const transformed = await env.IMAGES.input(source)
-            .transform({ trim: { top: 0, left: 0.14, width: 0.72, height: 0.68 } })
+            // Keep nearly the whole 3:4 frame. The former 68% vertical crop
+            // removed the waist the shot contract explicitly asked to show.
+            .transform({ trim })
             .output({ format: 'image/png' });
         const response = transformed.response();
         if (!response.ok) throw new Error(`Images binding returned ${response.status}`);
         const bytes = new Uint8Array(await response.arrayBuffer());
         if (!bytes.length) throw new Error('Images binding returned an empty image');
+        const dimensions = imageDimensions(bytes, 'image/png');
+        if (!dimensions || dimensions.width < 256 || dimensions.height < 256) {
+            throw new GenerationError('GENERATION_FRAME_CROP_FAILED', '中景裁切结果尺寸无效，已阻止返回损坏图片', 502);
+        }
         return {
             ...image,
             contentType: 'image/png',
             base64: Buffer.from(bytes).toString('base64'),
-            dimensions: imageDimensions(bytes, 'image/png'),
-            frameCrop: 'waist-up-contract',
+            dimensions,
+            frameCrop: preserveBottom ? 'waist-up-preserve-required-knot' : 'waist-up-contract',
         };
     } catch (error) {
         if (error instanceof GenerationError) throw error;
@@ -551,7 +584,7 @@ function modelScopePriorityDirective({ anchor, variant, poseRef, visualPoseSent 
 }
 
 function buildModelScopeDirection({ modelId, imageRoles, fields, corrections, priorityDirective, visualPoseSent, imageNotes, frameLocked, framePrompt, variant, poseRef, anchor }) {
-    if (modelId === MODELSCOPE_TURBO_MODEL) {
+    if (modelId === MODELSCOPE_TURBO_MODEL || modelId === MODELSCOPE_QWEN_IMAGE_21_MODEL) {
         return modelScopeDirection({ modelId, prompt: framePrompt, locked: frameLocked, variant, poseRef, size: variant?.size, anchor, priorityDirective, imageRoles });
     }
     return [
@@ -591,8 +624,9 @@ function imageRoleGuidance(roles = []) {
         anchor: '仅用于保持同一人物的身份和发型；服装以服装参考图和文字为准，不复制锚点中的姿势、取景或背景。',
         identity: '仅用于人物面部身份和发型；忽略参考图中的背景、场景、姿势、服装、光线和裁切。',
         style: '仅用于服装款式、层次、颜色和材质；忽略文字未要求的配饰。',
+        photography: '仅用于摄影审美：光线方向与层次、色彩影调、空间层次、抓拍感和与本镜头相容的画面组织；忽略参考图中的人物身份、面部、服装、场景、道具及其具体裁切。文字分镜锁定人物、场地、服装、动作与景别；发生冲突时以文字方案为准。',
         scene: '仅用于场景环境。',
-        pose: '仅用于身体动作、肢体关系和重心；不复制参考图中的脸、服装、背景、线稿或标记。',
+        pose: '仅用于身体动作、肢体关系、肩线、头部朝向和重心；不复制参考图中的脸、服装、配饰、光线、背景、线稿或标记。',
     };
     if (!roles.length) return '';
     return `参考图角色按发送顺序对应：${roles.map((role, index) => `Image ${index + 1}（${role}）：${instructions[role] || '只参考与本镜头对应的属性。'}`).join(' ')}`;
@@ -760,14 +794,18 @@ export async function submitModelScope({ env, prompt, size, seed, references, va
             ? `Image ${images.length} supplies face identity and hairstyle only; do not copy its clothing, shoulders, pose, lighting, background or crop`
             : `Image ${images.length} is the ${reference.role} reference`);
     }
-    const visualPoseSent = Boolean(poseRef && !isUpperBodyFrame(variant) && !frameAnchor?.assetId);
+    const visualPoseSent = canSendVisualPoseReference(variant, poseRef, frameAnchor);
     if (visualPoseSent) {
         if (!poseRef.imageUrl) throw new GenerationError('GENERATION_REFERENCE_MISSING', '已选择姿势，但没有可用的姿势参考图', 409);
-        const poseImage = await fetchLibraryImage(poseRef.imageUrl, fetchImpl);
+        const poseImage = await preparePoseReference(await fetchLibraryImage(poseRef.imageUrl, fetchImpl), poseRef.imageUrl, variant, env);
         if (!poseImage) throw new GenerationError('GENERATION_REFERENCE_MISSING', '姿势参考图无法读取；已停止生成，没有退化为纯文字姿势', 409);
         images.push(await referenceDataUrl({ buffer: poseImage.bytes, mime: poseImage.mime }, env));
         imageRoles.push('pose');
-        imageNotes.push(`Image ${images.length} is a PoseAtlas pose sketch: use only its body angle and pose, never its face, clothing or background`);
+        imageNotes.push(isBundledWaistPose(poseRef.imageUrl)
+            ? `Image ${images.length} is a licensed waist-up pose photograph: use only the torso angle, shoulder line and head direction; do not copy its face, clothing, accessories, lighting or background`
+            : isPoseAtlasPoseImage(poseRef.imageUrl) && isWaistUp(variant)
+                ? `Image ${images.length} is a cropped upper-body PoseAtlas geometry sketch: use only the torso turn, shoulder-line asymmetry and head direction; ignore the sketch face and do not widen the requested waist-up frame`
+                : `Image ${images.length} is a PoseAtlas pose sketch: use only its body angle and pose, never its face, clothing or background`);
     }
     const frameLocked = upperCrop ? { ...locked, subject: wardrobeVisibleInFrame(locked?.subject, variant), wardrobe: wardrobeVisibleInFrame(locked?.wardrobe, variant) } : locked;
     const framePrompt = promptVisibleInFrame(prompt, variant);
@@ -775,9 +813,10 @@ export async function submitModelScope({ env, prompt, size, seed, references, va
     const corrections = modelScopeCorrections({ locked: frameLocked, variant, poseRef });
     const priorityDirective = modelScopePriorityDirective({ anchor: frameAnchor, variant, poseRef, visualPoseSent });
     const direction = buildModelScopeDirection({ modelId, imageRoles, fields, corrections, priorityDirective, visualPoseSent, imageNotes, frameLocked, framePrompt, variant, poseRef, anchor: frameAnchor });
+    const modelScopeEndpoint = modelScopeEndpointFor(modelId);
     let response;
     try {
-        response = await fetchImpl(MODELSCOPE_ENDPOINT, {
+        response = await fetchImpl(modelScopeEndpoint.generate, {
             method: 'POST',
             headers: { ...headers, 'X-ModelScope-Async-Mode': 'true', 'X-ModelScope-Task-Type': 'image_generation' },
             body: JSON.stringify({ model: modelId, prompt: direction, ...(size ? { size } : {}), ...(images.length ? { image_url: images } : {}), ...(Number.isSafeInteger(seed) ? { seed } : {}) }),
@@ -808,15 +847,16 @@ export async function submitModelScope({ env, prompt, size, seed, references, va
     return { taskId, prompt: direction, referencesSent: images.length, poseReferenceSent: visualPoseSent, referenceRolesSent: imageRoles };
 }
 
-export async function pollModelScope({ env, taskId, fetchImpl = fetch }) {
+export async function pollModelScope({ env, taskId, modelId = MODELSCOPE_MODEL, fetchImpl = fetch }) {
     const token = env?.MODELSCOPE_TOKEN;
     if (!token) throw new GenerationError('GENERATION_NOT_CONFIGURED', '缺少魔搭 MODELSCOPE_TOKEN', 503, { missing: ['MODELSCOPE_TOKEN'] });
     if (typeof taskId !== 'string' || !/^[A-Za-z0-9_-]{1,128}$/.test(taskId)) {
         throw new GenerationError('GENERATION_TASK_ID_INVALID', '魔搭任务编号无效', 400);
     }
+    const modelScopeEndpoint = modelScopeEndpointFor(modelId);
     let response;
     try {
-        response = await fetchImpl(MODELSCOPE_TASK + taskId, {
+        response = await fetchImpl(modelScopeEndpoint.task + taskId, {
             headers: { Authorization: `Bearer ${token}`, 'X-ModelScope-Task-Type': 'image_generation' },
             // The Pages proxy cuts off at 30s. Give slow ModelScope task reads
             // more room than the previous 20s while keeping a safe margin.
@@ -864,23 +904,31 @@ export async function pollModelScope({ env, taskId, fetchImpl = fetch }) {
 
 // ModelScope (魔搭) · Qwen-Image-Edit adapter.
 //
-// The only option found that satisfies all four requirements at once:
-//   1. cheap enough to test at volume - 2000 free calls/day after real-name
-//      verification, i.e. zero marginal cost for our whole test cycle
-//   2. takes reference images - Qwen-Image-Edit accepts an image_url ARRAY, so
+// The configured API-Inference path is suitable for small controlled trials;
+// its free allowance, credits, concurrency, and latency can change by account.
+// Do not assume unlimited or zero-cost use from an old quota snapshot.
+// It accepts reference images - Qwen-Image-Edit accepts an image_url ARRAY, so
 //      face + outfit + pose can all be supplied
-//   3. reachable from mainland China without a proxy
-//   4. OpenAI-compatible shape, so it drops into this adapter layer
+// It uses an OpenAI-compatible request shape, so it fits this adapter layer.
 //
 // It is asynchronous: the POST returns a task id and the result has to be polled.
 const MODELSCOPE_ENDPOINT = 'https://api-inference.modelscope.cn/v1/images/generations';
 const MODELSCOPE_TASK = 'https://api-inference.modelscope.cn/v1/tasks/';
+const MODELSCOPE_COMMUNITY_KLEIN_ENDPOINT = 'https://api-inference.modelscope.ai/v1/images/generations';
+const MODELSCOPE_COMMUNITY_KLEIN_TASK = 'https://api-inference.modelscope.ai/v1/tasks/';
 const MODELSCOPE_MODEL = 'Qwen/Qwen-Image-Edit-2511';
 const MODELSCOPE_TURBO_MODEL = 'Qwen/Qwen-Image-2.1-Turbo';
-const MODELSCOPE_MODELS = new Set([MODELSCOPE_MODEL, MODELSCOPE_TURBO_MODEL]);
+const MODELSCOPE_QWEN_IMAGE_21_MODEL = 'Qwen/Qwen-Image-2.1';
+const MODELSCOPE_QWEN_IMAGE_MODEL = 'Qwen/Qwen-Image';
+const MODELSCOPE_FLUX2_KLEIN_BASE_MODEL = 'black-forest-labs/FLUX.2-klein-base-4B';
+const MODELSCOPE_FLUX2_KLEIN_COMMUNITY_MODEL = 'flux-community/FLUX.2-klein-4B';
+const MODELSCOPE_MODELS = new Set([MODELSCOPE_MODEL, MODELSCOPE_TURBO_MODEL, MODELSCOPE_QWEN_IMAGE_21_MODEL, MODELSCOPE_QWEN_IMAGE_MODEL, MODELSCOPE_FLUX2_KLEIN_BASE_MODEL, MODELSCOPE_FLUX2_KLEIN_COMMUNITY_MODEL]);
 const MODELSCOPE_DEFAULT_SIZE = '1024x1536';
-const BUNDLED_PEXELS_WAIST_POSE = 'https://photo-workflow.pages.dev/assets/pose-references/pose-02.jpg';
-
+function modelScopeEndpointFor(modelId) {
+    return modelId === MODELSCOPE_FLUX2_KLEIN_COMMUNITY_MODEL
+        ? { generate: MODELSCOPE_COMMUNITY_KLEIN_ENDPOINT, task: MODELSCOPE_COMMUNITY_KLEIN_TASK }
+        : { generate: MODELSCOPE_ENDPOINT, task: MODELSCOPE_TASK };
+}
 function isBundledWaistPose(rawUrl) {
     try {
         const url = new URL(rawUrl);
@@ -888,6 +936,43 @@ function isBundledWaistPose(rawUrl) {
     } catch {
         return false;
     }
+}
+
+function isPoseAtlasPoseImage(rawUrl) {
+    try {
+        const url = new URL(rawUrl);
+        return url.origin === 'https://hruiccc.github.io'
+            && /^\/RuiC-PoseAtlas\/thumbs\/[A-Za-z0-9_-]+\.jpg$/.test(url.pathname)
+            && !url.search && !url.hash;
+    } catch {
+        return false;
+    }
+}
+
+async function preparePoseReference(image, imageUrl, variant, env) {
+    if (!image || !isWaistUp(variant) || !isPoseAtlasPoseImage(imageUrl)) return image;
+    if (!env?.IMAGES?.input) {
+        throw new GenerationError('GENERATION_REFERENCE_CROP_UNAVAILABLE', '上半身姿势参考裁切服务未连接，已停止生成', 503);
+    }
+    try {
+        const transformed = await env.IMAGES.input(image.bytes)
+            .transform({ trim: { top: 0, left: 0.12, width: 0.76, height: 0.60 } })
+            .output({ format: 'image/png' });
+        const response = transformed.response();
+        if (!response.ok) throw new Error(`Images binding returned ${response.status}`);
+        const bytes = new Uint8Array(await response.arrayBuffer());
+        if (!bytes.length) throw new Error('Images binding returned an empty image');
+        return { bytes, mime: 'image/png' };
+    } catch (error) {
+        if (error instanceof GenerationError) throw error;
+        throw new GenerationError('GENERATION_REFERENCE_CROP_FAILED', `上半身姿势参考裁切失败：${String(error?.message || error).slice(0, 160)}`, 502);
+    }
+}
+
+function canSendVisualPoseReference(variant, poseRef, frameAnchor) {
+    if (!poseRef || frameAnchor?.assetId) return false;
+    if (!isUpperBodyFrame(variant)) return true;
+    return isWaistUp(variant) && (isBundledWaistPose(poseRef.imageUrl) || isPoseAtlasPoseImage(poseRef.imageUrl));
 }
 
 export function isModelScopeModelAllowed(modelId) {
@@ -905,7 +990,7 @@ async function callModelScope({ env, prompt, size, seed, references, variant, po
     if (!isModelScopeModelAllowed(modelId)) throw new GenerationError('GENERATION_MODEL_NOT_ALLOWED', '不支持的魔搭图像模型', 400);
     const token = env?.MODELSCOPE_TOKEN;
     if (!token) {
-        throw new GenerationError('GENERATION_NOT_CONFIGURED', '缺少魔搭 MODELSCOPE_TOKEN（实名后每日 2000 次免费）', 503, { missing: ['MODELSCOPE_TOKEN'] });
+        throw new GenerationError('GENERATION_NOT_CONFIGURED', '缺少魔搭 MODELSCOPE_TOKEN', 503, { missing: ['MODELSCOPE_TOKEN'] });
     }
     const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
 
@@ -939,16 +1024,21 @@ async function callModelScope({ env, prompt, size, seed, references, variant, po
             : `Image ${images.length} is the ${reference.role} reference`);
         imageRoles.push(reference.role);
     }
-    // Full-body PoseAtlas line art overrides waist-up framing, while the bundled
-    // waist-up photo carries clothing and accessories that conflict with outfit locks.
+    // Full-body PoseAtlas line art overrides waist-up framing. The specifically
+    // bundled waist-up pose photograph is passed as pose-only guidance.
     const visualPoseUrl = poseRef?.imageUrl;
-    const visualPoseSent = Boolean(poseRef && !skipStyleRef && !frameAnchor?.assetId);
+    const visualPoseSent = canSendVisualPoseReference(variant, poseRef, frameAnchor);
     if (visualPoseSent) {
         if (!visualPoseUrl) throw new GenerationError('GENERATION_REFERENCE_MISSING', '已选择姿势，但没有可用的姿势参考图', 409);
-        const poseImage = await fetchLibraryImage(visualPoseUrl, fetchImpl);
+        const poseImage = await preparePoseReference(await fetchLibraryImage(visualPoseUrl, fetchImpl), visualPoseUrl, variant, env);
         if (!poseImage) throw new GenerationError('GENERATION_REFERENCE_MISSING', 'PoseAtlas 姿势参考图无法读取；已停止生成，没有退化为纯文字姿势', 409);
         images.push(await referenceDataUrl({ buffer: poseImage.bytes, mime: poseImage.mime }, env));
         imageRoles.push('pose');
+        imageNotes.push(isBundledWaistPose(visualPoseUrl)
+            ? `Image ${images.length} is a licensed waist-up pose photograph: use only the torso angle, shoulder line and head direction; do not copy its face, clothing, accessories, lighting or background`
+            : isPoseAtlasPoseImage(visualPoseUrl) && isWaistUp(variant)
+                ? `Image ${images.length} is a cropped upper-body PoseAtlas geometry sketch: use only the torso turn, shoulder-line asymmetry and head direction; ignore the sketch face and do not widen the requested waist-up frame`
+                : `Image ${images.length} is a PoseAtlas pose sketch: use only its body angle and pose, never its face, clothing or background`);
     }
 
     const frameLocked = upperCrop ? { ...locked, subject: wardrobeVisibleInFrame(locked?.subject, variant), wardrobe: wardrobeVisibleInFrame(locked?.wardrobe, variant) } : locked;
@@ -958,7 +1048,8 @@ async function callModelScope({ env, prompt, size, seed, references, variant, po
     const priorityDirective = modelScopePriorityDirective({ anchor: frameAnchor, variant, poseRef, visualPoseSent });
     const finalDirection = buildModelScopeDirection({ modelId, imageRoles, fields, corrections, priorityDirective, visualPoseSent, imageNotes, frameLocked, framePrompt, variant, poseRef, anchor: frameAnchor });
 
-    const submit = await fetchImpl(MODELSCOPE_ENDPOINT, {
+    const modelScopeEndpoint = modelScopeEndpointFor(modelId);
+    const submit = await fetchImpl(modelScopeEndpoint.generate, {
         method: 'POST',
         headers: { ...headers, 'X-ModelScope-Async-Mode': 'true' },
         body: JSON.stringify({
@@ -987,7 +1078,7 @@ async function callModelScope({ env, prompt, size, seed, references, variant, po
     const deadline = Date.now() + 240000;
     while (Date.now() < deadline) {
         await new Promise(resolve => setTimeout(resolve, 2500));
-        const poll = await fetchImpl(MODELSCOPE_TASK + taskId, {
+        const poll = await fetchImpl(modelScopeEndpoint.task + taskId, {
             headers: { ...headers, 'X-ModelScope-Task-Type': 'image_generation' },
             signal: AbortSignal.timeout(20000),
         }).catch(() => null);
