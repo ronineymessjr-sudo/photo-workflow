@@ -789,6 +789,26 @@ test('anchored ModelScope shots follow PoseAtlas text without mixing the pose ph
     assert.doesNotMatch(payload.prompt, /最后一张参考图来自摆姿库/);
 });
 
+test('ModelScope walking shots keep the face reference without a standing anchor', async () => {
+    const store = createMemoryStore();
+    const group = await readyGroup(store);
+    Object.assign(group.shots[0], {
+        size: 'MFS', shotType: 'MFS', action: '模特沿木栈道缓慢前行，手臂自然摆动。',
+        scene: '湖边木栈道', crop: '膝盖以上入画', poseRef: null,
+    });
+    group.shots.push({ ...group.shots[0], shotId: 'anchor-standing', action: '模特站立扶髋。' });
+    setAnchor(group, { assetId: group.references.find(reference => reference.role === 'identity').assetId, shotId: 'anchor-standing' });
+    const result = await generateShot({
+        group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit', modelId: 'Qwen/Qwen-Image-2.1-Turbo',
+        env: { MODELSCOPE_TOKEN: 'test-only' }, store, submitOnly: true,
+        fetchImpl: async () => Response.json({ task_id: 'walking-without-standing-anchor' }),
+    });
+    assert.ok(result.referenceRolesSent.includes('identity'));
+    assert.ok(!result.referenceRolesSent.includes('anchor'));
+    assert.match(result.sentPrompt, /缓慢前行/);
+    assert.match(result.sentPrompt, /膝盖以上入画/);
+});
+
 test('ModelScope waist-up frames crop an angle-specific PoseAtlas sketch and exclude wardrobe refs', async () => {
     const store = createMemoryStore();
     const wardrobe = '米白色针织裹身上衣（宽袖、腰前交叠系结），卡其色层叠长半身裙至脚踝，棕色及膝长靴；不添加包袋、项链、首饰或帽子。';

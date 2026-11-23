@@ -778,7 +778,7 @@ export async function submitModelScope({ env, prompt, size, seed, references, va
     const imageNotes = [];
     // A full-body anchor repeatedly overrode waist-up crops in live tests.
     // Keep face identity on the portrait reference and let the shot contract set this crop.
-    const frameAnchor = isUpperBodyFrame(variant) ? null : anchor;
+    const frameAnchor = modelScopeFrameAnchor(variant, anchor);
     if (frameAnchor?.assetId) {
         const stored = await readAsset(`/api/continuity/asset/${frameAnchor.assetId}`, { env, store });
         if (!stored?.buffer?.length) throw new GenerationError('GENERATION_ANCHOR_MISSING', '已锁定的母图读不到；停止生成，不能退回无母图请求', 409);
@@ -977,6 +977,14 @@ function canSendVisualPoseReference(variant, poseRef, frameAnchor) {
     return isWaistUp(variant) && (isBundledWaistPose(poseRef.imageUrl) || isPoseAtlasPoseImage(poseRef.imageUrl));
 }
 
+function modelScopeFrameAnchor(variant, anchor) {
+    // A full-body anchor can pull a tight shot wide or copy its planted stance
+    // into a walking frame. The separate portrait reference still locks identity.
+    const walkingFromAnotherPose = anchor?.sourceAction && shotPoseAction(anchor.sourceAction) !== 'walking'
+        && shotPoseAction(variant?.action) === 'walking';
+    return isUpperBodyFrame(variant) || walkingFromAnotherPose ? null : anchor;
+}
+
 export function isModelScopeModelAllowed(modelId) {
     return modelId === undefined || modelId === null || modelId === '' || MODELSCOPE_MODELS.has(modelId);
 }
@@ -1003,7 +1011,7 @@ async function callModelScope({ env, prompt, size, seed, references, variant, po
     const imageRoles = [];
     // A full-body anchor repeatedly overrode waist-up crops in live tests.
     // Keep face identity on the portrait reference and let the shot contract set this crop.
-    const frameAnchor = isUpperBodyFrame(variant) ? null : anchor;
+    const frameAnchor = modelScopeFrameAnchor(variant, anchor);
     if (frameAnchor?.assetId) {
         const stored = await readAsset(`/api/continuity/asset/${frameAnchor.assetId}`, { env, store });
         if (!stored?.buffer?.length) throw new GenerationError('GENERATION_ANCHOR_MISSING', '已锁定的母图读不到；停止生成，不能退回无母图请求', 409);
@@ -1357,6 +1365,10 @@ export async function generateShot({ group, shotId, providerId = '', env = {}, f
         : (isWaistUp(request.variant) || isTightPortrait(request.variant))
         ? aspectSizes['3:4']
         : aspectSizes[request.aspect] || '1056x1584';
+    const anchor = request.anchor && {
+        ...request.anchor,
+        sourceAction: group.shots.find(shot => shot.shotId === request.anchor.shotId)?.action,
+    };
 
     // Async provider: hand the work off and return immediately. A 20-40s
     // generation cannot be held open behind the Pages proxy (30s ceiling).
@@ -1366,7 +1378,7 @@ export async function generateShot({ group, shotId, providerId = '', env = {}, f
             variant: request.variant,
             poseRef: (group.shots || []).find(shot => shot.shotId === shotId)?.poseRef || null,
             modelId,
-            anchor: request.anchor, locked: request.locked, store, fetchImpl,
+            anchor, locked: request.locked, store, fetchImpl,
         });
         return {
             shotId, provider: providerId, status: 'pending', taskId: submitted.taskId,
@@ -1389,7 +1401,7 @@ export async function generateShot({ group, shotId, providerId = '', env = {}, f
         poseRef: (group.shots || []).find(shot => shot.shotId === shotId)?.poseRef || null,
         modelId,
         // The accepted frame to edit from. Present from the second shot onward.
-        anchor: request.anchor,
+        anchor,
         store,
     });
 
