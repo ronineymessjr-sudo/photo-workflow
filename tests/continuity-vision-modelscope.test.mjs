@@ -24,15 +24,19 @@ test('vision prescreen falls back to ModelScope VL when DEEPSEEK_API_KEY is abse
 test('vision receives pose and crop requirements and can reject a head-only turn', async () => {
     const shot = {
         size: 'MS', camera: '平视', lens: '50mm',
+        scene: '木亭长椅', crop: '腰部以上', wardrobe: '米白色针织上衣',
         action: '躯干斜转三分之四，脸朝画面右侧',
         mustShow: '完整腰结和下缘留量',
         rejectIf: '只有头转、躯干仍正对镜头',
     };
     const result = await prescreen({
-        imageDataUrl: PNG_1PX, shot, locked: {}, env: { MODELSCOPE_TOKEN: 'test' },
+        imageDataUrl: PNG_1PX, shot, locked: { location: '竹林、湖边与木亭', wardrobe: '上衣、长裙和棕靴' }, env: { MODELSCOPE_TOKEN: 'test' },
         fetchImpl: async (_url, init) => {
             const prompt = JSON.parse(init.body).messages[0].content[0].text;
-            for (const field of ['action', 'mustShow', 'rejectIf']) assert.ok(prompt.includes(shot[field]), field);
+            for (const field of ['action', 'crop', 'mustShow', 'rejectIf', 'wardrobe']) assert.ok(prompt.includes(shot[field]), field);
+            assert.match(prompt, /地点：木亭长椅/);
+            assert.doesNotMatch(prompt, /竹林、湖边与木亭/);
+            assert.match(prompt, /鞋靴或服装细节本应在画外时，不判缺失/);
             return Response.json({ choices: [{ message: { content: '{"wardrobe":"pass","shot-spec":"fail"}' } }] });
         },
     });
