@@ -61,6 +61,7 @@ function imageDimensions(bytes, mime) {
 
 import { assertReadyToGenerate, buildShotRequests, ContinuityError, CONTINUITY_PROVIDERS } from './continuity.mjs';
 import { requiresWaistKnotInFrame, wardrobeCoverageRules } from './continuity-prompt-rules.mjs';
+import { shotPoseAction } from './ai-studio/pose-suitability.mjs';
 import { storeAsset, readAsset, AssetError } from './continuity-assets.mjs';
 import { pickLightKit } from './light-kit.mjs';
 import { BUNDLED_PEXELS_WAIST_POSE } from './continuity-studio-bridge.mjs';
@@ -1216,14 +1217,22 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
         : /P017/i.test(selectedPoseId)
             ? 'PoseAtlas P017: stand in a relaxed three-quarter turn and look back over the shoulder, with balanced separated feet; do not mirror the pose.'
             : '';
+    const action = shotPoseAction(variant?.action);
+    const actionConstraint = action === 'seated'
+        ? 'The person must be visibly seated on the specified seat. Place their torso at seated height with an upright, relaxed posture. Do not make a standing portrait.'
+        : action === 'walking'
+            ? 'Capture the person mid-step in a natural walk. Keep the arms relaxed and avoid a planted standing pose.'
+            : '';
     const composed = [
         framingLine(variant),
+        actionConstraint,
         // Follow the chosen shoot's look instead of imposing one global film or
         // gritty texture on every location. Keep facial information readable.
         'Photographic texture: natural skin and highlight rolloff, directional but balanced shadows with facial details preserved; follow the specified style, lighting and location without forced film grain, grime, dust, water stains or wear. Follow the subject brief for who appears in the frame; do not add people.',
         anchorBuffer
-            ? 'Image 1 is the accepted frame from this shoot. Preserve established identity and group-wide wardrobe continuity except where the current shot contract specifies a change. Follow that contract for pose, action, scene, lighting, camera and framing. Image 2 is the approved visual-style reference.'
-            : 'Image 1 supplies the identity reference; Image 2 is the approved visual-style reference.',
+            ? 'Image 1 is the accepted frame from this shoot. Preserve established identity and group-wide wardrobe continuity except where the current shot contract specifies a change. Follow that contract for pose, action, scene, lighting, camera and framing.'
+            : 'Image 1 supplies the identity reference for the face and hair only. Follow the shot contract for all remaining details.',
+        'Image 2 supplies garment material and color only. Follow the written wardrobe design. Discard its person, pose, background and framing.',
         direction ? `Shot: ${stripBannedWords(direction)}.` : '',
         poseCorrection,
         ...wardrobeCoverageEn,

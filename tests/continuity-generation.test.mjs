@@ -245,6 +245,8 @@ test('Cloudflare anchor prompt preserves identity while following the current sh
     assert.match(composed, /Preserve established identity and group-wide wardrobe continuity/);
     assert.match(composed, /Follow that contract for pose, action, scene, lighting, camera and framing/);
     assert.match(composed, /Two adults seated together on a bench in a riverside park/);
+    assert.match(composed, /must be visibly seated on the specified seat/);
+    assert.match(composed, /Image 2 supplies garment material and color only/);
     assert.match(composed, /preserve the shot's specified pose and action/i);
     assert.doesNotMatch(composed, /exactly one person|change only the camera position|only the camera position and framing/i);
     assert.doesNotMatch(composed, /visible pores|fine facial hair|exposure variation|venue shows wear|the unlit side genuinely dark/i);
