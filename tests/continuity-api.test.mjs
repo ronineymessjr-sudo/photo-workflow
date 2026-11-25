@@ -102,13 +102,19 @@ test('continuity collect returns a stored image for a succeeded async task', asy
     }
 });
 
-test('continuity collect applies the saved shoulder-up crop contract before storing a near portrait', async () => {
+for (const frame of [
+    { frameSize: '近景', frameCrop: 'near-portrait-shoulders-up', transform: { trim: { top: 0, left: 0.18, width: 0.64, height: 0.7 } } },
+    { frameSize: 'CU', faceCloseUp: true, frameCrop: 'face-close-up', transform: { width: 960, height: 1240, fit: 'crop', gravity: 'face', zoom: 0.45 } },
+]) test(`continuity collect applies the saved ${frame.frameCrop} contract before storing a portrait`, async () => {
     const originalFetch = globalThis.fetch;
     const values = new Map();
     const taskId = 'task-near-portrait';
     const cacheKey = `continuity-result-cache/${createHash('sha256').update(`continuity-api-test-user\0${taskId}`).digest('hex')}`;
-    values.set(cacheKey, JSON.stringify({ status: 'pending', shotId: 'shot-near', frameSize: '近景' }));
-    let trim;
+    values.set(cacheKey, JSON.stringify({
+        status: 'pending', shotId: 'shot-near', frameSize: frame.frameSize,
+        ...(frame.faceCloseUp ? { faceCloseUp: true } : {}),
+    }));
+    let transform;
     const kv = {
         async get(key, type) {
             const value = values.get(key);
@@ -120,7 +126,7 @@ test('continuity collect applies the saved shoulder-up crop contract before stor
         input(bytes) {
             assert.ok(bytes.length > 0);
             return {
-                transform(options) { trim = options.trim; return this; },
+                transform(options) { transform = options; return this; },
                 output(options) {
                     assert.equal(options.format, 'image/png');
                     return { response: () => new Response(Buffer.from(PNG_DATA_URL.split(',')[1], 'base64'), { headers: { 'Content-Type': 'image/png' } }) };
@@ -136,8 +142,8 @@ test('continuity collect applies the saved shoulder-up crop contract before stor
         const { status, body } = await call('/api/continuity/collect', { taskId, shotId: 'shot-near' }, 'POST', { MODELSCOPE_TOKEN: 'test-only', CONTINUITY_KV: kv, IMAGES: images });
         assert.equal(status, 200);
         assert.equal(body.status, 'succeeded');
-        assert.equal(body.frameCrop, 'near-portrait-shoulders-up');
-        assert.deepEqual(trim, { top: 0, left: 0.18, width: 0.64, height: 0.7 });
+        assert.equal(body.frameCrop, frame.frameCrop);
+        assert.deepEqual(transform, frame.transform);
         assert.ok(body.image.assetId);
     } finally {
         globalThis.fetch = originalFetch;
@@ -286,7 +292,10 @@ test('the Studio bridge imports plan shots and retains selected library referenc
     assert.deepEqual(body.group.references.map(reference => reference.status), ['confirmed', 'confirmed', 'confirmed']);
 });
 
-test('near-portrait ModelScope submissions retain the shot crop metadata for async collect', async () => {
+for (const shot of [
+    { size: '近景', crop: '只保留头部与双肩。', mustShow: '完整面部与自然肩姿。', prompt: 'Head-and-shoulders portrait by a wooden pavilion bench.' },
+    { size: 'CU', crop: '发顶到锁骨。', mustShow: '人物侧脸表情。', prompt: 'Face close-up by a wooden pavilion bench.', faceCloseUp: true },
+]) test(`ModelScope ${shot.size} submissions retain the shot crop metadata for async collect`, async () => {
     const originalFetch = globalThis.fetch;
     const values = new Map();
     globalThis.fetch = async input => {
@@ -310,11 +319,11 @@ test('near-portrait ModelScope submissions retain the shot crop metadata for asy
                 { id: 'pose-near', kind: 'pose', title: '肩颈放松', referenceImageUrl: 'https://hruiccc.github.io/RuiC-PoseAtlas/thumbs/P017_front.jpg', angles: ['front'] },
             ],
             guidance: { suggestions: [{ sourceItemId: 'pose-near', direction: '肩颈放松，头部微微侧转。' }] },
-            shots: [{ id: 'near', shotSize: '近景', directorContract: {
-                shot_size: '近景', scene: '木亭长椅', referenceIds: ['pose-near'],
-                generator_prompt: 'Head-and-shoulders portrait by a wooden pavilion bench.',
+            shots: [{ id: 'near', shotSize: shot.size, directorContract: {
+                shot_size: shot.size, scene: '木亭长椅', referenceIds: ['pose-near'],
+                generator_prompt: shot.prompt,
                 wardrobe_styling: '象牙白长袖针织上衣，不添加首饰。',
-                crop_boundary: '只保留头部与双肩。', must_show: '完整面部与自然肩姿。',
+                crop_boundary: shot.crop, must_show: shot.mustShow,
             } }],
         });
         assert.equal(imported.status, 200);
@@ -333,7 +342,10 @@ test('near-portrait ModelScope submissions retain the shot crop metadata for asy
         assert.equal(submitted.body.status, 'pending');
         const digest = createHash('sha256').update(`continuity-api-test-user\0task-near-metadata`).digest('hex');
         const metadata = JSON.parse(values.get(`continuity-result-cache/${digest}`));
-        assert.deepEqual(metadata, { status: 'pending', shotId: confirmed.body.group.shots[0].shotId, frameSize: '近景' });
+        assert.deepEqual(metadata, {
+            status: 'pending', shotId: confirmed.body.group.shots[0].shotId, frameSize: shot.size,
+            ...(shot.faceCloseUp ? { faceCloseUp: true } : {}),
+        });
     } finally {
         globalThis.fetch = originalFetch;
     }

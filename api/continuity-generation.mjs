@@ -459,14 +459,24 @@ export function isNearPortrait(variant = {}) {
     return /^(MCU|近景|MEDIUM[- ]?CLOSE[- ]?UP)$/i.test(String(variant.size || variant.shotType || '').trim());
 }
 
-export async function cropNearPortraitImage(image, env) {
+export function isFaceCloseUp(variant = {}) {
+    if (!/^(CU|特写|CLOSE[- ]?UP)$/i.test(String(variant.size || variant.shotType || '').trim())) return false;
+    const framing = `${variant.crop || ''} ${variant.mustShow || ''}`;
+    return !/袖口|手部|手指|衣料|服装细节|道具特写|cuff|fabric|hand detail/i.test(framing)
+        && /脸|面部|锁骨|发丝|回眸|回望|笑容|表情|眼神|face|facial|expression/i.test(`${framing} ${variant.action || ''}`);
+}
+
+export async function cropNearPortraitImage(image, env, { faceCloseUp = false } = {}) {
     if (!env?.IMAGES?.input || !image?.base64) {
         throw new GenerationError('GENERATION_FRAME_CROP_UNAVAILABLE', '近景成片裁切服务未连接', 503);
     }
     try {
         const source = Uint8Array.from(Buffer.from(image.base64, 'base64'));
+        const frameOptions = faceCloseUp
+            ? { width: 960, height: 1240, fit: 'crop', gravity: 'face', zoom: 0.45 }
+            : { trim: { top: 0, left: 0.18, width: 0.64, height: 0.70 } };
         const transformed = await env.IMAGES.input(source)
-            .transform({ trim: { top: 0, left: 0.18, width: 0.64, height: 0.70 } })
+            .transform(frameOptions)
             .output({ format: 'image/png' });
         const response = transformed.response();
         if (!response.ok) throw new Error(`Images binding returned ${response.status}`);
@@ -481,7 +491,7 @@ export async function cropNearPortraitImage(image, env) {
             contentType: 'image/png',
             base64: Buffer.from(bytes).toString('base64'),
             dimensions,
-            frameCrop: 'near-portrait-shoulders-up',
+            frameCrop: faceCloseUp ? 'face-close-up' : 'near-portrait-shoulders-up',
         };
     } catch (error) {
         if (error instanceof GenerationError) throw error;
