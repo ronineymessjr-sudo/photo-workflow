@@ -373,6 +373,11 @@ export function validatePhotographerFeasibility(shots = []) {
         }
 
         const framing = `${shot?.crop_boundary || ''} ${shot?.must_show || ''}`;
+        if (['MS', 'MCU', 'CU'].includes(shot?.shot_size)
+            && /(?:手|掌)[^，。；]{0,12}(?:膝|大腿)|(?:膝|大腿)[^，。；]{0,8}(?:手|掌)/.test(pose)
+            && hasPositiveMention(String(shot.must_show || ''), /手部|双手|手掌|手指/)) {
+            violations.push(`镜头${index + 1}手部位置在当前景别画框之外，请扩大景别或把手部动作移入画框并同步裁切与提示词`);
+        }
         const generatorPrompt = String(shot?.generator_prompt || '');
         if (framingConflictsWithSize(framing, shot?.shot_size)) {
             violations.push(`镜头${index + 1}景别与裁切范围或必须呈现范围冲突`);

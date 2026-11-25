@@ -29,6 +29,17 @@ test('high angles remove conflicting chest-height directions while keeping the d
     assert.equal(repeated.generator_prompt, shot.generator_prompt);
 });
 
+test('waist-up sitting cannot require hands that are resting on the knees to be visible', () => {
+    const shot = {
+        model_pose: '模特坐于木亭固定长椅，双手自然分放膝上',
+        shot_size: 'MS', crop_boundary: '中景，腰部以上入画',
+        must_show: '必须看见清晰的坐姿与手部自然状态',
+    };
+    assert.ok(validatePhotographerFeasibility([shot]).some(issue => /手部位置在当前景别画框之外/.test(issue)));
+    assert.deepEqual(validatePhotographerFeasibility([{ ...shot, must_show: '自然肩线与木亭长椅' }]), []);
+    assert.deepEqual(validatePhotographerFeasibility([{ ...shot, model_pose: '坐于长椅，双手抬到胸前' }]), []);
+});
+
 test('a fixed focal length applies to alternate directions as well as the lens field', () => {
     const brief = { extra: '全组固定35mm' };
     const shot = { lens: '35mm', execution_note: '不可拍时拉近焦段或移动机位' };
