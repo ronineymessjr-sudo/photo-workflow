@@ -92,7 +92,8 @@ export function extractHardConstraints(input = {}) {
     const scopedText = allText.split(/[。！？；;\n]+/)
         .filter(part => /所有(?:的)?镜头|全部镜头|每个镜头|每一镜|所有分镜|每个分镜|每一张/.test(part))
         .join('，');
-    const lensOnly = allText.match(/(?:仅|只|只能)(?:使用)?\s*(\d{2,3})\s*mm(?:定焦|镜头)?/i);
+    const lensOnly = allText.match(/(?:仅|只|只能)(?:使用)?\s*(\d{2,3})\s*mm(?:定焦|镜头)?/i)
+        || allText.match(/(?:全组|全程|全套)(?:固定|统一)(?:使用)?\s*(\d{2,3})\s*mm/i);
     const constraints = {
         fullBodyAll: /全身|从头到脚/.test(scopedText),
         downwardAll: /俯拍|高机位|从上方拍/.test(scopedText),
@@ -142,7 +143,16 @@ export function validateHardConstraints(shots, input) {
             ? ['high_angle'].includes(shot.camera_angle)
             : ['high_angle', 'overhead'].includes(shot.camera_angle))) add(index, '机位不符合全组俯拍要求');
         if (constraints.lowerLeftAll && !/左下(?:角|方)?|画面左下|lower[- ]left/i.test(shot.model_position)) add(index, '人物位置未明确放在画面左下');
-        if (constraints.focalLengthOnly && !new RegExp(`^\\s*${constraints.focalLengthOnly.replace('mm', '')}\\s*mm\\b`, 'i').test(shot.lens)) add(index, `焦段不符合仅用${constraints.focalLengthOnly}的要求`);
+        if (constraints.focalLengthOnly) {
+            if (!new RegExp(`^\\s*${constraints.focalLengthOnly.replace('mm', '')}\\s*mm\\b`, 'i').test(shot.lens)) {
+                add(index, `焦段不符合仅用${constraints.focalLengthOnly}的要求`);
+            }
+            const note = String(shot.execution_note || '');
+            const changesLens = /(?<!不)(?:换用其他焦段|换焦段|更换焦段|调整焦段|拉(?:近|长|远)焦段|换(?:个|另一支)镜头)/i;
+            const otherFocalLength = positiveMentionIndexes(note, /\b\d{2,3}\s*mm\b/i)
+                .some(([start, length]) => note.slice(start, start + length).toLowerCase().replace(/\s+/g, '') !== constraints.focalLengthOnly);
+            if (hasPositiveMention(note, changesLens) || otherFocalLength) add(index, `替代拍法也必须保留${constraints.focalLengthOnly}焦段`);
+        }
         for (const item of constraints.prohibited) if (hasPositiveMention(shotText, item.pattern)) add(index, `出现禁用内容：${item.label}`);
         // The prompt explicitly allows "依赖现场条件的镜头明确写条件与替代方案":
         // a plan may reference an unconfirmed resource as long as the condition
@@ -284,7 +294,9 @@ function normalizeShotCameraFields(shot) {
     const angle = cameraAngleCanonical[shot?.camera_angle];
     if (!angle) return shot;
     const position = String(shot.photographer_position || '');
-    const alignedPosition = position.replace(cameraTextPatterns, ' ').replace(/[，,;；\s]+/g, ' ').trim();
+    const positionWithMatchingHeight = shot.camera_angle === 'eye_level' ? position : position
+        .replace(/(?:(?:机位|相机)(?:在|位于|保持在)?\s*)?(?:胸口|胸部|胸前|眼睛|眼部|视线)(?:的)?高度/g, '');
+    const alignedPosition = positionWithMatchingHeight.replace(cameraTextPatterns, ' ').replace(/[，,;；\s]+/g, ' ').trim();
     const prompt = String(shot.generator_prompt || '').replace(cameraTextPatterns, ' ').replace(/\s+/g, ' ').trim();
     const keepLevelPosition = shot.camera_angle === 'eye_level' && /平视|眼平/.test(position)
         && !hasCameraAngleConflict(position, shot.camera_angle);
@@ -486,7 +498,7 @@ shot_language 是独特的镜头名称；model_pose 写具体动作口令；phot
                 constraints.fullBodyAll && '全组硬性规则：每个镜头 shot_size 只能是 FS、WS 或 EWS；裁切边界不得写半身、膝上或截脚。',
                 constraints.downwardAll && `全组硬性规则：每个镜头机位必须${constraints.highAngleOnly ? '为 high_angle' : '为 high_angle 或 overhead'}，摄影师站位说明也必须与俯拍一致。`,
                 constraints.lowerLeftAll && '全组硬性规则：每个镜头 model_position 必须明确写画面左下角。',
-                constraints.focalLengthOnly && `全组硬性规则：每个镜头 lens 只能为 ${constraints.focalLengthOnly}。`,
+                constraints.focalLengthOnly && `全组硬性规则：每个镜头 lens 只能为 ${constraints.focalLengthOnly}，替代拍法也不换焦段，只调整安全机位或后裁。`,
                 constraints.prohibited.length && `全组禁用：${constraints.prohibited.map(item => item.label).join('、')}。所有分镜字段中都不要出现这些器材或行为（包括英文图像提示词）；不要写成“禁止/不使用/without”等否定句，只写合规的替代做法。`,
                 absentResources.length && `不得假设以下未提供资源存在：${absentResources.map(item => item.name).join('、')}。`,
                 '只使用用户已提供的场地和道具；任何未提供资源都不得假设存在，也不得写进动作或站位。',

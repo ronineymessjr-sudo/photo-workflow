@@ -6,6 +6,9 @@ import { createHmac } from 'node:crypto';
 import { aiPlanProviders, handleAiPlan, extractHardConstraints, validateHardConstraints, validatePhotographerFeasibility, normalizePlanShot } from '../api/ai-plan.mjs';
 import worker from '../api/index.js';
 
+const key = 'test-private-key-never-log';
+const input = { theme: '雨夜纪实', scene: '斑马线', people: '1', duration: '1小时', extra: '高机位俯拍，人物左下角，完整全身' };
+
 test('camera normalization preserves an explicit chest-height level position', () => {
     const position = '距主体约2.5米，胸口高度平视拍摄';
     const shot = normalizePlanShot({
@@ -13,8 +16,23 @@ test('camera normalization preserves an explicit chest-height level position', (
     });
     assert.equal(shot.photographer_position, position);
 });
-const key = 'test-private-key-never-log';
-const input = { theme: '雨夜纪实', scene: '斑马线', people: '1', duration: '1小时', extra: '高机位俯拍，人物左下角，完整全身' };
+
+test('high angles remove conflicting chest-height directions while keeping the distance', () => {
+    const shot = normalizePlanShot({
+        camera_angle: 'high_angle', photographer_position: '距主体约2.5米，胸口高度平视',
+        generator_prompt: 'close-up portrait', shot_size: 'CU',
+    });
+    assert.match(shot.photographer_position, /距主体约2\.5米.*头部以上向下俯拍/);
+    assert.doesNotMatch(shot.photographer_position, /胸口高度|平视/);
+});
+
+test('a fixed focal length applies to alternate directions as well as the lens field', () => {
+    const brief = { extra: '全组固定35mm' };
+    const shot = { lens: '35mm', execution_note: '不可拍时拉近焦段或移动机位' };
+    assert.equal(extractHardConstraints(brief).focalLengthOnly, '35mm');
+    assert.ok(validateHardConstraints([shot], brief).some(item => /替代拍法.*35mm/.test(item)));
+    assert.deepEqual(validateHardConstraints([{ ...shot, execution_note: '保持35mm并稍向侧移' }], brief), []);
+});
 
 test('deterministic plan normalization repairs camera and crop conflicts before quality retry', () => {
     const shot = normalizePlanShot({
