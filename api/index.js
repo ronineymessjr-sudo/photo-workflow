@@ -15,7 +15,7 @@ import { workspaceEntryKey } from '../assets/workspace-sync-protocol.mjs';
 export { AiStudioQuota } from './ai-studio/quota.mjs';
 import { createGroup, setReference, confirmMaster, buildShotRequests, recordQc, continuitySummary, continuitySchema, attachResult, handoffFor, setImageProvider, setAnchor, ContinuityError } from './continuity.mjs';
 import { storeAsset, readAsset } from './continuity-assets.mjs';
-import { generateShot, validateShotGeneration, pollModelScope, isModelScopeModelAllowed, isNearPortrait, isFaceCloseUp, isWaistUp, cropNearPortraitImage, cropWaistUpImage } from './continuity-generation.mjs';
+import { generateShot, validateShotGeneration, pollModelScope, isModelScopeModelAllowed, isNearPortrait, isFaceCloseUp, isSeatedKneeUp, isWaistUp, cropNearPortraitImage, cropWaistUpImage } from './continuity-generation.mjs';
 import { requiresWaistKnotInFrame } from './continuity-prompt-rules.mjs';
 import { listProviders, recommendProvider, assertGroupProvider } from './continuity-providers.mjs';
 import { BUNDLED_PEXELS_WAIST_POSE, groupFromStudio } from './continuity-studio-bridge.mjs';
@@ -799,9 +799,11 @@ export default {
                             if (isAsync && generated.taskId) {
                                 const shot = (body?.group?.shots || []).find(item => item.shotId === body?.shotId);
                                 const faceCloseUp = isFaceCloseUp(shot);
-                                if (isNearPortrait(shot) || faceCloseUp) await writeContinuityResultCache(env, uid, generated.taskId, {
+                                const seatedKneeUp = isSeatedKneeUp(shot);
+                                if (isNearPortrait(shot) || faceCloseUp || seatedKneeUp) await writeContinuityResultCache(env, uid, generated.taskId, {
                                     status: 'pending', shotId: body.shotId, frameSize: shot.size || shot.shotType,
                                     ...(faceCloseUp ? { faceCloseUp } : {}),
+                                    ...(seatedKneeUp ? { seatedKneeUp } : {}),
                                 });
                             }
                             result = { status: isAsync ? 202 : 200, body: generated };
@@ -864,8 +866,8 @@ export default {
                             } };
                         } else {
                             try {
-                                const framed = cached?.faceCloseUp || isNearPortrait({ size: cached?.frameSize })
-                                    ? await cropNearPortraitImage(polled, env, { faceCloseUp: cached?.faceCloseUp === true })
+                                const framed = cached?.faceCloseUp || cached?.seatedKneeUp || isNearPortrait({ size: cached?.frameSize })
+                                    ? await cropNearPortraitImage(polled, env, { faceCloseUp: cached?.faceCloseUp === true, seatedKneeUp: cached?.seatedKneeUp === true })
                                     : polled;
                                 const stored = await storeAsset({
                                     dataUrl: `data:${framed.contentType};base64,${framed.base64}`,

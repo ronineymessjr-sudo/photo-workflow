@@ -494,13 +494,20 @@ export function isFaceCloseUp(variant = {}) {
         && /脸|面部|锁骨|发丝|回眸|回望|笑容|表情|眼神|face|facial|expression/i.test(`${framing} ${variant.action || ''}`);
 }
 
-export async function cropNearPortraitImage(image, env, { faceCloseUp = false } = {}) {
+export function isSeatedKneeUp(variant = {}) {
+    return /^(MFS|中全景)$/i.test(String(variant.size || variant.shotType || ''))
+        && shotPoseAction(variant.action) === 'seated';
+}
+
+export async function cropNearPortraitImage(image, env, { faceCloseUp = false, seatedKneeUp = false } = {}) {
     if (!env?.IMAGES?.input || !image?.base64) {
         throw new GenerationError('GENERATION_FRAME_CROP_UNAVAILABLE', '近景成片裁切服务未连接', 503);
     }
     try {
         const source = Uint8Array.from(Buffer.from(image.base64, 'base64'));
-        const frameOptions = faceCloseUp
+        const frameOptions = seatedKneeUp
+            ? { trim: { top: 0, left: 0.04, width: 0.92, height: 0.82 } }
+            : faceCloseUp
             ? { width: 960, height: 1240, fit: 'crop', gravity: 'face', zoom: 0.45 }
             : { trim: { top: 0, left: 0.18, width: 0.64, height: 0.70 } };
         const transformed = await env.IMAGES.input(source)
@@ -519,7 +526,7 @@ export async function cropNearPortraitImage(image, env, { faceCloseUp = false } 
             contentType: 'image/png',
             base64: Buffer.from(bytes).toString('base64'),
             dimensions,
-            frameCrop: faceCloseUp ? 'face-close-up' : 'near-portrait-shoulders-up',
+            frameCrop: seatedKneeUp ? 'seated-knee-up' : faceCloseUp ? 'face-close-up' : 'near-portrait-shoulders-up',
         };
     } catch (error) {
         if (error instanceof GenerationError) throw error;

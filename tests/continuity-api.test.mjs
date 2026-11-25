@@ -105,6 +105,7 @@ test('continuity collect returns a stored image for a succeeded async task', asy
 for (const frame of [
     { frameSize: '近景', frameCrop: 'near-portrait-shoulders-up', transform: { trim: { top: 0, left: 0.18, width: 0.64, height: 0.7 } } },
     { frameSize: 'CU', faceCloseUp: true, frameCrop: 'face-close-up', transform: { width: 960, height: 1240, fit: 'crop', gravity: 'face', zoom: 0.45 } },
+    { frameSize: 'MFS', seatedKneeUp: true, frameCrop: 'seated-knee-up', transform: { trim: { top: 0, left: 0.04, width: 0.92, height: 0.82 } } },
 ]) test(`continuity collect applies the saved ${frame.frameCrop} contract before storing a portrait`, async () => {
     const originalFetch = globalThis.fetch;
     const values = new Map();
@@ -113,6 +114,7 @@ for (const frame of [
     values.set(cacheKey, JSON.stringify({
         status: 'pending', shotId: 'shot-near', frameSize: frame.frameSize,
         ...(frame.faceCloseUp ? { faceCloseUp: true } : {}),
+        ...(frame.seatedKneeUp ? { seatedKneeUp: true } : {}),
     }));
     let transform;
     const kv = {
@@ -295,6 +297,7 @@ test('the Studio bridge imports plan shots and retains selected library referenc
 for (const shot of [
     { size: '近景', crop: '只保留头部与双肩。', mustShow: '完整面部与自然肩姿。', prompt: 'Head-and-shoulders portrait by a wooden pavilion bench.' },
     { size: 'CU', crop: '发顶到锁骨。', mustShow: '人物侧脸表情。', prompt: 'Face close-up by a wooden pavilion bench.', faceCloseUp: true },
+    { size: 'MFS', action: '模特坐于长椅，双手放在大腿上', crop: '大腿中段以上', mustShow: '双手与坐姿', prompt: 'Seated knee-up portrait on a bench.', seatedKneeUp: true },
 ]) test(`ModelScope ${shot.size} submissions retain the shot crop metadata for async collect`, async () => {
     const originalFetch = globalThis.fetch;
     const values = new Map();
@@ -321,6 +324,7 @@ for (const shot of [
             guidance: { suggestions: [{ sourceItemId: 'pose-near', direction: '肩颈放松，头部微微侧转。' }] },
             shots: [{ id: 'near', shotSize: shot.size, directorContract: {
                 shot_size: shot.size, scene: '木亭长椅', referenceIds: ['pose-near'],
+                model_pose: shot.action || '',
                 generator_prompt: shot.prompt,
                 wardrobe_styling: '象牙白长袖针织上衣，不添加首饰。',
                 crop_boundary: shot.crop, must_show: shot.mustShow,
@@ -345,6 +349,7 @@ for (const shot of [
         assert.deepEqual(metadata, {
             status: 'pending', shotId: confirmed.body.group.shots[0].shotId, frameSize: shot.size,
             ...(shot.faceCloseUp ? { faceCloseUp: true } : {}),
+            ...(shot.seatedKneeUp ? { seatedKneeUp: true } : {}),
         });
     } finally {
         globalThis.fetch = originalFetch;
