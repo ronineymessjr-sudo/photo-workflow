@@ -286,7 +286,12 @@ function normalizeShotCameraFields(shot) {
     const position = String(shot.photographer_position || '');
     const alignedPosition = position.replace(cameraTextPatterns, ' ').replace(/[，,;；\s]+/g, ' ').trim();
     const prompt = String(shot.generator_prompt || '').replace(cameraTextPatterns, ' ').replace(/\s+/g, ' ').trim();
-    return { ...shot, photographer_position: `${alignedPosition || '距主体约3米'}，${angle.zh}`, generator_prompt: `${prompt}${prompt ? ', ' : ''}${angle.en}` };
+    const keepLevelPosition = shot.camera_angle === 'eye_level' && /平视|眼平/.test(position)
+        && !hasCameraAngleConflict(position, shot.camera_angle);
+    const angleDirection = shot.camera_angle === 'eye_level' && /胸口|胸部|胸前/.test(alignedPosition)
+        ? '保持相机水平拍摄' : angle.zh;
+    return { ...shot, photographer_position: keepLevelPosition ? position : `${alignedPosition || '距主体约3米'}，${angleDirection}`,
+        generator_prompt: `${prompt}${prompt ? ', ' : ''}${angle.en}` };
 }
 
 export function normalizePlanShot(shot) {
@@ -485,11 +490,12 @@ shot_language 是独特的镜头名称；model_pose 写具体动作口令；phot
                 constraints.prohibited.length && `全组禁用：${constraints.prohibited.map(item => item.label).join('、')}。所有分镜字段中都不要出现这些器材或行为（包括英文图像提示词）；不要写成“禁止/不使用/without”等否定句，只写合规的替代做法。`,
                 absentResources.length && `不得假设以下未提供资源存在：${absentResources.map(item => item.name).join('、')}。`,
                 '只使用用户已提供的场地和道具；任何未提供资源都不得假设存在，也不得写进动作或站位。',
+                '单人人像的拍摄距离应随焦段和景别变化。以全画幅35mm竖拍为例，成年人全身约2至3米，腰上约1至2米。若固定广角拍面部特写，保持舒适的拍摄距离并写明后裁边界。沿用用户指定的器材、安全距离和站位。',
             ].filter(Boolean).join('\n');
             const poseTemplates = (referenceContext?.templates || []).filter(template => template.kind === 'pose');
-            const poseRules = poseTemplates.length ? `姿势库已选参考（按镜头顺序循环匹配；服装细节镜头不分配姿势图）：${poseTemplates.map((template, index) => {
+            const poseRules = poseTemplates.length ? `姿势库已选参考（仅给动作相符的镜头分配；服装细节镜头不分配姿势图）：${poseTemplates.map(template => {
                 const direction = (referenceContext.guidance?.suggestions || []).find(item => item.sourceItemId === template.id)?.direction || template.description || template.title;
-                return `镜头序位${index + 1}参考 ${template.id} ${template.title}：动作按此姿势方向描述（${direction}）`;
+                return `${template.id} ${template.title}：${direction}`;
             }).join('；')}。如用户动作限制与参考姿势冲突，保留用户限制并使用自然安全的替代姿势。` : '';
             const systemInstruction = [instruction, poseRules, hardRules].filter(Boolean).join('\n\n');
             const messages = [{ role: 'system', content: systemInstruction }, { role: 'user', content: brief || '未指定主题，请提出自然人像草案，未知条件标为待确认。' }];

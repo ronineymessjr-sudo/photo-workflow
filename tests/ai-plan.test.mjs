@@ -6,6 +6,13 @@ import { createHmac } from 'node:crypto';
 import { aiPlanProviders, handleAiPlan, extractHardConstraints, validateHardConstraints, validatePhotographerFeasibility, normalizePlanShot } from '../api/ai-plan.mjs';
 import worker from '../api/index.js';
 
+test('camera normalization preserves an explicit chest-height level position', () => {
+    const position = '距主体约2.5米，胸口高度平视拍摄';
+    const shot = normalizePlanShot({
+        camera_angle: 'eye_level', photographer_position: position, generator_prompt: 'waist-up portrait',
+    });
+    assert.equal(shot.photographer_position, position);
+});
 const key = 'test-private-key-never-log';
 const input = { theme: '雨夜纪实', scene: '斑马线', people: '1', duration: '1小时', extra: '高机位俯拍，人物左下角，完整全身' };
 

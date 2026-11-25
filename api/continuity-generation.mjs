@@ -61,7 +61,7 @@ function imageDimensions(bytes, mime) {
 
 import { assertReadyToGenerate, buildShotRequests, ContinuityError, CONTINUITY_PROVIDERS } from './continuity.mjs';
 import { requiresWaistKnotInFrame, wardrobeCoverageRules } from './continuity-prompt-rules.mjs';
-import { shotPoseAction } from './ai-studio/pose-suitability.mjs';
+import { poseMatchesShotAction, shotPoseAction } from './ai-studio/pose-suitability.mjs';
 import { storeAsset, readAsset, AssetError } from './continuity-assets.mjs';
 import { pickLightKit } from './light-kit.mjs';
 import { BUNDLED_PEXELS_WAIST_POSE } from './continuity-studio-bridge.mjs';
@@ -554,7 +554,7 @@ function modelScopeCorrections({ locked, variant, poseRef }) {
         '领口与内搭严格按服装文字描述：不要擅自添加蓝色、白色或未指定的内搭针织/打底衫；若服装参考图含围巾、丝巾或包袋且文字未要求，严禁复制到成片中。',
     ];
     const poseText = [poseRef?.id, poseRef?.title, poseRef?.direction, variant?.action].filter(Boolean).join(' ');
-    if (/P015|右手/i.test(poseText) && !isTightPortrait(variant)) {
+    if (/P015/i.test(poseText) && !isTightPortrait(variant)) {
         rules.push('姿势与左右侧方向严格按文字和摆姿参考执行，不得左右镜像翻转：人物右手轻搭自身右侧髋部（位于画面左侧），左手自然下垂。');
     }
     const lightingText = [locked?.weather, locked?.light, variant?.lighting].filter(Boolean).join(' ');
@@ -574,8 +574,9 @@ function modelScopePriorityDirective({ anchor, variant, poseRef, visualPoseSent 
         }
     }
     const poseText = [poseRef?.id, poseRef?.title, poseRef?.direction, variant?.action].filter(Boolean).join(' ');
-    if (shotPoseAction(variant?.action) === 'walking' && /不看(?:向)?镜头|视线避开镜头/i.test(variant.action)) {
-        out.push('【视线与步态】在行走中抓拍，身体重心前移，双臂随步伐自然摆动；眼睛看向沿路前方或画外，和相机不发生眼神接触。');
+    if (shotPoseAction(variant?.action) === 'walking'
+        && /不看(?:向)?镜头|视线避开镜头|(?:视线|目光)(?:平视|看向|望向|朝向)前方/i.test(variant.action)) {
+        out.push('【视线与步态】抓拍迈步时的重心转移，鼻尖朝向行进方向，眼睛看向沿路前方或画外；相机站在视线一侧拍摄，保留自然的侧脸或四分之三侧脸，和相机不发生眼神接触。');
     }
     if (!isTightPortrait(variant)) {
         if (/P015/i.test(poseText) && !isUpperBodyFrame(variant)) {
@@ -592,8 +593,10 @@ function buildModelScopeDirection({ modelId, imageRoles, fields, corrections, pr
     if (modelId === MODELSCOPE_TURBO_MODEL || modelId === MODELSCOPE_QWEN_IMAGE_21_MODEL) {
         return modelScopeDirection({ modelId, prompt: framePrompt, locked: frameLocked, variant, poseRef, size: variant?.size, anchor, priorityDirective, imageRoles });
     }
+    const wardrobe = directive(frameLocked?.wardrobe || variant?.wardrobe);
     return [
         imageRoleGuidance(imageRoles),
+        ...(visualPoseSent && wardrobe ? [`【成片服装】给画中人物穿上方案指定的${wardrobe}。摆姿图只决定关节位置和重心，参考人物的连体衣、紧身轮廓、裸露与鞋子均不得复制到成片。`] : []),
         ...priorityDirective,
         ...fields.map(([key, value]) => `${FIELD_LABELS_ZH[key] || key}：${value}`),
         ...corrections,
@@ -980,6 +983,11 @@ function canSendVisualPoseReference(variant, poseRef, frameAnchor) {
     return isWaistUp(variant) && (isBundledWaistPose(poseRef.imageUrl) || isPoseAtlasPoseImage(poseRef.imageUrl));
 }
 
+function compatibleShotPose(group, shot) {
+    const poseRef = shot?.poseRef;
+    return group?.studio?.planId && !poseMatchesShotAction(poseRef, shot?.action) ? null : poseRef;
+}
+
 function modelScopeFrameAnchor(variant, anchor) {
     // A full-body anchor can pull a tight shot wide or copy its planted stance
     // into a walking frame. The separate portrait reference still locks identity.
@@ -1312,7 +1320,8 @@ export async function generateShot({ group, shotId, providerId = '', env = {}, f
         throw new GenerationError('GENERATION_MODEL_NOT_ALLOWED', '不支持的魔搭图像模型', 400);
     }
     if (!shotId) throw new ContinuityError('CONTINUITY_SHOT_REQUIRED', '需要镜头 ID', 400);
-    if (!(group?.shots || []).some(shot => shot.shotId === shotId)) {
+    const shot = (group?.shots || []).find(item => item.shotId === shotId);
+    if (!shot) {
         throw new ContinuityError('CONTINUITY_SHOT_UNKNOWN', `没有这个镜头：${shotId}`, 404);
     }
     // Gate first: references confirmed, master human-confirmed, provider capable.
@@ -1372,6 +1381,7 @@ export async function generateShot({ group, shotId, providerId = '', env = {}, f
         ...request.anchor,
         sourceAction: group.shots.find(shot => shot.shotId === request.anchor.shotId)?.action,
     };
+    const poseRef = compatibleShotPose(group, shot);
 
     // Async provider: hand the work off and return immediately. A 20-40s
     // generation cannot be held open behind the Pages proxy (30s ceiling).
@@ -1379,7 +1389,7 @@ export async function generateShot({ group, shotId, providerId = '', env = {}, f
         const submitted = await submitModelScope({
             env, prompt: request.prompt, size, seed: request.seed, references,
             variant: request.variant,
-            poseRef: (group.shots || []).find(shot => shot.shotId === shotId)?.poseRef || null,
+            poseRef,
             modelId,
             anchor, locked: request.locked, store, fetchImpl,
         });
@@ -1401,7 +1411,7 @@ export async function generateShot({ group, shotId, providerId = '', env = {}, f
         variant: request.variant,
         locked: request.locked,
         // The pose template the operator picked for THIS frame, if any.
-        poseRef: (group.shots || []).find(shot => shot.shotId === shotId)?.poseRef || null,
+        poseRef,
         modelId,
         // The accepted frame to edit from. Present from the second shot onward.
         anchor,
@@ -1470,7 +1480,7 @@ export async function validateShotGeneration({ group, shotId, providerId = '', e
         catch (error) { throw new GenerationError('GENERATION_REFERENCE_INVALID', error.message, 409); }
         if (!anchor?.buffer?.length) throw new GenerationError('GENERATION_REFERENCE_MISSING', '锚点成片无法读取', 409);
     }
-    const poseRef = (group.shots || []).find(shot => shot.shotId === shotId)?.poseRef;
+    const poseRef = compatibleShotPose(group, (group.shots || []).find(shot => shot.shotId === shotId));
     if (providerId === 'modelscope-qwen-edit' && poseRef && !poseRef.assetId && poseRef.referenceImageUrl) {
         const pose = await fetchLibraryImage(poseRef.referenceImageUrl, fetchImpl);
         if (!pose) throw new GenerationError('GENERATION_REFERENCE_MISSING', '姿势参考图无法读取', 409);

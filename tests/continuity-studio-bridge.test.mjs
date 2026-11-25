@@ -157,6 +157,17 @@ test('a real Studio plan keeps per-shot scenes and pose selections in the contin
     assert.equal(result.group.shots[0].poseRef, null, '行走镜头不使用坐姿参考图');
     assert.equal(result.group.shots[0].action, '自然行走');
 
+    const standing = { ...pose, id: 'atlas-pose-full_single_p017', upstreamId: 'full_single_p017', title: '站立・回眸顾盼' };
+    const slowWalk = groupFromStudio({
+        templates: [portrait, costume, standing],
+        input: { theme: '湖边自然人像' },
+        shots: [{
+            id: 'walk', scene: '湖边木栈道', description: '模特侧身缓行一手轻抚衣袖',
+            directorContract: { model_pose: '模特侧身缓行一手轻抚衣袖', referenceIds: [standing.id] },
+        }],
+    });
+    assert.equal(slowWalk.group.shots[0].poseRef, null, '缓行不能沿用站姿摆姿图');
+
     const ready = confirmMaster(result.group, { assetId: result.group.references.find(reference => reference.role === 'identity').assetId });
     assert.equal(ready.master.confirmedBy, 'human');
     const requests = buildShotRequests(ready, { providerId: 'cloudflare-flux-klein' });

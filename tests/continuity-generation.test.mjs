@@ -792,9 +792,11 @@ test('anchored ModelScope shots follow PoseAtlas text without mixing the pose ph
 test('ModelScope walking shots keep the face reference without a standing anchor', async () => {
     const store = createMemoryStore();
     const group = await readyGroup(store);
+    group.studio = { planId: 'previously-imported-plan' };
     Object.assign(group.shots[0], {
         size: 'MFS', shotType: 'MFS', action: '模特沿木栈道缓慢前行，不看镜头，手臂自然摆动。',
-        scene: '湖边木栈道', crop: '人物主体完整清晰；按当前景别保留必要的画面空间。', poseRef: null,
+        scene: '湖边木栈道', crop: '人物主体完整清晰；按当前景别保留必要的画面空间。',
+        poseRef: { id: 'atlas-pose-full_single_p017', title: '站立・回眸顾盼', imageUrl: 'https://example.com/standing.jpg' },
     });
     group.shots.push({ ...group.shots[0], shotId: 'anchor-standing', action: '模特站立扶髋。' });
     setAnchor(group, { assetId: group.references.find(reference => reference.role === 'identity').assetId, shotId: 'anchor-standing' });
@@ -805,9 +807,26 @@ test('ModelScope walking shots keep the face reference without a standing anchor
     });
     assert.ok(result.referenceRolesSent.includes('identity'));
     assert.ok(!result.referenceRolesSent.includes('anchor'));
+    assert.ok(!result.referenceRolesSent.includes('pose'));
     assert.match(result.sentPrompt, /缓慢前行/);
     assert.match(result.sentPrompt, /视线与步态.*眼睛看向沿路前方或画外/);
     assert.match(result.sentPrompt, /景别最高优先级：中全景：画框下沿切在膝盖上方/);
+});
+
+test('ModelScope preserves off-camera walking gaze and the specified right-hand action', async () => {
+    const store = createMemoryStore();
+    const group = await readyGroup(store);
+    Object.assign(group.shots[0], {
+        action: '模特沿竹林小径缓行，视线平视前方，右手轻抚衣袖。', poseRef: null,
+    });
+    const result = await generateShot({
+        group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit',
+        env: { MODELSCOPE_TOKEN: 'test-only' }, store, submitOnly: true,
+        fetchImpl: async () => Response.json({ task_id: 'walking-gaze-without-hip-pose' }),
+    });
+    assert.match(result.sentPrompt, /视线与步态.*鼻尖朝向行进方向/);
+    assert.match(result.sentPrompt, /右手轻抚衣袖/);
+    assert.doesNotMatch(result.sentPrompt, /右手轻搭自身右侧髋部/);
 });
 
 test('ModelScope waist-up frames crop an angle-specific PoseAtlas sketch and exclude wardrobe refs', async () => {
