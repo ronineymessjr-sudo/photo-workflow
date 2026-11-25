@@ -15,7 +15,7 @@ const propMentionPatterns = [
     ['玻璃', /玻璃|\bglass\b/i], ['书本', /书本|书籍|\bbooks?\b/i], ['饮品', /饮品|咖啡杯|手持咖啡|咖啡饮品|茶饮|\bdrinks?\b|\bcoffee cup\b|\bcup of coffee\b/i],
     ['杯瓶', /杯|瓶|\bcups?\b|\bbottles?\b/i],
     ['手机', /手机|\bphone\b/i], ['雨伞', /雨伞|\bumbrella\b/i], ['包袋', /包袋|手提包|\bbags?\b/i],
-    ['花束', /花束|花瓶|\bbouquet\b/i], ['相机', /相机|\bcamera\b/i], ['服装配件', /纽扣|鞋|衣摆|衣料|围巾|帽子|眼镜|饰品|\bscarf\b/i],
+    ['花束', /花束|花瓶|\bbouquet\b/i], ['相机', /相机|\bcamera\b/i], ['服装配件', /围巾|帽子|眼镜|饰品|\bscarf\b/i],
     ['门窗结构', /门框|窗框|门窗|窗帘|\bdoor\b|\bcurtain\b|\bframe\b/i], ['其他物件', /道具|物品|物件|工具|\bprops?\b|\bobjects?\b/i],
 ];
 const lightingEquipmentPattern = /反光板|反光材料|补光板|补光灯|闪光灯|柔光箱|柔光屏|灯架|\breflector\b|\bsoftbox\b|\bfill light\b|\bflash\b|\bLED light\b/i;
@@ -92,11 +92,16 @@ export async function createDirectorPlan(input, { baseUrl, fetchImpl = fetch, re
     const wardrobeNote = wardrobeMentioned ? '' : '用户未指定服装、发型或妆容：将其标为待确认，不得推荐具体款式、颜色或造型，也不得把未选择的服装/人像参考当作用户要求。';
     const userText = `${cleanInput.theme} ${cleanInput.style} ${cleanInput.modelDesc} ${cleanInput.scene} ${cleanInput.extra}`;
     const productSubject = /产品|商品/.test(userText);
-    const negativePropClausePattern = /(?:不新增|不添加|不要|不使用|不出现|不携带|不佩戴|不配戴|不拿|不带|禁止|不能新增|不得出现|不能携带|不得携带|别带|勿带)[^。\n；;，,]*/g;
+    const negativePropClausePattern = /(?:不新增|不添加|不要|不使用|不出现|不携带|不佩戴|不配戴|不拿|不带|不触碰|不接触|不依赖|禁止|不能新增|不得出现|不能携带|不得携带|别带|勿带|无(?:新增|额外)?(?:道具|物品))[^。\n；;，,]*/g;
     const explicitlyNoNewProps = /(?:不新增|不添加|不要|不使用|不出现|不携带|不佩戴|不配戴|不拿|不带|禁止|不能新增|不得出现|不能携带|不得携带)[^。\n；;]{0,20}(?:道具|物品|随身物|包袋|配饰|首饰)/i.test(`${cleanInput.extra} ${cleanInput.modelDesc}`);
     const propsOpenEnded = /(?:允许|可以|可)[^。\n；;]{0,12}(?:自由添加|自行选择|自由发挥).{0,8}(?:道具|物品)/i.test(cleanInput.extra);
     const noNewProps = explicitlyNoNewProps || !propsOpenEnded;
-    const allowedPropText = userText.replace(negativePropClausePattern, ' ');
+    const positivePropText = value => value.replace(negativePropClausePattern, ' ');
+    const allowedPropText = positivePropText(userText);
+    const hasUnrequestedProp = (fields, equipment = '') => {
+        const mentioned = fields.map(positivePropText).join(' ');
+        return propMentionPatterns.some(([, pattern]) => pattern.test(mentioned) && !pattern.test(`${allowedPropText} ${equipment}`));
+    };
     const specificProductNames = [
         '护肤精华瓶', '精华瓶', '护肤精华', '精华液', '护肤品', '面霜', '乳液', '防晒霜', '香水瓶', '口红',
         '陶瓷杯', '保温杯', '咖啡杯', '拿铁杯', '玻璃杯', '茶杯', '水杯', '玻璃瓶',
@@ -145,11 +150,11 @@ export async function createDirectorPlan(input, { baseUrl, fetchImpl = fetch, re
         const originalPose = text(shot.model_pose);
         const originalPosition = text(shot.model_position);
         const photographerPosition = text(shot.photographer_position);
-        const sceneActionText = [originalTitle, originalPose, originalPosition, photographerPosition, text(shot.framing), text(shot.crop_boundary), text(shot.must_show), text(shot.execution_note)].join(' ');
-        const hasUnrequestedObject = propMentionPatterns.some(([, pattern]) => pattern.test(sceneActionText) && !pattern.test(allowedPropText));
+        const actionFields = [originalTitle, originalPose, originalPosition, text(shot.framing), text(shot.crop_boundary), text(shot.must_show)];
+        const sceneActionText = [...actionFields, photographerPosition, text(shot.execution_note)].join(' ');
         const shotProps = text(shot.shot_props);
-        const declaresUnrequestedProp = propMentionPatterns.some(([, pattern]) => pattern.test(shotProps) && !pattern.test(allowedPropText));
-        const unrequestedPropAction = noNewProps && (hasUnrequestedObject || declaresUnrequestedProp || /prop-interaction/i.test(originalTitle) && !userAllowedProps.length);
+        const unrequestedPropAction = noNewProps && (hasUnrequestedProp([...actionFields, shotProps])
+            || /prop-interaction/i.test(originalTitle) && !userAllowedProps.length);
         const sceneMentionsProduct = /产品|商品|\bproduct\b|\bitem\b/i.test(sceneActionText)
             || productName && new RegExp(productName).test(sceneActionText);
         const productShotNeedsRewrite = productSubject && (unrequestedPropAction || !sceneMentionsProduct);
@@ -218,13 +223,14 @@ export async function createDirectorPlan(input, { baseUrl, fetchImpl = fetch, re
             ? `${sizeLabel || '当前景别'}以${productLabel}为可辨主体，人物动作围绕产品实际用途安排；未确认的产品细节和辅助物件不补造。`
             : `${sizeLabel || '适合当前景别'}取景，人物置于画面偏侧，保留已确认场地的纵深与自然空间；不加入未提供的物件。`
             : originalPosition;
-        const methodValue = photographerPosition;
         const safeMethod = shot.camera_angle === 'high_angle' || shot.camera_angle === 'overhead'
             ? '摄影师双脚站稳在安全地面，从高于人物视线的位置俯拍；不攀爬、不站不稳物体。'
             : shot.camera_angle === 'ground_level' || shot.camera_angle === 'low_angle'
                 ? '摄影师在安全通行区域内降低机位拍摄，不躺卧在车行道或阻碍行人。'
                 : '摄影师在安全通行区域与人物保持距离，按标注景别完成取景。';
-        const method = safeRewrite || /[A-Za-z]/.test(methodValue) ? safeMethod : methodValue;
+        const methodNeedsRewrite = noNewProps && hasUnrequestedProp([photographerPosition], '相机');
+        const method = methodNeedsRewrite || /[A-Za-z]/.test(photographerPosition.replace(/\d\s*(?:cm|mm|m)\b/gi, ''))
+            ? safeMethod : photographerPosition;
         const safeComposition = /[A-Za-z]/.test(composition) ? '人物在画面中自然站立或沿安全通行路径缓慢移动，保留已确认场地的空间层次。' : composition;
         const wardrobe = wardrobeMentioned ? text(shot.wardrobe_styling) : '服装与妆发待确认；本方案不指定具体款式、颜色或配件。';
         const props = noNewProps ? userAllowedProps.length
@@ -259,7 +265,8 @@ export async function createDirectorPlan(input, { baseUrl, fetchImpl = fetch, re
         const cropBoundary = safeRewrite ? safeCrop : text(shot.crop_boundary);
         const mustShow = safeRewrite ? safeMustShow : text(shot.must_show);
         const rejectIf = safeRewrite ? safeReject : text(shot.reject_if);
-        const executionNote = safeRewrite ? safeExecutionNote : text(shot.execution_note);
+        const executionNoteSource = text(shot.execution_note);
+        const executionNote = safeRewrite || noNewProps && hasUnrequestedProp([executionNoteSource]) ? safeExecutionNote : executionNoteSource;
         const clothingDetail = /服装细节|衣料细节/.test(title);
         const referencePoses = (referenceContext?.templates || [])
             .filter(template => template.kind === 'pose' && poseMatchesShotAction(template, description));

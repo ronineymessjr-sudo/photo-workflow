@@ -232,6 +232,35 @@ test('explicit no-prop constraints sanitize unsafe Director fields and internal 
     assert.doesNotMatch(shot.directorContract.generator_prompt, /地图|橱窗|咖啡|查看地图|触碰橱窗/);
 });
 
+test('prop checks preserve concrete directions for portraits with wardrobe and no added props', async () => {
+    const position = '摄影师站在栈道内侧，距主体约3.5米，相机在胸口高度平视';
+    const pose = '先迈出左脚，沿木栈道向前走，视线看向路的尽头';
+    const plan = await createDirectorPlan({
+        theme: '秋日人像', scene: '湖边木栈道', modelDesc: '米白针织上衣，卡其长裙，棕色长靴',
+        extra: '不新增道具，全组固定35mm',
+    }, {
+        baseUrl: 'http://127.0.0.1:8004',
+        fetchImpl: async () => Response.json({ shot_plans: [{
+            shot_language: '步行全身', model_pose: pose, photographer_position: position,
+            lens: '35mm', shot_size: 'FS', camera_angle: 'eye_level', model_position: '画面左侧',
+            shot_props: '无新增道具', crop_boundary: '全身，靴子和脚下地面入画',
+            must_show: '双鞋和摆动的衣摆', execution_note: '人流靠近时等栈道空出，不触碰周边物件',
+        }, {
+            shot_language: '站定回望', model_pose: '手持未提供的雨伞回望镜头',
+            photographer_position: position, lens: '35mm', shot_size: 'FS', camera_angle: 'eye_level',
+            shot_props: '雨伞',
+        }] }),
+    });
+    const [walking, standing] = plan.shotList;
+    assert.equal(walking.method, position);
+    assert.equal(walking.directorContract.photographer_position, position);
+    assert.equal(walking.description, pose);
+    assert.equal(walking.directorContract.must_show, '双鞋和摆动的衣摆');
+    assert.match(walking.alternative, /等栈道空出/);
+    assert.equal(standing.method, position);
+    assert.doesNotMatch(standing.description, /雨伞/);
+});
+
 test('unprovided lighting equipment is removed from the lighting plan and image prompt', async () => {
     const plan = await createDirectorPlan({
         theme: '室内自然人像', modelDesc: '成年模特；服装由现场确认', scene: '简洁室内自然光',
