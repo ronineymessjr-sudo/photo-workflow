@@ -279,7 +279,7 @@ function modelScopeDirection({ modelId, prompt, locked, variant, poseRef, size, 
     }).filter(rule => (!nearPortrait && !isTightPortrait(frameVariant)) || !/下摆|腹部/.test(rule)).join(' ');
     const actionAndPose = [
         directive(variant?.action),
-        poseRef?.direction && `选定摆姿${poseRef.title ? `“${directive(poseRef.title)}”` : ''}：与本镜动作兼容的方向为${directive(poseRef.direction)}；冲突时以本镜动作优先`,
+        !isTightPortrait(frameVariant) && poseRef?.direction && `选定摆姿${poseRef.title ? `“${directive(poseRef.title)}”` : ''}：与本镜动作兼容的方向为${directive(poseRef.direction)}；冲突时以本镜动作优先`,
     ].filter(Boolean).join('；');
     const fields = [
         ['任务', '生成一张真实摄影成片，单张照片，不是拼图或插画。'],
@@ -425,7 +425,7 @@ const FIELD_LABELS_ZH = {
 // what is absent is weaker than stating the cut.
 const FRAMING_ZH = {
     ECU: '极特写：画框只包含脸部局部（眼睛或嘴唇），额头与下巴被画框切掉，脸占画面八成以上',
-    CU: '特写：画框下沿切在锁骨下方，胸口以下完全不在画面内，画面里只有头部、颈部和肩，不出现手臂、不出现手',
+    CU: '面部特写：从发顶到锁骨取景。面部应占画面高度至少一半，只保留颈部、双肩和少量衣领；画框下沿在锁骨附近，上臂、胸口以下和腰部均在画外。按本镜动作呈现头部方向与眼神，不自动改成正面看镜头',
     MCU: '近景半身：画框下沿切在胸部，胸部以下完全不在画面内，画面里只有头部到胸前，不出现腰、腿、脚，人物占画面高度七成以上',
     MS: '中景腰上人像：只显示头部、肩膀、胸部和上腹，画框必须在自然腰线结束；绝不出现裙子、胯部、腿、膝盖、靴子或脚；禁止全身照、七分身照和远景，必要时裁掉手肘以下，人物占画面高度约七成',
     MFS: '中全景：画框下沿切在膝盖上方，膝盖以下完全不在画面内，人物占画面高度约八成',
@@ -574,6 +574,9 @@ function modelScopePriorityDirective({ anchor, variant, poseRef, visualPoseSent 
         }
     }
     const poseText = [poseRef?.id, poseRef?.title, poseRef?.direction, variant?.action].filter(Boolean).join(' ');
+    if (shotPoseAction(variant?.action) === 'walking' && /不看(?:向)?镜头|视线避开镜头/i.test(variant.action)) {
+        out.push('【视线与步态】在行走中抓拍，身体重心前移，双臂随步伐自然摆动；眼睛看向沿路前方或画外，和相机不发生眼神接触。');
+    }
     if (!isTightPortrait(variant)) {
         if (/P015/i.test(poseText) && !isUpperBodyFrame(variant)) {
             out.push('【核心动作优先执行】人物严格按摆姿参考摆出不对称对立式站姿：右肘明显向外弯折形成手臂与腰间三角空隙，右手明确扶在人物自身右侧髋部（画面左侧），左臂自然垂在身侧；双脚前后错步重心在后脚；不要双手同时垂在身体两侧。');

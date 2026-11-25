@@ -793,7 +793,7 @@ test('ModelScope walking shots keep the face reference without a standing anchor
     const store = createMemoryStore();
     const group = await readyGroup(store);
     Object.assign(group.shots[0], {
-        size: 'MFS', shotType: 'MFS', action: '模特沿木栈道缓慢前行，手臂自然摆动。',
+        size: 'MFS', shotType: 'MFS', action: '模特沿木栈道缓慢前行，不看镜头，手臂自然摆动。',
         scene: '湖边木栈道', crop: '人物主体完整清晰；按当前景别保留必要的画面空间。', poseRef: null,
     });
     group.shots.push({ ...group.shots[0], shotId: 'anchor-standing', action: '模特站立扶髋。' });
@@ -806,6 +806,7 @@ test('ModelScope walking shots keep the face reference without a standing anchor
     assert.ok(result.referenceRolesSent.includes('identity'));
     assert.ok(!result.referenceRolesSent.includes('anchor'));
     assert.match(result.sentPrompt, /缓慢前行/);
+    assert.match(result.sentPrompt, /视线与步态.*眼睛看向沿路前方或画外/);
     assert.match(result.sentPrompt, /景别最高优先级：中全景：画框下沿切在膝盖上方/);
 });
 
@@ -1234,6 +1235,24 @@ test('ModelScope CU drops a full-body anchor while WS keeps its zoom override', 
     assert.deepEqual(wsRes.referenceRolesSent, ['anchor', 'identity', 'style']);
     assert.match(wsPayload.prompt, /【景别硬性切换】.*大幅拉远/);
     assert.match(wsPayload.prompt, /周围环境与空间纵深是主体/);
+});
+
+test('Turbo face close-up keeps the collarbone cut and omits unrelated standing-pose text', async () => {
+    const store = createMemoryStore();
+    const group = await readyGroup(store);
+    Object.assign(group.shots[0], {
+        size: 'CU', shotType: 'CU', action: '轻微侧转头部，视线看向斜下方。',
+        scene: '木亭长椅', crop: '按当前景别保留必要的画面空间。',
+        poseRef: { id: 'pose-standing', title: '标准正面站姿', direction: '先拍正面，双手扶髋。' },
+    });
+    const result = await generateShot({
+        group, shotId: 'shot-01', providerId: 'modelscope-qwen-edit', modelId: 'Qwen/Qwen-Image-2.1-Turbo',
+        env: { MODELSCOPE_TOKEN: 'test-only' }, store, submitOnly: true,
+        fetchImpl: async () => Response.json({ task_id: 'tight-crop-no-standing-pose' }),
+    });
+    assert.match(result.sentPrompt, /景别最高优先级：面部特写：从发顶到锁骨取景。面部应占画面高度至少一半/);
+    assert.match(result.sentPrompt, /视线看向斜下方/);
+    assert.doesNotMatch(result.sentPrompt, /标准正面站姿|先拍正面|双手扶髋/);
 });
 
 test('an explicitly required waist knot overrides the generic waistline crop and keeps the lower edge', async () => {
