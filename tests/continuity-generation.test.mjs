@@ -258,7 +258,7 @@ test('Cloudflare isolates person and wardrobe from the anchor before switching l
     const store = createMemoryStore();
     const group = await readyGroup(store);
     Object.assign(group.shots[0], { size: 'MS', scene: '木亭长椅' });
-    group.shots.push({ ...group.shots[0], shotId: 'anchor-fs', scene: '公园竹林小径' });
+    group.shots.push({ ...group.shots[0], shotId: 'anchor-fs', size: 'FS', scene: '公园竹林小径' });
     setAnchor(group, { assetId: group.references.find(reference => reference.role === 'identity').assetId, shotId: 'anchor-fs' });
     const isolatedJpeg = Uint8Array.of(0xff, 0xd8, 0xff, 0xc0, 0, 11, 8, 0, 1, 0, 1, 1, 1, 0x11, 0, 0xff, 0xd9);
     let isolatedOptions;
@@ -287,6 +287,7 @@ test('Cloudflare isolates person and wardrobe from the anchor before switching l
         else assert.equal(firstReference.type, 'image/png');
     }
     assert.equal(isolatedOptions.segment, 'foreground');
+    assert.deepEqual(isolatedOptions.trim, { top: 0, left: 0.12, width: 0.76, height: 0.55 });
 });
 
 test('detail close-ups honor the named target and remove incompatible wide-shot clauses', async () => {

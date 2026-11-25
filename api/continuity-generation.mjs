@@ -18,11 +18,17 @@ async function prepareFluxReference(source, env) {
     return source;
 }
 
-async function isolateFluxAnchor(source, env) {
+async function isolateFluxAnchor(source, env, anchor, variant) {
     if (!env.IMAGES?.input) return null;
     try {
+        const fullBodyAnchor = /^(?:FS|WS|EWS|全身|环境全景|环境远景)$/i.test(String(anchor.sourceFrameSize || ''));
+        const framing = isFaceCloseUp(variant)
+            ? { width: 576, height: 768, fit: 'crop', gravity: 'face', zoom: 0.45 }
+            : { width: 768, height: 768, fit: 'scale-down',
+                ...(fullBodyAnchor && isWaistUp(variant) ? { trim: { top: 0, left: 0.12, width: 0.76, height: 0.55 } } : {}),
+            };
         const transformed = await env.IMAGES.input(source.buffer)
-            .transform({ segment: 'foreground', background: '#e6e6e6', width: 768, height: 768, fit: 'scale-down' })
+            .transform({ segment: 'foreground', background: '#e6e6e6', ...framing })
             .output({ format: 'image/jpeg', quality: 84 });
         const response = transformed.response();
         if (!response.ok) return null;
@@ -1243,7 +1249,7 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
             // store must be forwarded: without it readAsset falls back to a
             // fresh in-memory backend that never saw the uploaded frame.
             const stored = await readAsset(`/api/continuity/asset/${anchor.assetId}`, { env, store });
-            if (stored?.buffer?.length) anchorBuffer = changingScene ? await isolateFluxAnchor(stored, env) : stored;
+            if (stored?.buffer?.length) anchorBuffer = changingScene ? await isolateFluxAnchor(stored, env, anchor, variant) : stored;
         } catch {
             anchorBuffer = null;
         }
@@ -1413,6 +1419,7 @@ export async function generateShot({ group, shotId, providerId = '', env = {}, f
         ...request.anchor,
         sourceAction: anchorShot?.action,
         sourceScene: anchorShot?.scene,
+        sourceFrameSize: anchorShot?.size || anchorShot?.shotType,
     };
     const poseRef = compatibleShotPose(group, shot);
 
