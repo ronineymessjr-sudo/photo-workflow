@@ -2,6 +2,11 @@ export function wardrobeCoverageRules({ subject, wardrobe, shotWardrobe, languag
     const wardrobeText = [subject, wardrobe, shotWardrobe].filter(Boolean).join(' ');
     const hasLongSleeves = /宽袖|长袖|long[- ]sleeve|wide[- ]sleeve/i.test(wardrobeText);
     const explicitlyCropped = /短款|露脐|cropped|crop[- ]top/i.test(wardrobeText);
+    const wrapConstruction = /裹身|wrap[- ]?(?:top|blouse|knit)/i.test(wardrobeText)
+        ? language === 'en'
+            ? 'The wrap top has two overlapping front panels crossing diagonally over the torso and fastening at the waist. Preserve this wrap construction and the specified neckline; do not substitute a pullover with its hem twisted into a knot.'
+            : '裹身上衣由左右两片前襟沿躯干斜向交叠，并在腰部系合，领口遵循选定款式；保留交叠前襟结构，不用普通套头毛衣下摆拧结来代替裹身版型。'
+        : '';
     const shouldersCovered = hasLongSleeves && !/露肩|滑肩|off[- ]shoulder|bare shoulders?/i.test(wardrobeText)
         ? language === 'en'
             ? 'Keep both shoulders fully covered; the knit top shoulder seams stay at the natural shoulder positions. Do not use off-shoulder, cutout-shoulder, or slipped-shoulder styling.'
@@ -17,7 +22,7 @@ export function wardrobeCoverageRules({ subject, wardrobe, shotWardrobe, languag
             ? 'No jewelry anywhere: no earrings, necklace, bracelets, or rings.'
             : '人物全组不佩戴首饰：耳朵、颈部、手腕和手指均无耳饰、项链、手链或戒指。'
         : '';
-    return [shouldersCovered, torsoCovered, jewelryExcluded].filter(Boolean);
+    return [wrapConstruction, shouldersCovered, torsoCovered, jewelryExcluded].filter(Boolean);
 }
 
 export function requiresWaistKnotInFrame(mustShow) {
