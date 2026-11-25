@@ -415,7 +415,7 @@ function photographerRepairGuidance(shots, violations) {
 
     const details = framingIndexes.map(index => {
         const shot = shots[index];
-        return `镜头${index + 1}当前：shot_size=${shot.shot_size}；model_pose=${shot.model_pose}；crop_boundary=${shot.crop_boundary}；must_show=${shot.must_show}；generator_prompt=${shot.generator_prompt}`;
+        return `镜头${index + 1}当前：shot_size=${shot.shot_size}；crop_boundary=${shot.crop_boundary}；must_show=${shot.must_show}；generator_prompt=${shot.generator_prompt}；model_pose=${shot.model_pose}`;
     }).join('\n');
     return `\n景别冲突的逐镜修订依据：\n${details}\n修订时先遵守用户需求中明确的全身、半身、特写等硬性要求；没有明确要求时，根据该镜头主体和现场任务确定可执行景别。再让 shot_size、crop_boundary、must_show 与 generator_prompt 完全一致，不得通过删掉用户要求的必见内容来绕过校验。景别对应：ECU=五官/极近特写，CU=脸部特写，MCU=头肩，MS=腰部以上，MFS=膝部以上，FS=完整全身，WS=全身加较多环境，EWS=环境远景。generator_prompt 只保留一种正向景别描述。`;
 }
