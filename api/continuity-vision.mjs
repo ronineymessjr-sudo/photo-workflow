@@ -37,6 +37,7 @@ function buildPrompt({ shot, locked }) {
         `- 时间：${locked.timeOfDay}`,
         `本镜要求：景别 ${shot.size}；机位 ${shot.camera}；焦段 ${shot.lens}；人物位置 ${shot.subjectPlacement || '未指定'}。`,
         shot.crop && `- 本镜裁切：${shot.crop}`,
+        /^(MFS|中全景)$/i.test(String(shot.size || '')) && '景别定义：MFS 为膝上人像，画框下沿可落在大腿中段至膝盖上方之间。大腿中部属于膝盖以上；保留完整头部、躯干及本镜必见手部且膝盖不入画时，不因下沿位于大腿中部而判失败。坐姿同样按人体部位判断。',
         shot.wardrobe && `- 本镜服装说明：${shot.wardrobe}`,
         shot.action && `- 本镜动作：${shot.action}`,
         shot.mustShow && `- 本镜必见：${shot.mustShow}`,
