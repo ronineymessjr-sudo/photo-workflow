@@ -254,6 +254,41 @@ test('Cloudflare anchor prompt preserves identity while following the current sh
     assert.doesNotMatch(composed, /only the face is sharp|whole scene is sharp from foreground to background/i);
 });
 
+test('Cloudflare isolates person and wardrobe from the anchor before switching locations', async () => {
+    const store = createMemoryStore();
+    const group = await readyGroup(store);
+    Object.assign(group.shots[0], { size: 'MS', scene: '木亭长椅' });
+    group.shots.push({ ...group.shots[0], shotId: 'anchor-fs', scene: '公园竹林小径' });
+    setAnchor(group, { assetId: group.references.find(reference => reference.role === 'identity').assetId, shotId: 'anchor-fs' });
+    const isolatedJpeg = Uint8Array.of(0xff, 0xd8, 0xff, 0xc0, 0, 11, 8, 0, 1, 0, 1, 1, 1, 0x11, 0, 0xff, 0xd9);
+    let isolatedOptions;
+    const images = {
+        input: () => ({
+            transform(options) {
+                isolatedOptions = options;
+                return { output: async () => ({ response: () => new Response(isolatedJpeg) }) };
+            },
+        }),
+    };
+    for (const isolationAvailable of [true, false]) {
+        let firstReference;
+        const generated = await generateShot({
+            group, shotId: 'shot-01', providerId: 'cloudflare-flux-klein', store,
+            env: { ...(isolationAvailable ? { IMAGES: images } : {}), AI: { run: async (model, input) => {
+                if (model.includes('llama')) return { response: 'A portrait by a wooden pavilion bench.' };
+                const form = await new Response(input.multipart.body, { headers: { 'content-type': input.multipart.contentType } }).formData();
+                firstReference = form.get('input_image_0');
+                assert.match(form.get('prompt'), /complete new background for this shot at 木亭长椅/);
+                return { image: PNG_1PX.split(',')[1] };
+            } } },
+        });
+        assert.deepEqual(generated.referenceRolesSent, [isolationAvailable ? 'anchor' : 'identity', 'style']);
+        if (isolationAvailable) assert.deepEqual(new Uint8Array(await firstReference.arrayBuffer()), isolatedJpeg);
+        else assert.equal(firstReference.type, 'image/png');
+    }
+    assert.equal(isolatedOptions.segment, 'foreground');
+});
+
 test('detail close-ups honor the named target and remove incompatible wide-shot clauses', async () => {
     const store = createMemoryStore();
     const group = await readyGroup(store);

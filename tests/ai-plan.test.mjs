@@ -24,6 +24,9 @@ test('high angles remove conflicting chest-height directions while keeping the d
     });
     assert.match(shot.photographer_position, /距主体约2\.5米.*头部以上向下俯拍/);
     assert.doesNotMatch(shot.photographer_position, /胸口高度|平视/);
+    const repeated = normalizePlanShot(shot);
+    assert.equal(repeated.photographer_position, shot.photographer_position);
+    assert.equal(repeated.generator_prompt, shot.generator_prompt);
 });
 
 test('a fixed focal length applies to alternate directions as well as the lens field', () => {

@@ -294,10 +294,13 @@ function normalizeShotCameraFields(shot) {
     const angle = cameraAngleCanonical[shot?.camera_angle];
     if (!angle) return shot;
     const position = String(shot.photographer_position || '');
-    const positionWithMatchingHeight = shot.camera_angle === 'eye_level' ? position : position
+    const canonicalAngles = Object.values(cameraAngleCanonical);
+    const positionWithoutDirection = canonicalAngles.reduce((value, entry) => value.replaceAll(entry.zh, ''), position);
+    const positionWithMatchingHeight = shot.camera_angle === 'eye_level' ? positionWithoutDirection : positionWithoutDirection
         .replace(/(?:(?:机位|相机)(?:在|位于|保持在)?\s*)?(?:胸口|胸部|胸前|眼睛|眼部|视线)(?:的)?高度/g, '');
     const alignedPosition = positionWithMatchingHeight.replace(cameraTextPatterns, ' ').replace(/[，,;；\s]+/g, ' ').trim();
-    const prompt = String(shot.generator_prompt || '').replace(cameraTextPatterns, ' ').replace(/\s+/g, ' ').trim();
+    const prompt = canonicalAngles.reduce((value, entry) => value.replaceAll(entry.en, ''), String(shot.generator_prompt || ''))
+        .replace(cameraTextPatterns, ' ').replace(/\s+/g, ' ').replace(/[,\s]+$/, '').trim();
     const keepLevelPosition = shot.camera_angle === 'eye_level' && /平视|眼平/.test(position)
         && !hasCameraAngleConflict(position, shot.camera_angle);
     const angleDirection = shot.camera_angle === 'eye_level' && /胸口|胸部|胸前/.test(alignedPosition)
@@ -504,6 +507,7 @@ shot_language 是独特的镜头名称；model_pose 写具体动作口令；phot
                 absentResources.length && `不得假设以下未提供资源存在：${absentResources.map(item => item.name).join('、')}。`,
                 '只使用用户已提供的场地和道具；任何未提供资源都不得假设存在，也不得写进动作或站位。',
                 multipleLocations && '多场地拍摄时，每镜标题明确写一个用户给出的场地名称。动作、构图、用光和替代拍法都按这一处场地安排，不把其他场地的固定设施或背景写入同一镜。',
+                /不跨栏杆|不靠近危险边缘/.test(String(body.input.extra || '')) && '涉及步道或栈道的走姿让模特沿已确认的通行段中线行走，站位留在安全一侧。背影和远景通过改变镜头方向获得，不让模特走向水面或危险边缘。',
                 '单人人像的拍摄距离应随焦段和景别变化。以全画幅35mm竖拍为例，成年人全身约2至3米，腰上约1至2米。若固定广角拍面部特写，保持舒适的拍摄距离并写明后裁边界。沿用用户指定的器材、安全距离和站位。',
             ].filter(Boolean).join('\n');
             const poseTemplates = (referenceContext?.templates || []).filter(template => template.kind === 'pose');

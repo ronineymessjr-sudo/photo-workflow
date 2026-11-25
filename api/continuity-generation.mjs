@@ -18,6 +18,22 @@ async function prepareFluxReference(source, env) {
     return source;
 }
 
+async function isolateFluxAnchor(source, env) {
+    if (!env.IMAGES?.input) return null;
+    try {
+        const transformed = await env.IMAGES.input(source.buffer)
+            .transform({ segment: 'foreground', background: '#e6e6e6', width: 768, height: 768, fit: 'scale-down' })
+            .output({ format: 'image/jpeg', quality: 84 });
+        const response = transformed.response();
+        if (!response.ok) return null;
+        const buffer = new Uint8Array(await response.arrayBuffer());
+        return imageDimensions(buffer, 'image/jpeg') ? { ...source, buffer, mime: 'image/jpeg' } : null;
+    } catch (error) {
+        console.warn('continuity_anchor_isolation_failed', String(error?.message || error).slice(0, 200));
+        return null;
+    }
+}
+
 function imageDimensions(bytes, mime) {
     if (mime === 'image/png' && bytes.length >= 24) {
         const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
@@ -1220,12 +1236,14 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
     // an edit of a real frame keeps the one that was already approved. This is
     // the only identity mechanism this model has.
     let anchorBuffer = null;
+    const changingScene = Boolean(directive(anchor?.sourceScene) && directive(variant?.scene)
+        && directive(anchor.sourceScene) !== directive(variant.scene));
     if (anchor?.assetId) {
         try {
             // store must be forwarded: without it readAsset falls back to a
             // fresh in-memory backend that never saw the uploaded frame.
             const stored = await readAsset(`/api/continuity/asset/${anchor.assetId}`, { env, store });
-            if (stored?.buffer?.length) anchorBuffer = stored;
+            if (stored?.buffer?.length) anchorBuffer = changingScene ? await isolateFluxAnchor(stored, env) : stored;
         } catch {
             anchorBuffer = null;
         }
@@ -1254,11 +1272,14 @@ async function callCloudflareWorkersAi({ env, prompt, size, seed, references, va
             : '';
     const composed = [
         framingLine(variant),
+        changingScene ? `Build a complete new background for this shot at ${directive(variant.scene)}. Recreate the location, ground and light around the person.` : '',
         actionConstraint,
         // Follow the chosen shoot's look instead of imposing one global film or
         // gritty texture on every location. Keep facial information readable.
         'Photographic texture: natural skin and highlight rolloff, directional but balanced shadows with facial details preserved; follow the specified style, lighting and location without forced film grain, grime, dust, water stains or wear. Follow the subject brief for who appears in the frame; do not add people.',
-        anchorBuffer
+        anchorBuffer && changingScene
+            ? 'Image 1 is the isolated person from the accepted frame. Preserve the same face, hairstyle and outfit. Repose the person and build the new location to match this shot.'
+            : anchorBuffer
             ? 'Image 1 is the accepted frame from this shoot. Preserve established identity and group-wide wardrobe continuity except where the current shot contract specifies a change. Follow that contract for pose, action, scene, lighting, camera and framing.'
             : 'Image 1 supplies the identity reference for the face and hair only. Follow the shot contract for all remaining details.',
         'Image 2 supplies garment material and color only. Follow the written wardrobe design. Discard its person, pose, background and framing.',
@@ -1387,9 +1408,11 @@ export async function generateShot({ group, shotId, providerId = '', env = {}, f
         : (isWaistUp(request.variant) || isTightPortrait(request.variant))
         ? aspectSizes['3:4']
         : aspectSizes[request.aspect] || '1056x1584';
+    const anchorShot = request.anchor ? group.shots.find(item => item.shotId === request.anchor.shotId) : null;
     const anchor = request.anchor && {
         ...request.anchor,
-        sourceAction: group.shots.find(shot => shot.shotId === request.anchor.shotId)?.action,
+        sourceAction: anchorShot?.action,
+        sourceScene: anchorShot?.scene,
     };
     const poseRef = compatibleShotPose(group, shot);
 
