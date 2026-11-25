@@ -408,14 +408,14 @@ export function validatePhotographerFeasibility(shots = []) {
 
 function photographerRepairGuidance(shots, violations) {
     const framingIndexes = [...new Set(violations
-        .filter(item => /景别与裁切范围或必须呈现范围冲突|英文生图提示中的构图与景别冲突/.test(item))
+        .filter(item => /景别与裁切范围或必须呈现范围冲突|英文生图提示中的构图与景别冲突|手部位置在当前景别画框之外/.test(item))
         .map(item => Number(item.match(/镜头(\d+)/)?.[1]) - 1)
         .filter(index => Number.isInteger(index) && index >= 0 && index < shots.length))];
     if (!framingIndexes.length) return '';
 
     const details = framingIndexes.map(index => {
         const shot = shots[index];
-        return `镜头${index + 1}当前：shot_size=${shot.shot_size}；crop_boundary=${shot.crop_boundary}；must_show=${shot.must_show}；generator_prompt=${shot.generator_prompt}`;
+        return `镜头${index + 1}当前：shot_size=${shot.shot_size}；model_pose=${shot.model_pose}；crop_boundary=${shot.crop_boundary}；must_show=${shot.must_show}；generator_prompt=${shot.generator_prompt}`;
     }).join('\n');
     return `\n景别冲突的逐镜修订依据：\n${details}\n修订时先遵守用户需求中明确的全身、半身、特写等硬性要求；没有明确要求时，根据该镜头主体和现场任务确定可执行景别。再让 shot_size、crop_boundary、must_show 与 generator_prompt 完全一致，不得通过删掉用户要求的必见内容来绕过校验。景别对应：ECU=五官/极近特写，CU=脸部特写，MCU=头肩，MS=腰部以上，MFS=膝部以上，FS=完整全身，WS=全身加较多环境，EWS=环境远景。generator_prompt 只保留一种正向景别描述。`;
 }
@@ -511,6 +511,7 @@ shot_language 是独特的镜头名称；model_pose 写具体动作口令；phot
                 constraints.prohibited.length && `全组禁用：${constraints.prohibited.map(item => item.label).join('、')}。所有分镜字段中都不要出现这些器材或行为（包括英文图像提示词）；不要写成“禁止/不使用/without”等否定句，只写合规的替代做法。`,
                 absentResources.length && `不得假设以下未提供资源存在：${absentResources.map(item => item.name).join('、')}。`,
                 '只使用用户已提供的场地和道具；任何未提供资源都不得假设存在，也不得写进动作或站位。',
+                '腰上、头肩与面部特写中，放在膝上或大腿上的双手位于画外，不要求手部可见。若本镜要表现手部，把手放到胸前、脸旁或腰线内，并让裁切、必见内容和英文提示同步；若手必须留在膝上，改用膝上或更宽景别。',
                 multipleLocations && '多场地拍摄时，每镜标题明确写一个用户给出的场地名称。动作、构图、用光和替代拍法都按这一处场地安排，不把其他场地的固定设施或背景写入同一镜。',
                 /不跨栏杆|不靠近危险边缘/.test(String(body.input.extra || '')) && '涉及步道或栈道的走姿让模特沿已确认的通行段中线行走，站位留在安全一侧。背影和远景通过改变镜头方向获得，不让模特走向水面或危险边缘。',
                 '单人人像的拍摄距离应随焦段和景别变化。以全画幅35mm竖拍为例，成年人全身约2至3米，腰上约1至2米。若固定广角拍面部特写，保持舒适的拍摄距离并写明后裁边界。沿用用户指定的器材、安全距离和站位。',
