@@ -37,6 +37,7 @@ const REASON_LABELS = Object.freeze({
 
 function poseText(template) {
   return String([
+    template?.id,
     template?.upstreamId,
     template?.title,
     template?.englishTitle,
@@ -69,14 +70,18 @@ function poseFamilyFor(template) {
 
 export function shotPoseAction(text) {
   if (/行走|步行|迈步|缓步|缓行|前行|走路|走姿|走动|走过|走至|走向|\bwalk(?:s|ing)?\b|\bstride\b/i.test(text)) return 'walking';
-  if (/坐姿|坐在|坐于|坐着|坐稳|坐下|静坐|\bsit(?:ting)?\b|\bseated\b/i.test(text)) return 'seated';
+  if (/坐姿|坐在|坐于|坐着|坐稳|坐下|静坐|正坐|端坐|侧坐|坐长椅|\bsit(?:ting)?\b|\bseated\b/i.test(text)) return 'seated';
   if (/倚靠|靠墙|靠在|\blean(?:ing)? against\b/i.test(text)) return 'leaning';
   return '';
 }
 
 export function poseMatchesShotAction(template, action) {
   const required = shotPoseAction(action);
-  return !required || shotPoseAction(poseText(template)) === required;
+  const reference = poseText(template);
+  if (required && shotPoseAction(reference) !== required) return false;
+  const singleHandAtHip = /(?:一(?:只)?手|单手|[左右]手)[^，。；、]{0,6}(?:搭|扶|叉|放)[^，。；、]{0,5}(?:髋|腰)/i;
+  if (singleHandAtHip.test(action)) return singleHandAtHip.test(reference) || /(?:^|[_-])p015\b/i.test(reference);
+  return true;
 }
 
 export function classifyPose(template) {

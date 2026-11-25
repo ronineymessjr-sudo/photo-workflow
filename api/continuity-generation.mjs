@@ -575,7 +575,7 @@ function modelScopePriorityDirective({ anchor, variant, poseRef, visualPoseSent 
     }
     const poseText = [poseRef?.id, poseRef?.title, poseRef?.direction, variant?.action].filter(Boolean).join(' ');
     if (shotPoseAction(variant?.action) === 'walking'
-        && /不看(?:向)?镜头|视线避开镜头|(?:视线|目光)(?:平视|看向|望向|朝向)前方/i.test(variant.action)) {
+        && /不看(?:向)?镜头|视线避开镜头|(?:视线|目光)[^，。；]{0,12}(?:前方|远方|地面|画外)/i.test(variant.action)) {
         out.push('【视线与步态】抓拍迈步时的重心转移，鼻尖朝向行进方向，眼睛看向沿路前方或画外；相机站在视线一侧拍摄，保留自然的侧脸或四分之三侧脸，和相机不发生眼神接触。');
     }
     if (!isTightPortrait(variant)) {
