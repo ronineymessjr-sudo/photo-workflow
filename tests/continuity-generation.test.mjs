@@ -836,6 +836,7 @@ test('ModelScope walking shots keep the face reference without a standing anchor
         scene: '湖边木栈道', crop: '人物主体完整清晰；按当前景别保留必要的画面空间。',
         poseRef: { id: 'atlas-pose-full_single_p017', title: '站立・回眸顾盼', imageUrl: 'https://example.com/standing.jpg' },
     });
+    group.shots[0].wardrobe = '米白针织裹身上衣，卡其色长裙，棕色及膝长靴';
     group.shots.push({ ...group.shots[0], shotId: 'anchor-standing', action: '模特站立扶髋。' });
     setAnchor(group, { assetId: group.references.find(reference => reference.role === 'identity').assetId, shotId: 'anchor-standing' });
     const result = await generateShot({
@@ -849,6 +850,8 @@ test('ModelScope walking shots keep the face reference without a standing anchor
     assert.match(result.sentPrompt, /缓慢前行/);
     assert.match(result.sentPrompt, /视线与步态.*眼睛看向沿路前方或画外/);
     assert.match(result.sentPrompt, /景别最高优先级：中全景：画框下沿切在膝盖上方/);
+    assert.match(result.sentPrompt, /服装：米白针织裹身上衣，卡其色长裙/);
+    assert.doesNotMatch(result.sentPrompt, /棕色及膝长靴/);
 });
 
 test('ModelScope preserves off-camera walking gaze and the specified right-hand action', async () => {

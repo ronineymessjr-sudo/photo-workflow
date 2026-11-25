@@ -350,6 +350,9 @@ function wardrobeDirectionForFrame(lockedWardrobe, variant) {
 }
 
 function subjectDirectionForFrame(subject, variant) {
+    if (/^(MFS|中全景)$/i.test(String(variant?.size || variant?.shotType || ''))) {
+        return wardrobeVisibleInFrame(subject, variant);
+    }
     const crop = [variant?.crop, variant?.size, variant?.shotType]
         .filter(value => typeof value === 'string').join(' ');
     if (!isWaistUp(variant) && !/(?:腰上|腰线|腰部以上|waist[- ]?up|above (?:the )?waist)/i.test(crop)) return directive(subject);
@@ -647,6 +650,10 @@ function isAccessoryConflictingOutfitReference(reference) {
 
 function wardrobeVisibleInFrame(value, variant = {}) {
     const text = directive(value);
+    if (/^(MFS|中全景)$/i.test(String(variant?.size || variant?.shotType || ''))) {
+        return text.replace(/(?:棕色|黑色|白色|米色|褐色|深棕色)?(?:及膝|过膝|高筒|中筒|短筒)?(?:长靴|短靴|皮靴|靴子|鞋子|皮鞋|运动鞋|长袜|短袜)/g, '')
+            .replace(/[，、,；;。]+$/, '');
+    }
     if (!isUpperBodyFrame(variant) || !text) return text;
     return text.split(/(?<=[，、,；;。])/)
         .filter(part => !/(裙|裤|靴|鞋|袜|下装|skirt|trousers|pants|boots|shoes|socks|lower[- ]body)/i.test(part))
