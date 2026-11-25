@@ -79,8 +79,14 @@ export function poseMatchesShotAction(template, action) {
   const required = shotPoseAction(action);
   const reference = poseText(template);
   if (required && shotPoseAction(reference) !== required) return false;
-  const singleHandAtHip = /(?:一(?:只)?手|单手|[左右]手)[^，。；、]{0,6}(?:搭|扶|叉|放)[^，。；、]{0,5}(?:髋|腰)/i;
-  if (singleHandAtHip.test(action)) return singleHandAtHip.test(reference) || /(?:^|[_-])p015\b/i.test(reference);
+  const hipPlacement = /(双手|一(?:只)?手|单手|左手|右手)[^，。；、]{0,6}(?:搭|扶|叉|放)[^，。；、]{0,5}(?:髋|腰)/i;
+  const requestedHands = String(action || '').match(hipPlacement)?.[1];
+  if (requestedHands) {
+    const referenceHands = /(?:^|[_-])p015\b/i.test(reference) ? '右手' : reference.match(hipPlacement)?.[1];
+    if (!referenceHands) return false;
+    if (/^(双手|左手|右手)$/.test(requestedHands)) return requestedHands === referenceHands;
+    return referenceHands !== '双手';
+  }
   return true;
 }
 

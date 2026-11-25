@@ -494,6 +494,7 @@ shot_language 是独特的镜头名称；model_pose 写具体动作口令；phot
 严格遵守用户明确要求的角度、人物位置、完整性和禁用项，不要只把限制抄进备注。未提供的设备、地址、服装、人物关系不得编造；依赖现场条件的镜头明确写条件与替代方案。按拍摄动线排序，兼顾安全、时间、环境交代、主体、动作和细节。常规人像动作必须舒适、可支撑且重心明确，不安排极限后仰、深度扭转、悬空或倒置。摄影师站位要与机位代号一致，景别要与裁切和必见内容一致；英文生图提示要与中文人物动作、景别及焦段一致，不增加未提供的人物或道具。generator_prompt 每条只用一种正向景别描述，并必须对应 shot_size：ECU=extreme close-up，CU=close-up，MCU=head-and-shoulders，MS=waist-up，MFS=knee-up，FS=full-body，WS=wide full-body，EWS=environmental wide shot。不得在提示词中列举其他景别，即使是否定句也不要写，以免图像模型和质量检查产生歧义。`;
             const constraints = extractHardConstraints(body.input);
             const absentResources = unconfirmedResources.filter(item => !isProvided(item, constraints.resourceAllowlist));
+            const multipleLocations = String(body.input.scene || '').split(/[；;\n]+/).filter(value => value.trim()).length > 1;
             const hardRules = [
                 constraints.fullBodyAll && '全组硬性规则：每个镜头 shot_size 只能是 FS、WS 或 EWS；裁切边界不得写半身、膝上或截脚。',
                 constraints.downwardAll && `全组硬性规则：每个镜头机位必须${constraints.highAngleOnly ? '为 high_angle' : '为 high_angle 或 overhead'}，摄影师站位说明也必须与俯拍一致。`,
@@ -502,6 +503,7 @@ shot_language 是独特的镜头名称；model_pose 写具体动作口令；phot
                 constraints.prohibited.length && `全组禁用：${constraints.prohibited.map(item => item.label).join('、')}。所有分镜字段中都不要出现这些器材或行为（包括英文图像提示词）；不要写成“禁止/不使用/without”等否定句，只写合规的替代做法。`,
                 absentResources.length && `不得假设以下未提供资源存在：${absentResources.map(item => item.name).join('、')}。`,
                 '只使用用户已提供的场地和道具；任何未提供资源都不得假设存在，也不得写进动作或站位。',
+                multipleLocations && '多场地拍摄时，每镜标题明确写一个用户给出的场地名称。动作、构图、用光和替代拍法都按这一处场地安排，不把其他场地的固定设施或背景写入同一镜。',
                 '单人人像的拍摄距离应随焦段和景别变化。以全画幅35mm竖拍为例，成年人全身约2至3米，腰上约1至2米。若固定广角拍面部特写，保持舒适的拍摄距离并写明后裁边界。沿用用户指定的器材、安全距离和站位。',
             ].filter(Boolean).join('\n');
             const poseTemplates = (referenceContext?.templates || []).filter(template => template.kind === 'pose');

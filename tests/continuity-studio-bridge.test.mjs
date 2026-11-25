@@ -185,13 +185,16 @@ test('a real Studio plan keeps per-shot scenes and pose selections in the contin
     assert.match(handoff.cards[0].instruction, /场景按方案文字/);
 });
 
-test('automatic continuity references respect seated directions and one-handed hip placement', () => {
+test('automatic continuity references respect seated directions and specified hand placement', () => {
     const bothHands = { ...pose, id: 'atlas-pose-full_single_p018', upstreamId: 'full_single_p018', title: '站立・双手扶腰' };
     const singleHand = { ...pose, id: 'atlas-pose-full_single_p015', upstreamId: 'full_single_p015', title: '站立・对立式平衡・手扶腰' };
     const rows = [
         ['bench', '模特正坐长椅，双手交叠置于膝上', bothHands.id],
         ['wrong-hand', '模特侧身站立，双脚前后错开，一手轻搭髋部', bothHands.id],
         ['correct-hand', '模特侧身站立，双脚前后错开，一手轻搭髋部', singleHand.id],
+        ['left-hand', '模特站立，左手轻搭髋部', singleHand.id],
+        ['wrong-both', '模特站立林间，双手分扶腰', singleHand.id],
+        ['correct-both', '模特站立林间，双手分扶腰', bothHands.id],
     ];
     const result = groupFromStudio({
         templates: [portrait, costume, bothHands, singleHand],
@@ -199,7 +202,7 @@ test('automatic continuity references respect seated directions and one-handed h
             id, directorContract: { model_pose, referenceIds: [referenceId] },
         })),
     });
-    assert.deepEqual(result.group.shots.map(shot => shot.poseRef?.id ?? null), [null, null, singleHand.id]);
+    assert.deepEqual(result.group.shots.map(shot => shot.poseRef?.id ?? null), [null, null, singleHand.id, null, null, bothHands.id]);
 });
 
 test('handoff does not treat an untrusted external URL as a ready library reference', () => {
