@@ -851,6 +851,7 @@ test('ModelScope walking shots keep the face reference without a standing anchor
     assert.match(result.sentPrompt, /缓慢前行/);
     assert.match(result.sentPrompt, /视线与步态.*眼睛看向沿路前方或画外/);
     assert.match(result.sentPrompt, /景别最高优先级：中全景：画框下沿切在膝盖上方/);
+    assert.match(result.sentPrompt, /从完整发顶到大腿中段取景/);
     assert.match(result.sentPrompt, /服装：米白针织裹身上衣，卡其色长裙/);
     assert.doesNotMatch(result.sentPrompt, /棕色及膝长靴/);
 });
