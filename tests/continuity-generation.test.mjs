@@ -676,6 +676,8 @@ test('waist-up Turbo shots expand legacy crop codes and omit out-of-frame wardro
     assert.match(body.prompt, /场景：湖边木栈道/);
     assert.match(body.prompt, /景别最高优先级：中景腰上人像.*自然腰线结束/);
     assert.match(body.prompt, /^服装：米白色针织裹身上衣$/m);
+    assert.match(body.prompt, /^全组服装款式：.*宽袖、腰前交叠系结/m);
+    assert.ok(body.prompt.includes(`天气与时间：${group.locked.weather}`));
     assert.doesNotMatch(body.prompt, /棕色及膝靴/);
     assert.match(body.prompt, /腰线以下不在画面内/);
     assert.match(body.prompt, /湖水/);
